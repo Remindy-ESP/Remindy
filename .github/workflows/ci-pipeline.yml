@@ -1,0 +1,198 @@
+name: CI Pipeline - Simplified
+
+on:
+  pull_request:
+    branches: [develop, staging, main]
+  push:
+    branches: [develop, staging, main]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # 🔧 Backend Tests
+  test-backend:
+    name: 🔧 Backend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🔍 Quality checks
+        run: |
+          cd backend
+          npm run lint
+          npm run build
+
+      - name: 🗄️ Set database URL based on branch
+        id: db-config
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+            echo "BRANCH_NAME=production" >> $GITHUB_OUTPUT
+            echo "NEON_BRANCH_ID=${{ secrets.NEON_PRODUCTION_BRANCH_ID }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/Staging" ]]; then
+            echo "BRANCH_NAME=staging" >> $GITHUB_OUTPUT
+            echo "NEON_BRANCH_ID=${{ secrets.NEON_STAGING_BRANCH_ID }}" >> $GITHUB_OUTPUT
+          else
+            echo "BRANCH_NAME=development" >> $GITHUB_OUTPUT
+            echo "NEON_BRANCH_ID=${{ secrets.NEON_DEVELOP_BRANCH_ID }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🌐 Get Neon connection string
+        id: neon-connection
+        run: |
+          # Récupérer l'URL de connexion depuis Neon API
+          DB_URL=$(curl -s -X GET \
+            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ steps.db-config.outputs.NEON_BRANCH_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Accept: application/json" | jq -r '.uri')
+          
+          echo "DATABASE_URL=$DB_URL" >> $GITHUB_OUTPUT
+          echo "✅ Using Neon branch: ${{ steps.db-config.outputs.BRANCH_NAME }}"
+
+      - name: 🧪 Run unit tests
+        run: |
+          cd backend
+          npm run test
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          NODE_ENV: test
+
+      - name: 🔄 Test migrations
+        run: |
+          cd backend
+          echo "🗄️ Running migrations on ${{ steps.db-config.outputs.BRANCH_NAME }} branch"
+          npm run migration:run
+          echo "✅ Migrations completed successfully"
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+
+      - name: 🧪 Run integration tests
+        run: |
+          cd backend
+          npm run test:e2e
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          NODE_ENV: test
+
+  # 🎨 Frontend Tests
+  test-frontend:
+    name: 🎨 Frontend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend-web/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend-web
+          npm ci
+
+      - name: 🔍 Quality & Tests
+        run: |
+          cd frontend-web
+          npm run lint
+          npm run type-check
+          npm run test
+
+      - name: 🔨 Build check
+        run: |
+          cd frontend-web
+          npm run build
+
+  # 📱 Mobile Tests
+  test-mobile:
+    name: 📱 Mobile CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd mobile
+          npm ci
+
+      - name: 🔍 Quality & Tests
+        run: |
+          cd mobile
+          npm run lint
+          npx tsc --noEmit
+          npm run test
+
+  # 📦 Build final (seulement sur push vers branches principales)
+  build-artifacts:
+    name: 📦 Build Artifacts
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, test-mobile]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/production' || github.ref == 'refs/heads/Staging')
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🔧 Build backend
+        run: |
+          cd backend
+          npm ci
+          npm run build
+
+      - name: 🎨 Build frontend
+        run: |
+          cd frontend-web
+          npm ci
+          npm run build
+
+      - name: 📤 Upload backend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-${{ github.ref_name }}-${{ github.sha }}
+          path: backend/dist/
+          retention-days: 30
+
+      - name: 📤 Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.ref_name }}-${{ github.sha }}
+          path: frontend-web/dist/
+          retention-days: 30
+
+      - name: 🎯 Summary
+        run: |
+          echo "✅ Build completed for branch: ${{ github.ref_name }}"
+          echo "📦 Artifacts are ready for manual deployment"
+          echo "🗄️ Database tested on: Neon ${{ github.ref_name }} branch"
