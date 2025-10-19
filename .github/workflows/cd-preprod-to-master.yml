@@ -149,7 +149,7 @@ jobs:
           echo "📡 Fetching Neon connection string for production branch..."
 
           RESPONSE=$(curl -s -X GET \
-            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/connection_uri?branch_id=${NEON_PRODUCTION_BRANCH_ID}&role_name=neondb_owner" \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/connection_uri?branch_id=${NEON_PRODUCTION_BRANCH_ID}&role_name=neondb_owner&database_name=Prod_db_remindy" \
             -H "Authorization: Bearer ${NEON_API_KEY}" \
             -H "Accept: application/json")
 
