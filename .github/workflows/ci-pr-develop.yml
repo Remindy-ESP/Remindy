@@ -1,0 +1,126 @@
+name: CI - Pull Request to Develop
+
+on:
+  pull_request:
+    branches: [develop]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # 🔧 Backend Quick Check
+  backend-quick-check:
+    name: 🔧 Backend Quick Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🔍 Lint
+        run: |
+          cd backend
+          npm run lint
+
+      - name: 🔨 Build check
+        run: |
+          cd backend
+          npm run build
+
+  # 🎨 Frontend Admin Quick Check
+  frontend-admin-quick-check:
+    name: 🎨 Frontend Admin Quick Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend_admin/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend_admin
+          npm ci
+
+      - name: 🔍 Lint
+        run: |
+          cd frontend_admin
+          npm run lint
+
+      - name: 🔨 Build check
+        run: |
+          cd frontend_admin
+          npm run build
+
+  # 📱 Mobile Quick Check
+  mobile-quick-check:
+    name: 📱 Mobile Quick Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend_mobile/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend_mobile
+          npm ci
+
+      - name: 🔍 Lint
+        run: |
+          cd frontend_mobile
+          npm run lint
+
+      - name: 📝 TypeScript check
+        run: |
+          cd frontend_mobile
+          npx tsc --noEmit
+
+  # ✅ Summary
+  ci-summary:
+    name: ✅ CI Summary
+    runs-on: ubuntu-latest
+    needs: [backend-quick-check, frontend-admin-quick-check, mobile-quick-check]
+    if: always()
+
+    steps:
+      - name: 📊 Check results
+        run: |
+          if [[ "${{ needs.backend-quick-check.result }}" == "success" && \
+                "${{ needs.frontend-admin-quick-check.result }}" == "success" && \
+                "${{ needs.mobile-quick-check.result }}" == "success" ]]; then
+            echo "✅ All quick checks passed!"
+            echo "✅ Backend: Lint + Build OK"
+            echo "✅ Frontend Admin: Lint + Build OK"
+            echo "✅ Mobile: Lint + TypeScript OK"
+            echo ""
+            echo "💡 Ready to merge into develop"
+          else
+            echo "❌ Some checks failed"
+            exit 1
+          fi

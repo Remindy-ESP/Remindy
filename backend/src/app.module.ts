@@ -8,12 +8,12 @@ import { InfrastructureModule } from './infrastructure/infrastructure.module';
 
 @Module({
   imports: [
-      ConfigModule.forRoot({
-        isGlobal: true,
-        envFilePath: `.env.staging`,
-      }),
-      TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
-      InfrastructureModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.env.staging`,
+    }),
+    TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
+    InfrastructureModule,
   ],
   controllers: [AppController],
   providers: [AppService],

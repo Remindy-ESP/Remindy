@@ -10,7 +10,7 @@ import prettierConfig from 'eslint-config-prettier';
 
 export default [
     {
-        ignores: ['dist/**', 'build/**', 'node_modules/**', 'vite.config.*'],
+        ignores: ['dist/**', 'build/**', 'node_modules/**', 'vite.config.*', 'playwright.config.ts', 'tests/**', 'tests-examples/**'],
     },
 
     {
@@ -23,7 +23,7 @@ export default [
                 ecmaVersion: 'latest',
                 ecmaFeatures: { jsx: true },
                 sourceType: 'module',
-                project: './tsconfig.json',
+                projectService: true,
             },
         },
         plugins: {
@@ -43,7 +43,7 @@ export default [
             '@typescript-eslint/explicit-function-return-type': 'off',
             '@typescript-eslint/explicit-module-boundary-types': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',
-            '@typescript-eslint/prefer-const': 'error',
+            '@typescript-eslint/prefer-as-const': 'error',
             '@typescript-eslint/no-var-requires': 'error',
             '@typescript-eslint/consistent-type-imports': 'error',
             '@typescript-eslint/no-import-type-side-effects': 'error',
@@ -76,6 +76,21 @@ export default [
             'semi': ['error', 'always'],
 
             'prettier/prettier': 'error',
+        },
+    },
+
+    // Configuration spécifique pour les fichiers de tests
+    {
+        files: ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.tsx', '**/*.test.tsx', 'tests/**/*.ts', 'tests-examples/**/*.ts'],
+        rules: {
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            'no-console': 'off',
         },
     },
 

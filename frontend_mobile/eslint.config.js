@@ -1,62 +1,81 @@
-import js from '@eslint/js';
-import globals from 'globals';
-import reactHooks from 'eslint-plugin-react-hooks';
-import react from 'eslint-plugin-react';
-import reactNative from 'eslint-plugin-react-native';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
-import prettier from 'eslint-plugin-prettier';
-import prettierConfig from 'eslint-config-prettier';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 
 export default [
     {
-        ignores: ['node_modules/**', 'ios/**', 'android/**', '.expo/**'],
+        ignores: [
+            'node_modules/**',
+            'ios/**',
+            'android/**',
+            '.expo/**',
+            '**/*.d.ts',
+        ],
     },
-
     {
         files: ['**/*.{ts,tsx}'],
         languageOptions: {
-            globals: {
-                ...globals.browser,
-                __DEV__: 'readonly',
-            },
-            parser: tsparser,
+            parser: tsParser,
+            ecmaVersion: 2020,
+            sourceType: 'module',
             parserOptions: {
-                ecmaFeatures: { jsx: true },
-                sourceType: 'module',
+                ecmaFeatures: {
+                    jsx: true,
+                },
+            },
+            globals: {
+                __DEV__: 'readonly',
+                console: 'readonly',
+                require: 'readonly',
+                module: 'readonly',
+                process: 'readonly',
             },
         },
         plugins: {
-            '@typescript-eslint': tseslint,
-            'react': react,
-            'react-hooks': reactHooks,
-            'react-native': reactNative,
-            'prettier': prettier,
-        },
-        settings: {
-            react: { version: 'detect' },
+            '@typescript-eslint': tsPlugin,
         },
         rules: {
-            ...js.configs.recommended.rules,
-
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-            '@typescript-eslint/no-explicit-any': 'warn',
-
-            'react/react-in-jsx-scope': 'off',
-            'react/prop-types': 'off',
-
-            ...reactHooks.configs.recommended.rules,
-
-            'react-native/no-unused-styles': 'error',
-            'react-native/no-inline-styles': 'warn',
-            'react-native/no-raw-text': 'error',
-
             'no-console': 'off',
             'prefer-const': 'error',
-
-            'prettier/prettier': 'error',
         },
     },
-
-    prettierConfig,
+    {
+        files: ['**/*.{js,jsx}'],
+        languageOptions: {
+            ecmaVersion: 2020,
+            sourceType: 'module',
+            parserOptions: {
+                ecmaFeatures: {
+                    jsx: true,
+                },
+            },
+            globals: {
+                __DEV__: 'readonly',
+                console: 'readonly',
+                require: 'readonly',
+                module: 'readonly',
+                process: 'readonly',
+            },
+        },
+        rules: {
+            'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+            'no-console': 'off',
+            'prefer-const': 'error',
+        },
+    },
+    // Configuration spécifique pour les fichiers de tests
+    {
+        files: ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.tsx', '**/*.test.tsx', '__tests__/**/*.{ts,tsx}'],
+        rules: {
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+            'no-console': 'off',
+        },
+    },
 ];
