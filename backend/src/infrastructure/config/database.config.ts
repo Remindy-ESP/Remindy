@@ -9,7 +9,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     const isTest = configService.get('NODE_ENV') === 'test';
 
     // Priorité : DATABASE_URL (tests CI/CD) > NEON_DATABASE_URL_DEV > NEON_DATABASE_URL_PROD
-    const databaseUrl: string =
+    const databaseUrl: string | undefined =
       configService.get('DATABASE_URL') ||
       configService.get('NEON_DATABASE_URL_DEV') ||
       configService.get('NEON_DATABASE_URL_PROD');
