@@ -5,26 +5,28 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
   imports: [ConfigModule],
   inject: [ConfigService],
   useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
-    const isDevelopment = configService.get('NODE_ENV') === 'development';
-    const isTest = configService.get('NODE_ENV') === 'test';
-
-    // Priorité : DATABASE_URL (tests CI/CD) > NEON_DATABASE_URL_DEV > NEON_DATABASE_URL_PROD
+    const nodeEnv: string | undefined = configService.get('NODE_ENV') || 'development';
+    const isDevelopment: boolean = nodeEnv === 'development';
+    const isTest: boolean = nodeEnv === 'test';
+    const isStaging: boolean = nodeEnv === 'staging';
+    const isProduction: boolean = nodeEnv === 'production';
     const databaseUrl: string | undefined =
       configService.get('DATABASE_URL') ||
       configService.get('NEON_DATABASE_URL_DEV') ||
+      configService.get('NEON_DATABASE_URL_STAGING') ||
       configService.get('NEON_DATABASE_URL_PROD');
 
     return {
       type: 'postgres',
       url: databaseUrl,
-      ssl: !isTest, // Pas de SSL pour PostgreSQL local en tests
+      ssl: !isTest,
       autoLoadEntities: true,
-      synchronize: isDevelopment || isTest, // Auto-sync en dev et test
+      synchronize: isDevelopment || isTest,
       logging: isDevelopment,
       retryAttempts: 3,
       retryDelay: 3000,
       migrations: ['dist/infrastructure/database/migrations/*.js'],
-      migrationsRun: !isDevelopment && !isTest,
+      migrationsRun: isStaging || isProduction,
     };
   },
 };
