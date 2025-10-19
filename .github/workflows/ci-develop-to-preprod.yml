@@ -15,6 +15,22 @@ jobs:
     name: 🔧 Backend Full Tests
     runs-on: ubuntu-latest
 
+    # PostgreSQL service pour les tests (isolation parfaite)
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -41,23 +57,12 @@ jobs:
           cd backend
           npm run build
 
-      - name: 🗄️ Get Neon connection string (Develop)
-        id: neon-connection
-        run: |
-          DB_URL=$(curl -s -X GET \
-            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_DEVELOP_BRANCH_ID }}" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
-            -H "Accept: application/json" | jq -r '.uri')
-
-          echo "DATABASE_URL=$DB_URL" >> $GITHUB_OUTPUT
-          echo "✅ Using Neon development branch"
-
       - name: 🧪 Run unit tests
         run: |
           cd backend
           npm run test
         env:
-          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           NODE_ENV: test
 
       - name: 📊 Run tests with coverage
@@ -65,25 +70,36 @@ jobs:
           cd backend
           npm run test:cov
         env:
-          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           NODE_ENV: test
-
-      - name: 🔄 Test migrations
-        run: |
-          cd backend
-          echo "🗄️ Running migrations on development branch"
-          npm run migration:run
-          echo "✅ Migrations completed successfully"
-        env:
-          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
 
       - name: 🧪 Run E2E tests
         run: |
           cd backend
           npm run test:e2e
         env:
-          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           NODE_ENV: test
+
+      - name: 🗄️ Get Neon connection string (Test branch)
+        id: neon-connection
+        run: |
+          DB_URL=$(curl -s -X GET \
+            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_TEST_BRANCH_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Accept: application/json" | jq -r '.uri')
+
+          echo "NEON_DATABASE_URL_DEV=$DB_URL" >> $GITHUB_OUTPUT
+          echo "✅ Using Neon test branch for migrations"
+
+      - name: 🔄 Test migrations on Neon
+        run: |
+          cd backend
+          echo "🗄️ Testing migrations on Neon test branch"
+          npm run migration:run
+          echo "✅ Migrations test completed successfully"
+        env:
+          NEON_DATABASE_URL_DEV: ${{ steps.neon-connection.outputs.NEON_DATABASE_URL_DEV }}
 
       - name: 📤 Upload coverage reports
         uses: actions/upload-artifact@v4

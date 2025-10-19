@@ -147,7 +147,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
             -H "Accept: application/json" | jq -r '.uri')
 
-          echo "DATABASE_URL=$DB_URL" >> $GITHUB_OUTPUT
+          echo "NEON_DATABASE_URL_PROD=$DB_URL" >> $GITHUB_OUTPUT
           echo "✅ Using Neon production branch"
 
       - name: 🔄 Run migrations
@@ -157,7 +157,7 @@ jobs:
           npm run migration:run
           echo "✅ Production migrations completed successfully"
         env:
-          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          NEON_DATABASE_URL_PROD: ${{ steps.neon-connection.outputs.NEON_DATABASE_URL_PROD }}
 
   # ✅ CD Summary
   cd-summary:
