@@ -1,0 +1,203 @@
+name: CD - Preprod to Master (Build & Deploy)
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [preprod]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # 📦 Build Backend
+  build-backend:
+    name: 📦 Build Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci --production=false
+
+      - name: 🔨 Build
+        run: |
+          cd backend
+          npm run build
+
+      - name: 📤 Upload backend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-${{ github.sha }}
+          path: backend/dist/
+          retention-days: 30
+
+      - name: 📤 Upload backend package.json
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-package-${{ github.sha }}
+          path: |
+            backend/package.json
+            backend/package-lock.json
+          retention-days: 30
+
+  # 📦 Build Frontend Admin
+  build-frontend-admin:
+    name: 📦 Build Frontend Admin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend_admin/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend_admin
+          npm ci
+
+      - name: 🔨 Build
+        run: |
+          cd frontend_admin
+          npm run build
+
+      - name: 📤 Upload frontend admin build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-admin-build-${{ github.sha }}
+          path: frontend_admin/dist/
+          retention-days: 30
+
+  # 📦 Build Mobile (Optional - for web export)
+  build-mobile-web:
+    name: 📦 Build Mobile Web
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/preprod'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend_mobile/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend_mobile
+          npm ci
+
+      - name: 🔨 Export web version (if needed)
+        run: |
+          cd frontend_mobile
+          if grep -q '"build"' package.json; then
+            npm run build
+          else
+            echo "⚠️ No build script for mobile web, skipping"
+          fi
+
+  # 🗄️ Database Migration (Production)
+  migrate-database:
+    name: 🗄️ Run Production Migrations
+    runs-on: ubuntu-latest
+    needs: [build-backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/preprod'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🗄️ Get Neon connection string (Production)
+        id: neon-connection
+        run: |
+          DB_URL=$(curl -s -X GET \
+            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_PRODUCTION_BRANCH_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Accept: application/json" | jq -r '.uri')
+
+          echo "DATABASE_URL=$DB_URL" >> $GITHUB_OUTPUT
+          echo "✅ Using Neon production branch"
+
+      - name: 🔄 Run migrations
+        run: |
+          cd backend
+          echo "🗄️ Running migrations on PRODUCTION database"
+          npm run migration:run
+          echo "✅ Production migrations completed successfully"
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+
+  # ✅ CD Summary
+  cd-summary:
+    name: ✅ CD Summary
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend-admin]
+    if: always()
+
+    steps:
+      - name: 📊 Check build results
+        run: |
+          if [[ "${{ needs.build-backend.result }}" == "success" && \
+                "${{ needs.build-frontend-admin.result }}" == "success" ]]; then
+            echo "✅ All builds successful!"
+            echo "✅ Backend: Build artifact ready"
+            echo "✅ Frontend Admin: Build artifact ready"
+            echo ""
+            echo "📦 Artifacts available for deployment:"
+            echo "   - backend-build-${{ github.sha }}"
+            echo "   - frontend-admin-build-${{ github.sha }}"
+            echo ""
+            if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/preprod" ]]; then
+              echo "🚀 Ready for manual deployment to production"
+              echo "💡 Download artifacts and deploy to your hosting platform"
+            else
+              echo "💡 PR validation passed - ready to merge into master"
+            fi
+          else
+            echo "❌ Some builds failed"
+            echo "Backend: ${{ needs.build-backend.result }}"
+            echo "Frontend Admin: ${{ needs.build-frontend-admin.result }}"
+            exit 1
+          fi
+
+      - name: 📝 Deployment instructions
+        if: github.event_name == 'push' && github.ref == 'refs/heads/preprod'
+        run: |
+          echo "📋 Deployment Steps:"
+          echo "1. Download artifacts from this workflow"
+          echo "2. Backend: Deploy backend-build-${{ github.sha }} to your Node.js hosting"
+          echo "3. Frontend: Deploy frontend-admin-build-${{ github.sha }} to your static hosting"
+          echo "4. Database: Migrations have been automatically applied"
+          echo "5. Verify deployment and test in production"

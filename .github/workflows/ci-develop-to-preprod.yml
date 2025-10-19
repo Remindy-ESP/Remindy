@@ -1,0 +1,201 @@
+name: CI - Develop to Preprod (Full Tests)
+
+on:
+  pull_request:
+    branches: [preprod]
+  push:
+    branches: [develop]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # 🔧 Backend Full Tests
+  backend-full-tests:
+    name: 🔧 Backend Full Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🔍 Lint
+        run: |
+          cd backend
+          npm run lint
+
+      - name: 🔨 Build
+        run: |
+          cd backend
+          npm run build
+
+      - name: 🗄️ Get Neon connection string (Develop)
+        id: neon-connection
+        run: |
+          DB_URL=$(curl -s -X GET \
+            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_DEVELOP_BRANCH_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Accept: application/json" | jq -r '.uri')
+
+          echo "DATABASE_URL=$DB_URL" >> $GITHUB_OUTPUT
+          echo "✅ Using Neon development branch"
+
+      - name: 🧪 Run unit tests
+        run: |
+          cd backend
+          npm run test
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          NODE_ENV: test
+
+      - name: 📊 Run tests with coverage
+        run: |
+          cd backend
+          npm run test:cov
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          NODE_ENV: test
+
+      - name: 🔄 Test migrations
+        run: |
+          cd backend
+          echo "🗄️ Running migrations on development branch"
+          npm run migration:run
+          echo "✅ Migrations completed successfully"
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+
+      - name: 🧪 Run E2E tests
+        run: |
+          cd backend
+          npm run test:e2e
+        env:
+          DATABASE_URL: ${{ steps.neon-connection.outputs.DATABASE_URL }}
+          NODE_ENV: test
+
+      - name: 📤 Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          retention-days: 7
+
+  # 🎨 Frontend Admin Full Tests
+  frontend-admin-full-tests:
+    name: 🎨 Frontend Admin Full Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend_admin/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend_admin
+          npm ci
+
+      - name: 🔍 Lint
+        run: |
+          cd frontend_admin
+          npm run lint
+
+      - name: 🔨 Build
+        run: |
+          cd frontend_admin
+          npm run build
+
+      - name: 🧪 Run tests (if available)
+        run: |
+          cd frontend_admin
+          if grep -q '"test"' package.json; then
+            npm run test
+          else
+            echo "⚠️ No test script found, skipping tests"
+          fi
+
+  # 📱 Mobile Full Tests
+  mobile-full-tests:
+    name: 📱 Mobile Full Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend_mobile/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend_mobile
+          npm ci
+
+      - name: 🔍 Lint
+        run: |
+          cd frontend_mobile
+          npm run lint
+
+      - name: 📝 TypeScript check
+        run: |
+          cd frontend_mobile
+          npx tsc --noEmit
+
+      - name: 🧪 Run tests (if available)
+        run: |
+          cd frontend_mobile
+          if grep -q '"test"' package.json; then
+            npm run test
+          else
+            echo "⚠️ No test script found, skipping tests"
+          fi
+
+  # ✅ Full CI Summary
+  ci-full-summary:
+    name: ✅ Full CI Summary
+    runs-on: ubuntu-latest
+    needs: [backend-full-tests, frontend-admin-full-tests, mobile-full-tests]
+    if: always()
+
+    steps:
+      - name: 📊 Check all results
+        run: |
+          if [[ "${{ needs.backend-full-tests.result }}" == "success" && \
+                "${{ needs.frontend-admin-full-tests.result }}" == "success" && \
+                "${{ needs.mobile-full-tests.result }}" == "success" ]]; then
+            echo "✅ All tests passed!"
+            echo "✅ Backend: Lint + Build + Unit Tests + E2E + Migrations OK"
+            echo "✅ Frontend Admin: Lint + Build + Tests OK"
+            echo "✅ Mobile: Lint + TypeScript + Tests OK"
+            echo ""
+            echo "💡 Ready to merge into preprod"
+          else
+            echo "❌ Some tests failed"
+            echo "Backend: ${{ needs.backend-full-tests.result }}"
+            echo "Frontend Admin: ${{ needs.frontend-admin-full-tests.result }}"
+            echo "Mobile: ${{ needs.mobile-full-tests.result }}"
+            exit 1
+          fi
