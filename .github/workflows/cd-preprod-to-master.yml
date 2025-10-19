@@ -142,13 +142,25 @@ jobs:
       - name: 🗄️ Get Neon connection string (Production)
         id: neon-connection
         run: |
-          DB_URL=$(curl -s -X GET \
-            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_PRODUCTION_BRANCH_ID }}" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
-            -H "Accept: application/json" | jq -r '.uri')
+          echo "📡 Fetching Neon connection string for production branch..."
 
+          RESPONSE=$(curl -s -X GET \
+            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_PRODUCTION_BRANCH_ID }}&role_name=neondb_owner" \
+            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            -H "Accept: application/json")
+
+          echo "🔍 API Response: $RESPONSE"
+
+          DB_URL=$(echo "$RESPONSE" | jq -r '.uri')
+
+          if [ -z "$DB_URL" ] || [ "$DB_URL" = "null" ]; then
+            echo "❌ Failed to get database URL from Neon API"
+            echo "Response: $RESPONSE"
+            exit 1
+          fi
+
+          echo "✅ Database URL retrieved successfully"
           echo "NEON_DATABASE_URL_PROD=$DB_URL" >> $GITHUB_OUTPUT
-          echo "✅ Using Neon production branch"
 
       - name: 🔄 Run migrations
         run: |
