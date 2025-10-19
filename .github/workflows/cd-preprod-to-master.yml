@@ -141,12 +141,16 @@ jobs:
 
       - name: 🗄️ Get Neon connection string (Production)
         id: neon-connection
+        env:
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          NEON_PRODUCTION_BRANCH_ID: ${{ secrets.NEON_PRODUCTION_BRANCH_ID }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
           echo "📡 Fetching Neon connection string for production branch..."
 
           RESPONSE=$(curl -s -X GET \
-            "https://console.neon.tech/api/v2/projects/${{ secrets.NEON_PROJECT_ID }}/connection_uri?branch_id=${{ secrets.NEON_PRODUCTION_BRANCH_ID }}&role_name=neondb_owner" \
-            -H "Authorization: Bearer ${{ secrets.NEON_API_KEY }}" \
+            "https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/connection_uri?branch_id=${NEON_PRODUCTION_BRANCH_ID}&role_name=neondb_owner" \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
             -H "Accept: application/json")
 
           echo "🔍 API Response: $RESPONSE"
