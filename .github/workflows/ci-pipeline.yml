@@ -2,9 +2,9 @@ name: CI Pipeline - Simplified
 
 on:
   pull_request:
-    branches: [develop, staging, main]
+    branches: [develop, preprod, master]
   push:
-    branches: [develop, staging, main]
+    branches: [develop, preprod, master]
 
 env:
   NODE_VERSION: '22'
