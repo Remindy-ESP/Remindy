@@ -13,7 +13,7 @@ yarn-error.log*
 lerna-debug.log*
 
 # Env
-.env.production
+.env.master
 .env.staging
 .env.develop
 
