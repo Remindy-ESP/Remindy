@@ -51,16 +51,27 @@ feature/* ──PR──> develop ──PR──> preprod ──PR──> master
 **Actions :**
 - ✅ Lint (tous les projets)
 - ✅ Build (tous les projets)
-- ✅ **Tests unitaires** (Backend)
-- ✅ **Tests E2E** (Backend)
+- ✅ **Tests unitaires** (Backend) → PostgreSQL Docker (isolation)
+- ✅ **Tests E2E** (Backend) → PostgreSQL Docker (isolation)
 - ✅ **Coverage** (Backend)
-- ✅ **Migrations DB** sur Neon develop branch
+- ✅ **Migrations DB** → Branche Neon "test" dédiée
 - ✅ Tests frontend/mobile (si disponibles)
+
+**Architecture hybride de tests :**
+1. **Tests (unitaires/E2E)** : PostgreSQL Docker local
+   - Chaque workflow a sa propre DB isolée
+   - Pas de conflit entre PRs parallèles
+   - Connexion : `postgresql://test_user:test_password@localhost:5432/test_db`
+
+2. **Migrations** : Branche Neon "test"
+   - Teste sur la vraie infrastructure Neon
+   - Une seule branche permanente, réutilisable
+   - Connexion via API Neon
 
 **Configuration requise :**
 - `NEON_PROJECT_ID` (secret)
 - `NEON_API_KEY` (secret)
-- `NEON_DEVELOP_BRANCH_ID` (secret)
+- `NEON_TEST_BRANCH_ID` (secret) ← Branche "test" à créer sur Neon
 
 **Quand ça échoue :**
 - Tests unitaires échouent
@@ -104,12 +115,12 @@ feature/* ──PR──> develop ──PR──> preprod ──PR──> master
 
 Allez dans **Settings > Secrets and variables > Actions** et ajoutez :
 
-| Secret | Description | Exemple |
-|--------|-------------|---------|
-| `NEON_PROJECT_ID` | ID du projet Neon | `ep-abc-123456` |
-| `NEON_API_KEY` | Clé API Neon | `neon_api_...` |
-| `NEON_DEVELOP_BRANCH_ID` | ID de la branch develop | `br-dev-123` |
-| `NEON_PRODUCTION_BRANCH_ID` | ID de la branch production | `br-prod-456` |
+| Secret | Description | Utilisation |
+|--------|-------------|-------------|
+| `NEON_PROJECT_ID` | ID du projet Neon | Toutes les pipelines |
+| `NEON_API_KEY` | Clé API Neon | Toutes les pipelines |
+| `NEON_TEST_BRANCH_ID` | ID de la branche "test" | Tests de migrations CI/CD |
+| `NEON_PRODUCTION_BRANCH_ID` | ID de la branche production | Migrations production |
 
 ### Comment obtenir ces valeurs ?
 
@@ -121,11 +132,25 @@ Allez dans **Settings > Secrets and variables > Actions** et ajoutez :
    - Settings > API Keys > Create New API Key
    - Copiez et sauvegardez la clé
 
-3. **NEON_DEVELOP_BRANCH_ID** / **NEON_PRODUCTION_BRANCH_ID** :
-   - Dans votre projet Neon, créez 2 branches :
-     - `develop` (pour les tests)
-     - `production` (pour la prod)
-   - Copiez les branch IDs depuis l'interface
+3. **Créer la branche "test" sur Neon** :
+   ```bash
+   curl -X POST \
+     "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches" \
+     -H "Authorization: Bearer $NEON_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "branch": {
+         "name": "test",
+         "parent_id": "main"
+       }
+     }'
+   ```
+   - Récupérez le `branch_id` dans la réponse
+   - Ajoutez-le comme secret `NEON_TEST_BRANCH_ID`
+
+4. **NEON_PRODUCTION_BRANCH_ID** :
+   - Utilisez votre branche principale Neon ou créez-en une dédiée pour la production
+   - Copiez le branch ID depuis l'interface Neon
 
 ---
 
