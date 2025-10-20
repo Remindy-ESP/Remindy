@@ -1,53 +1,66 @@
 import {
   Entity,
-  Column,
   PrimaryColumn,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   OneToOne,
   JoinColumn,
+  Check,
 } from 'typeorm';
-import { EUser } from './user.entity';
+import { UserEntity } from './user.entity';
 
-export type ThemeType = 'light' | 'dark' | 'auto';
+export enum Theme {
+  LIGHT = 'light',
+  DARK = 'dark',
+  AUTO = 'auto',
+}
 
 @Entity('user_preferences')
+@Check('default_reminder_delay BETWEEN 1 AND 365')
 export class UserPreferenceEntity {
-  @PrimaryColumn({ name: 'user_id', type: 'uuid' })
+  @PrimaryColumn('uuid')
   userId: string;
 
-  @OneToOne(() => EUser, user => user.preferences, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user: EUser;
+  @Column({
+    type: 'enum',
+    enum: Theme,
+    default: Theme.LIGHT,
+  })
+  theme: Theme;
 
-  @Column({ type: 'varchar', length: 10, default: 'light' })
-  theme: ThemeType;
-
-  @Column({ name: 'notification_email', type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true })
   notificationEmail: boolean;
 
-  @Column({ name: 'notification_push', type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true })
   notificationPush: boolean;
 
-  @Column({ name: 'notification_sms', type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false })
   notificationSms: boolean;
 
-  @Column({ name: 'default_reminder_delay', type: 'integer', default: 3 })
+  @Column({ type: 'integer', default: 3 })
   defaultReminderDelay: number;
 
   @Column({ type: 'varchar', length: 3, default: 'EUR' })
   currency: string;
 
-  @Column({ name: 'show_online_status', type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true })
   showOnlineStatus: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
-  deletedAt?: Date;
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
+  deletedAt: Date;
+
+  // Relations
+  @OneToOne(() => UserEntity, (user) => user.preferences, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
+  user: UserEntity;
 }

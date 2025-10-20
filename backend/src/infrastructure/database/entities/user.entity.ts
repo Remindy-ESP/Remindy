@@ -1,52 +1,64 @@
 import {
-  Column,
   Entity,
   PrimaryGeneratedColumn,
+  Column,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  BeforeInsert,
-  BeforeUpdate,
+  ManyToOne,
+  OneToMany,
   OneToOne,
   JoinColumn,
-  ManyToOne,
+  Index,
 } from 'typeorm';
-import { UserPreferenceEntity } from './user-preference.entity';
 import { RoleEntity } from './role.entity';
+import { UserSessionEntity } from './user-session.entity';
+import { UserPreferenceEntity } from './user-preference.entity';
 
-export type UserStatus = 'active' | 'verified' | 'banned' | 'inactive';
+export enum UserStatus {
+  ACTIVE = 'active',
+  VERIFIED = 'verified',
+  BANNED = 'banned',
+  INACTIVE = 'inactive',
+}
 
 @Entity('users')
-export class EUser {
+@Index('idx_users_email', ['email'], { unique: true })
+@Index('idx_users_role', ['role'])
+@Index('idx_users_status', ['status'])
+@Index('idx_users_deleted_at', ['deletedAt'])
+@Index('idx_users_last_login', ['lastLoginAt'])
+@Index('idx_users_failed_login', ['failedLoginCount'])
+export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'citext', unique: true, nullable: false })
   email: string;
 
-  @Column({ name: 'password_hash', type: 'varchar', length: 255, nullable: true })
-  passwordHash?: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  passwordHash: string;
 
-  @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
-  firstName?: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  firstName: string;
 
-  @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
-  lastName?: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  lastName: string;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  phone?: string;
+  phone: string;
 
-  @Column({ name: 'photo_r2_key', type: 'varchar', length: 500, nullable: true })
-  photoR2Key?: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  photoR2Key: string;
 
-  @Column({ name: 'role_key', type: 'text' })
+  @Column({ type: 'text', nullable: false })
   role: string;
 
-  @ManyToOne(() => RoleEntity, { eager: false })
-  @JoinColumn({ name: 'role_key' })
-  roleEntity?: RoleEntity;
-
-  @Column({ type: 'varchar', length: 20, default: 'active' })
+  @Column({
+    type: 'enum',
+    enum: UserStatus,
+    default: UserStatus.ACTIVE,
+  })
   status: UserStatus;
 
   @Column({ type: 'varchar', length: 50, default: 'Europe/Paris' })
@@ -55,43 +67,41 @@ export class EUser {
   @Column({ type: 'varchar', length: 10, default: 'fr' })
   language: string;
 
-  @Column({ name: 'email_verified', type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false })
   emailVerified: boolean;
 
-  @Column({ name: 'mfa_enabled', type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false })
   mfaEnabled: boolean;
 
-  @Column({ name: 'mfa_secret', type: 'varchar', length: 255, nullable: true })
-  mfaSecret?: string;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  mfaSecret: string;
 
-  @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
-  lastLoginAt?: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  lastLoginAt: Date;
 
-  @Column({ name: 'failed_login_count', type: 'integer', default: 0 })
+  @Column({ type: 'integer', default: 0 })
   failedLoginCount: number;
 
-  @Column({ name: 'password_changed_at', type: 'timestamptz', nullable: true })
-  passwordChangedAt?: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  passwordChangedAt: Date;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   updatedAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
-  deletedAt?: Date;
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
+  deletedAt: Date;
 
-  @OneToOne(() => UserPreferenceEntity, preferences => preferences.user, {
-    cascade: true,
-  })
-  preferences?: UserPreferenceEntity;
+  // Relations
+  @ManyToOne(() => RoleEntity, (role) => role.users)
+  @JoinColumn({ name: 'role', referencedColumnName: 'key' })
+  roleEntity: RoleEntity;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  normalizeEmail() {
-    if (this.email) {
-      this.email = this.email.toLowerCase().trim();
-    }
-  }
+  @OneToMany(() => UserSessionEntity, (session) => session.user)
+  sessions: UserSessionEntity[];
+
+  @OneToOne(() => UserPreferenceEntity, (preference) => preference.user)
+  preferences: UserPreferenceEntity;
 }

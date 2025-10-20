@@ -1,50 +1,65 @@
 import {
   Entity,
-  Column,
   PrimaryGeneratedColumn,
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
-import { EUser } from './user.entity';
+import { UserEntity } from './user.entity';
 
 @Entity('user_sessions')
+@Index('idx_user_sessions_user_id', ['userId'])
+@Index('idx_user_sessions_refresh_token_hash', ['refreshTokenHash'], {
+  unique: true,
+})
+@Index('idx_user_sessions_expires_at', ['expiresAt'])
+@Index('idx_user_sessions_is_revoked', ['isRevoked'], {
+  where: 'is_revoked = false',
+})
+@Index('idx_user_sessions_deleted_at', ['deletedAt'], {
+  where: 'deleted_at IS NULL',
+})
 export class UserSessionEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'user_id', type: 'uuid' })
+  @Column({ type: 'uuid', nullable: false })
   userId: string;
 
-  @ManyToOne(() => EUser, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user: EUser;
-
-  @Column({ name: 'refresh_token_hash', type: 'varchar', length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true, nullable: false })
   refreshTokenHash: string;
 
-  @Column({ name: 'device_name', type: 'varchar', length: 100, nullable: true })
-  deviceName?: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  deviceName: string;
 
-  @Column({ name: 'ip_address', type: 'inet' })
+  @Column({ type: 'inet', nullable: false })
   ipAddress: string;
 
-  @Column({ name: 'user_agent', type: 'text', nullable: true })
-  userAgent?: string;
+  @Column({ type: 'text', nullable: true })
+  userAgent: string;
 
-  @Column({ name: 'last_activity', type: 'timestamptz', default: () => 'NOW()' })
+  @Column({ type: 'timestamptz', default: () => 'NOW()' })
   lastActivity: Date;
 
-  @Column({ name: 'expires_at', type: 'timestamptz' })
+  @Column({ type: 'timestamptz', nullable: false })
   expiresAt: Date;
 
-  @Column({ name: 'is_revoked', type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false })
   isRevoked: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   createdAt: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
-  deletedAt?: Date;
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
+  deletedAt: Date;
+
+  // Relations
+  @ManyToOne(() => UserEntity, (user) => user.sessions, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'userId' })
+  user: UserEntity;
 }
