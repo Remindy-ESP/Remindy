@@ -1,7 +1,7 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import type { ISubscriptionRepository } from '../ports/subscription-repository.interface';
 import { SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
-import { Subscription, SubscriptionPeriodType } from '../../domain/subscription.entity';
+import { Subscription, SubscriptionFrequency } from '../../domain/subscription.entity';
 
 @Injectable()
 export class FindSubscriptionsByPeriodUseCase {
@@ -10,15 +10,15 @@ export class FindSubscriptionsByPeriodUseCase {
     private readonly subscriptionRepository: ISubscriptionRepository,
   ) {}
 
-  async execute(periodType: string): Promise<Subscription[]> {
-    const validPeriodTypes: SubscriptionPeriodType[] = ['day', 'week', 'month', 'year'];
+  async execute(frequency: string): Promise<Subscription[]> {
+    const validFrequencies: SubscriptionFrequency[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
 
-    if (!validPeriodTypes.includes(periodType as SubscriptionPeriodType)) {
+    if (!validFrequencies.includes(frequency as SubscriptionFrequency)) {
       throw new BadRequestException(
-        `Invalid period type. Must be one of: ${validPeriodTypes.join(', ')}`,
+        `Invalid frequency. Must be one of: ${validFrequencies.join(', ')}`,
       );
     }
 
-    return await this.subscriptionRepository.findByPeriodType(periodType);
+    return await this.subscriptionRepository.findByFrequency(frequency as SubscriptionFrequency);
   }
 }

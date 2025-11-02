@@ -1,13 +1,17 @@
-import { SubscriptionPeriodType } from '../../domain/subscription.entity';
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export interface CreateSubscriptionAppDto {
   userId: string;
+  contractId?: number;
   name: string;
-  description?: string;
   amount: number;
   currency: string;
-  periodType: SubscriptionPeriodType;
+  frequency: SubscriptionFrequency;
   startDate: Date;
-  endDate?: Date;
-  isActive: boolean;
+  nextDueDate: Date;
+  trialStartDate?: Date;
+  trialEndDate?: Date;
+  status: SubscriptionStatus;
+  color?: string;
+  notes?: string;
 }

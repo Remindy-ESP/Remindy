@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { SubscriptionPeriodType } from '../../domain/subscription.entity';
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export class SubscriptionResponseDto {
   @ApiProperty({
@@ -15,17 +15,17 @@ export class SubscriptionResponseDto {
   userId: string;
 
   @ApiProperty({
+    description: 'ID de la catégorie de contrat',
+    example: 1,
+    required: false,
+  })
+  contractId?: number;
+
+  @ApiProperty({
     description: 'Nom de l\'abonnement',
     example: 'Netflix Premium',
   })
   name: string;
-
-  @ApiProperty({
-    description: 'Description de l\'abonnement',
-    example: 'Abonnement mensuel Netflix avec 4 écrans',
-    required: false,
-  })
-  description?: string;
 
   @ApiProperty({
     description: 'Montant de l\'abonnement',
@@ -41,32 +41,69 @@ export class SubscriptionResponseDto {
   currency: string;
 
   @ApiProperty({
-    description: 'Type de période de facturation',
-    enum: ['day', 'week', 'month', 'year'],
-    example: 'month',
+    description: 'Fréquence de facturation',
+    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    example: 'monthly',
   })
-  periodType: SubscriptionPeriodType;
+  frequency: SubscriptionFrequency;
 
   @ApiProperty({
     description: 'Date de début de l\'abonnement',
-    example: '2025-01-01T00:00:00Z',
+    example: '2025-01-01',
     type: String,
   })
   startDate: Date;
 
   @ApiProperty({
-    description: 'Date de fin de l\'abonnement',
-    example: '2025-12-31T23:59:59Z',
+    description: 'Prochaine date d\'échéance',
+    example: '2025-02-01',
+    type: String,
+  })
+  nextDueDate: Date;
+
+  @ApiProperty({
+    description: 'Date de début de la période d\'essai',
+    example: '2025-01-01',
     required: false,
     type: String,
   })
-  endDate?: Date;
+  trialStartDate?: Date;
 
   @ApiProperty({
-    description: 'Indique si l\'abonnement est actif',
-    example: true,
+    description: 'Date de fin de la période d\'essai',
+    example: '2025-02-01',
+    required: false,
+    type: String,
   })
-  isActive: boolean;
+  trialEndDate?: Date;
+
+  @ApiProperty({
+    description: 'Indique si la période d\'essai est active',
+    example: true,
+    required: false,
+  })
+  isTrialActive?: boolean;
+
+  @ApiProperty({
+    description: 'Statut de l\'abonnement',
+    enum: ['active', 'paused', 'cancelled', 'trial'],
+    example: 'active',
+  })
+  status: SubscriptionStatus;
+
+  @ApiProperty({
+    description: 'Couleur HEX pour le calendrier',
+    example: '#FF5733',
+    required: false,
+  })
+  color?: string;
+
+  @ApiProperty({
+    description: 'Notes sur l\'abonnement',
+    example: 'Abonnement familial partagé avec 3 personnes',
+    required: false,
+  })
+  notes?: string;
 
   @ApiProperty({
     description: 'Date de création',

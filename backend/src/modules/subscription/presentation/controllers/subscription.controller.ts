@@ -53,15 +53,21 @@ export class SubscriptionController {
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les abonnements avec filtres optionnels' })
   @ApiQuery({ name: 'userId', required: false, description: 'Filtrer par ID utilisateur' })
+  @ApiQuery({ name: 'contractId', required: false, description: 'Filtrer par ID de contrat' })
   @ApiQuery({ name: 'name', required: false, description: 'Filtrer par nom (recherche partielle)' })
   @ApiQuery({ name: 'currency', required: false, description: 'Filtrer par devise' })
   @ApiQuery({
-    name: 'periodType',
+    name: 'frequency',
     required: false,
-    enum: ['day', 'week', 'month', 'year'],
-    description: 'Filtrer par type de période',
+    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    description: 'Filtrer par fréquence de facturation',
   })
-  @ApiQuery({ name: 'isActive', required: false, type: Boolean, description: 'Filtrer par statut actif' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'paused', 'cancelled', 'trial'],
+    description: 'Filtrer par statut',
+  })
   @ApiResponse({
     status: 200,
     description: 'Liste des abonnements',
@@ -73,20 +79,20 @@ export class SubscriptionController {
     return SubscriptionPresentationMapper.toResponseDtoArray(subscriptions);
   }
 
-  @Get('period/:type')
-  @ApiOperation({ summary: 'Récupérer les abonnements par type de période' })
+  @Get('frequency/:type')
+  @ApiOperation({ summary: 'Récupérer les abonnements par fréquence de facturation' })
   @ApiParam({
     name: 'type',
-    enum: ['day', 'week', 'month', 'year'],
-    description: 'Type de période (day/week/month/year)',
+    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    description: 'Fréquence de facturation (weekly/monthly/quarterly/yearly)',
   })
   @ApiResponse({
     status: 200,
-    description: 'Liste des abonnements pour le type de période spécifié',
+    description: 'Liste des abonnements pour la fréquence spécifiée',
     type: [SubscriptionResponseDto],
   })
-  @ApiResponse({ status: 400, description: 'Type de période invalide' })
-  async findByPeriod(@Param('type') type: string): Promise<SubscriptionResponseDto[]> {
+  @ApiResponse({ status: 400, description: 'Fréquence invalide' })
+  async findByFrequency(@Param('type') type: string): Promise<SubscriptionResponseDto[]> {
     const subscriptions = await this.findSubscriptionsByPeriodUseCase.execute(type);
     return SubscriptionPresentationMapper.toResponseDtoArray(subscriptions);
   }

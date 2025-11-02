@@ -1,9 +1,10 @@
-import { SubscriptionPeriodType } from '../../domain/subscription.entity';
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export interface SubscriptionFilterAppDto {
   userId?: string;
+  contractId?: number;
   name?: string;
   currency?: string;
-  periodType?: SubscriptionPeriodType;
-  isActive?: boolean;
+  frequency?: SubscriptionFrequency;
+  status?: SubscriptionStatus;
 }

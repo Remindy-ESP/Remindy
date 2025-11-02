@@ -19,12 +19,12 @@ export class UpdateSubscriptionUseCase {
     }
 
     // Apply updates
-    if (dto.name !== undefined) {
-      existingSubscription.updateName(dto.name);
+    if (dto.contractId !== undefined) {
+      existingSubscription.updateContractId(dto.contractId);
     }
 
-    if (dto.description !== undefined) {
-      existingSubscription.updateDescription(dto.description);
+    if (dto.name !== undefined) {
+      existingSubscription.updateName(dto.name);
     }
 
     if (dto.amount !== undefined) {
@@ -35,22 +35,32 @@ export class UpdateSubscriptionUseCase {
       existingSubscription.updateCurrency(dto.currency);
     }
 
-    if (dto.periodType !== undefined) {
-      existingSubscription.updatePeriodType(dto.periodType);
+    if (dto.frequency !== undefined) {
+      existingSubscription.updateFrequency(dto.frequency);
     }
 
-    if (dto.startDate !== undefined || dto.endDate !== undefined) {
+    if (dto.startDate !== undefined || dto.nextDueDate !== undefined) {
       const newStartDate = dto.startDate ?? existingSubscription.startDate;
-      const newEndDate = dto.endDate !== undefined ? dto.endDate : existingSubscription.endDate;
-      existingSubscription.updateDates(newStartDate, newEndDate);
+      const newNextDueDate = dto.nextDueDate ?? existingSubscription.nextDueDate;
+      existingSubscription.updateDates(newStartDate, newNextDueDate);
     }
 
-    if (dto.isActive !== undefined) {
-      if (dto.isActive) {
-        existingSubscription.activate();
-      } else {
-        existingSubscription.deactivate();
-      }
+    if (dto.trialStartDate !== undefined || dto.trialEndDate !== undefined) {
+      const newTrialStartDate = dto.trialStartDate ?? existingSubscription.trialStartDate;
+      const newTrialEndDate = dto.trialEndDate ?? existingSubscription.trialEndDate;
+      existingSubscription.updateTrialDates(newTrialStartDate, newTrialEndDate);
+    }
+
+    if (dto.status !== undefined) {
+      existingSubscription.updateStatus(dto.status);
+    }
+
+    if (dto.color !== undefined) {
+      existingSubscription.updateColor(dto.color);
+    }
+
+    if (dto.notes !== undefined) {
+      existingSubscription.updateNotes(dto.notes);
     }
 
     const updated = await this.subscriptionRepository.update(id, existingSubscription);

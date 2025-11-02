@@ -6,14 +6,19 @@ export class SubscriptionMapper {
     return new Subscription({
       id: entity.id,
       userId: entity.userId,
+      contractId: entity.contractId,
       name: entity.name,
-      description: entity.description,
       amount: Number(entity.amount),
       currency: entity.currency,
-      periodType: entity.periodType,
+      frequency: entity.frequency,
       startDate: entity.startDate,
-      endDate: entity.endDate,
-      isActive: entity.isActive,
+      nextDueDate: entity.nextDueDate,
+      trialStartDate: entity.trialStartDate,
+      trialEndDate: entity.trialEndDate,
+      isTrialActive: entity.isTrialActive,
+      status: entity.status,
+      color: entity.color,
+      notes: entity.notes,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
@@ -28,14 +33,19 @@ export class SubscriptionMapper {
     }
 
     entity.userId = domain.userId;
+    entity.contractId = domain.contractId;
     entity.name = domain.name;
-    entity.description = domain.description;
     entity.amount = domain.amount;
     entity.currency = domain.currency;
-    entity.periodType = domain.periodType;
+    entity.frequency = domain.frequency;
     entity.startDate = domain.startDate;
-    entity.endDate = domain.endDate;
-    entity.isActive = domain.isActive;
+    entity.nextDueDate = domain.nextDueDate;
+    entity.trialStartDate = domain.trialStartDate;
+    entity.trialEndDate = domain.trialEndDate;
+    // isTrialActive is GENERATED, no need to set
+    entity.status = domain.status;
+    entity.color = domain.color;
+    entity.notes = domain.notes;
 
     if (domain.createdAt) {
       entity.createdAt = domain.createdAt;

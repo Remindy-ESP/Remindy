@@ -39,9 +39,10 @@ describe('FindSubscriptionUseCase', () => {
       name: 'Netflix Premium',
       amount: 15.99,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date('2025-01-01'),
-      isActive: true,
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
     });
 
     repository.findById.mockResolvedValue(expectedSubscription);

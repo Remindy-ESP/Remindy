@@ -9,39 +9,53 @@ import { SubscriptionFilterAppDto } from '../../application/dto/subscription-fil
 
 export class SubscriptionPresentationMapper {
   static toCreateAppDto(dto: CreateSubscriptionDto): CreateSubscriptionAppDto {
+    const startDate = new Date(dto.startDate);
+    const nextDueDate = dto.nextDueDate
+      ? new Date(dto.nextDueDate)
+      : this.calculateNextDueDate(startDate, dto.frequency);
+
     return {
       userId: dto.userId,
+      contractId: dto.contractId,
       name: dto.name,
-      description: dto.description,
       amount: dto.amount,
-      currency: dto.currency,
-      periodType: dto.periodType,
-      startDate: new Date(dto.startDate),
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
-      isActive: dto.isActive ?? true,
+      currency: dto.currency ?? 'EUR',
+      frequency: dto.frequency,
+      startDate,
+      nextDueDate,
+      trialStartDate: dto.trialStartDate ? new Date(dto.trialStartDate) : undefined,
+      trialEndDate: dto.trialEndDate ? new Date(dto.trialEndDate) : undefined,
+      status: dto.status ?? 'active',
+      color: dto.color,
+      notes: dto.notes,
     };
   }
 
   static toUpdateAppDto(dto: UpdateSubscriptionDto): UpdateSubscriptionAppDto {
     return {
+      contractId: dto.contractId,
       name: dto.name,
-      description: dto.description,
       amount: dto.amount,
       currency: dto.currency,
-      periodType: dto.periodType,
+      frequency: dto.frequency,
       startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
-      isActive: dto.isActive,
+      nextDueDate: dto.nextDueDate ? new Date(dto.nextDueDate) : undefined,
+      trialStartDate: dto.trialStartDate ? new Date(dto.trialStartDate) : undefined,
+      trialEndDate: dto.trialEndDate ? new Date(dto.trialEndDate) : undefined,
+      status: dto.status,
+      color: dto.color,
+      notes: dto.notes,
     };
   }
 
   static toFilterAppDto(dto: SubscriptionFilterDto): SubscriptionFilterAppDto {
     return {
       userId: dto.userId,
+      contractId: dto.contractId,
       name: dto.name,
       currency: dto.currency,
-      periodType: dto.periodType,
-      isActive: dto.isActive,
+      frequency: dto.frequency,
+      status: dto.status,
     };
   }
 
@@ -49,14 +63,19 @@ export class SubscriptionPresentationMapper {
     const response = new SubscriptionResponseDto();
     response.id = subscription.id!;
     response.userId = subscription.userId;
+    response.contractId = subscription.contractId;
     response.name = subscription.name;
-    response.description = subscription.description;
     response.amount = subscription.amount;
     response.currency = subscription.currency;
-    response.periodType = subscription.periodType;
+    response.frequency = subscription.frequency;
     response.startDate = subscription.startDate;
-    response.endDate = subscription.endDate;
-    response.isActive = subscription.isActive;
+    response.nextDueDate = subscription.nextDueDate;
+    response.trialStartDate = subscription.trialStartDate;
+    response.trialEndDate = subscription.trialEndDate;
+    response.isTrialActive = subscription.isTrialActive;
+    response.status = subscription.status;
+    response.color = subscription.color;
+    response.notes = subscription.notes;
     response.createdAt = subscription.createdAt!;
     response.updatedAt = subscription.updatedAt!;
     return response;
@@ -64,5 +83,27 @@ export class SubscriptionPresentationMapper {
 
   static toResponseDtoArray(subscriptions: Subscription[]): SubscriptionResponseDto[] {
     return subscriptions.map(subscription => this.toResponseDto(subscription));
+  }
+
+  private static calculateNextDueDate(
+    startDate: Date,
+    frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly',
+  ): Date {
+    const date = new Date(startDate);
+    switch (frequency) {
+      case 'weekly':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case 'quarterly':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case 'yearly':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+    }
+    return date;
   }
 }

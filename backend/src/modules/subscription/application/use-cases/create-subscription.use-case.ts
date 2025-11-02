@@ -14,14 +14,18 @@ export class CreateSubscriptionUseCase {
   async execute(dto: CreateSubscriptionAppDto): Promise<Subscription> {
     const subscription = new Subscription({
       userId: dto.userId,
+      contractId: dto.contractId,
       name: dto.name,
-      description: dto.description,
       amount: dto.amount,
       currency: dto.currency.toUpperCase(),
-      periodType: dto.periodType,
+      frequency: dto.frequency,
       startDate: dto.startDate,
-      endDate: dto.endDate,
-      isActive: dto.isActive ?? true,
+      nextDueDate: dto.nextDueDate,
+      trialStartDate: dto.trialStartDate,
+      trialEndDate: dto.trialEndDate,
+      status: dto.status,
+      color: dto.color,
+      notes: dto.notes,
     });
 
     return await this.subscriptionRepository.create(subscription);

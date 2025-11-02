@@ -1,11 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsEnum, IsDateString, IsOptional, IsBoolean } from 'class-validator';
-import type { SubscriptionPeriodType } from '../../domain/subscription.entity';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsDateString,
+  IsOptional,
+  IsInt,
+  Matches,
+} from 'class-validator';
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export class UpdateSubscriptionDto {
   @ApiProperty({
+    description: 'ID de la catégorie de contrat (optionnel)',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  contractId?: number;
+
+  @ApiProperty({
     description: 'Nom de l\'abonnement',
-    example: 'Netflix Premium',
+    example: 'Netflix Premium HD',
     maxLength: 255,
     required: false,
   })
@@ -14,17 +31,8 @@ export class UpdateSubscriptionDto {
   name?: string;
 
   @ApiProperty({
-    description: 'Description de l\'abonnement',
-    example: 'Abonnement mensuel Netflix avec 4 écrans',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({
     description: 'Montant de l\'abonnement',
-    example: 15.99,
+    example: 17.99,
     type: Number,
     required: false,
   })
@@ -43,18 +51,18 @@ export class UpdateSubscriptionDto {
   currency?: string;
 
   @ApiProperty({
-    description: 'Type de période de facturation',
-    enum: ['day', 'week', 'month', 'year'],
-    example: 'month',
+    description: 'Fréquence de facturation',
+    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    example: 'monthly',
     required: false,
   })
   @IsOptional()
-  @IsEnum(['day', 'week', 'month', 'year'])
-  periodType?: SubscriptionPeriodType;
+  @IsEnum(['weekly', 'monthly', 'quarterly', 'yearly'])
+  frequency?: SubscriptionFrequency;
 
   @ApiProperty({
     description: 'Date de début de l\'abonnement',
-    example: '2025-01-01T00:00:00Z',
+    example: '2025-01-01',
     type: String,
     required: false,
   })
@@ -63,21 +71,62 @@ export class UpdateSubscriptionDto {
   startDate?: string;
 
   @ApiProperty({
-    description: 'Date de fin de l\'abonnement',
-    example: '2025-12-31T23:59:59Z',
+    description: 'Prochaine date d\'échéance',
+    example: '2025-02-01',
     required: false,
     type: String,
   })
   @IsOptional()
   @IsDateString()
-  endDate?: string;
+  nextDueDate?: string;
 
   @ApiProperty({
-    description: 'Indique si l\'abonnement est actif',
-    example: true,
+    description: 'Date de début de la période d\'essai',
+    example: '2025-01-01',
+    required: false,
+    type: String,
+  })
+  @IsOptional()
+  @IsDateString()
+  trialStartDate?: string;
+
+  @ApiProperty({
+    description: 'Date de fin de la période d\'essai',
+    example: '2025-02-01',
+    required: false,
+    type: String,
+  })
+  @IsOptional()
+  @IsDateString()
+  trialEndDate?: string;
+
+  @ApiProperty({
+    description: 'Statut de l\'abonnement',
+    enum: ['active', 'paused', 'cancelled', 'trial'],
+    example: 'active',
     required: false,
   })
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsEnum(['active', 'paused', 'cancelled', 'trial'])
+  status?: SubscriptionStatus;
+
+  @ApiProperty({
+    description: 'Couleur HEX pour le calendrier',
+    example: '#FF5733',
+    required: false,
+  })
+  @IsOptional()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'Color must be a valid HEX color code (e.g., #FF5733)',
+  })
+  color?: string;
+
+  @ApiProperty({
+    description: 'Notes sur l\'abonnement',
+    example: 'Abonnement familial partagé avec 3 personnes',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
