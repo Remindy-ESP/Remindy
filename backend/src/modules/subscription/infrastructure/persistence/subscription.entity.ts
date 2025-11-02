@@ -9,7 +9,8 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
-import type { SubscriptionPeriodType } from '../../domain/subscription.entity';
+import { ContractEntity } from '../../../../infrastructure/database/entities/contract.entity';
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 @Entity('subscriptions')
 export class SubscriptionEntity {
@@ -23,29 +24,55 @@ export class SubscriptionEntity {
   @JoinColumn({ name: 'user_id' })
   user: EUser;
 
+  @Column({ name: 'contract_id', type: 'integer', nullable: true })
+  contractId?: number;
+
+  @ManyToOne(() => ContractEntity, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'contract_id' })
+  contract?: ContractEntity;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'text', nullable: true })
-  description?: string;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'numeric', precision: 19, scale: 4 })
   amount: number;
 
-  @Column({ type: 'varchar', length: 3 })
+  @Column({ type: 'varchar', length: 3, default: 'EUR' })
   currency: string;
 
-  @Column({ name: 'period_type', type: 'varchar', length: 10 })
-  periodType: SubscriptionPeriodType;
+  @Column({ type: 'varchar', length: 20 })
+  frequency: SubscriptionFrequency;
 
-  @Column({ name: 'start_date', type: 'timestamp' })
+  @Column({ name: 'start_date', type: 'date' })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
-  endDate?: Date;
+  @Column({ name: 'next_due_date', type: 'date' })
+  nextDueDate: Date;
 
-  @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive: boolean;
+  @Column({ name: 'trial_start_date', type: 'date', nullable: true })
+  trialStartDate?: Date;
+
+  @Column({ name: 'trial_end_date', type: 'date', nullable: true })
+  trialEndDate?: Date;
+
+  @Column({
+    name: 'is_trial_active',
+    type: 'boolean',
+    generatedType: 'STORED',
+    asExpression: `trial_end_date IS NOT NULL AND trial_end_date >= CURRENT_DATE`,
+    insert: false,
+    update: false,
+  })
+  isTrialActive: boolean;
+
+  @Column({ type: 'varchar', length: 20, default: 'active' })
+  status: SubscriptionStatus;
+
+  @Column({ type: 'varchar', length: 7, nullable: true })
+  color?: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

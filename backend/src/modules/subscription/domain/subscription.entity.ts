@@ -1,16 +1,22 @@
-export type SubscriptionPeriodType = 'day' | 'week' | 'month' | 'year';
+export type SubscriptionFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'trial';
 
 export interface SubscriptionProps {
   id?: string;
   userId: string;
+  contractId?: number;
   name: string;
-  description?: string;
   amount: number;
   currency: string;
-  periodType: SubscriptionPeriodType;
+  frequency: SubscriptionFrequency;
   startDate: Date;
-  endDate?: Date;
-  isActive: boolean;
+  nextDueDate: Date;
+  trialStartDate?: Date;
+  trialEndDate?: Date;
+  isTrialActive?: boolean;
+  status: SubscriptionStatus;
+  color?: string;
+  notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -19,14 +25,19 @@ export interface SubscriptionProps {
 export class Subscription {
   private readonly _id?: string;
   private _userId: string;
+  private _contractId?: number;
   private _name: string;
-  private _description?: string;
   private _amount: number;
   private _currency: string;
-  private _periodType: SubscriptionPeriodType;
+  private _frequency: SubscriptionFrequency;
   private _startDate: Date;
-  private _endDate?: Date;
-  private _isActive: boolean;
+  private _nextDueDate: Date;
+  private _trialStartDate?: Date;
+  private _trialEndDate?: Date;
+  private readonly _isTrialActive?: boolean;
+  private _status: SubscriptionStatus;
+  private _color?: string;
+  private _notes?: string;
   private readonly _createdAt?: Date;
   private _updatedAt?: Date;
   private _deletedAt?: Date;
@@ -34,14 +45,19 @@ export class Subscription {
   constructor(props: SubscriptionProps) {
     this._id = props.id;
     this._userId = props.userId;
+    this._contractId = props.contractId;
     this._name = props.name;
-    this._description = props.description;
     this._amount = props.amount;
     this._currency = props.currency;
-    this._periodType = props.periodType;
+    this._frequency = props.frequency;
     this._startDate = props.startDate;
-    this._endDate = props.endDate;
-    this._isActive = props.isActive;
+    this._nextDueDate = props.nextDueDate;
+    this._trialStartDate = props.trialStartDate;
+    this._trialEndDate = props.trialEndDate;
+    this._isTrialActive = props.isTrialActive;
+    this._status = props.status;
+    this._color = props.color;
+    this._notes = props.notes;
     this._createdAt = props.createdAt;
     this._updatedAt = props.updatedAt;
     this._deletedAt = props.deletedAt;
@@ -58,12 +74,12 @@ export class Subscription {
     return this._userId;
   }
 
-  get name(): string {
-    return this._name;
+  get contractId(): number | undefined {
+    return this._contractId;
   }
 
-  get description(): string | undefined {
-    return this._description;
+  get name(): string {
+    return this._name;
   }
 
   get amount(): number {
@@ -74,20 +90,40 @@ export class Subscription {
     return this._currency;
   }
 
-  get periodType(): SubscriptionPeriodType {
-    return this._periodType;
+  get frequency(): SubscriptionFrequency {
+    return this._frequency;
   }
 
   get startDate(): Date {
     return this._startDate;
   }
 
-  get endDate(): Date | undefined {
-    return this._endDate;
+  get nextDueDate(): Date {
+    return this._nextDueDate;
   }
 
-  get isActive(): boolean {
-    return this._isActive;
+  get trialStartDate(): Date | undefined {
+    return this._trialStartDate;
+  }
+
+  get trialEndDate(): Date | undefined {
+    return this._trialEndDate;
+  }
+
+  get isTrialActive(): boolean | undefined {
+    return this._isTrialActive;
+  }
+
+  get status(): SubscriptionStatus {
+    return this._status;
+  }
+
+  get color(): string | undefined {
+    return this._color;
+  }
+
+  get notes(): string | undefined {
+    return this._notes;
   }
 
   get createdAt(): Date | undefined {
@@ -124,13 +160,22 @@ export class Subscription {
       throw new Error('Currency must be a valid ISO 4217 code (3 characters)');
     }
 
-    const validPeriodTypes: SubscriptionPeriodType[] = ['day', 'week', 'month', 'year'];
-    if (!validPeriodTypes.includes(this._periodType)) {
-      throw new Error('Invalid period type. Must be: day, week, month, or year');
+    const validFrequencies: SubscriptionFrequency[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
+    if (!validFrequencies.includes(this._frequency)) {
+      throw new Error('Invalid frequency. Must be: weekly, monthly, quarterly, or yearly');
     }
 
-    if (this._endDate && this._endDate < this._startDate) {
-      throw new Error('End date cannot be before start date');
+    const validStatuses: SubscriptionStatus[] = ['active', 'paused', 'cancelled', 'trial'];
+    if (!validStatuses.includes(this._status)) {
+      throw new Error('Invalid status. Must be: active, paused, cancelled, or trial');
+    }
+
+    if (this._trialStartDate && this._trialEndDate && this._trialEndDate <= this._trialStartDate) {
+      throw new Error('Trial end date must be after trial start date');
+    }
+
+    if (this._color && !/^#[0-9A-Fa-f]{6}$/.test(this._color)) {
+      throw new Error('Color must be a valid HEX color code (e.g., #FF5733)');
     }
   }
 
@@ -142,10 +187,6 @@ export class Subscription {
       throw new Error('Subscription name cannot exceed 255 characters');
     }
     this._name = newName.trim();
-  }
-
-  public updateDescription(description?: string): void {
-    this._description = description?.trim();
   }
 
   public updateAmount(newAmount: number): void {
@@ -165,57 +206,119 @@ export class Subscription {
     this._currency = newCurrency.toUpperCase();
   }
 
-  public updatePeriodType(newPeriodType: SubscriptionPeriodType): void {
-    const validPeriodTypes: SubscriptionPeriodType[] = ['day', 'week', 'month', 'year'];
-    if (!validPeriodTypes.includes(newPeriodType)) {
-      throw new Error('Invalid period type. Must be: day, week, month, or year');
+  public updateFrequency(newFrequency: SubscriptionFrequency): void {
+    const validFrequencies: SubscriptionFrequency[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
+    if (!validFrequencies.includes(newFrequency)) {
+      throw new Error('Invalid frequency. Must be: weekly, monthly, quarterly, or yearly');
     }
-    this._periodType = newPeriodType;
+    this._frequency = newFrequency;
+    this.recalculateNextDueDate();
   }
 
-  public updateDates(startDate: Date, endDate?: Date): void {
-    if (endDate && endDate < startDate) {
-      throw new Error('End date cannot be before start date');
+  public updateDates(startDate: Date, nextDueDate: Date): void {
+    if (nextDueDate <= startDate) {
+      throw new Error('Next due date must be after start date');
     }
     this._startDate = startDate;
-    this._endDate = endDate;
+    this._nextDueDate = nextDueDate;
+  }
+
+  public updateTrialDates(trialStartDate?: Date, trialEndDate?: Date): void {
+    if (trialStartDate && trialEndDate && trialEndDate <= trialStartDate) {
+      throw new Error('Trial end date must be after trial start date');
+    }
+    this._trialStartDate = trialStartDate;
+    this._trialEndDate = trialEndDate;
+  }
+
+  public updateStatus(newStatus: SubscriptionStatus): void {
+    const validStatuses: SubscriptionStatus[] = ['active', 'paused', 'cancelled', 'trial'];
+    if (!validStatuses.includes(newStatus)) {
+      throw new Error('Invalid status. Must be: active, paused, cancelled, or trial');
+    }
+    this._status = newStatus;
+  }
+
+  public updateColor(color?: string): void {
+    if (color && !/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      throw new Error('Color must be a valid HEX color code (e.g., #FF5733)');
+    }
+    this._color = color;
+  }
+
+  public updateNotes(notes?: string): void {
+    this._notes = notes?.trim();
+  }
+
+  public updateContractId(contractId?: number): void {
+    this._contractId = contractId;
+  }
+
+  public pause(): void {
+    this._status = 'paused';
+  }
+
+  public cancel(): void {
+    this._status = 'cancelled';
   }
 
   public activate(): void {
-    this._isActive = true;
+    this._status = 'active';
   }
 
-  public deactivate(): void {
-    this._isActive = false;
+  public startTrial(): void {
+    this._status = 'trial';
   }
 
   public isExpired(): boolean {
-    if (!this._endDate) {
-      return false;
-    }
-    return new Date() > this._endDate;
+    return this._status === 'cancelled';
   }
 
-  public getDurationInDays(): number {
-    if (!this._endDate) {
-      return Infinity;
+  public isInTrial(): boolean {
+    if (!this._trialEndDate) {
+      return false;
     }
-    const diff = this._endDate.getTime() - this._startDate.getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return new Date() <= this._trialEndDate;
+  }
+
+  private recalculateNextDueDate(): void {
+    const date = new Date(this._startDate);
+
+    switch (this._frequency) {
+      case 'weekly':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      case 'quarterly':
+        date.setMonth(date.getMonth() + 3);
+        break;
+      case 'yearly':
+        date.setFullYear(date.getFullYear() + 1);
+        break;
+    }
+
+    this._nextDueDate = date;
   }
 
   public toJSON(): SubscriptionProps {
     return {
       id: this._id,
       userId: this._userId,
+      contractId: this._contractId,
       name: this._name,
-      description: this._description,
       amount: this._amount,
       currency: this._currency,
-      periodType: this._periodType,
+      frequency: this._frequency,
       startDate: this._startDate,
-      endDate: this._endDate,
-      isActive: this._isActive,
+      nextDueDate: this._nextDueDate,
+      trialStartDate: this._trialStartDate,
+      trialEndDate: this._trialEndDate,
+      isTrialActive: this._isTrialActive,
+      status: this._status,
+      color: this._color,
+      notes: this._notes,
       createdAt: this._createdAt,
       updatedAt: this._updatedAt,
       deletedAt: this._deletedAt,

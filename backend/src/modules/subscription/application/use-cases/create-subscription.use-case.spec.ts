@@ -35,26 +35,26 @@ describe('CreateSubscriptionUseCase', () => {
     const dto: CreateSubscriptionAppDto = {
       userId: 'user-123',
       name: 'Netflix Premium',
-      description: 'Monthly subscription',
       amount: 15.99,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date('2025-01-01'),
-      endDate: new Date('2025-12-31'),
-      isActive: true,
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
+      notes: 'Monthly subscription',
     };
 
     const expectedSubscription = new Subscription({
       id: 'subscription-123',
       userId: dto.userId,
       name: dto.name,
-      description: dto.description,
       amount: dto.amount,
       currency: dto.currency.toUpperCase(),
-      periodType: dto.periodType,
+      frequency: dto.frequency,
       startDate: dto.startDate,
-      endDate: dto.endDate,
-      isActive: dto.isActive,
+      nextDueDate: dto.nextDueDate,
+      status: dto.status,
+      notes: dto.notes,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -74,9 +74,10 @@ describe('CreateSubscriptionUseCase', () => {
       name: 'Spotify',
       amount: 9.99,
       currency: 'eur',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date('2025-01-01'),
-      isActive: true,
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
     };
 
     const expectedSubscription = new Subscription({
@@ -98,9 +99,10 @@ describe('CreateSubscriptionUseCase', () => {
       name: '',
       amount: 15.99,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date('2025-01-01'),
-      isActive: true,
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
     };
 
     await expect(useCase.execute(dto)).rejects.toThrow('Subscription name cannot be empty');
@@ -112,28 +114,29 @@ describe('CreateSubscriptionUseCase', () => {
       name: 'Test Subscription',
       amount: -10,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date('2025-01-01'),
-      isActive: true,
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
     };
 
     await expect(useCase.execute(dto)).rejects.toThrow('Subscription amount cannot be negative');
   });
 
-  it('should default isActive to true when not provided', async () => {
+  it('should create subscription with valid frequency', async () => {
     const dto: CreateSubscriptionAppDto = {
       userId: 'user-123',
       name: 'Test Subscription',
       amount: 10,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'quarterly',
       startDate: new Date('2025-01-01'),
-      isActive: undefined as any,
+      nextDueDate: new Date('2025-04-01'),
+      status: 'active',
     };
 
     const expectedSubscription = new Subscription({
       ...dto,
-      isActive: true,
     });
 
     repository.create.mockResolvedValue(expectedSubscription);
@@ -141,6 +144,6 @@ describe('CreateSubscriptionUseCase', () => {
     await useCase.execute(dto);
 
     const createdSubscription = repository.create.mock.calls[0][0];
-    expect(createdSubscription.isActive).toBe(true);
+    expect(createdSubscription.frequency).toBe('quarterly');
   });
 });

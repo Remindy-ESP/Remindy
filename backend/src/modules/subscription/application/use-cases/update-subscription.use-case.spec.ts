@@ -41,9 +41,10 @@ describe('UpdateSubscriptionUseCase', () => {
       name: 'Netflix Premium',
       amount: 15.99,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date('2025-01-01'),
-      isActive: true,
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
     });
 
     const updateDto: UpdateSubscriptionAppDto = {
@@ -75,7 +76,7 @@ describe('UpdateSubscriptionUseCase', () => {
     );
   });
 
-  it('should activate subscription when isActive is true', async () => {
+  it('should update subscription status to active', async () => {
     const subscriptionId = 'subscription-123';
     const existingSubscription = new Subscription({
       id: subscriptionId,
@@ -83,13 +84,14 @@ describe('UpdateSubscriptionUseCase', () => {
       name: 'Test',
       amount: 10,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date(),
-      isActive: false,
+      nextDueDate: new Date(),
+      status: 'paused',
     });
 
     const updateDto: UpdateSubscriptionAppDto = {
-      isActive: true,
+      status: 'active',
     };
 
     repository.findById.mockResolvedValue(existingSubscription);
@@ -97,10 +99,10 @@ describe('UpdateSubscriptionUseCase', () => {
 
     await useCase.execute(subscriptionId, updateDto);
 
-    expect(existingSubscription.isActive).toBe(true);
+    expect(existingSubscription.status).toBe('active');
   });
 
-  it('should deactivate subscription when isActive is false', async () => {
+  it('should update subscription status to cancelled', async () => {
     const subscriptionId = 'subscription-123';
     const existingSubscription = new Subscription({
       id: subscriptionId,
@@ -108,13 +110,14 @@ describe('UpdateSubscriptionUseCase', () => {
       name: 'Test',
       amount: 10,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date(),
-      isActive: true,
+      nextDueDate: new Date(),
+      status: 'active',
     });
 
     const updateDto: UpdateSubscriptionAppDto = {
-      isActive: false,
+      status: 'cancelled',
     };
 
     repository.findById.mockResolvedValue(existingSubscription);
@@ -122,7 +125,7 @@ describe('UpdateSubscriptionUseCase', () => {
 
     await useCase.execute(subscriptionId, updateDto);
 
-    expect(existingSubscription.isActive).toBe(false);
+    expect(existingSubscription.status).toBe('cancelled');
   });
 
   it('should throw error when update fails', async () => {
@@ -133,9 +136,10 @@ describe('UpdateSubscriptionUseCase', () => {
       name: 'Test',
       amount: 10,
       currency: 'EUR',
-      periodType: 'month',
+      frequency: 'monthly',
       startDate: new Date(),
-      isActive: true,
+      nextDueDate: new Date(),
+      status: 'active',
     });
 
     const updateDto: UpdateSubscriptionAppDto = {

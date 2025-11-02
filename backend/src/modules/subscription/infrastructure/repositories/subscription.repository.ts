@@ -40,6 +40,12 @@ export class SubscriptionRepository implements ISubscriptionRepository {
         queryBuilder.andWhere('subscription.userId = :userId', { userId: filters.userId });
       }
 
+      if (filters.contractId) {
+        queryBuilder.andWhere('subscription.contractId = :contractId', {
+          contractId: filters.contractId,
+        });
+      }
+
       if (filters.name) {
         queryBuilder.andWhere('subscription.name ILIKE :name', { name: `%${filters.name}%` });
       }
@@ -48,15 +54,15 @@ export class SubscriptionRepository implements ISubscriptionRepository {
         queryBuilder.andWhere('subscription.currency = :currency', { currency: filters.currency });
       }
 
-      if (filters.periodType) {
-        queryBuilder.andWhere('subscription.periodType = :periodType', {
-          periodType: filters.periodType,
+      if (filters.frequency) {
+        queryBuilder.andWhere('subscription.frequency = :frequency', {
+          frequency: filters.frequency,
         });
       }
 
-      if (filters.isActive !== undefined) {
-        queryBuilder.andWhere('subscription.isActive = :isActive', {
-          isActive: filters.isActive,
+      if (filters.status) {
+        queryBuilder.andWhere('subscription.status = :status', {
+          status: filters.status,
         });
       }
     }
@@ -67,9 +73,9 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     return SubscriptionMapper.toDomainArray(entities);
   }
 
-  async findByPeriodType(periodType: string): Promise<Subscription[]> {
+  async findByFrequency(frequency: string): Promise<Subscription[]> {
     const entities = await this.repository.find({
-      where: { periodType: periodType as any },
+      where: { frequency: frequency as any },
       order: { createdAt: 'DESC' },
     });
 

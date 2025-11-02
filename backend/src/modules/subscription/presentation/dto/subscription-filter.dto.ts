@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEnum, IsBoolean, IsOptional } from 'class-validator';
-import type { SubscriptionPeriodType } from '../../domain/subscription.entity';
+import { IsString, IsEnum, IsOptional, IsInt } from 'class-validator';
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export class SubscriptionFilterDto {
   @ApiProperty({
@@ -11,6 +11,15 @@ export class SubscriptionFilterDto {
   @IsOptional()
   @IsString()
   userId?: string;
+
+  @ApiProperty({
+    description: 'Filtrer par ID de contrat',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  contractId?: number;
 
   @ApiProperty({
     description: 'Filtrer par nom (recherche partielle)',
@@ -31,21 +40,22 @@ export class SubscriptionFilterDto {
   currency?: string;
 
   @ApiProperty({
-    description: 'Filtrer par type de période',
-    enum: ['day', 'week', 'month', 'year'],
-    example: 'month',
+    description: 'Filtrer par fréquence',
+    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    example: 'monthly',
     required: false,
   })
   @IsOptional()
-  @IsEnum(['day', 'week', 'month', 'year'])
-  periodType?: SubscriptionPeriodType;
+  @IsEnum(['weekly', 'monthly', 'quarterly', 'yearly'])
+  frequency?: SubscriptionFrequency;
 
   @ApiProperty({
-    description: 'Filtrer par statut actif',
-    example: true,
+    description: 'Filtrer par statut',
+    enum: ['active', 'paused', 'cancelled', 'trial'],
+    example: 'active',
     required: false,
   })
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsEnum(['active', 'paused', 'cancelled', 'trial'])
+  status?: SubscriptionStatus;
 }
