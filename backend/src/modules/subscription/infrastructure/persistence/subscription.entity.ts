@@ -11,6 +11,7 @@ import {
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 import { ContractEntity } from '../../../../infrastructure/database/entities/contract.entity';
 import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
+import { isTrialActive as checkTrialActive } from '../../../../utils/date.utils';
 
 @Entity('subscriptions')
 export class SubscriptionEntity {
@@ -55,15 +56,9 @@ export class SubscriptionEntity {
   @Column({ name: 'trial_end_date', type: 'date', nullable: true })
   trialEndDate?: Date;
 
-  @Column({
-    name: 'is_trial_active',
-    type: 'boolean',
-    generatedType: 'STORED',
-    asExpression: `trial_end_date IS NOT NULL AND trial_end_date >= CURRENT_DATE`,
-    insert: false,
-    update: false,
-  })
-  isTrialActive: boolean;
+  get isTrialActive(): boolean {
+    return checkTrialActive(this.trialEndDate);
+  }
 
   @Column({ type: 'varchar', length: 20, default: 'active' })
   status: SubscriptionStatus;
