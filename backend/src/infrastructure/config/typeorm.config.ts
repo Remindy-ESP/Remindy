@@ -17,7 +17,10 @@ export const AppDataSource = new DataSource({
   type: 'postgres',
   url: databaseUrl,
   ssl: !isTest,
-  entities: ['src/infrastructure/database/entities/*.entity.ts'],
+  entities: [
+    'src/modules/**/infrastructure/*.orm-entity.ts',
+    'dist/modules/**/infrastructure/*.orm-entity.js',
+  ],
   migrations: ['src/infrastructure/database/migrations/*.ts'],
   synchronize: false,
   logging: true,
