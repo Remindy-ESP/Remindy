@@ -11,6 +11,7 @@ import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { EventModule } from './modules/event/event.module';
 import { DocumentModule } from './modules/document/document.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { DocumentModule } from './modules/document/document.module';
     SubscriptionModule,
     EventModule,
     DocumentModule,
+    NotificationModule,
     AuditModule,
   ],
   controllers: [AppController],
