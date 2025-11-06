@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { EventModule } from './modules/event/event.module';
+import { DocumentModule } from './modules/document/document.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EventModule } from './modules/event/event.module';
     UsersModule,
     SubscriptionModule,
     EventModule,
+    DocumentModule,
     AuditModule,
   ],
   controllers: [AppController],
