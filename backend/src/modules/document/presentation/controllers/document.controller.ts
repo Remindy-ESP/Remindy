@@ -14,9 +14,11 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { DocumentResponseDto } from '../dto/document-response.dto';
 import { DocumentFilterDto } from '../dto/document-filter.dto';
 import { ReprocessOcrDto } from '../dto/reprocess-ocr.dto';
@@ -29,6 +31,7 @@ import { UploadDocumentAppDto } from '../../application/dto/upload-document-app.
 
 @ApiTags('Documents')
 @Controller('documents')
+@UseGuards(ThrottlerGuard)
 export class DocumentController {
   constructor(
     private readonly uploadDocumentUseCase: UploadDocumentUseCase,

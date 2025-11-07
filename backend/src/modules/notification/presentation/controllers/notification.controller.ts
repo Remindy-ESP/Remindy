@@ -7,8 +7,10 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { NotificationResponseDto } from '../dto/notification-response.dto';
 import { NotificationFilterDto } from '../dto/notification-filter.dto';
 import { SnoozeNotificationDto } from '../dto/snooze-notification.dto';
@@ -19,6 +21,7 @@ import { NotificationPresentationMapper } from '../mappers/notification-presenta
 
 @ApiTags('Notifications')
 @Controller('notifications')
+@UseGuards(ThrottlerGuard)
 export class NotificationController {
   constructor(
     private readonly findAllNotificationsUseCase: FindAllNotificationsUseCase,

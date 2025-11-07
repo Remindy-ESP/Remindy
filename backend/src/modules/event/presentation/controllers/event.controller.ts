@@ -1,5 +1,6 @@
-import { Controller, Get, Put, Param, Query, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Put, Param, Query, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { EventResponseDto } from '../dto/event-response.dto';
 import { EventFilterDto } from '../dto/event-filter.dto';
 import { RescheduleEventDto } from '../dto/reschedule-event.dto';
@@ -9,6 +10,7 @@ import { EventPresentationMapper } from '../mappers/event-presentation.mapper';
 
 @ApiTags('Calendar - Événements')
 @Controller('v1/calendar')
+@UseGuards(ThrottlerGuard)
 export class EventController {
   constructor(
     private readonly findAllEventsUseCase: FindAllEventsUseCase,

@@ -9,8 +9,10 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from '../dto/update-subscription.dto';
 import { SubscriptionResponseDto } from '../dto/subscription-response.dto';
@@ -25,6 +27,7 @@ import { SubscriptionPresentationMapper } from '../mappers/subscription-presenta
 
 @ApiTags('Abonnements')
 @Controller('subscriptions')
+@UseGuards(ThrottlerGuard)
 export class SubscriptionController {
   constructor(
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
