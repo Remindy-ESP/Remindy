@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { typeOrmAsyncConfig } from './infrastructure/config/database.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { UsersModule } from './modules/user/user.module';
@@ -20,6 +21,12 @@ import { NotificationModule } from './modules/notification/notification.module';
       envFilePath: `.env.develop`,
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     InfrastructureModule,
     AuthModule,
     UsersModule,
