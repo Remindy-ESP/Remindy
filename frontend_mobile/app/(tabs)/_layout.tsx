@@ -28,6 +28,7 @@ export default function TabLayout() {
         name="dashboard"
         options={{
           tabBarLabel: '',
+            title: ' ',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
@@ -37,6 +38,7 @@ export default function TabLayout() {
         name="statistique"
         options={{
           tabBarLabel: '',
+            title: ' ',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="stats-chart-outline" size={size} color={color} />
           ),
@@ -46,6 +48,7 @@ export default function TabLayout() {
         name="abonnement"
         options={{
           tabBarLabel: '',
+            title: ' ',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="document-text-outline" size={size} color={color} />
           ),
@@ -55,6 +58,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           tabBarLabel: '',
+            title: ' ',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
