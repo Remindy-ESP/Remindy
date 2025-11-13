@@ -1,9 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { styles } from './dashboard.styles';
+
+type TimePeriod = 'day' | 'week' | 'month' | 'year';
 
 export default function DashboardScreen() {
   const [selected, setSelected] = useState('');
+  const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
+
+  const timePeriods: { key: TimePeriod; label: string; value: string }[] = [
+    { key: 'day', label: 'Ce jour', value: '1' },
+    { key: 'week', label: 'Semaine', value: '2' },
+    { key: 'month', label: 'Mensuel', value: '3' },
+    { key: 'year', label: 'Année', value: '4' },
+  ];
+
+  const getContentForPeriod = (period: TimePeriod): string => {
+    const periodData = timePeriods.find((p) => p.key === period);
+    return periodData?.value || '1';
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -50,83 +66,44 @@ export default function DashboardScreen() {
         />
       </View>
 
-      <View style={styles.remindersSection}>
-        <Text style={styles.sectionTitle}>Rappels du jour</Text>
-        {selected ? (
-          <View style={styles.reminderCard}>
-            <Text style={styles.reminderText}>
-              Aucun rappel pour le {selected}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.reminderCard}>
-            <Text style={styles.reminderText}>
-              Sélectionnez une date pour voir vos rappels
-            </Text>
-          </View>
-        )}
+      {/* Menu de filtrage temporel - Détails de vos dépenses */}
+      <View style={styles.timePeriodSection}>
+        <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
+        <View style={styles.timePeriodMenu}>
+          {timePeriods.map((period) => (
+            <TouchableOpacity
+              key={period.key}
+              testID={`period-${period.key}`}
+              style={[
+                styles.timePeriodTab,
+                activePeriod === period.key
+                  ? styles.timePeriodTabActive
+                  : styles.timePeriodTabInactive,
+              ]}
+              onPress={() => setActivePeriod(period.key)}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.timePeriodTabText,
+                  activePeriod === period.key
+                    ? styles.timePeriodTabTextActive
+                    : styles.timePeriodTabTextInactive,
+                ]}
+              >
+                {period.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Contenu en fonction de la période sélectionnée */}
+      <View style={styles.contentSection}>
+        <Text style={styles.contentText} testID="period-content">
+          {getContentForPeriod(activePeriod)}
+        </Text>
       </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#6366f1',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
-  },
-  calendarContainer: {
-    margin: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  remindersSection: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  reminderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  reminderText: {
-    fontSize: 16,
-    color: '#666',
-  },
-});
