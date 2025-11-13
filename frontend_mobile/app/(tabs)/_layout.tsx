@@ -27,16 +27,34 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: ' ',
+          tabBarLabel: '',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="statistique"
+        options={{
+          tabBarLabel: '',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="abonnement"
+        options={{
+          tabBarLabel: '',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="document-text-outline" size={size} color={color} />
+          ),
+        }}
+      />
+            <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profil',
+          tabBarLabel: '',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
