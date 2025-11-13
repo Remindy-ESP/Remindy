@@ -185,12 +185,12 @@ describe('RgpdExportService', () => {
     it('should throw NotFoundException when export not found', async () => {
       rgpdExportRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        service.getExportStatus('user-123', 'nonexistent-id'),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.getExportStatus('user-123', 'nonexistent-id'),
-      ).rejects.toThrow('Export request not found');
+      await expect(service.getExportStatus('user-123', 'nonexistent-id')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.getExportStatus('user-123', 'nonexistent-id')).rejects.toThrow(
+        'Export request not found',
+      );
     });
 
     it('should throw NotFoundException when export belongs to another user', async () => {
@@ -199,18 +199,15 @@ describe('RgpdExportService', () => {
         userId: 'other-user',
       } as any);
 
-      await expect(
-        service.getExportStatus('user-123', 'export-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getExportStatus('user-123', 'export-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('getUserExports', () => {
     it('should return all user exports', async () => {
-      const mockExports = [
-        mockExport,
-        { ...mockExport, id: 'export-456', status: 'completed' },
-      ];
+      const mockExports = [mockExport, { ...mockExport, id: 'export-456', status: 'completed' }];
 
       userRepository.findById.mockResolvedValue(mockUser as any);
       rgpdExportRepository.findByUserId.mockResolvedValue(mockExports as any);
@@ -226,9 +223,7 @@ describe('RgpdExportService', () => {
     it('should throw NotFoundException when user not found', async () => {
       userRepository.findById.mockResolvedValue(null);
 
-      await expect(service.getUserExports('nonexistent-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.getUserExports('nonexistent-id')).rejects.toThrow(NotFoundException);
     });
 
     it('should return empty array when user has no exports', async () => {
@@ -263,9 +258,7 @@ describe('RgpdExportService', () => {
     it('should throw NotFoundException when export not found', async () => {
       rgpdExportRepository.findById.mockResolvedValue(null);
 
-      await expect(service.processExport('nonexistent-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.processExport('nonexistent-id')).rejects.toThrow(NotFoundException);
     });
 
     it('should update status to failed on error', async () => {

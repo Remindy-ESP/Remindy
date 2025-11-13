@@ -35,10 +35,7 @@ export class RgpdExportRepository {
     return this.rgpdExportRepository.save(exportEntity);
   }
 
-  async update(
-    id: string,
-    data: Partial<RgpdExportEntity>,
-  ): Promise<RgpdExportEntity | null> {
+  async update(id: string, data: Partial<RgpdExportEntity>): Promise<RgpdExportEntity | null> {
     await this.rgpdExportRepository.update(id, data);
     return this.findById(id);
   }

@@ -1,14 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsString,
-  IsInt,
-  IsOptional,
-  Min,
-  Max,
-  MaxLength,
-  IsIn,
-} from 'class-validator';
+import { IsBoolean, IsString, IsInt, IsOptional, Min, Max, MaxLength, IsIn } from 'class-validator';
 
 export class UserPreferencesResponseDto {
   @ApiProperty({ description: 'User ID' })

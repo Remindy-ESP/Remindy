@@ -87,27 +87,19 @@ describe('UserPreferencesService', () => {
     it('should create default preferences if they do not exist', async () => {
       userRepository.findById.mockResolvedValue(mockUser as any);
       userPreferencesRepository.findByUserId.mockResolvedValue(null);
-      userPreferencesRepository.createDefaultPreferences.mockResolvedValue(
-        mockPreferences as any,
-      );
+      userPreferencesRepository.createDefaultPreferences.mockResolvedValue(mockPreferences as any);
 
       const result = await service.getUserPreferences('user-123');
 
       expect(result).toBeDefined();
-      expect(userPreferencesRepository.createDefaultPreferences).toHaveBeenCalledWith(
-        'user-123',
-      );
+      expect(userPreferencesRepository.createDefaultPreferences).toHaveBeenCalledWith('user-123');
     });
 
     it('should throw NotFoundException when user not found', async () => {
       userRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        service.getUserPreferences('nonexistent-id'),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.getUserPreferences('nonexistent-id'),
-      ).rejects.toThrow('User not found');
+      await expect(service.getUserPreferences('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getUserPreferences('nonexistent-id')).rejects.toThrow('User not found');
     });
   });
 
@@ -155,12 +147,12 @@ describe('UserPreferencesService', () => {
       userRepository.findById.mockResolvedValue(mockUser as any);
       userPreferencesRepository.findByUserId.mockResolvedValue(mockPreferences as any);
 
-      await expect(
-        service.updateUserPreferences('user-123', updateDto),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updateUserPreferences('user-123', updateDto),
-      ).rejects.toThrow('Invalid currency code');
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        'Invalid currency code',
+      );
     });
 
     it('should throw BadRequestException for invalid reminder delay (too low)', async () => {
@@ -171,12 +163,12 @@ describe('UserPreferencesService', () => {
       userRepository.findById.mockResolvedValue(mockUser as any);
       userPreferencesRepository.findByUserId.mockResolvedValue(mockPreferences as any);
 
-      await expect(
-        service.updateUserPreferences('user-123', updateDto),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updateUserPreferences('user-123', updateDto),
-      ).rejects.toThrow('Default reminder delay must be between 1 and 365 days');
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        'Default reminder delay must be between 1 and 365 days',
+      );
     });
 
     it('should throw BadRequestException for invalid reminder delay (too high)', async () => {
@@ -187,12 +179,12 @@ describe('UserPreferencesService', () => {
       userRepository.findById.mockResolvedValue(mockUser as any);
       userPreferencesRepository.findByUserId.mockResolvedValue(mockPreferences as any);
 
-      await expect(
-        service.updateUserPreferences('user-123', updateDto),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updateUserPreferences('user-123', updateDto),
-      ).rejects.toThrow('Default reminder delay must be between 1 and 365 days');
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        'Default reminder delay must be between 1 and 365 days',
+      );
     });
 
     it('should create preferences if they do not exist before updating', async () => {
@@ -202,9 +194,7 @@ describe('UserPreferencesService', () => {
 
       userRepository.findById.mockResolvedValue(mockUser as any);
       userPreferencesRepository.findByUserId.mockResolvedValue(null);
-      userPreferencesRepository.createDefaultPreferences.mockResolvedValue(
-        mockPreferences as any,
-      );
+      userPreferencesRepository.createDefaultPreferences.mockResolvedValue(mockPreferences as any);
       userPreferencesRepository.update.mockResolvedValue({
         ...mockPreferences,
         theme: 'dark' as const,
@@ -213,9 +203,7 @@ describe('UserPreferencesService', () => {
       const result = await service.updateUserPreferences('user-123', updateDto);
 
       expect(result).toBeDefined();
-      expect(userPreferencesRepository.createDefaultPreferences).toHaveBeenCalledWith(
-        'user-123',
-      );
+      expect(userPreferencesRepository.createDefaultPreferences).toHaveBeenCalledWith('user-123');
       expect(userPreferencesRepository.update).toHaveBeenCalled();
     });
 

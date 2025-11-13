@@ -39,11 +39,11 @@ export class EUser {
   @Column({ name: 'photo_r2_key', type: 'varchar', length: 500, nullable: true })
   photoR2Key?: string;
 
-  @Column({ type: 'text' })
+  @Column({ name: 'role_key', type: 'text' })
   role: string;
 
   @ManyToOne(() => RoleEntity, { eager: false })
-  @JoinColumn({ name: 'role' })
+  @JoinColumn({ name: 'role_key' })
   roleEntity?: RoleEntity;
 
   @Column({ type: 'varchar', length: 20, default: 'active' })
