@@ -66,7 +66,6 @@ export default function DashboardScreen() {
         />
       </View>
 
-      {/* Menu de filtrage temporel - Détails de vos dépenses */}
       <View style={styles.timePeriodSection}>
         <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
         <View style={styles.timePeriodMenu}>
