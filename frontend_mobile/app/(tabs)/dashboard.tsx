@@ -24,10 +24,6 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dashboard</Text>
-        <Text style={styles.headerSubtitle}>
-          Gérez vos rappels et événements
-        </Text>
       </View>
 
       <View style={styles.calendarContainer}>
@@ -44,7 +40,7 @@ export default function DashboardScreen() {
           }}
           theme={{
             backgroundColor: '#2a2a5e',
-            calendarBackground: '#2a2a5e',
+            calendarBackground: '#373848',
             textSectionTitleColor: '#fff',
             selectedDayBackgroundColor: '#4f46e5',
             selectedDayTextColor: '#ffffff',
