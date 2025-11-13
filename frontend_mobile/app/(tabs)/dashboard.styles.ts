@@ -3,11 +3,11 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#1a1a3e',
   },
   header: {
     padding: 20,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#1a1a3e',
   },
   headerTitle: {
     fontSize: 28,
@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
   },
   calendarContainer: {
     margin: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#2a2a5e',
     borderRadius: 12,
     padding: 10,
     shadowColor: '#000',
@@ -44,10 +44,10 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   timePeriodMenu: {
-    backgroundColor: '#1e1b4b', // Bleu foncé inspiré de la maquette
+    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 4,
     flexDirection: 'row',
@@ -70,7 +70,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timePeriodTabActive: {
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
   },
   timePeriodTabInactive: {
     backgroundColor: 'transparent',
@@ -80,17 +80,18 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
   },
   timePeriodTabTextActive: {
-    color: '#1e1b4b',
+    color: '#fff',
   },
   timePeriodTabTextInactive: {
-    color: '#fff',
-    opacity: 0.7,
+    color: '#000',
+    opacity: 0.6,
   },
   // Section de contenu sous le menu
   contentSection: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2a2a5e',
     marginHorizontal: 16,
     marginTop: 12,
+    marginBottom: 20,
     borderRadius: 12,
     padding: 20,
     shadowColor: '#000',
@@ -105,7 +106,7 @@ export const styles = StyleSheet.create({
   contentTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 16,
   },
   contentText: {
