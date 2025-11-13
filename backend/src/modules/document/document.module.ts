@@ -8,6 +8,9 @@ import { UploadDocumentUseCase } from './application/use-cases/upload-document.u
 import { FindAllDocumentsUseCase } from './application/use-cases/find-all-documents.use-case';
 import { DeleteDocumentUseCase } from './application/use-cases/delete-document.use-case';
 import { ReprocessOcrUseCase } from './application/use-cases/reprocess-ocr.use-case';
+import { CloudflareR2Service } from './infrastructure/services/cloudflare-r2.service';
+import { OcrService } from './infrastructure/services/ocr.service';
+import { GeminiParserService } from './infrastructure/services/gemini-parser.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([DocumentEntity])],
@@ -17,6 +20,9 @@ import { ReprocessOcrUseCase } from './application/use-cases/reprocess-ocr.use-c
       provide: DOCUMENT_REPOSITORY,
       useClass: DocumentRepository,
     },
+    CloudflareR2Service,
+    OcrService,
+    GeminiParserService,
     UploadDocumentUseCase,
     FindAllDocumentsUseCase,
     DeleteDocumentUseCase,

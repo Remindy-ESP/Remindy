@@ -5,6 +5,7 @@ export interface DocumentProps {
   userId: string;
   subscriptionId?: string;
   contractId?: number;
+  folderId?: string;
   filename: string;
   r2Key: string;
   r2Bucket: string;
@@ -24,6 +25,7 @@ export class Document {
   private _userId: string;
   private _subscriptionId?: string;
   private _contractId?: number;
+  private _folderId?: string;
   private _filename: string;
   private _r2Key: string;
   private _r2Bucket: string;
@@ -42,6 +44,7 @@ export class Document {
     this._userId = props.userId;
     this._subscriptionId = props.subscriptionId;
     this._contractId = props.contractId;
+    this._folderId = props.folderId;
     this._filename = props.filename.trim();
     this._r2Key = props.r2Key.trim();
     this._r2Bucket = props.r2Bucket.trim();
@@ -73,6 +76,10 @@ export class Document {
 
   get contractId(): number | undefined {
     return this._contractId;
+  }
+
+  get folderId(): string | undefined {
+    return this._folderId;
   }
 
   get filename(): string {
@@ -184,6 +191,11 @@ export class Document {
 
   public linkToContract(contractId: number): void {
     this._contractId = contractId;
+  }
+
+  public moveToFolder(folderId?: string): void {
+    this._folderId = folderId;
+    this._updatedAt = new Date();
   }
 
   public isPdf(): boolean {
