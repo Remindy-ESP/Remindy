@@ -16,7 +16,7 @@ export default function TabLayout() {
           paddingTop: 8,
         },
         headerStyle: {
-          backgroundColor: '#6366f1',
+          backgroundColor: '#11112A',
         },
         headerTintColor: '#fff',
         headerTitleStyle: {
@@ -27,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Dashboard',
+          title: ' ',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),

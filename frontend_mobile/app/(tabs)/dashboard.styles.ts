@@ -3,11 +3,11 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a3e',
+    backgroundColor: '#11112A',
   },
   header: {
     padding: 20,
-    backgroundColor: '#1a1a3e',
+    backgroundColor: '#11112A',
   },
   headerTitle: {
     fontSize: 28,
@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
   },
   calendarContainer: {
     margin: 16,
-    backgroundColor: '#2a2a5e',
+    backgroundColor: '#373848',
     borderRadius: 12,
     padding: 10,
     shadowColor: '#000',
