@@ -1,18 +1,14 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserRepository } from '../../infrastructure/repositories/user.repository';
-import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
-import { UpdateUserProfileDto, UserProfileResponseDto } from '../../presentation/dto/user-profile.dto';
+import {
+  UpdateUserProfileDto,
+  UserProfileResponseDto,
+} from '../../presentation/dto/user-profile.dto';
+import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 
 @Injectable()
 export class UserService {
-  constructor(
-    private readonly userRepository: UserRepository,
-    private readonly userPreferencesRepository: UserPreferencesRepository,
-  ) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async getUserProfile(userId: string): Promise<UserProfileResponseDto> {
     const user = await this.userRepository.findByIdWithPreferences(userId);
@@ -21,6 +17,63 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
+    return this.mapToProfileResponseDto(user);
+  }
+
+  async updateUserProfile(
+    userId: string,
+    updateDto: UpdateUserProfileDto,
+  ): Promise<UserProfileResponseDto> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Validate phone number format if provided
+    if (updateDto.phone !== undefined) {
+      if (updateDto.phone && !this.isValidPhoneNumber(updateDto.phone)) {
+        throw new BadRequestException('Invalid phone number format');
+      }
+    }
+
+    // Validate timezone if provided
+    if (updateDto.timezone !== undefined) {
+      if (!this.isValidTimezone(updateDto.timezone)) {
+        throw new BadRequestException('Invalid timezone');
+      }
+    }
+
+    // Build update data, filtering out undefined values
+    const updateData: Partial<EUser> = {};
+
+    if (updateDto.firstName !== undefined) {
+      updateData.firstName = updateDto.firstName;
+    }
+    if (updateDto.lastName !== undefined) {
+      updateData.lastName = updateDto.lastName;
+    }
+    if (updateDto.phone !== undefined) {
+      updateData.phone = updateDto.phone;
+    }
+    if (updateDto.timezone !== undefined) {
+      updateData.timezone = updateDto.timezone;
+    }
+    if (updateDto.language !== undefined) {
+      updateData.language = updateDto.language;
+    }
+
+    // Update user profile
+    const updatedUser = await this.userRepository.updateProfile(userId, updateData);
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found after update');
+    }
+
+    return this.mapToProfileResponseDto(updatedUser);
+  }
+
+  private mapToProfileResponseDto(user: EUser): UserProfileResponseDto {
     return {
       id: user.id,
       email: user.email,
@@ -37,63 +90,6 @@ export class UserService {
       lastLoginAt: user.lastLoginAt,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-    };
-  }
-
-  async updateUserProfile(
-    userId: string,
-    updateDto: UpdateUserProfileDto,
-  ): Promise<UserProfileResponseDto> {
-    const user = await this.userRepository.findById(userId);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Validate phone number format if provided
-    if (updateDto.phone !== undefined) {
-      // Basic phone validation (can be enhanced)
-      if (updateDto.phone && !this.isValidPhoneNumber(updateDto.phone)) {
-        throw new BadRequestException('Invalid phone number format');
-      }
-    }
-
-    // Validate timezone if provided
-    if (updateDto.timezone !== undefined) {
-      if (!this.isValidTimezone(updateDto.timezone)) {
-        throw new BadRequestException('Invalid timezone');
-      }
-    }
-
-    // Update user profile
-    const updatedUser = await this.userRepository.updateProfile(userId, {
-      firstName: updateDto.firstName,
-      lastName: updateDto.lastName,
-      phone: updateDto.phone,
-      timezone: updateDto.timezone,
-      language: updateDto.language,
-    });
-
-    if (!updatedUser) {
-      throw new NotFoundException('User not found after update');
-    }
-
-    return {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      phone: updatedUser.phone,
-      photoR2Key: updatedUser.photoR2Key,
-      role: updatedUser.role,
-      status: updatedUser.status,
-      timezone: updatedUser.timezone,
-      language: updatedUser.language,
-      emailVerified: updatedUser.emailVerified,
-      mfaEnabled: updatedUser.mfaEnabled,
-      lastLoginAt: updatedUser.lastLoginAt,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
     };
   }
 

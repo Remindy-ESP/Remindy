@@ -30,10 +30,7 @@ export class UserRepository {
     });
   }
 
-  async updateProfile(
-    id: string,
-    data: Partial<EUser>,
-  ): Promise<EUser | null> {
+  async updateProfile(id: string, data: Partial<EUser>): Promise<EUser | null> {
     await this.userRepository.update(id, data);
     return this.findById(id);
   }

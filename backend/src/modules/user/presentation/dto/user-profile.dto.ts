@@ -1,12 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  MaxLength,
-  IsPhoneNumber,
-  IsIn,
-} from 'class-validator';
+import { IsString, IsOptional, MaxLength, Matches } from 'class-validator';
 
 export class UserProfileResponseDto {
   @ApiProperty({ description: 'User ID' })
@@ -68,9 +61,12 @@ export class UpdateUserProfileDto {
   @MaxLength(100)
   lastName?: string;
 
-  @ApiPropertyOptional({ description: 'Phone number' })
+  @ApiPropertyOptional({ description: 'Phone number (international format)' })
   @IsOptional()
-  @IsPhoneNumber(undefined, { message: 'Invalid phone number format' })
+  @IsString()
+  @Matches(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, {
+    message: 'Invalid phone number format. Use international format (e.g., +33612345678)',
+  })
   phone?: string;
 
   @ApiPropertyOptional({ description: 'Timezone', default: 'Europe/Paris' })

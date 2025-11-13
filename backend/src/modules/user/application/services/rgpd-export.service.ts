@@ -1,14 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { RgpdExportRepository } from '../../infrastructure/repositories/rgpd-export.repository';
 import { UserRepository } from '../../infrastructure/repositories/user.repository';
-import {
-  CreateRgpdExportDto,
-  RgpdExportResponseDto,
-} from '../../presentation/dto/rgpd-export.dto';
+import { CreateRgpdExportDto, RgpdExportResponseDto } from '../../presentation/dto/rgpd-export.dto';
+import { RgpdExportEntity } from '../../../../infrastructure/database/entities/rgpd-export.entity';
 
 @Injectable()
 export class RgpdExportService {
@@ -31,7 +25,7 @@ export class RgpdExportService {
     // Check if there's already a pending or processing export
     const existingExports = await this.rgpdExportRepository.findByUserId(userId);
     const hasPendingExport = existingExports.some(
-      (exp) => exp.status === 'pending' || exp.status === 'processing',
+      exp => exp.status === 'pending' || exp.status === 'processing',
     );
 
     if (hasPendingExport) {
@@ -62,10 +56,7 @@ export class RgpdExportService {
     return this.mapToResponseDto(exportEntity);
   }
 
-  async getExportStatus(
-    userId: string,
-    exportId: string,
-  ): Promise<RgpdExportResponseDto> {
+  async getExportStatus(userId: string, exportId: string): Promise<RgpdExportResponseDto> {
     const exportEntity = await this.rgpdExportRepository.findById(exportId);
 
     if (!exportEntity) {
@@ -87,10 +78,10 @@ export class RgpdExportService {
     }
 
     const exports = await this.rgpdExportRepository.findByUserId(userId);
-    return exports.map((exp) => this.mapToResponseDto(exp));
+    return exports.map(exp => this.mapToResponseDto(exp));
   }
 
-  private mapToResponseDto(exportEntity: any): RgpdExportResponseDto {
+  private mapToResponseDto(exportEntity: RgpdExportEntity): RgpdExportResponseDto {
     return {
       id: exportEntity.id,
       userId: exportEntity.userId,
@@ -137,7 +128,7 @@ export class RgpdExportService {
       // Update status to failed with error message
       await this.rgpdExportRepository.update(exportId, {
         status: 'failed',
-        errorMessage: error.message || 'Unknown error occurred',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error occurred',
       });
     }
   }

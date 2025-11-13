@@ -92,12 +92,8 @@ describe('UserService', () => {
     it('should throw NotFoundException when user not found', async () => {
       userRepository.findByIdWithPreferences.mockResolvedValue(null);
 
-      await expect(service.getUserProfile('nonexistent-id')).rejects.toThrow(
-        NotFoundException,
-      );
-      await expect(service.getUserProfile('nonexistent-id')).rejects.toThrow(
-        'User not found',
-      );
+      await expect(service.getUserProfile('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getUserProfile('nonexistent-id')).rejects.toThrow('User not found');
     });
   });
 
@@ -142,12 +138,12 @@ describe('UserService', () => {
 
       userRepository.findById.mockResolvedValue(mockUser as any);
 
-      await expect(
-        service.updateUserProfile('user-123', updateDto),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updateUserProfile('user-123', updateDto),
-      ).rejects.toThrow('Invalid phone number format');
+      await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
+        'Invalid phone number format',
+      );
     });
 
     it('should throw BadRequestException for invalid timezone', async () => {
@@ -157,12 +153,12 @@ describe('UserService', () => {
 
       userRepository.findById.mockResolvedValue(mockUser as any);
 
-      await expect(
-        service.updateUserProfile('user-123', updateDto),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.updateUserProfile('user-123', updateDto),
-      ).rejects.toThrow('Invalid timezone');
+      await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
+        'Invalid timezone',
+      );
     });
 
     it('should accept undefined phone and timezone', async () => {

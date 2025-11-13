@@ -1,38 +1,12 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Post,
-  Body,
-  Param,
-  Req,
-  UseGuards,
-  HttpStatus,
-  HttpCode,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiBody,
-} from '@nestjs/swagger';
+import { Controller, Get, Put, Post, Body, Param, Req, HttpStatus, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { UserService } from '../../application/services/user.service';
 import { UserPreferencesService } from '../../application/services/user-preferences.service';
 import { RgpdExportService } from '../../application/services/rgpd-export.service';
-import {
-  UpdateUserProfileDto,
-  UserProfileResponseDto,
-} from '../dto/user-profile.dto';
-import {
-  UpdateUserPreferencesDto,
-  UserPreferencesResponseDto,
-} from '../dto/user-preferences.dto';
-import {
-  CreateRgpdExportDto,
-  RgpdExportResponseDto,
-} from '../dto/rgpd-export.dto';
+import { UpdateUserProfileDto, UserProfileResponseDto } from '../dto/user-profile.dto';
+import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from '../dto/user-preferences.dto';
+import { CreateRgpdExportDto, RgpdExportResponseDto } from '../dto/rgpd-export.dto';
 
 // TODO: Import your JWT authentication guard
 // import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -64,9 +38,9 @@ export class UserController {
     description: 'Unauthorized',
   })
   async getProfile(@Req() req: Request): Promise<UserProfileResponseDto> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+    // TODO: Implement JWT guard and extract user ID from token
+    // When JWT guard is implemented, use: const userId = req.user.id;
+    const userId = this.extractUserIdFromRequest(req);
     return this.userService.getUserProfile(userId);
   }
 
@@ -94,9 +68,8 @@ export class UserController {
     @Req() req: Request,
     @Body() updateDto: UpdateUserProfileDto,
   ): Promise<UserProfileResponseDto> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
     return this.userService.updateUserProfile(userId, updateDto);
   }
 
@@ -115,12 +88,9 @@ export class UserController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
   })
-  async getPreferences(
-    @Req() req: Request,
-  ): Promise<UserPreferencesResponseDto> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+  async getPreferences(@Req() req: Request): Promise<UserPreferencesResponseDto> {
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
     return this.userPreferencesService.getUserPreferences(userId);
   }
 
@@ -148,9 +118,8 @@ export class UserController {
     @Req() req: Request,
     @Body() updateDto: UpdateUserPreferencesDto,
   ): Promise<UserPreferencesResponseDto> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
     return this.userPreferencesService.updateUserPreferences(userId, updateDto);
   }
 
@@ -179,9 +148,8 @@ export class UserController {
     @Req() req: Request,
     @Body() createDto: CreateRgpdExportDto,
   ): Promise<RgpdExportResponseDto> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
     const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
     return this.rgpdExportService.createExportRequest(userId, createDto, ipAddress);
   }
@@ -202,9 +170,8 @@ export class UserController {
     description: 'Unauthorized',
   })
   async getExports(@Req() req: Request): Promise<RgpdExportResponseDto[]> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
     return this.rgpdExportService.getUserExports(userId);
   }
 
@@ -227,9 +194,27 @@ export class UserController {
     @Req() req: Request,
     @Param('exportId') exportId: string,
   ): Promise<RgpdExportResponseDto> {
-    // TODO: Extract user ID from JWT token
-    // const userId = req.user.id;
-    const userId = 'temp-user-id'; // Temporary placeholder
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
     return this.rgpdExportService.getExportStatus(userId, exportId);
+  }
+
+  /**
+   * Helper method to extract user ID from request
+   * TODO: Replace with JWT token extraction once guard is implemented
+   * @param req Express Request object
+   * @returns User ID from token or throws error
+   */
+  private extractUserIdFromRequest(_req: Request): string {
+    // TODO: Implement actual JWT extraction
+    // This is a temporary placeholder that should be replaced with:
+    // const user = req.user as JwtPayload;
+    // if (!user?.id) throw new UnauthorizedException('Invalid token');
+    // return user.id;
+
+    // For now, throw error to indicate JWT is not implemented
+    throw new Error(
+      'JWT authentication not yet implemented. Please implement JWT guard and token extraction.',
+    );
   }
 }
