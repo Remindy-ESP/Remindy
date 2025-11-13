@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 @Injectable()
@@ -56,7 +61,7 @@ export class CloudflareR2Service {
       // Générer l'URL publique (ou URL signée si le bucket est privé)
       const fileUrl = this.publicUrl
         ? `${this.publicUrl}/${key}`
-        : await this.getSignedUrl(key, 3600 * 24 * 365); // URL valide 1 an
+        : await this.getSignedUrl(key, 604800); // URL valide 7 jours (max autorisé par S3/R2)
 
       this.logger.log(`File uploaded successfully: ${key}`);
       return fileUrl;
@@ -164,7 +169,9 @@ export class CloudflareR2Service {
    * @param key Chemin du fichier dans le bucket
    * @returns Métadonnées du fichier (taille, type, etc.)
    */
-  async getFileMetadata(key: string): Promise<{ size: number; contentType: string; lastModified: Date }> {
+  async getFileMetadata(
+    key: string,
+  ): Promise<{ size: number; contentType: string; lastModified: Date }> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucketName,

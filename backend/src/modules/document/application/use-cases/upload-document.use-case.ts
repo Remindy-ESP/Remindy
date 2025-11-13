@@ -36,11 +36,16 @@ export class UploadDocumentUseCase {
       const fileUrl = await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
       this.logger.log(`File uploaded successfully to R2`);
 
+      // Convertir les chaînes vides en undefined pour éviter les erreurs de validation UUID
+      const subscriptionId =
+        dto.subscriptionId && dto.subscriptionId.trim() !== '' ? dto.subscriptionId : undefined;
+      const contractId = dto.contractId && dto.contractId > 0 ? dto.contractId : undefined;
+
       // Create domain entity
       const document = new Document({
         userId: dto.userId,
-        subscriptionId: dto.subscriptionId,
-        contractId: dto.contractId,
+        subscriptionId,
+        contractId,
         filename: dto.filename,
         r2Key,
         r2Bucket: 'remindy-documents',
