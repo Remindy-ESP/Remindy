@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { SubscriptionEntity } from '../../../subscription/infrastructure/persistence/subscription.entity';
 import { ContractEntity } from '../../../../infrastructure/database/entities/contract.entity';
+import { FolderEntity } from '../../../folder/infrastructure/persistence/folder.entity';
 
 export type OcrStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -34,6 +35,13 @@ export class DocumentEntity {
   @ManyToOne(() => ContractEntity, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'contract_id' })
   contract?: ContractEntity;
+
+  @Column({ name: 'folder_id', type: 'uuid', nullable: true })
+  folderId?: string;
+
+  @ManyToOne(() => FolderEntity, folder => folder.documents, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'folder_id' })
+  folder?: FolderEntity;
 
   @Column({ type: 'varchar', length: 255 })
   filename: string;
@@ -70,4 +78,26 @@ export class DocumentEntity {
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
   deletedAt?: Date;
+
+  // Champs parsed par Gemini (Ticket 3)
+  @Column({ name: 'parsed_provider', type: 'varchar', length: 255, nullable: true })
+  parsedProvider?: string;
+
+  @Column({ name: 'parsed_amount', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  parsedAmount?: number;
+
+  @Column({ name: 'parsed_currency', type: 'varchar', length: 3, nullable: true })
+  parsedCurrency?: string;
+
+  @Column({ name: 'parsed_date', type: 'date', nullable: true })
+  parsedDate?: Date;
+
+  @Column({ name: 'parsed_frequency', type: 'varchar', length: 50, nullable: true })
+  parsedFrequency?: string;
+
+  @Column({ name: 'parsed_category', type: 'varchar', length: 50, nullable: true })
+  parsedCategory?: string;
+
+  @Column({ name: 'parsing_confidence', type: 'float', nullable: true })
+  parsingConfidence?: number;
 }
