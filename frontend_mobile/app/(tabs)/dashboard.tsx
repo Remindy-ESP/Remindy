@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './dashboard.styles';
-import { TimePeriod, TIME_PERIODS, getContentForPeriod } from '@/utils';
+import { useDashboard } from '@/hooks/useDashboard';
 
 export default function DashboardScreen() {
-  const [selected, setSelected] = useState('');
-  const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const {
+    selected,
+    setSelected,
+    activePeriod,
+    setActivePeriod,
+    filtersOpen,
+    setFiltersOpen,
+    timePeriods,
+    getContentForPeriod,
+  } = useDashboard();
 
   return (
     <ScrollView style={styles.container}>
@@ -70,7 +77,7 @@ export default function DashboardScreen() {
       <View style={styles.timePeriodSection}>
         <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
         <View style={styles.timePeriodMenu}>
-          {TIME_PERIODS.map((period) => (
+          {timePeriods.map((period) => (
             <TouchableOpacity
               key={period.key}
               testID={`period-${period.key}`}
