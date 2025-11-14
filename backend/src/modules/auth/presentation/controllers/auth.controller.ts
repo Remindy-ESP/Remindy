@@ -1,22 +1,29 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { RegisterRequestDto } from '../dto/register-request.dto';
+import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
+import { LoginRequestDto } from '../dto/login-request.dto';
+import { LoginUseCase } from '../../application/use-cases/login.use-case';  
 
 @ApiTags('Authentification')
 @Controller('auth')
-@UseGuards(ThrottlerGuard)
 export class AuthController {
+  constructor(
+    private readonly registerUserUseCase: RegisterUserUseCase,
+    private readonly loginUseCase: LoginUseCase,
+  ) {}
+
   @Post('register')
-  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 requêtes par heure
-  register() {
-    return { message: 'register OK' };
+  async register(@Body() dto: RegisterRequestDto) {
+    const user = await this.registerUserUseCase.execute(dto);
+    return { success: true, userId: user.getId() };
   }
 
   @Post('login')
-  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requêtes par minute
-  login() {
-    return { message: 'login OK' };
-  }
+  async login(@Body() dto: LoginRequestDto) {
+    const result = await this.loginUseCase.execute(dto);
+    return result;
+    }
 
   @Post('logout')
   logout() {
@@ -24,19 +31,16 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requêtes par minute
   refreshToken() {
     return { message: 'refresh-token OK' };
   }
 
   @Post('forgot-password')
-  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 requêtes par heure
   forgotPassword() {
     return { message: 'forgot-password OK' };
   }
 
   @Post('reset-password')
-  @Throttle({ default: { limit: 5, ttl: 600000 } }) // 5 requêtes par 10 minutes
   resetPassword() {
     return { message: 'reset-password OK' };
   }

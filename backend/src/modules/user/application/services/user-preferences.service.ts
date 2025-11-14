@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import { UserRepository } from '../../infrastructure/repositories/user.repository';
 import {
   UpdateUserPreferencesDto,
   UserPreferencesResponseDto,
 } from '../../presentation/dto/user-preferences.dto';
-import { ThemeType } from '../../../../infrastructure/database/entities/user-preference.entity';
+import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
 
 @Injectable()
 export class UserPreferencesService {
@@ -69,45 +73,29 @@ export class UserPreferencesService {
 
     // Validate reminder delay if provided
     if (updateDto.defaultReminderDelay !== undefined) {
-      if (updateDto.defaultReminderDelay < 1 || updateDto.defaultReminderDelay > 365) {
-        throw new BadRequestException('Default reminder delay must be between 1 and 365 days');
+      if (
+        updateDto.defaultReminderDelay < 1 ||
+        updateDto.defaultReminderDelay > 365
+      ) {
+        throw new BadRequestException(
+          'Default reminder delay must be between 1 and 365 days',
+        );
       }
     }
 
-    // Build update data with proper types
-    const updateData: Record<string, any> = {};
-
-    if (updateDto.theme !== undefined) {
-      this.validateTheme(updateDto.theme);
-      updateData.theme = updateDto.theme as ThemeType;
-    }
-
-    if (updateDto.notificationEmail !== undefined) {
-      updateData.notificationEmail = updateDto.notificationEmail;
-    }
-
-    if (updateDto.notificationPush !== undefined) {
-      updateData.notificationPush = updateDto.notificationPush;
-    }
-
-    if (updateDto.notificationSms !== undefined) {
-      updateData.notificationSms = updateDto.notificationSms;
-    }
-
-    if (updateDto.defaultReminderDelay !== undefined) {
-      updateData.defaultReminderDelay = updateDto.defaultReminderDelay;
-    }
-
-    if (updateDto.currency !== undefined) {
-      updateData.currency = updateDto.currency.toUpperCase();
-    }
-
-    if (updateDto.showOnlineStatus !== undefined) {
-      updateData.showOnlineStatus = updateDto.showOnlineStatus;
-    }
-
     // Update preferences
-    const updatedPreferences = await this.userPreferencesRepository.update(userId, updateData);
+    const updatedPreferences = await this.userPreferencesRepository.update(
+      userId,
+      {
+        theme: updateDto.theme as Theme | undefined,
+        notificationEmail: updateDto.notificationEmail,
+        notificationPush: updateDto.notificationPush,
+        notificationSms: updateDto.notificationSms,
+        defaultReminderDelay: updateDto.defaultReminderDelay,
+        currency: updateDto.currency?.toUpperCase(),
+        showOnlineStatus: updateDto.showOnlineStatus,
+      },
+    );
 
     if (!updatedPreferences) {
       throw new NotFoundException('Preferences not found after update');
@@ -125,13 +113,6 @@ export class UserPreferencesService {
       createdAt: updatedPreferences.createdAt,
       updatedAt: updatedPreferences.updatedAt,
     };
-  }
-
-  private validateTheme(theme: string): void {
-    const validThemes: ThemeType[] = ['light', 'dark', 'auto'];
-    if (!validThemes.includes(theme as ThemeType)) {
-      throw new BadRequestException('Invalid theme. Must be light, dark, or auto');
-    }
   }
 
   private isValidCurrency(currency: string): boolean {

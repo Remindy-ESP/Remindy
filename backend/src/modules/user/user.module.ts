@@ -5,6 +5,7 @@ import { UserPreferenceEntity } from '../../infrastructure/database/entities/use
 import { UserSessionEntity } from '../../infrastructure/database/entities/user-session.entity';
 import { RgpdExportEntity } from '../../infrastructure/database/entities/rgpd-export.entity';
 import { RoleEntity } from '../../infrastructure/database/entities/role.entity';
+import { RoleLimitEntity } from 'src/infrastructure/database/entities/role-limit.entity';
 
 // Controllers
 import { UserController } from './presentation/controllers/user.controller';
@@ -28,6 +29,7 @@ import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.
       UserSessionEntity,
       RgpdExportEntity,
       RoleEntity,
+      RoleLimitEntity
     ]),
   ],
   controllers: [UserController],

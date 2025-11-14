@@ -12,10 +12,10 @@ import { RoleEntity } from './role.entity';
 
 @Entity('role_limits')
 @Check(
-  `(max_subscriptions IS NULL OR max_subscriptions > 0) AND
-   (max_documents IS NULL OR max_documents > 0) AND
-   (max_document_size_mb IS NULL OR max_document_size_mb > 0) AND
-   (max_reminders_per_subscription IS NULL OR max_reminders_per_subscription > 0)`,
+  `("maxSubscriptions" IS NULL OR "maxSubscriptions" > 0) AND
+   ("maxDocuments" IS NULL OR "maxDocuments" > 0) AND
+   ("maxDocumentSizeMb" IS NULL OR "maxDocumentSizeMb" > 0) AND
+   ("maxRemindersPerSubscription" IS NULL OR "maxRemindersPerSubscription" > 0)`,
 )
 export class RoleLimitEntity {
   @PrimaryColumn('text')

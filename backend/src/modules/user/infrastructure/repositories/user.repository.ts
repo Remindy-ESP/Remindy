@@ -39,6 +39,10 @@ export class UserRepository {
     return this.userRepository.save(user);
   }
 
+  async create(data: Partial<EUser>): Promise<EUser> {
+    return this.userRepository.create(data);
+  }
+
   async softDelete(id: string): Promise<void> {
     await this.userRepository.softDelete(id);
   }
