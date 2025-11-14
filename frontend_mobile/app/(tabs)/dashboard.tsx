@@ -3,25 +3,12 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './dashboard.styles';
-
-type TimePeriod = 'day' | 'week' | 'month' | 'year';
+import { TimePeriod, TIME_PERIODS, getContentForPeriod } from '@/utils';
 
 export default function DashboardScreen() {
   const [selected, setSelected] = useState('');
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
   const [filtersOpen, setFiltersOpen] = useState(false);
-
-  const timePeriods: { key: TimePeriod; label: string; value: string }[] = [
-    { key: 'day', label: 'Ce jour', value: '1' },
-    { key: 'week', label: 'Semaine', value: '2' },
-    { key: 'month', label: 'Mensuel', value: '3' },
-    { key: 'year', label: 'Année', value: '4' },
-  ];
-
-  const getContentForPeriod = (period: TimePeriod): string => {
-    const periodData = timePeriods.find((p) => p.key === period);
-    return periodData?.value || '1';
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -83,7 +70,7 @@ export default function DashboardScreen() {
       <View style={styles.timePeriodSection}>
         <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
         <View style={styles.timePeriodMenu}>
-          {timePeriods.map((period) => (
+          {TIME_PERIODS.map((period) => (
             <TouchableOpacity
               key={period.key}
               testID={`period-${period.key}`}
