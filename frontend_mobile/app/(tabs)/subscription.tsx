@@ -1,17 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function StatistiqueScreen() {
+export default function SubscriptionScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Statistique</Text>
+        <Text style={styles.headerTitle}>Abonnement</Text>
         <Text style={styles.headerSubtitle}>
-          Consultez vos statistiques
+          Gérez votre abonnement
         </Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.placeholder}>Contenu Statistique</Text>
+        <Text style={styles.placeholder}>Contenu Abonnement</Text>
       </View>
     </View>
   );

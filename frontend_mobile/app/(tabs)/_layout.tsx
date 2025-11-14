@@ -33,7 +33,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="statistique"
+        name="stats"
         options={{
           tabBarLabel: '',
             title: ' ',
@@ -43,7 +43,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="abonnement"
+        name="subscription"
         options={{
           tabBarLabel: '',
             title: ' ',
