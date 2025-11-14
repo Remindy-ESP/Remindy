@@ -6,7 +6,7 @@ import {
   OneToMany,
   OneToOne,
 } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { EUser } from './user.entity';
 import { RoleLimitEntity } from './role-limit.entity';
 
 @Entity('roles')
@@ -24,8 +24,8 @@ export class RoleEntity {
   createdAt: Date;
 
   // Relations
-  @OneToMany(() => UserEntity, (user) => user.role)
-  users: UserEntity[];
+  @OneToMany(() => EUser, (user) => user.role)
+  users: EUser[];
 
   @OneToOne(() => RoleLimitEntity, (roleLimit) => roleLimit.role)
   roleLimit: RoleLimitEntity;

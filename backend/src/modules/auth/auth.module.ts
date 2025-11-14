@@ -1,8 +1,46 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './presentation/controllers/auth.controller';
-
+import { UserAuthTypeOrmRepository } from './infrastructure/database/repositories/user-auth-typeorm.repository';
+import { IUserAuthRepository } from './domain/repositories/user-auth.repository';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
+import { UserSessionEntity } from 'src/infrastructure/database/entities/user-session.entity';
+import { EUser } from 'src/infrastructure/database/entities/user.entity';
+import { UserOrmMapper } from './infrastructure/mappers/user-orm.mapper';
+import { BcryptPasswordService } from './infrastructure/services/bcrypt-password.service';
+import { IPasswordService } from './domain/services/password.service';
+import { LoginUseCase } from './application/use-cases/login.use-case';
+import { JwtTokenService } from './infrastructure/services/jwt-token.service';
+import { ITokenService } from './domain/services/token.service';
+import { UserSessionTypeOrmRepository } from './infrastructure/database/repositories/user-session-typeorm.repository';
+import { IUserSessionRepository } from './domain/repositories/user-session.repository';
 @Module({
-  providers: [],
+  imports: [
+    TypeOrmModule.forFeature([EUser, UserSessionEntity]),
+  ],
   controllers: [AuthController],
+  providers: [
+    RegisterUserUseCase,
+    LoginUseCase,
+
+    UserOrmMapper,
+    {
+      provide: ITokenService,
+      useClass: JwtTokenService,
+    },
+    {
+      provide: IUserSessionRepository,
+      useClass: UserSessionTypeOrmRepository,
+    },
+    BcryptPasswordService,
+    {
+      provide: IPasswordService,
+      useClass: BcryptPasswordService,
+    },
+    {
+      provide: IUserAuthRepository,
+      useClass: UserAuthTypeOrmRepository,
+    },
+  ],
 })
 export class AuthModule {}

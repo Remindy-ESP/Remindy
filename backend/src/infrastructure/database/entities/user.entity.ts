@@ -29,7 +29,7 @@ export enum UserStatus {
 @Index('idx_users_deleted_at', ['deletedAt'])
 @Index('idx_users_last_login', ['lastLoginAt'])
 @Index('idx_users_failed_login', ['failedLoginCount'])
-export class UserEntity {
+export class EUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

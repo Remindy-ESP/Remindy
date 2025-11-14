@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserPreferenceEntity } from '../../../../infrastructure/database/entities/user-preference.entity';
+import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
 
 @Injectable()
 export class UserPreferencesRepository {
@@ -19,7 +20,7 @@ export class UserPreferencesRepository {
   async createDefaultPreferences(userId: string): Promise<UserPreferenceEntity> {
     const preferences = this.preferencesRepository.create({
       userId,
-      theme: 'light',
+      theme: Theme.LIGHT,
       notificationEmail: true,
       notificationPush: true,
       notificationSms: false,

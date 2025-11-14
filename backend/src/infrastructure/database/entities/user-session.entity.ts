@@ -8,7 +8,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { EUser } from './user.entity';
 
 @Entity('user_sessions')
 @Index('idx_user_sessions_user_id', ['userId'])
@@ -17,10 +17,10 @@ import { UserEntity } from './user.entity';
 })
 @Index('idx_user_sessions_expires_at', ['expiresAt'])
 @Index('idx_user_sessions_is_revoked', ['isRevoked'], {
-  where: 'is_revoked = false',
+  where: `"isRevoked" = false`,
 })
 @Index('idx_user_sessions_deleted_at', ['deletedAt'], {
-  where: 'deleted_at IS NULL',
+  where: `"deletedAt" IS NULL`,
 })
 export class UserSessionEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -57,9 +57,9 @@ export class UserSessionEntity {
   deletedAt: Date;
 
   // Relations
-  @ManyToOne(() => UserEntity, (user) => user.sessions, {
+  @ManyToOne(() => EUser, (user) => user.sessions, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-  user: UserEntity;
+  user: EUser;
 }

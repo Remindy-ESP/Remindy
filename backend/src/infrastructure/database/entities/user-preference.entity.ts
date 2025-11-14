@@ -9,7 +9,7 @@ import {
   JoinColumn,
   Check,
 } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { EUser } from './user.entity';
 
 export enum Theme {
   LIGHT = 'light',
@@ -18,7 +18,7 @@ export enum Theme {
 }
 
 @Entity('user_preferences')
-@Check('default_reminder_delay BETWEEN 1 AND 365')
+@Check('"defaultReminderDelay" BETWEEN 1 AND 365')
 export class UserPreferenceEntity {
   @PrimaryColumn('uuid')
   userId: string;
@@ -58,9 +58,9 @@ export class UserPreferenceEntity {
   deletedAt: Date;
 
   // Relations
-  @OneToOne(() => UserEntity, (user) => user.preferences, {
+  @OneToOne(() => EUser, (user) => user.preferences, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-  user: UserEntity;
+  user: EUser;
 }
