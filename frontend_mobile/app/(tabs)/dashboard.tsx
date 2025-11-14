@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { Ionicons } from '@expo/vector-icons';
 import { styles } from './dashboard.styles';
 import { useDashboard } from '@/hooks/useDashboard';
+import Button from '@/components/Button';
 
 export default function DashboardScreen() {
   const {
@@ -23,20 +23,11 @@ export default function DashboardScreen() {
       </View>
 
       {/* Bouton Filtres */}
-      <View style={styles.filterButtonContainer}>
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFiltersOpen(!filtersOpen)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.filterButtonText}>Filtres</Text>
-          <Ionicons
-            name={filtersOpen ? "chevron-up" : "chevron-down"}
-            size={20}
-            color="#1F1F39"
-          />
-        </TouchableOpacity>
-      </View>
+     <Button
+        onPress={() => setFiltersOpen(!filtersOpen)}
+        label="Filtres"
+        isOpen={filtersOpen}
+      />
 
       <View style={styles.calendarContainer}>
         <Calendar
