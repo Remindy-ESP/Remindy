@@ -14,6 +14,18 @@ export class EventRepository implements IEventRepository {
     private readonly repository: Repository<EventEntity>,
   ) {}
 
+  async create(event: Event): Promise<Event> {
+    const entity = EventMapper.toPersistence(event);
+    const saved = await this.repository.save(entity);
+    return EventMapper.toDomain(saved);
+  }
+
+  async createMany(events: Event[]): Promise<Event[]> {
+    const entities = events.map((event) => EventMapper.toPersistence(event));
+    const saved = await this.repository.save(entities);
+    return EventMapper.toDomainArray(saved);
+  }
+
   async findById(id: string): Promise<Event | null> {
     const entity = await this.repository.findOne({
       where: { id },
@@ -72,6 +84,14 @@ export class EventRepository implements IEventRepository {
     }
 
     const entities = await queryBuilder.getMany();
+    return EventMapper.toDomainArray(entities);
+  }
+
+  async findBySubscriptionId(subscriptionId: string): Promise<Event[]> {
+    const entities = await this.repository.find({
+      where: { subscriptionId },
+      order: { startsAt: 'ASC' },
+    });
     return EventMapper.toDomainArray(entities);
   }
 

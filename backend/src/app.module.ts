@@ -11,6 +11,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { EventModule } from './modules/event/event.module';
+import { EventSeriesModule } from './modules/event-series/event-series.module';
 import { DocumentModule } from './modules/document/document.module';
 import { NotificationModule } from './modules/notification/notification.module';
 
@@ -32,6 +33,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     UsersModule,
     SubscriptionModule,
     EventModule,
+    EventSeriesModule,
     DocumentModule,
     NotificationModule,
     AuditModule,

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SubscriptionController } from './presentation/controllers/subscription.controller';
 import { SubscriptionEntity } from './infrastructure/persistence/subscription.entity';
@@ -10,9 +10,16 @@ import { DeleteSubscriptionUseCase } from './application/use-cases/delete-subscr
 import { FindSubscriptionUseCase } from './application/use-cases/find-subscription.use-case';
 import { FindAllSubscriptionsUseCase } from './application/use-cases/find-all-subscriptions.use-case';
 import { FindSubscriptionsByPeriodUseCase } from './application/use-cases/find-subscriptions-by-period.use-case';
+import { PauseSubscriptionUseCase } from './application/use-cases/pause-subscription.use-case';
+import { ResumeSubscriptionUseCase } from './application/use-cases/resume-subscription.use-case';
+import { FindSubscriptionEventsUseCase } from './application/use-cases/find-subscription-events.use-case';
+import { EventModule } from '../event/event.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SubscriptionEntity])],
+  imports: [
+    TypeOrmModule.forFeature([SubscriptionEntity]),
+    forwardRef(() => EventModule),
+  ],
   controllers: [SubscriptionController],
   providers: [
     {
@@ -25,6 +32,9 @@ import { FindSubscriptionsByPeriodUseCase } from './application/use-cases/find-s
     FindSubscriptionUseCase,
     FindAllSubscriptionsUseCase,
     FindSubscriptionsByPeriodUseCase,
+    PauseSubscriptionUseCase,
+    ResumeSubscriptionUseCase,
+    FindSubscriptionEventsUseCase,
   ],
   exports: [
     SUBSCRIPTION_REPOSITORY,
@@ -34,6 +44,8 @@ import { FindSubscriptionsByPeriodUseCase } from './application/use-cases/find-s
     FindSubscriptionUseCase,
     FindAllSubscriptionsUseCase,
     FindSubscriptionsByPeriodUseCase,
+    PauseSubscriptionUseCase,
+    ResumeSubscriptionUseCase,
   ],
 })
 export class SubscriptionModule {}

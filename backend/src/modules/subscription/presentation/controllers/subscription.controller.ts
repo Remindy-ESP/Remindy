@@ -23,6 +23,9 @@ import { DeleteSubscriptionUseCase } from '../../application/use-cases/delete-su
 import { FindSubscriptionUseCase } from '../../application/use-cases/find-subscription.use-case';
 import { FindAllSubscriptionsUseCase } from '../../application/use-cases/find-all-subscriptions.use-case';
 import { FindSubscriptionsByPeriodUseCase } from '../../application/use-cases/find-subscriptions-by-period.use-case';
+import { PauseSubscriptionUseCase } from '../../application/use-cases/pause-subscription.use-case';
+import { ResumeSubscriptionUseCase } from '../../application/use-cases/resume-subscription.use-case';
+import { FindSubscriptionEventsUseCase } from '../../application/use-cases/find-subscription-events.use-case';
 import { SubscriptionPresentationMapper } from '../mappers/subscription-presentation.mapper';
 
 @ApiTags('Abonnements')
@@ -36,6 +39,9 @@ export class SubscriptionController {
     private readonly findSubscriptionUseCase: FindSubscriptionUseCase,
     private readonly findAllSubscriptionsUseCase: FindAllSubscriptionsUseCase,
     private readonly findSubscriptionsByPeriodUseCase: FindSubscriptionsByPeriodUseCase,
+    private readonly pauseSubscriptionUseCase: PauseSubscriptionUseCase,
+    private readonly resumeSubscriptionUseCase: ResumeSubscriptionUseCase,
+    private readonly findSubscriptionEventsUseCase: FindSubscriptionEventsUseCase,
   ) {}
 
   @Post()
@@ -141,5 +147,67 @@ export class SubscriptionController {
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
   async delete(@Param('id') id: string): Promise<void> {
     await this.deleteSubscriptionUseCase.execute(id);
+  }
+
+  @Post(':id/pause')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Mettre en pause un abonnement' })
+  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiResponse({
+    status: 200,
+    description: 'Abonnement mis en pause avec succès',
+    type: SubscriptionResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  async pause(@Param('id') id: string): Promise<SubscriptionResponseDto> {
+    const subscription = await this.pauseSubscriptionUseCase.execute(id);
+    return SubscriptionPresentationMapper.toResponseDto(subscription);
+  }
+
+  @Post(':id/resume')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Réactiver un abonnement en pause' })
+  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiResponse({
+    status: 200,
+    description: 'Abonnement réactivé avec succès',
+    type: SubscriptionResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  async resume(@Param('id') id: string): Promise<SubscriptionResponseDto> {
+    const subscription = await this.resumeSubscriptionUseCase.execute(id);
+    return SubscriptionPresentationMapper.toResponseDto(subscription);
+  }
+
+  @Get(':id/events')
+  @ApiOperation({ summary: 'Récupérer tous les événements d\'un abonnement' })
+  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des événements de l\'abonnement',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          subscriptionId: { type: 'string' },
+          eventSeriesId: { type: 'string' },
+          title: { type: 'string' },
+          amount: { type: 'number' },
+          startsAt: { type: 'string', format: 'date-time' },
+          endsAt: { type: 'string', format: 'date-time' },
+          status: { type: 'string' },
+          paymentStatus: { type: 'string' },
+          notes: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  async getEvents(@Param('id') id: string) {
+    return await this.findSubscriptionEventsUseCase.execute(id);
   }
 }
