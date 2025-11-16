@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FindSubscriptionsByPeriodUseCase } from './find-subscriptions-by-period.use-case';
-import { ISubscriptionRepository, SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
+import {
+  ISubscriptionRepository,
+  SUBSCRIPTION_REPOSITORY,
+} from '../ports/subscription-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { BadRequestException } from '@nestjs/common';
 

@@ -38,11 +38,24 @@ export class ReminderController {
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les rappels avec filtres optionnels' })
-  @ApiQuery({ name: 'subscription_id', required: false, description: 'Filtrer par ID de souscription' })
+  @ApiQuery({
+    name: 'subscription_id',
+    required: false,
+    description: 'Filtrer par ID de souscription',
+  })
   @ApiQuery({ name: 'type', required: false, description: 'Filtrer par type de rappel' })
   @ApiQuery({ name: 'enabled', required: false, description: 'Filtrer par état actif/inactif' })
-  @ApiQuery({ name: 'limit', required: false, description: 'Nombre maximum de résultats', type: Number })
-  @ApiQuery({ name: 'sort', required: false, description: 'Tri (created_at:asc|desc, updated_at:asc|desc)' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Nombre maximum de résultats',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    description: 'Tri (created_at:asc|desc, updated_at:asc|desc)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Liste des rappels',

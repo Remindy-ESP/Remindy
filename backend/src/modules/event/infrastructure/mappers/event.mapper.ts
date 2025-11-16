@@ -45,6 +45,6 @@ export class EventMapper {
   }
 
   static toDomainArray(entities: EventEntity[]): Event[] {
-    return entities.map((entity) => this.toDomain(entity));
+    return entities.map(entity => this.toDomain(entity));
   }
 }

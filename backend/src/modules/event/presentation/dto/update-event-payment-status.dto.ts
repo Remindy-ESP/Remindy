@@ -9,7 +9,7 @@ export enum PaymentStatusEnum {
 
 export class UpdateEventPaymentStatusDto {
   @ApiProperty({
-    description: 'Statut du paiement de l\'événement',
+    description: "Statut du paiement de l'événement",
     enum: PaymentStatusEnum,
     example: PaymentStatusEnum.PAID,
   })

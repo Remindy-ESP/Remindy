@@ -45,6 +45,6 @@ export class ReminderMapper {
   }
 
   static toDomainArray(entities: ReminderEntity[]): Reminder[] {
-    return entities.map((entity) => this.toDomain(entity));
+    return entities.map(entity => this.toDomain(entity));
   }
 }

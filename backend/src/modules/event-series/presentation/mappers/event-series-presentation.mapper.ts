@@ -10,8 +10,8 @@ export class EventSeriesPresentationMapper {
       rrule: dto.rrule,
       dtstart: new Date(dto.dtstart),
       timezone: dto.timezone || 'Europe/Paris',
-      exdates: dto.exdates?.map((d) => new Date(d)),
-      rdates: dto.rdates?.map((d) => new Date(d)),
+      exdates: dto.exdates?.map(d => new Date(d)),
+      rdates: dto.rdates?.map(d => new Date(d)),
     };
   }
 

@@ -112,7 +112,8 @@ export class CreateSubscriptionsTable1731703000000 implements MigrationInterface
           },
           {
             name: 'chk_subscriptions_trial_dates',
-            expression: 'trial_start_date IS NULL OR trial_end_date IS NULL OR trial_end_date > trial_start_date',
+            expression:
+              'trial_start_date IS NULL OR trial_end_date IS NULL OR trial_end_date > trial_start_date',
           },
           {
             name: 'chk_subscriptions_frequency',

@@ -11,12 +11,7 @@ import { RoleRepository } from './infrastructure/repositories/role.repository';
 import { RoleLimitRepository } from './infrastructure/repositories/role-limit.repository';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      RoleEntity,
-      RoleLimitEntity,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([RoleEntity, RoleLimitEntity])],
   providers: [
     // Services
     RoleService,
@@ -24,10 +19,6 @@ import { RoleLimitRepository } from './infrastructure/repositories/role-limit.re
     RoleRepository,
     RoleLimitRepository,
   ],
-  exports: [
-    RoleService,
-    RoleRepository,
-    RoleLimitRepository,
-  ],
+  exports: [RoleService, RoleRepository, RoleLimitRepository],
 })
 export class RolesModule {}

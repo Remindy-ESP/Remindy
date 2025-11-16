@@ -16,10 +16,7 @@ import { FindSubscriptionEventsUseCase } from './application/use-cases/find-subs
 import { EventModule } from '../event/event.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([SubscriptionEntity]),
-    forwardRef(() => EventModule),
-  ],
+  imports: [TypeOrmModule.forFeature([SubscriptionEntity]), forwardRef(() => EventModule)],
   controllers: [SubscriptionController],
   providers: [
     {

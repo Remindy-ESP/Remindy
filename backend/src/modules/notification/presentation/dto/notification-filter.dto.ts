@@ -5,11 +5,23 @@ import { Type } from 'class-transformer';
 export class NotificationFilterDto {
   @ApiPropertyOptional({
     description: 'Filtrer par type de notification',
-    enum: ['reminder', 'payment_overdue', 'trial_ending', 'subscription_renewed', 'document_processed'],
+    enum: [
+      'reminder',
+      'payment_overdue',
+      'trial_ending',
+      'subscription_renewed',
+      'document_processed',
+    ],
     example: 'reminder',
   })
   @IsOptional()
-  @IsEnum(['reminder', 'payment_overdue', 'trial_ending', 'subscription_renewed', 'document_processed'])
+  @IsEnum([
+    'reminder',
+    'payment_overdue',
+    'trial_ending',
+    'subscription_renewed',
+    'document_processed',
+  ])
   type?: string;
 
   @ApiPropertyOptional({

@@ -127,7 +127,7 @@ describe('FindAllEventsUseCase', () => {
     const result = await useCase.execute(filters);
 
     expect(result).toHaveLength(2);
-    expect(result.every((e) => e.subscriptionId === 'sub-123')).toBe(true);
+    expect(result.every(e => e.subscriptionId === 'sub-123')).toBe(true);
     expect(repository.findAll).toHaveBeenCalledWith(filters);
   });
 

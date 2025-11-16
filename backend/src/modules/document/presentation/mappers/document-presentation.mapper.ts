@@ -28,7 +28,7 @@ export class DocumentPresentationMapper {
   }
 
   static toResponseDtoArray(documents: Document[]): DocumentResponseDto[] {
-    return documents.map((document) => this.toResponseDto(document));
+    return documents.map(document => this.toResponseDto(document));
   }
 
   static toFilterAppDto(userId: string, dto: DocumentFilterDto): DocumentFilterAppDto {

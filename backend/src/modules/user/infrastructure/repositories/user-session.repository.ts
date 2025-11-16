@@ -69,17 +69,11 @@ export class UserSessionRepository {
   }
 
   async updateLastActivity(id: string): Promise<void> {
-    await this.sessionRepository.update(
-      { id },
-      { lastActivity: new Date() },
-    );
+    await this.sessionRepository.update({ id }, { lastActivity: new Date() });
   }
 
   async revokeSession(id: string): Promise<void> {
-    await this.sessionRepository.update(
-      { id },
-      { isRevoked: true },
-    );
+    await this.sessionRepository.update({ id }, { isRevoked: true });
   }
 
   async revokeAllUserSessions(userId: string, exceptSessionId?: string): Promise<void> {

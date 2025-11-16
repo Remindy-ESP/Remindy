@@ -21,7 +21,7 @@ export class UpdateSubscriptionDto {
   contractId?: number;
 
   @ApiProperty({
-    description: 'Nom de l\'abonnement',
+    description: "Nom de l'abonnement",
     example: 'Netflix Premium HD',
     maxLength: 255,
     required: false,
@@ -31,7 +31,7 @@ export class UpdateSubscriptionDto {
   name?: string;
 
   @ApiProperty({
-    description: 'Montant de l\'abonnement',
+    description: "Montant de l'abonnement",
     example: 17.99,
     type: Number,
     required: false,
@@ -61,7 +61,7 @@ export class UpdateSubscriptionDto {
   frequency?: SubscriptionFrequency;
 
   @ApiProperty({
-    description: 'Date de début de l\'abonnement',
+    description: "Date de début de l'abonnement",
     example: '2025-01-01',
     type: String,
     required: false,
@@ -71,7 +71,7 @@ export class UpdateSubscriptionDto {
   startDate?: string;
 
   @ApiProperty({
-    description: 'Prochaine date d\'échéance',
+    description: "Prochaine date d'échéance",
     example: '2025-02-01',
     required: false,
     type: String,
@@ -81,7 +81,7 @@ export class UpdateSubscriptionDto {
   nextDueDate?: string;
 
   @ApiProperty({
-    description: 'Date de début de la période d\'essai',
+    description: "Date de début de la période d'essai",
     example: '2025-01-01',
     required: false,
     type: String,
@@ -91,7 +91,7 @@ export class UpdateSubscriptionDto {
   trialStartDate?: string;
 
   @ApiProperty({
-    description: 'Date de fin de la période d\'essai',
+    description: "Date de fin de la période d'essai",
     example: '2025-02-01',
     required: false,
     type: String,
@@ -101,7 +101,7 @@ export class UpdateSubscriptionDto {
   trialEndDate?: string;
 
   @ApiProperty({
-    description: 'Statut de l\'abonnement',
+    description: "Statut de l'abonnement",
     enum: ['active', 'paused', 'cancelled', 'trial'],
     example: 'active',
     required: false,
@@ -122,7 +122,7 @@ export class UpdateSubscriptionDto {
   color?: string;
 
   @ApiProperty({
-    description: 'Notes sur l\'abonnement',
+    description: "Notes sur l'abonnement",
     example: 'Abonnement familial partagé avec 3 personnes',
     required: false,
   })

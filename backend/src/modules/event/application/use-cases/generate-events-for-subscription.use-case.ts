@@ -21,12 +21,10 @@ export class GenerateEventsForSubscriptionUseCase {
   async execute(dto: GenerateEventsForSubscriptionDto): Promise<Event[]> {
     // Check existing events to avoid duplicates
     const existingEvents = await this.repository.findBySubscriptionId(dto.subscriptionId);
-    const existingDates = new Set(
-      existingEvents.map((e) => e.startsAt.toISOString().split('T')[0]),
-    );
+    const existingDates = new Set(existingEvents.map(e => e.startsAt.toISOString().split('T')[0]));
 
     // Filter out occurrences that already have events
-    const newOccurrences = dto.occurrences.filter((occ) => {
+    const newOccurrences = dto.occurrences.filter(occ => {
       const dateKey = occ.startsAt.toISOString().split('T')[0];
       return !existingDates.has(dateKey);
     });
@@ -37,7 +35,7 @@ export class GenerateEventsForSubscriptionUseCase {
 
     // Create new events
     const events = newOccurrences.map(
-      (occ) =>
+      occ =>
         new Event({
           subscriptionId: dto.subscriptionId,
           eventSeriesId: dto.eventSeriesId,

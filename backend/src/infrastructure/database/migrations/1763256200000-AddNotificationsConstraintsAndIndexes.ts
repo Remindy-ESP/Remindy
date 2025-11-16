@@ -139,12 +139,22 @@ export class AddNotificationsConstraintsAndIndexes1763256200000 implements Migra
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_notifications_user_id"`);
 
     // Drop CHECK constraints
-    await queryRunner.query(`ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_snoozed_until"`);
-    await queryRunner.query(`ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_status"`);
-    await queryRunner.query(`ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_channel"`);
-    await queryRunner.query(`ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_type"`);
+    await queryRunner.query(
+      `ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_snoozed_until"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_status"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_channel"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "chk_notifications_type"`,
+    );
 
     // Drop foreign key constraint
-    await queryRunner.query(`ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "fk_notifications_reminder"`);
+    await queryRunner.query(
+      `ALTER TABLE "notifications" DROP CONSTRAINT IF EXISTS "fk_notifications_reminder"`,
+    );
   }
 }

@@ -1,7 +1,9 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import type { ISubscriptionRepository } from '../ports/subscription-repository.interface';
 import { SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
+import type { IEventRepository } from '../../../event/application/ports/event-repository.interface';
 import { EVENT_REPOSITORY } from '../../../event/application/ports/event-repository.interface';
+import { Event } from '../../../event/domain/event.entity';
 
 // We'll use the Event type from event module
 export interface SubscriptionEvent {
@@ -25,7 +27,7 @@ export class FindSubscriptionEventsUseCase {
     @Inject(SUBSCRIPTION_REPOSITORY)
     private readonly subscriptionRepository: ISubscriptionRepository,
     @Inject(EVENT_REPOSITORY)
-    private readonly eventRepository: any, // Will be injected from EventModule
+    private readonly eventRepository: IEventRepository,
   ) {}
 
   async execute(subscriptionId: string): Promise<SubscriptionEvent[]> {
@@ -39,19 +41,21 @@ export class FindSubscriptionEventsUseCase {
     // Get all events for this subscription
     const events = await this.eventRepository.findBySubscriptionId(subscriptionId);
 
-    return events.map((event: any) => ({
-      id: event.id,
-      subscriptionId: event.subscriptionId,
-      eventSeriesId: event.eventSeriesId,
-      title: event.title,
-      amount: event.amount,
-      startsAt: event.startsAt,
-      endsAt: event.endsAt,
-      status: event.status,
-      paymentStatus: event.paymentStatus,
-      notes: event.notes,
-      createdAt: event.createdAt,
-      updatedAt: event.updatedAt,
-    }));
+    return events.map(
+      (event: Event): SubscriptionEvent => ({
+        id: event.id!,
+        subscriptionId: event.subscriptionId,
+        eventSeriesId: event.eventSeriesId,
+        title: event.title,
+        amount: event.amount,
+        startsAt: event.startsAt,
+        endsAt: event.endsAt,
+        status: event.status,
+        paymentStatus: event.paymentStatus,
+        notes: event.notes,
+        createdAt: event.createdAt!,
+        updatedAt: event.updatedAt!,
+      }),
+    );
   }
 }

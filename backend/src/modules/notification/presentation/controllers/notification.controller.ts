@@ -35,7 +35,12 @@ export class NotificationController {
   @ApiQuery({ name: 'channel', required: false, description: 'Filtrer par canal' })
   @ApiQuery({ name: 'status', required: false, description: 'Filtrer par statut' })
   @ApiQuery({ name: 'is_read', required: false, description: 'Filtrer par état de lecture' })
-  @ApiQuery({ name: 'limit', required: false, description: 'Nombre maximum de résultats', type: Number })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Nombre maximum de résultats',
+    type: Number,
+  })
   @ApiQuery({ name: 'sort', required: false, description: 'Tri (created_at:asc|desc)' })
   @ApiResponse({
     status: 200,

@@ -137,14 +137,14 @@ export class EventSeries {
       this._exdates = [];
     }
     // Avoid duplicates
-    if (!this._exdates.some((d) => d.getTime() === date.getTime())) {
+    if (!this._exdates.some(d => d.getTime() === date.getTime())) {
       this._exdates.push(date);
     }
   }
 
   public removeExceptionDate(date: Date): void {
     if (this._exdates) {
-      this._exdates = this._exdates.filter((d) => d.getTime() !== date.getTime());
+      this._exdates = this._exdates.filter(d => d.getTime() !== date.getTime());
     }
   }
 
@@ -153,14 +153,14 @@ export class EventSeries {
       this._rdates = [];
     }
     // Avoid duplicates
-    if (!this._rdates.some((d) => d.getTime() === date.getTime())) {
+    if (!this._rdates.some(d => d.getTime() === date.getTime())) {
       this._rdates.push(date);
     }
   }
 
   public removeRecurrenceDate(date: Date): void {
     if (this._rdates) {
-      this._rdates = this._rdates.filter((d) => d.getTime() !== date.getTime());
+      this._rdates = this._rdates.filter(d => d.getTime() !== date.getTime());
     }
   }
 

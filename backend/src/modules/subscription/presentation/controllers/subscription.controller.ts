@@ -108,7 +108,7 @@ export class SubscriptionController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer un abonnement par son ID' })
-  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({
     status: 200,
     description: 'Abonnement trouvé',
@@ -122,7 +122,7 @@ export class SubscriptionController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Mettre à jour un abonnement' })
-  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({
     status: 200,
     description: 'Abonnement mis à jour avec succès',
@@ -142,7 +142,7 @@ export class SubscriptionController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Supprimer un abonnement (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({ status: 204, description: 'Abonnement supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
   async delete(@Param('id') id: string): Promise<void> {
@@ -152,7 +152,7 @@ export class SubscriptionController {
   @Post(':id/pause')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mettre en pause un abonnement' })
-  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({
     status: 200,
     description: 'Abonnement mis en pause avec succès',
@@ -167,7 +167,7 @@ export class SubscriptionController {
   @Post(':id/resume')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Réactiver un abonnement en pause' })
-  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({
     status: 200,
     description: 'Abonnement réactivé avec succès',
@@ -180,11 +180,11 @@ export class SubscriptionController {
   }
 
   @Get(':id/events')
-  @ApiOperation({ summary: 'Récupérer tous les événements d\'un abonnement' })
-  @ApiParam({ name: 'id', description: 'ID de l\'abonnement' })
+  @ApiOperation({ summary: "Récupérer tous les événements d'un abonnement" })
+  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({
     status: 200,
-    description: 'Liste des événements de l\'abonnement',
+    description: "Liste des événements de l'abonnement",
     schema: {
       type: 'array',
       items: {
