@@ -1,10 +1,8 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { EventSeries } from '../../domain/event-series.entity';
 import { CreateEventSeriesAppDto } from '../dto/create-event-series-app.dto';
-import {
-  IEventSeriesRepository,
-  EVENT_SERIES_REPOSITORY,
-} from '../ports/event-series-repository.interface';
+import type { IEventSeriesRepository } from '../ports/event-series-repository.interface';
+import { EVENT_SERIES_REPOSITORY } from '../ports/event-series-repository.interface';
 
 @Injectable()
 export class CreateEventSeriesUseCase {

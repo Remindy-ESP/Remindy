@@ -1,13 +1,9 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import {
-  ISubscriptionRepository,
-  SUBSCRIPTION_REPOSITORY,
-} from '../../../subscription/application/ports/subscription-repository.interface';
-import {
-  IEventSeriesRepository,
-  EVENT_SERIES_REPOSITORY,
-} from '../../../event-series/application/ports/event-series-repository.interface';
+import type { ISubscriptionRepository } from '../../../subscription/application/ports/subscription-repository.interface';
+import { SUBSCRIPTION_REPOSITORY } from '../../../subscription/application/ports/subscription-repository.interface';
+import type { IEventSeriesRepository } from '../../../event-series/application/ports/event-series-repository.interface';
+import { EVENT_SERIES_REPOSITORY } from '../../../event-series/application/ports/event-series-repository.interface';
 import { GenerateEventsFromSeriesUseCase } from '../../../event-series/application/use-cases/generate-events-from-series.use-case';
 import { GenerateEventsForSubscriptionUseCase } from '../use-cases/generate-events-for-subscription.use-case';
 
