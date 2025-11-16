@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository } from 'typeorm';
 import { INotificationRepository } from '../../application/ports/notification-repository.interface';
 import { Notification } from '../../domain/notification.entity';
 import { NotificationEntity } from '../persistence/notification.entity';
@@ -68,6 +68,12 @@ export class NotificationRepository implements INotificationRepository {
     return NotificationMapper.toDomainArray(entities);
   }
 
+  async save(notification: Notification): Promise<Notification> {
+    const entity = NotificationMapper.toPersistence(notification);
+    const saved = await this.repository.save(entity);
+    return NotificationMapper.toDomain(saved);
+  }
+
   async update(id: string, notification: Notification): Promise<Notification | null> {
     const existing = await this.repository.findOne({ where: { id } });
 
@@ -80,5 +86,9 @@ export class NotificationRepository implements INotificationRepository {
 
     const updated = await this.repository.save(entity);
     return NotificationMapper.toDomain(updated);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.repository.softDelete(id);
   }
 }
