@@ -21,7 +21,7 @@ export class EventRepository implements IEventRepository {
   }
 
   async createMany(events: Event[]): Promise<Event[]> {
-    const entities = events.map((event) => EventMapper.toPersistence(event));
+    const entities = events.map(event => EventMapper.toPersistence(event));
     const saved = await this.repository.save(entities);
     return EventMapper.toDomainArray(saved);
   }

@@ -10,7 +10,7 @@ export enum EventStatusEnum {
 
 export class UpdateEventStatusDto {
   @ApiProperty({
-    description: 'Nouveau statut de l\'événement',
+    description: "Nouveau statut de l'événement",
     enum: EventStatusEnum,
     example: EventStatusEnum.COMPLETED,
   })

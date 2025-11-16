@@ -82,7 +82,7 @@ export class EUser {
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt?: Date;
 
-  @OneToOne(() => UserPreferenceEntity, (preferences) => preferences.user, {
+  @OneToOne(() => UserPreferenceEntity, preferences => preferences.user, {
     cascade: true,
   })
   preferences?: UserPreferenceEntity;

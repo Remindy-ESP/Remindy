@@ -1,16 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class EventResponseDto {
-  @ApiProperty({ description: 'ID unique de l\'événement', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
+  @ApiProperty({
+    description: "ID unique de l'événement",
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
   id: string;
 
-  @ApiProperty({ description: 'ID de l\'abonnement associé', example: 'sub-123' })
+  @ApiProperty({ description: "ID de l'abonnement associé", example: 'sub-123' })
   subscriptionId: string;
 
-  @ApiProperty({ description: 'ID de la série d\'événements', required: false })
+  @ApiProperty({ description: "ID de la série d'événements", required: false })
   eventSeriesId?: string;
 
-  @ApiProperty({ description: 'Titre de l\'événement', example: 'Paiement Netflix Premium' })
+  @ApiProperty({ description: "Titre de l'événement", example: 'Paiement Netflix Premium' })
   title: string;
 
   @ApiProperty({ description: 'Montant', example: 15.99 })
@@ -22,10 +25,19 @@ export class EventResponseDto {
   @ApiProperty({ description: 'Date de fin', required: false, example: '2025-02-01T01:00:00.000Z' })
   endsAt?: string;
 
-  @ApiProperty({ description: 'Statut', enum: ['scheduled', 'completed', 'canceled', 'failed'], example: 'scheduled' })
+  @ApiProperty({
+    description: 'Statut',
+    enum: ['scheduled', 'completed', 'canceled', 'failed'],
+    example: 'scheduled',
+  })
   status: string;
 
-  @ApiProperty({ description: 'Statut de paiement', enum: ['pending', 'paid', 'failed'], required: false, example: 'pending' })
+  @ApiProperty({
+    description: 'Statut de paiement',
+    enum: ['pending', 'paid', 'failed'],
+    required: false,
+    example: 'pending',
+  })
   paymentStatus?: string;
 
   @ApiProperty({ description: 'Notes', required: false })

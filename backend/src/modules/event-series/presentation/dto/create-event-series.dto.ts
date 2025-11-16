@@ -3,7 +3,7 @@ import { IsString, IsNotEmpty, IsDateString, IsOptional, IsArray } from 'class-v
 
 export class CreateEventSeriesDto {
   @ApiProperty({
-    description: 'ID de l\'abonnement',
+    description: "ID de l'abonnement",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsString()
@@ -36,7 +36,7 @@ export class CreateEventSeriesDto {
   timezone?: string;
 
   @ApiPropertyOptional({
-    description: 'Dates d\'exception (à exclure de la récurrence)',
+    description: "Dates d'exception (à exclure de la récurrence)",
     type: [String],
     example: ['2025-08-15T00:00:00Z', '2025-12-15T00:00:00Z'],
   })

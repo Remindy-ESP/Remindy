@@ -40,7 +40,7 @@ export class CreateEventUseCase {
 
   async createMany(dtos: CreateEventDto[]): Promise<Event[]> {
     const events = dtos.map(
-      (dto) =>
+      dto =>
         new Event({
           subscriptionId: dto.subscriptionId,
           eventSeriesId: dto.eventSeriesId,

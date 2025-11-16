@@ -55,6 +55,6 @@ export class NotificationMapper {
   }
 
   static toDomainArray(entities: NotificationEntity[]): Notification[] {
-    return entities.map((entity) => this.toDomain(entity));
+    return entities.map(entity => this.toDomain(entity));
   }
 }

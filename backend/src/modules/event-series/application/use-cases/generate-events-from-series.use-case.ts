@@ -48,7 +48,7 @@ export class GenerateEventsFromSeriesUseCase {
     // Add the parsed rule to the set
     if (parsedRule instanceof RRuleSet) {
       // If it's already an RRuleSet, merge its rules
-      parsedRule.rrules().forEach((r) => rruleSet.rrule(r));
+      parsedRule.rrules().forEach(r => rruleSet.rrule(r));
     } else {
       // If it's a single RRule, add it
       rruleSet.rrule(parsedRule);
@@ -75,7 +75,7 @@ export class GenerateEventsFromSeriesUseCase {
     const limitedOccurrences = occurrences.slice(0, maxOccurrences);
 
     // Map to GeneratedEventOccurrence
-    return limitedOccurrences.map((date) => ({
+    return limitedOccurrences.map(date => ({
       subscriptionId: eventSeries.subscriptionId,
       eventSeriesId: eventSeries.id!,
       startsAt: date,
@@ -88,7 +88,10 @@ export class GenerateEventsFromSeriesUseCase {
    * @param count - Number of occurrences to generate
    * @returns Array of event occurrences
    */
-  async generateNext(eventSeriesId: string, count: number = 12): Promise<GeneratedEventOccurrence[]> {
+  async generateNext(
+    eventSeriesId: string,
+    count: number = 12,
+  ): Promise<GeneratedEventOccurrence[]> {
     const eventSeries = await this.repository.findById(eventSeriesId);
 
     if (!eventSeries) {
@@ -106,7 +109,7 @@ export class GenerateEventsFromSeriesUseCase {
 
     // Add the parsed rule to the set
     if (parsedRule instanceof RRuleSet) {
-      parsedRule.rrules().forEach((r) => rruleSet.rrule(r));
+      parsedRule.rrules().forEach(r => rruleSet.rrule(r));
     } else {
       rruleSet.rrule(parsedRule);
     }
@@ -133,7 +136,7 @@ export class GenerateEventsFromSeriesUseCase {
       return i < count && date >= now;
     });
 
-    return allOccurrences.map((date) => ({
+    return allOccurrences.map(date => ({
       subscriptionId: eventSeries.subscriptionId,
       eventSeriesId: eventSeries.id!,
       startsAt: date,

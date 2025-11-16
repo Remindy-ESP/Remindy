@@ -57,6 +57,6 @@ export class DocumentMapper {
   }
 
   static toDomainArray(entities: DocumentEntity[]): Document[] {
-    return entities.map((entity) => this.toDomain(entity));
+    return entities.map(entity => this.toDomain(entity));
   }
 }

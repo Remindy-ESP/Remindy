@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FindAllSubscriptionsUseCase } from './find-all-subscriptions.use-case';
-import { ISubscriptionRepository, SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
+import {
+  ISubscriptionRepository,
+  SUBSCRIPTION_REPOSITORY,
+} from '../ports/subscription-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { FindAllSubscriptionsAppDto } from '../dto/find-all-subscriptions-app.dto';
 
@@ -102,7 +105,7 @@ describe('FindAllSubscriptionsUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result).toBe(expectedSubscriptions);
-    expect(result.every((sub) => sub.status === 'active')).toBe(true);
+    expect(result.every(sub => sub.status === 'active')).toBe(true);
     expect(repository.findAll).toHaveBeenCalledWith(dto);
   });
 
@@ -133,7 +136,7 @@ describe('FindAllSubscriptionsUseCase', () => {
     const result = await useCase.execute(dto);
 
     expect(result).toBe(expectedSubscriptions);
-    expect(result.every((sub) => sub.frequency === 'yearly')).toBe(true);
+    expect(result.every(sub => sub.frequency === 'yearly')).toBe(true);
     expect(repository.findAll).toHaveBeenCalledWith(dto);
   });
 

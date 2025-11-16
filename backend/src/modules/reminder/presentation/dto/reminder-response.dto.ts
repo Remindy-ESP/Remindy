@@ -8,7 +8,7 @@ export class ReminderResponseDto {
   id: string;
 
   @ApiProperty({
-    description: 'ID de l\'utilisateur',
+    description: "ID de l'utilisateur",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   user_id: string;
@@ -27,7 +27,7 @@ export class ReminderResponseDto {
   type: string;
 
   @ApiProperty({
-    description: 'Nombre de jours avant l\'événement',
+    description: "Nombre de jours avant l'événement",
     example: 7,
   })
   days_before: number;

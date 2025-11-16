@@ -17,7 +17,7 @@ export class UserPreferenceEntity {
   @PrimaryColumn({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @OneToOne(() => EUser, (user) => user.preferences, { onDelete: 'CASCADE' })
+  @OneToOne(() => EUser, user => user.preferences, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: EUser;
 

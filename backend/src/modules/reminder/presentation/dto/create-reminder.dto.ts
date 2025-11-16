@@ -1,10 +1,19 @@
-import { IsNotEmpty, IsEnum, IsInt, Min, Max, IsBoolean, IsOptional, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
+  IsBoolean,
+  IsOptional,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 export class CreateReminderDto {
   @ApiPropertyOptional({
-    description: 'ID de l\'utilisateur (sera remplacé par l\'utilisateur authentifié)',
+    description: "ID de l'utilisateur (sera remplacé par l'utilisateur authentifié)",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsOptional()
@@ -29,7 +38,7 @@ export class CreateReminderDto {
   type: string;
 
   @ApiProperty({
-    description: 'Nombre de jours avant l\'événement',
+    description: "Nombre de jours avant l'événement",
     example: 7,
     minimum: 1,
     maximum: 365,

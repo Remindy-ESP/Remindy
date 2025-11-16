@@ -24,7 +24,7 @@ export class ReminderPresentationMapper {
   }
 
   static toResponseDtoArray(reminders: Reminder[]): ReminderResponseDto[] {
-    return reminders.map((reminder) => this.toResponseDto(reminder));
+    return reminders.map(reminder => this.toResponseDto(reminder));
   }
 
   static toFilterAppDto(userId: string, dto: ReminderFilterDto): ReminderFilterAppDto {

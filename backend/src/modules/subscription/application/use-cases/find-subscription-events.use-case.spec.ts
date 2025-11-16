@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FindSubscriptionEventsUseCase, SubscriptionEvent } from './find-subscription-events.use-case';
-import { ISubscriptionRepository, SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
+import { FindSubscriptionEventsUseCase } from './find-subscription-events.use-case';
+import {
+  ISubscriptionRepository,
+  SUBSCRIPTION_REPOSITORY,
+} from '../ports/subscription-repository.interface';
 import { EVENT_REPOSITORY } from '../../../event/application/ports/event-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { NotFoundException } from '@nestjs/common';

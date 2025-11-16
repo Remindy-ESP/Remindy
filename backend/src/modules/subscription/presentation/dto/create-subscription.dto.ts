@@ -12,7 +12,7 @@ import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/sub
 
 export class CreateSubscriptionDto {
   @ApiProperty({
-    description: 'ID de l\'utilisateur propriétaire de l\'abonnement',
+    description: "ID de l'utilisateur propriétaire de l'abonnement",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsString()
@@ -28,7 +28,7 @@ export class CreateSubscriptionDto {
   contractId?: number;
 
   @ApiProperty({
-    description: 'Nom de l\'abonnement',
+    description: "Nom de l'abonnement",
     example: 'Netflix Premium',
     maxLength: 255,
   })
@@ -36,7 +36,7 @@ export class CreateSubscriptionDto {
   name: string;
 
   @ApiProperty({
-    description: 'Montant de l\'abonnement',
+    description: "Montant de l'abonnement",
     example: 15.99,
     type: Number,
   })
@@ -62,7 +62,7 @@ export class CreateSubscriptionDto {
   frequency: SubscriptionFrequency;
 
   @ApiProperty({
-    description: 'Date de début de l\'abonnement',
+    description: "Date de début de l'abonnement",
     example: '2025-01-01',
     type: String,
   })
@@ -70,7 +70,7 @@ export class CreateSubscriptionDto {
   startDate: string;
 
   @ApiProperty({
-    description: 'Prochaine date d\'échéance (calculée automatiquement si non fournie)',
+    description: "Prochaine date d'échéance (calculée automatiquement si non fournie)",
     example: '2025-02-01',
     required: false,
     type: String,
@@ -80,7 +80,7 @@ export class CreateSubscriptionDto {
   nextDueDate?: string;
 
   @ApiProperty({
-    description: 'Date de début de la période d\'essai (optionnelle)',
+    description: "Date de début de la période d'essai (optionnelle)",
     example: '2025-01-01',
     required: false,
     type: String,
@@ -90,7 +90,7 @@ export class CreateSubscriptionDto {
   trialStartDate?: string;
 
   @ApiProperty({
-    description: 'Date de fin de la période d\'essai (optionnelle)',
+    description: "Date de fin de la période d'essai (optionnelle)",
     example: '2025-02-01',
     required: false,
     type: String,
@@ -100,7 +100,7 @@ export class CreateSubscriptionDto {
   trialEndDate?: string;
 
   @ApiProperty({
-    description: 'Statut de l\'abonnement',
+    description: "Statut de l'abonnement",
     enum: ['active', 'paused', 'cancelled', 'trial'],
     example: 'active',
     default: 'active',
@@ -121,7 +121,7 @@ export class CreateSubscriptionDto {
   color?: string;
 
   @ApiProperty({
-    description: 'Notes sur l\'abonnement',
+    description: "Notes sur l'abonnement",
     example: 'Abonnement familial partagé avec 3 personnes',
     required: false,
   })

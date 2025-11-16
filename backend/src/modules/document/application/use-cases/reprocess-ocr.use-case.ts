@@ -25,9 +25,7 @@ export class ReprocessOcrUseCase {
 
     // Check if already completed and force not set
     if (document.ocrStatus === 'completed' && !dto.force) {
-      throw new BadRequestException(
-        'OCR already completed. Use force=true to reprocess.',
-      );
+      throw new BadRequestException('OCR already completed. Use force=true to reprocess.');
     }
 
     // Check if already processing

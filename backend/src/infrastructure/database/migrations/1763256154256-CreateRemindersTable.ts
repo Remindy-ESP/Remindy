@@ -128,13 +128,23 @@ export class CreateRemindersTable1763256154256 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_reminders_user_id"`);
 
     // Drop CHECK constraints
-    await queryRunner.query(`ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "chk_reminders_days_before_positive"`);
-    await queryRunner.query(`ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "chk_reminders_channel"`);
-    await queryRunner.query(`ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "chk_reminders_type"`);
+    await queryRunner.query(
+      `ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "chk_reminders_days_before_positive"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "chk_reminders_channel"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "chk_reminders_type"`,
+    );
 
     // Drop foreign key constraints
-    await queryRunner.query(`ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "fk_reminders_subscription"`);
-    await queryRunner.query(`ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "fk_reminders_user"`);
+    await queryRunner.query(
+      `ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "fk_reminders_subscription"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reminders" DROP CONSTRAINT IF EXISTS "fk_reminders_user"`,
+    );
 
     // Drop table
     await queryRunner.query(`DROP TABLE IF EXISTS "reminders"`);

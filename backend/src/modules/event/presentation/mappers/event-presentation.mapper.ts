@@ -24,7 +24,7 @@ export class EventPresentationMapper {
   }
 
   static toResponseDtoArray(events: Event[]): EventResponseDto[] {
-    return events.map((event) => this.toResponseDto(event));
+    return events.map(event => this.toResponseDto(event));
   }
 
   static toFilterAppDto(dto: EventFilterDto): EventFilterAppDto {

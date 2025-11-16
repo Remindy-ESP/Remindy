@@ -8,7 +8,10 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     const nodeEnv: string | undefined = configService.get('NODE_ENV') || 'development';
     const isDevelopment: boolean = nodeEnv === 'development';
     const isTest: boolean = nodeEnv === 'test';
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const isStaging: boolean = nodeEnv === 'staging';
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const isProduction: boolean = nodeEnv === 'production';
     const databaseUrl: string | undefined =
       configService.get('DATABASE_URL') ||

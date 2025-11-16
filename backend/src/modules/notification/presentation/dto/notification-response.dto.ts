@@ -8,13 +8,13 @@ export class NotificationResponseDto {
   id: string;
 
   @ApiProperty({
-    description: 'ID de l\'utilisateur',
+    description: "ID de l'utilisateur",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   user_id: string;
 
   @ApiPropertyOptional({
-    description: 'ID de l\'événement lié',
+    description: "ID de l'événement lié",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   event_id?: string;
@@ -28,7 +28,13 @@ export class NotificationResponseDto {
   @ApiProperty({
     description: 'Type de notification',
     example: 'reminder',
-    enum: ['reminder', 'payment_overdue', 'trial_ending', 'subscription_renewed', 'document_processed'],
+    enum: [
+      'reminder',
+      'payment_overdue',
+      'trial_ending',
+      'subscription_renewed',
+      'document_processed',
+    ],
   })
   type: string;
 
@@ -52,7 +58,7 @@ export class NotificationResponseDto {
   body: string;
 
   @ApiPropertyOptional({
-    description: 'Date d\'envoi',
+    description: "Date d'envoi",
     example: '2025-11-06T15:30:00Z',
   })
   sent_at?: string;
@@ -71,13 +77,13 @@ export class NotificationResponseDto {
   status: string;
 
   @ApiPropertyOptional({
-    description: 'Date jusqu\'à laquelle la notification est reportée',
+    description: "Date jusqu'à laquelle la notification est reportée",
     example: '2025-11-10T10:00:00Z',
   })
   snoozed_until?: string;
 
   @ApiPropertyOptional({
-    description: 'Message d\'erreur si échec',
+    description: "Message d'erreur si échec",
     example: 'SMTP timeout',
   })
   error_message?: string;

@@ -45,9 +45,7 @@ export class UpdateEventStatusUseCase {
     const allowedStatuses = validTransitions[currentStatus];
 
     if (!allowedStatuses.includes(newStatus)) {
-      throw new BadRequestException(
-        `Cannot transition from '${currentStatus}' to '${newStatus}'`,
-      );
+      throw new BadRequestException(`Cannot transition from '${currentStatus}' to '${newStatus}'`);
     }
   }
 }

@@ -44,8 +44,8 @@ export class EventSeriesController {
   }
 
   @Get('subscription/:subscriptionId')
-  @ApiOperation({ summary: 'Récupérer la règle de récurrence d\'un abonnement' })
-  @ApiParam({ name: 'subscriptionId', description: 'ID de l\'abonnement' })
+  @ApiOperation({ summary: "Récupérer la règle de récurrence d'un abonnement" })
+  @ApiParam({ name: 'subscriptionId', description: "ID de l'abonnement" })
   @ApiResponse({
     status: 200,
     description: 'Règle de récurrence trouvée',
@@ -60,7 +60,7 @@ export class EventSeriesController {
   }
 
   @Get(':id/generate')
-  @ApiOperation({ summary: 'Générer les occurrences d\'événements pour une période' })
+  @ApiOperation({ summary: "Générer les occurrences d'événements pour une période" })
   @ApiParam({ name: 'id', description: 'ID de la règle de récurrence' })
   @ApiQuery({
     name: 'start',
@@ -78,7 +78,7 @@ export class EventSeriesController {
     name: 'max',
     required: false,
     type: Number,
-    description: 'Nombre maximum d\'occurrences',
+    description: "Nombre maximum d'occurrences",
     example: 12,
   })
   @ApiResponse({

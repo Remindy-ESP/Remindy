@@ -90,12 +90,20 @@ export class AddEventsTableConstraintsAndIndexes1763254900000 implements Migrati
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_events_subscription_id"`);
 
     // Drop CHECK constraints
-    await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_date_range"`);
-    await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_payment_status"`);
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_date_range"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_payment_status"`,
+    );
     await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_status"`);
-    await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_amount_positive"`);
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "chk_events_amount_positive"`,
+    );
 
     // Drop foreign key constraint
-    await queryRunner.query(`ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "fk_events_event_series"`);
+    await queryRunner.query(
+      `ALTER TABLE "events" DROP CONSTRAINT IF EXISTS "fk_events_event_series"`,
+    );
   }
 }

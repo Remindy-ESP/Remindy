@@ -41,7 +41,9 @@ export class EventGenerationService {
       for (const subscription of subscriptions) {
         try {
           // Chercher l'event_series pour cet abonnement
-          const eventSeries = await this.eventSeriesRepository.findBySubscriptionId(subscription.id!);
+          const eventSeries = await this.eventSeriesRepository.findBySubscriptionId(
+            subscription.id!,
+          );
 
           if (!eventSeries) {
             this.logger.warn(`No event series found for subscription ${subscription.id}`);

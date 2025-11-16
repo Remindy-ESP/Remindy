@@ -24,11 +24,7 @@ export class RoleRepository {
     });
   }
 
-  async create(data: {
-    key: string;
-    label: string;
-    description?: string;
-  }): Promise<RoleEntity> {
+  async create(data: { key: string; label: string; description?: string }): Promise<RoleEntity> {
     const role = this.roleRepository.create(data);
     return this.roleRepository.save(role);
   }

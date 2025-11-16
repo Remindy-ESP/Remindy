@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 
 export class UpdateReminderDto {
   @ApiPropertyOptional({
-    description: 'Nombre de jours avant l\'événement',
+    description: "Nombre de jours avant l'événement",
     example: 7,
     minimum: 1,
     maximum: 365,

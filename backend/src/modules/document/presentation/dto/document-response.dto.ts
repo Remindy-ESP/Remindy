@@ -63,7 +63,7 @@ export class DocumentResponseDto {
 
   @ApiPropertyOptional({
     description: 'Texte extrait par OCR',
-    example: 'Contrat d\'abonnement Internet...',
+    example: "Contrat d'abonnement Internet...",
   })
   ocr_text?: string;
 
@@ -75,13 +75,13 @@ export class DocumentResponseDto {
   ocr_status: string;
 
   @ApiPropertyOptional({
-    description: 'Message d\'erreur OCR',
+    description: "Message d'erreur OCR",
     example: 'Timeout during OCR processing',
   })
   ocr_error?: string;
 
   @ApiProperty({
-    description: 'Date d\'upload',
+    description: "Date d'upload",
     example: '2025-01-15T10:30:00Z',
   })
   uploaded_at: string;

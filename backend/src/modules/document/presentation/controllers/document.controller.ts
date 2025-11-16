@@ -17,7 +17,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { DocumentResponseDto } from '../dto/document-response.dto';
 import { DocumentFilterDto } from '../dto/document-filter.dto';
@@ -111,7 +119,11 @@ export class DocumentController {
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les documents avec filtres optionnels' })
-  @ApiQuery({ name: 'subscription_id', required: false, description: "Filtrer par ID d'abonnement" })
+  @ApiQuery({
+    name: 'subscription_id',
+    required: false,
+    description: "Filtrer par ID d'abonnement",
+  })
   @ApiQuery({ name: 'contract_id', required: false, description: 'Filtrer par ID de contrat' })
   @ApiQuery({
     name: 'ocr_status',
@@ -120,7 +132,12 @@ export class DocumentController {
     description: 'Filtrer par statut OCR',
   })
   @ApiQuery({ name: 'mime_type', required: false, description: 'Filtrer par type MIME' })
-  @ApiQuery({ name: 'limit', required: false, description: 'Nombre maximum de résultats', type: Number })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Nombre maximum de résultats',
+    type: Number,
+  })
   @ApiQuery({
     name: 'sort',
     required: false,

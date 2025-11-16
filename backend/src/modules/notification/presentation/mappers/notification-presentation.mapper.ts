@@ -28,7 +28,7 @@ export class NotificationPresentationMapper {
   }
 
   static toResponseDtoArray(notifications: Notification[]): NotificationResponseDto[] {
-    return notifications.map((notification) => this.toResponseDto(notification));
+    return notifications.map(notification => this.toResponseDto(notification));
   }
 
   static toFilterAppDto(userId: string, dto: NotificationFilterDto): NotificationFilterAppDto {

@@ -1,4 +1,16 @@
-import { Controller, Get, Put, Patch, Delete, Param, Query, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { EventResponseDto } from '../dto/event-response.dto';
@@ -29,9 +41,23 @@ export class EventController {
 
   @Get('events')
   @ApiOperation({ summary: 'Récupérer les événements du calendrier avec filtres' })
-  @ApiQuery({ name: 'start', required: false, description: 'Date de début (ISO 8601)', example: '2025-01-01T00:00:00Z' })
-  @ApiQuery({ name: 'end', required: false, description: 'Date de fin (ISO 8601)', example: '2025-12-31T23:59:59Z' })
-  @ApiQuery({ name: 'subscription_id', required: false, description: 'Filtrer par ID d\'abonnement' })
+  @ApiQuery({
+    name: 'start',
+    required: false,
+    description: 'Date de début (ISO 8601)',
+    example: '2025-01-01T00:00:00Z',
+  })
+  @ApiQuery({
+    name: 'end',
+    required: false,
+    description: 'Date de fin (ISO 8601)',
+    example: '2025-12-31T23:59:59Z',
+  })
+  @ApiQuery({
+    name: 'subscription_id',
+    required: false,
+    description: "Filtrer par ID d'abonnement",
+  })
   @ApiQuery({
     name: 'status',
     required: false,
@@ -44,7 +70,13 @@ export class EventController {
     enum: ['pending', 'paid', 'failed'],
     description: 'Filtrer par statut de paiement',
   })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre limite de résultats (1-1000)', example: 100 })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Nombre limite de résultats (1-1000)',
+    example: 100,
+  })
   @ApiQuery({
     name: 'sort',
     required: false,
@@ -65,7 +97,7 @@ export class EventController {
 
   @Get('event/:id')
   @ApiOperation({ summary: 'Récupérer un événement par son ID' })
-  @ApiParam({ name: 'id', description: 'ID de l\'événement' })
+  @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({
     status: 200,
     description: 'Événement trouvé',
@@ -80,7 +112,7 @@ export class EventController {
   @Put('event/:id/reschedule')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reprogrammer un événement' })
-  @ApiParam({ name: 'id', description: 'ID de l\'événement' })
+  @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({
     status: 200,
     description: 'Événement reprogrammé avec succès',
@@ -99,8 +131,8 @@ export class EventController {
 
   @Patch('event/:id/status')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Mettre à jour le statut d\'un événement' })
-  @ApiParam({ name: 'id', description: 'ID de l\'événement' })
+  @ApiOperation({ summary: "Mettre à jour le statut d'un événement" })
+  @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({
     status: 200,
     description: 'Statut mis à jour avec succès',
@@ -118,8 +150,8 @@ export class EventController {
 
   @Patch('event/:id/payment-status')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Mettre à jour le statut de paiement d\'un événement' })
-  @ApiParam({ name: 'id', description: 'ID de l\'événement' })
+  @ApiOperation({ summary: "Mettre à jour le statut de paiement d'un événement" })
+  @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({
     status: 200,
     description: 'Statut de paiement mis à jour avec succès',
@@ -140,7 +172,7 @@ export class EventController {
   @Delete('event/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Supprimer un événement (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID de l\'événement' })
+  @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({
     status: 204,
     description: 'Événement supprimé avec succès',

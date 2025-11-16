@@ -7,7 +7,6 @@ import { UserPreferencesRepository } from '../../../infrastructure/repositories/
 describe('UserService', () => {
   let service: UserService;
   let userRepository: jest.Mocked<UserRepository>;
-  let userPreferencesRepository: jest.Mocked<UserPreferencesRepository>;
 
   const mockUser = {
     id: 'user-123',
@@ -56,7 +55,6 @@ describe('UserService', () => {
 
     service = module.get<UserService>(UserService);
     userRepository = module.get(UserRepository);
-    userPreferencesRepository = module.get(UserPreferencesRepository);
   });
 
   it('should be defined', () => {

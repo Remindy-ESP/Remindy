@@ -10,10 +10,7 @@ import {
 } from 'typeorm';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 import { SubscriptionEntity } from '../../../subscription/infrastructure/persistence/subscription.entity';
-import type {
-  ReminderType,
-  ReminderChannel,
-} from '../../domain/reminder.entity';
+import type { ReminderType, ReminderChannel } from '../../domain/reminder.entity';
 
 @Entity('reminders')
 export class ReminderEntity {
