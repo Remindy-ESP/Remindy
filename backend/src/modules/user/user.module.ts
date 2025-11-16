@@ -17,6 +17,7 @@ import { RgpdExportService } from './application/services/rgpd-export.service';
 // Repositories
 import { UserRepository } from './infrastructure/repositories/user.repository';
 import { UserPreferencesRepository } from './infrastructure/repositories/user-preferences.repository';
+import { UserSessionRepository } from './infrastructure/repositories/user-session.repository';
 import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.repository';
 
 @Module({
@@ -38,6 +39,7 @@ import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.
     // Repositories
     UserRepository,
     UserPreferencesRepository,
+    UserSessionRepository,
     RgpdExportRepository,
   ],
   exports: [
@@ -46,6 +48,7 @@ import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.
     RgpdExportService,
     UserRepository,
     UserPreferencesRepository,
+    UserSessionRepository,
     RgpdExportRepository,
   ],
 })

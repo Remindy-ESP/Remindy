@@ -8,6 +8,7 @@ import { typeOrmAsyncConfig } from './infrastructure/config/database.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { UsersModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { RolesModule } from './modules/roles/roles.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { EventModule } from './modules/event/event.module';
@@ -32,6 +33,7 @@ import { ReminderModule } from './modules/reminder/reminder.module';
     InfrastructureModule,
     AuthModule,
     UsersModule,
+    RolesModule,
     SubscriptionModule,
     EventModule,
     EventSeriesModule,

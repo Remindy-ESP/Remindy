@@ -21,12 +21,12 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
       url: databaseUrl,
       ssl: !isTest,
       autoLoadEntities: true,
-      synchronize: isDevelopment || isTest,
+      synchronize: false, // Disabled - use migrations only
       logging: isDevelopment,
       retryAttempts: 3,
       retryDelay: 3000,
       migrations: ['dist/infrastructure/database/migrations/*.js'],
-      migrationsRun: isStaging || isProduction,
+      migrationsRun: false, // Migrations should be run manually
     };
   },
 };

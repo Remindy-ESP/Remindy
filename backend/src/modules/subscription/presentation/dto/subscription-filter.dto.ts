@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsEnum, IsOptional, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
 import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export class SubscriptionFilterDto {
@@ -18,6 +19,7 @@ export class SubscriptionFilterDto {
     required: false,
   })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   contractId?: number;
 

@@ -1,5 +1,6 @@
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsOptional, IsUUID, IsInt } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class UploadDocumentDto {
   @ApiProperty({
@@ -22,5 +23,7 @@ export class UploadDocumentDto {
     example: 1,
   })
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
   contract_id?: number;
 }

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FindSubscriptionEventsUseCase, SubscriptionEvent } from './find-subscription-events.use-case';
 import { ISubscriptionRepository, SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
+import { EVENT_REPOSITORY } from '../../../event/application/ports/event-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { NotFoundException } from '@nestjs/common';
 
@@ -26,7 +27,7 @@ describe('FindSubscriptionEventsUseCase', () => {
           useValue: mockRepository,
         },
         {
-          provide: 'EVENT_REPOSITORY',
+          provide: EVENT_REPOSITORY,
           useValue: mockEventRepository,
         },
       ],
@@ -34,7 +35,7 @@ describe('FindSubscriptionEventsUseCase', () => {
 
     useCase = module.get<FindSubscriptionEventsUseCase>(FindSubscriptionEventsUseCase);
     repository = module.get(SUBSCRIPTION_REPOSITORY);
-    eventRepository = module.get('EVENT_REPOSITORY');
+    eventRepository = module.get(EVENT_REPOSITORY);
   });
 
   it('should be defined', () => {

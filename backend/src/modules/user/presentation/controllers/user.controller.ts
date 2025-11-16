@@ -1,5 +1,6 @@
-import { Controller, Get, Put, Post, Body, Param, Req, HttpStatus, HttpCode } from '@nestjs/common';
+import { Controller, Get, Put, Post, Delete, Body, Param, Req, HttpStatus, HttpCode, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { UserService } from '../../application/services/user.service';
 import { UserPreferencesService } from '../../application/services/user-preferences.service';
@@ -13,6 +14,7 @@ import { CreateRgpdExportDto, RgpdExportResponseDto } from '../dto/rgpd-export.d
 
 @ApiTags('Users')
 @Controller('users')
+@UseGuards(ThrottlerGuard)
 // @UseGuards(JwtAuthGuard) // Uncomment when JWT guard is implemented
 @ApiBearerAuth()
 export class UserController {
@@ -125,6 +127,7 @@ export class UserController {
 
   @Post('export-data')
   @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 requête par heure
   @ApiOperation({ summary: 'Request RGPD data export' })
   @ApiBody({ type: CreateRgpdExportDto })
   @ApiResponse({
@@ -150,7 +153,7 @@ export class UserController {
   ): Promise<RgpdExportResponseDto> {
     // TODO: Implement JWT guard and extract user ID from token
     const userId = this.extractUserIdFromRequest(req);
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+    const ipAddress = req.ip || 'unknown';
     return this.rgpdExportService.createExportRequest(userId, createDto, ipAddress);
   }
 
@@ -197,6 +200,28 @@ export class UserController {
     // TODO: Implement JWT guard and extract user ID from token
     const userId = this.extractUserIdFromRequest(req);
     return this.rgpdExportService.getExportStatus(userId, exportId);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 requête par jour
+  @ApiOperation({ summary: 'Delete current user account (RGPD right to deletion)' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'User account deleted successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'User not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  async deleteAccount(@Req() req: Request): Promise<void> {
+    // TODO: Implement JWT guard and extract user ID from token
+    const userId = this.extractUserIdFromRequest(req);
+    await this.userService.deleteAccount(userId);
   }
 
   /**
