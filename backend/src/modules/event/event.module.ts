@@ -7,6 +7,10 @@ import { FindAllEventsUseCase } from './application/use-cases/find-all-events.us
 import { RescheduleEventUseCase } from './application/use-cases/reschedule-event.use-case';
 import { CreateEventUseCase } from './application/use-cases/create-event.use-case';
 import { GenerateEventsForSubscriptionUseCase } from './application/use-cases/generate-events-for-subscription.use-case';
+import { GetEventByIdUseCase } from './application/use-cases/get-event-by-id.use-case';
+import { DeleteEventUseCase } from './application/use-cases/delete-event.use-case';
+import { UpdateEventStatusUseCase } from './application/use-cases/update-event-status.use-case';
+import { UpdateEventPaymentStatusUseCase } from './application/use-cases/update-event-payment-status.use-case';
 import { EventGenerationService } from './application/services/event-generation.service';
 import { EventController } from './presentation/controllers/event.controller';
 import { SubscriptionModule } from '../subscription/subscription.module';
@@ -28,6 +32,10 @@ import { EventSeriesModule } from '../event-series/event-series.module';
     RescheduleEventUseCase,
     CreateEventUseCase,
     GenerateEventsForSubscriptionUseCase,
+    GetEventByIdUseCase,
+    DeleteEventUseCase,
+    UpdateEventStatusUseCase,
+    UpdateEventPaymentStatusUseCase,
     EventGenerationService,
   ],
   exports: [EVENT_REPOSITORY, CreateEventUseCase, GenerateEventsForSubscriptionUseCase],
