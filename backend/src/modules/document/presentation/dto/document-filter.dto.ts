@@ -34,6 +34,7 @@ export class DocumentFilterDto {
     example: 'application/pdf',
   })
   @IsOptional()
+  @IsEnum(['application/pdf', 'image/png', 'image/jpeg'])
   mime_type?: string;
 
   @ApiPropertyOptional({

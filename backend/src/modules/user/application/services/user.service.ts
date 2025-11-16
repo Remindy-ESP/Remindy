@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserRepository } from '../../infrastructure/repositories/user.repository';
+import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import {
   UpdateUserProfileDto,
   UserProfileResponseDto,
@@ -8,7 +9,10 @@ import { EUser } from '../../../../infrastructure/database/entities/user.entity'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userPreferencesRepository: UserPreferencesRepository,
+  ) {}
 
   async getUserProfile(userId: string): Promise<UserProfileResponseDto> {
     const user = await this.userRepository.findByIdWithPreferences(userId);
@@ -107,5 +111,30 @@ export class UserService {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Delete user account with cascade soft delete
+   * This will soft delete:
+   * - User account
+   * - User preferences
+   * - User sessions (handled by FK cascade)
+   * - User subscriptions (handled by FK cascade)
+   * - User documents (handled by FK cascade)
+   * - User notifications (handled by FK cascade)
+   * - User reminders (handled by FK cascade)
+   */
+  async deleteAccount(userId: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Soft delete user preferences first
+    await this.userPreferencesRepository.softDelete(userId);
+
+    // Soft delete user account (cascade will handle related entities)
+    await this.userRepository.softDelete(userId);
   }
 }

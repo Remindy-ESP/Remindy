@@ -1,4 +1,4 @@
-import { IsDateString, IsOptional } from 'class-validator';
+import { IsDateString, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RescheduleEventDto {
@@ -13,5 +13,6 @@ export class RescheduleEventDto {
 
   @ApiProperty({ description: 'Notes sur la reprogrammation', required: false })
   @IsOptional()
+  @IsString()
   notes?: string;
 }
