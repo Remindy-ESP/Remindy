@@ -1,9 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { RRule, RRuleSet, rrulestr } from 'rrule';
-import {
-  IEventSeriesRepository,
-  EVENT_SERIES_REPOSITORY,
-} from '../ports/event-series-repository.interface';
+import { RRuleSet, rrulestr } from 'rrule';
+import type { IEventSeriesRepository } from '../ports/event-series-repository.interface';
+import { EVENT_SERIES_REPOSITORY } from '../ports/event-series-repository.interface';
 
 export interface GeneratedEventOccurrence {
   subscriptionId: string;
@@ -38,26 +36,34 @@ export class GenerateEventsFromSeriesUseCase {
       throw new Error(`Event series ${eventSeriesId} not found`);
     }
 
-    // Parse RRULE
-    const rrule = rrulestr(eventSeries.rrule, {
+    // Parse RRULE - rrulestr can return either RRule or RRuleSet
+    const parsedRule = rrulestr(eventSeries.rrule, {
       dtstart: eventSeries.dtstart,
       tzid: eventSeries.timezone,
-    }) as RRule;
+    });
 
     // Create RRuleSet to handle EXDATE and RDATE
     const rruleSet = new RRuleSet();
-    rruleSet.rrule(rrule);
+
+    // Add the parsed rule to the set
+    if (parsedRule instanceof RRuleSet) {
+      // If it's already an RRuleSet, merge its rules
+      parsedRule.rrules().forEach((r) => rruleSet.rrule(r));
+    } else {
+      // If it's a single RRule, add it
+      rruleSet.rrule(parsedRule);
+    }
 
     // Add exception dates (dates to exclude)
     if (eventSeries.exdates && eventSeries.exdates.length > 0) {
-      eventSeries.exdates.forEach((exdate) => {
+      eventSeries.exdates.forEach((exdate: Date) => {
         rruleSet.exdate(exdate);
       });
     }
 
     // Add additional recurrence dates
     if (eventSeries.rdates && eventSeries.rdates.length > 0) {
-      eventSeries.rdates.forEach((rdate) => {
+      eventSeries.rdates.forEach((rdate: Date) => {
         rruleSet.rdate(rdate);
       });
     }
@@ -90,32 +96,37 @@ export class GenerateEventsFromSeriesUseCase {
     }
 
     // Parse RRULE
-    const rrule = rrulestr(eventSeries.rrule, {
+    const parsedRule = rrulestr(eventSeries.rrule, {
       dtstart: eventSeries.dtstart,
       tzid: eventSeries.timezone,
-    }) as RRule;
+    });
 
     // Create RRuleSet
     const rruleSet = new RRuleSet();
-    rruleSet.rrule(rrule);
+
+    // Add the parsed rule to the set
+    if (parsedRule instanceof RRuleSet) {
+      parsedRule.rrules().forEach((r) => rruleSet.rrule(r));
+    } else {
+      rruleSet.rrule(parsedRule);
+    }
 
     // Add exception dates
     if (eventSeries.exdates && eventSeries.exdates.length > 0) {
-      eventSeries.exdates.forEach((exdate) => {
+      eventSeries.exdates.forEach((exdate: Date) => {
         rruleSet.exdate(exdate);
       });
     }
 
     // Add additional recurrence dates
     if (eventSeries.rdates && eventSeries.rdates.length > 0) {
-      eventSeries.rdates.forEach((rdate) => {
+      eventSeries.rdates.forEach((rdate: Date) => {
         rruleSet.rdate(rdate);
       });
     }
 
     // Generate next N occurrences from now
     const now = new Date();
-    const occurrences = rruleSet.after(now, true);
 
     // For getting multiple occurrences, we need to use all() with count
     const allOccurrences = rruleSet.all((date, i) => {

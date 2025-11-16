@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Event } from '../../domain/event.entity';
-import { IEventRepository, EVENT_REPOSITORY } from '../ports/event-repository.interface';
+import type { IEventRepository } from '../ports/event-repository.interface';
+import { EVENT_REPOSITORY } from '../ports/event-repository.interface';
 
 export interface CreateEventDto {
   subscriptionId: string;

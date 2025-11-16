@@ -41,7 +41,7 @@ export class CreateEventSeriesDto {
     example: ['2025-08-15T00:00:00Z', '2025-12-15T00:00:00Z'],
   })
   @IsArray()
-  @IsDateString({ each: true })
+  @IsDateString({}, { each: true })
   @IsOptional()
   exdates?: string[];
 
@@ -51,7 +51,7 @@ export class CreateEventSeriesDto {
     example: ['2025-03-21T00:00:00Z'],
   })
   @IsArray()
-  @IsDateString({ each: true })
+  @IsDateString({}, { each: true })
   @IsOptional()
   rdates?: string[];
 }

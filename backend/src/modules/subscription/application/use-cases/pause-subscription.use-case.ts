@@ -1,9 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { Subscription } from '../../domain/subscription.entity';
-import {
-  ISubscriptionRepository,
-  SUBSCRIPTION_REPOSITORY,
-} from '../ports/subscription-repository.interface';
+import type { ISubscriptionRepository } from '../ports/subscription-repository.interface';
+import { SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
 
 @Injectable()
 export class PauseSubscriptionUseCase {

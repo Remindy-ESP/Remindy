@@ -1,8 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import {
-  ISubscriptionRepository,
-  SUBSCRIPTION_REPOSITORY,
-} from '../ports/subscription-repository.interface';
+import type { ISubscriptionRepository } from '../ports/subscription-repository.interface';
+import { SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
+import { EVENT_REPOSITORY } from '../../../event/application/ports/event-repository.interface';
 
 // We'll use the Event type from event module
 export interface SubscriptionEvent {
@@ -25,7 +24,7 @@ export class FindSubscriptionEventsUseCase {
   constructor(
     @Inject(SUBSCRIPTION_REPOSITORY)
     private readonly subscriptionRepository: ISubscriptionRepository,
-    @Inject('EVENT_REPOSITORY')
+    @Inject(EVENT_REPOSITORY)
     private readonly eventRepository: any, // Will be injected from EventModule
   ) {}
 

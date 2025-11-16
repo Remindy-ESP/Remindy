@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEntity } from './infrastructure/persistence/event.entity';
 import { EventRepository } from './infrastructure/repositories/event.repository';
@@ -15,7 +15,7 @@ import { EventSeriesModule } from '../event-series/event-series.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([EventEntity]),
-    SubscriptionModule,
+    forwardRef(() => SubscriptionModule),
     EventSeriesModule,
   ],
   controllers: [EventController],
