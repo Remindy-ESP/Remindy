@@ -16,6 +16,8 @@ lerna-debug.log*
 .env.production
 .env.staging
 .env.develop
+.env.docker
+!.env.docker.example
 
 # OS
 .DS_Store
