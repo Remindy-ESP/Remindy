@@ -65,7 +65,7 @@ describe('UploadDocumentUseCase', () => {
     expect(result).toBe(expectedDocument);
     expect(repository.create).toHaveBeenCalledTimes(1);
 
-    // Vérifier que le document créé a les bonnes propriétés
+    // Verify that the created document has the correct properties
     const createdDocument = repository.create.mock.calls[0][0];
     expect(createdDocument).toBeInstanceOf(Document);
     expect(createdDocument.userId).toBe(dto.userId);
