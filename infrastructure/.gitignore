@@ -1,0 +1,19 @@
+# Fichiers système
+.DS_Store
+.DS_*
+
+# Clés SSH privées
+*.pem
+*.key
+id_rsa*
+!*.pub
+
+# Fichiers temporaires
+*.tmp
+*.log
+*.swp
+*~
+
+# Backup files
+*.backup
+*.bak

@@ -1,0 +1,20 @@
+#cloud-config
+
+users:
+  - name: ansible
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ansible_ssh_public_key}
+  - name: ${admin_username}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${admin_ssh_public_key}
+
+package_update: true
+package_upgrade: true
+
+runcmd:
+  - systemctl enable ssh
+  - systemctl start ssh
