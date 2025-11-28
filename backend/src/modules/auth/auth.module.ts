@@ -16,6 +16,11 @@ import { UserSessionTypeOrmRepository } from './infrastructure/database/reposito
 import { IUserSessionRepository } from './domain/repositories/user-session.repository';
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
+import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case';
+import { IEmailService } from './infrastructure/services/email.service';
+import { SendgridEmailService } from './infrastructure/services/sendgrid-email.service';
+import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([EUser, UserSessionEntity]),
@@ -26,6 +31,8 @@ import { LogoutUseCase } from './application/use-cases/logout.use-case';
     LoginUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
+    ForgotPasswordUseCase,
+    ResetPasswordUseCase,
 
     UserOrmMapper,
     {
@@ -44,6 +51,10 @@ import { LogoutUseCase } from './application/use-cases/logout.use-case';
     {
       provide: IUserAuthRepository,
       useClass: UserAuthTypeOrmRepository,
+    },
+    {
+      provide: IEmailService,
+      useClass: SendgridEmailService,
     },
   ],
 })

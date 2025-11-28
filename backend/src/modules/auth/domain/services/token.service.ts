@@ -7,6 +7,10 @@ export abstract class ITokenService {
     [key: string]: any;
   };
 
+  abstract generatePasswordResetToken(payload: {
+    sub: string;
+  }): string;
+
   abstract verifyRefreshToken(token: string): {
     sub: string;
     sessionId?: string;

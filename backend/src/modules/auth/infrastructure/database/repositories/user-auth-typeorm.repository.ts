@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { EUser } from 'src/infrastructure/database/entities/user.entity';
 import { UserOrmMapper } from '../../mappers/user-orm.mapper';
 import { AuthUser } from 'src/modules/auth/domain/entities/auth-user.entity';
@@ -23,5 +23,33 @@ export class UserAuthTypeOrmRepository implements IUserAuthRepository {
     const saved = await this.repo.save(orm);
     return this.mapper.toDomain(saved);
   }
+  async findById(id: string): Promise<AuthUser | null> {
+  const entity = await this.repo.findOne({
+    where: {
+      id,
+      deletedAt: IsNull(),
+    },
+  });
+
+  if (!entity) return null;
+
+  return this.mapper.toDomain(entity);
 }
+
+  async updatePassword(
+  userId: string,
+  passwordHash: string,
+): Promise<void> {
+  await this.repo.update(
+    { id: userId },
+    {
+      passwordHash,
+      passwordChangedAt: new Date(),
+      failedLoginCount: 0,
+    },
+  );
+}
+
+}
+  
 
