@@ -22,7 +22,7 @@ export class RegisterUserUseCase {
         firstName: dto.firstName || '',
         lastName: dto.lastName || '',
         phone: dto.phone || '',
-        role: 'user_freemium',
+        role_key: 'user_freemium',
     });
 
 

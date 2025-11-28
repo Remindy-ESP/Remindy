@@ -2,10 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  app.use(cookieParser());
+    
   const swaggerConfigBuilder = new DocumentBuilder()
     .setTitle('API Documentation for Remindy')
     .setDescription('Documentation de l’API')

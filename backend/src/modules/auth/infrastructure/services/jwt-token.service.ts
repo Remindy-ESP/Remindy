@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -8,19 +8,35 @@ export class JwtTokenService {
     return jwt.sign(
       payload,
       process.env.JWT_ACCESS_TOKEN_SECRET!,   
-      { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION || '15m' }
+      { 
+        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION as string | number || '15m'  
+      } as jwt.SignOptions 
     );
   }
 
   generateRefreshToken(payload: any): string {
-  const exp = process.env.JWT_REFRESH_TOKEN_EXPIRATION || '30d';
+    const exp = process.env.JWT_REFRESH_TOKEN_EXPIRATION || '30d';
 
-  if (!exp || typeof exp !== 'string') {
-    throw new Error(`Invalid JWT_REFRESH_TOKEN_EXPIRATION: "${exp}"`);
+    if (!exp || typeof exp !== 'string') {
+      throw new Error(`Invalid JWT_REFRESH_TOKEN_EXPIRATION: "${exp}"`);
+    }
+
+    return jwt.sign(
+      payload, 
+      process.env.JWT_REFRESH_TOKEN_SECRET!, 
+      {
+        expiresIn: exp,
+      } as jwt.SignOptions 
+    );
   }
-
-  return jwt.sign(payload, process.env.JWT_REFRESH_TOKEN_SECRET!, {
-    expiresIn: exp,
-  });
-}
+  verifyRefreshToken(token: string): any {
+    try {
+      return jwt.verify(
+        token,
+        process.env.JWT_REFRESH_TOKEN_SECRET!,
+      );
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }
