@@ -14,6 +14,8 @@ import { JwtTokenService } from './infrastructure/services/jwt-token.service';
 import { ITokenService } from './domain/services/token.service';
 import { UserSessionTypeOrmRepository } from './infrastructure/database/repositories/user-session-typeorm.repository';
 import { IUserSessionRepository } from './domain/repositories/user-session.repository';
+import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
+import { LogoutUseCase } from './application/use-cases/logout.use-case';
 @Module({
   imports: [
     TypeOrmModule.forFeature([EUser, UserSessionEntity]),
@@ -22,6 +24,8 @@ import { IUserSessionRepository } from './domain/repositories/user-session.repos
   providers: [
     RegisterUserUseCase,
     LoginUseCase,
+    RefreshTokenUseCase,
+    LogoutUseCase,
 
     UserOrmMapper,
     {

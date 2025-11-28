@@ -24,7 +24,7 @@ export enum UserStatus {
 
 @Entity('users')
 @Index('idx_users_email', ['email'], { unique: true })
-@Index('idx_users_role', ['role'])
+@Index('idx_users_role', ['role_key'])
 @Index('idx_users_status', ['status'])
 @Index('idx_users_deleted_at', ['deletedAt'])
 @Index('idx_users_last_login', ['lastLoginAt'])
@@ -52,7 +52,7 @@ export class EUser {
   photoR2Key: string;
 
   @Column({ type: 'text', nullable: false })
-  role: string;
+  role_key: string;
 
   @Column({
     type: 'enum',
@@ -96,7 +96,7 @@ export class EUser {
 
   // Relations
   @ManyToOne(() => RoleEntity, (role) => role.users)
-  @JoinColumn({ name: 'role', referencedColumnName: 'key' })
+  @JoinColumn({ name: 'role_key', referencedColumnName: 'key' })
   roleEntity: RoleEntity;
 
   @OneToMany(() => UserSessionEntity, (session) => session.user)

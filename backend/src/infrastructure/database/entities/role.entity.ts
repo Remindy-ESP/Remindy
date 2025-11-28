@@ -24,7 +24,7 @@ export class RoleEntity {
   createdAt: Date;
 
   // Relations
-  @OneToMany(() => EUser, (user) => user.role)
+  @OneToMany(() => EUser, (user) => user.role_key)
   users: EUser[];
 
   @OneToOne(() => RoleLimitEntity, (roleLimit) => roleLimit.role)

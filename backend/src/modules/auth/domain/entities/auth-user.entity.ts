@@ -6,7 +6,7 @@ export class AuthUser {
     id?: string;
     email: string;
     passwordHash: string;
-    role: string;
+    role_key: string;
     status: UserStatus;
     firstName: string;
     lastName: string;
@@ -26,7 +26,7 @@ static createNew(params: {
   firstName: string;
   lastName: string;
   phone?: string;
-  role?: string;
+  role_key?: string;
 }) {
   return new AuthUser({
     email: params.email,
@@ -34,7 +34,7 @@ static createNew(params: {
     firstName: params.firstName,
     lastName: params.lastName,
     phone: params.phone,
-    role: params.role ?? 'user_freemium',
+    role_key: params.role_key ?? 'user_freemium',
     status: UserStatus.ACTIVE,
     failedLoginCount: 0,
     emailVerified: false,
@@ -65,8 +65,8 @@ static createNew(params: {
     return this.props.phone;
   }
 
-  getRole() {
-    return this.props.role;
+  getRoleKey() {
+    return this.props.role_key;
   }
 
   getStatus() {

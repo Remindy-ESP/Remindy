@@ -85,7 +85,7 @@ export class UserService {
       lastName: user.lastName,
       phone: user.phone,
       photoR2Key: user.photoR2Key,
-      role: user.role,
+      role_key: user.role_key,
       status: user.status,
       timezone: user.timezone,
       language: user.language,
