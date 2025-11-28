@@ -39,4 +39,16 @@ export class JwtTokenService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+  generatePasswordResetToken(payload: { sub: string }): string {
+    return jwt.sign(
+      {
+        ...payload,
+        type: 'password-reset',
+      },
+      process.env.JWT_PASSWORD_RESET_SECRET!,
+      {
+        expiresIn: '15m',
+      },
+    );
+  }
 }

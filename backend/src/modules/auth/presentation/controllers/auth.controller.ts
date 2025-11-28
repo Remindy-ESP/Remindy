@@ -7,6 +7,10 @@ import { LoginRequestDto } from '../dto/login-request.dto';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
+import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-password.use-case';
+import { ForgotPasswordRequestDto } from '../../application/dto/forgot-password-request.dto';
+import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
+import { ResetPasswordRequestDto } from '../../application/dto/reset-password-request.dto';
 
 @ApiTags('Authentification')
 @Controller('auth')
@@ -16,6 +20,8 @@ export class AuthController {
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
   @Post('register')
@@ -89,5 +95,27 @@ export class AuthController {
 
   return { success: true };
   }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() dto: ForgotPasswordRequestDto) {
+    await this.forgotPasswordUseCase.execute(dto.email);
+
+    return {
+      success: true,
+      message: 'If the email exists, a reset link has been sent',
+    };
+  }
+  @Post('reset-password')
+async resetPassword(@Body() dto: ResetPasswordRequestDto) {
+  await this.resetPasswordUseCase.execute({
+    token: dto.token,
+    newPassword: dto.newPassword,
+  });
+
+  return {
+    success: true,
+    message: 'Password successfully reset',
+  };
+}
 
 }
