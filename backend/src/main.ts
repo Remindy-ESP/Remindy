@@ -12,7 +12,15 @@ async function bootstrap(): Promise<void> {
   const swaggerConfigBuilder = new DocumentBuilder()
     .setTitle('API Documentation for Remindy')
     .setDescription('Documentation de l’API')
-    .setVersion('v1');
+    .setVersion('v1')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    'access-token',
+    )
 
   const config = swaggerConfigBuilder.build();
 

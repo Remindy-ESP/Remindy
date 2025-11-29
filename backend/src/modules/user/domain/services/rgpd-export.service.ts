@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { RgpdExportRepository } from '../../infrastructure/repositories/rgpd-export.repository';
-import { UserRepository } from '../../infrastructure/repositories/user.repository';
+import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
 import { CreateRgpdExportDto, RgpdExportResponseDto } from '../../presentation/dto/rgpd-export.dto';
 import { RgpdExportEntity } from '../../../../infrastructure/database/entities/rgpd-export.entity';
 
@@ -8,7 +8,7 @@ import { RgpdExportEntity } from '../../../../infrastructure/database/entities/r
 export class RgpdExportService {
   constructor(
     private readonly rgpdExportRepository: RgpdExportRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UserTypeOrmRepository,
   ) {}
 
   async createExportRequest(

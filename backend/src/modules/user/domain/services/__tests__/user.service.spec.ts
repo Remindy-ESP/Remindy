@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserService } from '../user.service';
-import { UserRepository } from '../../../infrastructure/repositories/user.repository';
+import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
 import { UserPreferencesRepository } from '../../../infrastructure/repositories/user-preferences.repository';
 
 describe('UserService', () => {

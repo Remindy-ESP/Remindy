@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserPreferencesService } from '../user-preferences.service';
 import { UserPreferencesRepository } from '../../../infrastructure/repositories/user-preferences.repository';
-import { UserRepository } from '../../../infrastructure/repositories/user.repository';
+import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
 
 describe('UserPreferencesService', () => {
   let service: UserPreferencesService;

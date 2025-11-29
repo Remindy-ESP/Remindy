@@ -9,31 +9,43 @@ import {
   Req,
   HttpStatus,
   HttpCode,
+  UnauthorizedException,
   UseGuards,
+  Res,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiOkResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import type { Request } from 'express';
-import { UserService } from '../../application/services/user.service';
-import { UserPreferencesService } from '../../application/services/user-preferences.service';
-import { RgpdExportService } from '../../application/services/rgpd-export.service';
+import type { Request, Response } from 'express';
+import { UserService } from '../../domain/services/user.service';
+import { UserPreferencesService } from '../../domain/services/user-preferences.service';
+import { RgpdExportService } from '../../domain/services/rgpd-export.service';
 import { UpdateUserProfileDto, UserProfileResponseDto } from '../dto/user-profile.dto';
+import { UpdateUserMeRequestDto } from '../../application/dto/update-user-profile.request.dto';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from '../dto/user-preferences.dto';
 import { CreateRgpdExportDto, RgpdExportResponseDto } from '../dto/rgpd-export.dto';
+import { GetMyProfileUseCase } from '../../application/use-cases/get-my-profile.use-case';
+import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case'; 
+import { DeleteMyAccountUseCase } from '../../application/use-cases/delete-my-account.use-case';
+import { UserMeResponseDto } from '../dto/user-me.response.dto';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
+import { UserPresenter } from '../mappers/user.presenter';
+import type { RequestWithUser } from 'src/types/request-with-user.interface';
 
 // TODO: Import your JWT authentication guard
 // import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(ThrottlerGuard)
-// @UseGuards(JwtAuthGuard) // Uncomment when JWT guard is implemented
-@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('access-token')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userPreferencesService: UserPreferencesService,
     private readonly rgpdExportService: RgpdExportService,
+    private readonly getMyProfileUseCase: GetMyProfileUseCase,
+    private readonly updateMyProfileUseCase: UpdateMyProfileUseCase,
+    private readonly deleteMyAccountUseCase: DeleteMyAccountUseCase,
   ) {}
 
   @Get('profile')
@@ -57,6 +69,56 @@ export class UserController {
     const userId = this.extractUserIdFromRequest(req);
     return this.userService.getUserProfile(userId);
   }
+@Get('me')
+@UseGuards(JwtAuthGuard)
+async getMe(@Req() req: any) {
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    throw new UnauthorizedException('User ID not found in request');
+  }
+
+  return this.getMyProfileUseCase.execute({ userId });
+}
+
+
+@Put('me')
+@UseGuards(JwtAuthGuard)
+async updateMe(
+  @Req() req: Request & { user: { userId: string } },
+  @Body() dto: UpdateUserMeRequestDto,
+) {
+  const userId = req.user.userId;
+
+  if (!userId) {
+    throw new UnauthorizedException('User ID not found in request');
+  }
+
+  await this.updateMyProfileUseCase.execute(userId, dto);
+
+  return { success: true };
+}
+
+@Delete('me')
+@UseGuards(JwtAuthGuard)
+async deleteMe(
+  @Req() req: Request & { user: { userId: string } },
+  @Res({ passthrough: true }) res: Response,
+) {
+  const userId = req.user.userId;
+
+  if (!userId) {
+    throw new UnauthorizedException('User ID not found');
+  }
+
+  await this.deleteMyAccountUseCase.execute(userId);
+
+  res.clearCookie('refreshToken', {
+    path: '/',
+  });
+
+  return { success: true };
+}
 
   @Put('profile')
   @ApiOperation({ summary: 'Update current user profile' })

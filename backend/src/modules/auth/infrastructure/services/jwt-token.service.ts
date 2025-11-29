@@ -39,6 +39,16 @@ export class JwtTokenService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+  verifyAccessToken(token: string): any {
+    try {
+      return jwt.verify(
+        token,
+        process.env.JWT_ACCESS_TOKEN_SECRET!,
+      );
+    } catch {
+      throw new UnauthorizedException('Invalid or expired access token');
+    }
+  }
   generatePasswordResetToken(payload: { sub: string }): string {
     return jwt.sign(
       {
