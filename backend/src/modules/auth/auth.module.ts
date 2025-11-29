@@ -20,6 +20,7 @@ import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.u
 import { IEmailService } from './infrastructure/services/email.service';
 import { SendgridEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
+import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -33,6 +34,8 @@ import { ResetPasswordUseCase } from './application/use-cases/reset-password.use
     LogoutUseCase,
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
+    JwtTokenService,
+    JwtAuthGuard,
 
     UserOrmMapper,
     {
@@ -57,5 +60,8 @@ import { ResetPasswordUseCase } from './application/use-cases/reset-password.use
       useClass: SendgridEmailService,
     },
   ],
+  exports: [
+    JwtTokenService,
+  ]
 })
 export class AuthModule {}

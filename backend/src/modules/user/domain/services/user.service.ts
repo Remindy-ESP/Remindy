@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { UserRepository } from '../../infrastructure/repositories/user.repository';
+import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import {
   UpdateUserProfileDto,
@@ -10,7 +10,7 @@ import { EUser } from '../../../../infrastructure/database/entities/user.entity'
 @Injectable()
 export class UserService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UserTypeOrmRepository,
     private readonly userPreferencesRepository: UserPreferencesRepository,
   ) {}
 
@@ -67,8 +67,9 @@ export class UserService {
       updateData.language = updateDto.language;
     }
 
-    // Update user profile
-    const updatedUser = await this.userRepository.updateProfile(userId, updateData);
+    await this.userRepository.updateProfile(userId, updateData);
+
+    const updatedUser = await this.userRepository.findById(userId);
 
     if (!updatedUser) {
       throw new NotFoundException('User not found after update');

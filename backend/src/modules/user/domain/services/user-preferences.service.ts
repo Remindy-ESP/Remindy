@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
-import { UserRepository } from '../../infrastructure/repositories/user.repository';
+import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
 import {
   UpdateUserPreferencesDto,
   UserPreferencesResponseDto,
@@ -15,7 +15,7 @@ import { Theme } from 'src/infrastructure/database/entities/user-preference.enti
 export class UserPreferencesService {
   constructor(
     private readonly userPreferencesRepository: UserPreferencesRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UserTypeOrmRepository,
   ) {}
 
   async getUserPreferences(userId: string): Promise<UserPreferencesResponseDto> {

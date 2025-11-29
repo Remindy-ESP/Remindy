@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { RgpdExportService } from '../rgpd-export.service';
 import { RgpdExportRepository } from '../../../infrastructure/repositories/rgpd-export.repository';
-import { UserRepository } from '../../../infrastructure/repositories/user.repository';
+import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
 
 describe('RgpdExportService', () => {
   let service: RgpdExportService;

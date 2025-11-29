@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
+import { UserRepository } from '../../domain/repositories/user-user.repository';
 
 @Injectable()
-export class UserRepository {
+export class UserTypeOrmRepository implements UserRepository {
   constructor(
     @InjectRepository(EUser)
     private readonly userRepository: Repository<EUser>,
@@ -12,38 +13,52 @@ export class UserRepository {
 
   async findById(id: string): Promise<EUser | null> {
     return this.userRepository.findOne({
-      where: { id },
+      where: { id, deletedAt: IsNull() },
       relations: ['preferences'],
     });
   }
 
   async findByEmail(email: string): Promise<EUser | null> {
     return this.userRepository.findOne({
-      where: { email: email.toLowerCase().trim() },
+      where: {
+        email: email.toLowerCase().trim(),
+        deletedAt: IsNull(),
+      },
     });
   }
 
   async findByIdWithPreferences(id: string): Promise<EUser | null> {
     return this.userRepository.findOne({
-      where: { id },
+      where: { id, deletedAt: IsNull() },
       relations: ['preferences'],
     });
   }
 
-  async updateProfile(id: string, data: Partial<EUser>): Promise<EUser | null> {
-    await this.userRepository.update(id, data);
-    return this.findById(id);
+  async updateProfile(
+  userId: string,
+  data: Partial<EUser>,
+): Promise<void> {
+  if (!userId) {
+    throw new Error('updateProfile called without userId');
   }
+
+  await this.userRepository.update(
+    { id: userId },
+    data,
+  );
+}
+
 
   async save(user: EUser): Promise<EUser> {
     return this.userRepository.save(user);
   }
 
   async create(data: Partial<EUser>): Promise<EUser> {
-    return this.userRepository.create(data);
+    const user = this.userRepository.create(data);
+    return this.userRepository.save(user);
   }
 
-  async softDelete(id: string): Promise<void> {
-    await this.userRepository.softDelete(id);
+  async softDelete(userId: string): Promise<void> {
+    await this.userRepository.softDelete({ id: userId });
   }
 }

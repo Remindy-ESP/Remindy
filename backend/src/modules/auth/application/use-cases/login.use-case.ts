@@ -44,8 +44,8 @@ const refreshToken = this.tokenService.generateRefreshToken({
     });
 
     const accessToken = this.tokenService.generateAccessToken({
-      userId: user.getId(),
-      sessionId: session.id,
+      sub: user.getId(),
+      role: user.getRoleKey(),
     });
 
     return {
