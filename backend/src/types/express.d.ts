@@ -2,7 +2,7 @@ import 'express';
 
 declare module 'express' {
   interface User {
-    id: string;
+    userId: string;
   }
 
   interface Request {

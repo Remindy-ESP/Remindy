@@ -1,9 +1,9 @@
 import { Controller, Post, Body, Req, Res, UnauthorizedException} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { RegisterRequestDto } from '../dto/register-request.dto';
+import { RegisterRequestDto } from '../../application/dto/register-request.dto';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
-import { LoginRequestDto } from '../dto/login-request.dto';
+import { LoginRequestDto } from '../../application/dto/login-request.dto';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
@@ -30,19 +30,24 @@ export class AuthController {
     return { success: true, userId: user.getId() };
   }
 
-  @Post('login')
-  async login(
-    @Body() dto: LoginRequestDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+@Post('login')
+async login(
+  @Req() req: Request,
+  @Body() dto: LoginRequestDto,
+  @Res({ passthrough: true }) res: Response,
+) {
   const { accessToken, refreshToken } =
-    await this.loginUseCase.execute(dto);
+    await this.loginUseCase.execute({
+      email: dto.email,
+      password: dto.password,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.headers['user-agent'] ?? 'unknown',
+      deviceName: 'web',
+    });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: false,
     sameSite: 'lax',
-    path: '/',
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 

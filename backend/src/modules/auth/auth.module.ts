@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthController } from './presentation/controllers/auth.controller';
 import { UserAuthTypeOrmRepository } from './infrastructure/database/repositories/user-auth-typeorm.repository';
 import { IUserAuthRepository } from './domain/repositories/user-auth.repository';
@@ -21,9 +21,11 @@ import { IEmailService } from './infrastructure/services/email.service';
 import { SendgridEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
+import { UsersModule } from '../user/user.module';
 
 @Module({
   imports: [
+    forwardRef(() => UsersModule),
     TypeOrmModule.forFeature([EUser, UserSessionEntity]),
   ],
   controllers: [AuthController],
@@ -36,7 +38,6 @@ import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
     ResetPasswordUseCase,
     JwtTokenService,
     JwtAuthGuard,
-
     UserOrmMapper,
     {
       provide: ITokenService,

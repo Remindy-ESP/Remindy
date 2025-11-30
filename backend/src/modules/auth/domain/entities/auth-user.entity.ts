@@ -43,9 +43,12 @@ static createNew(params: {
 });
   }
 
-  getId() {
-    return this.props.id;
+  getId(): string {
+  if (!this.props.id) {
+    throw new Error('AuthUser ID is not defined');
   }
+  return this.props.id;
+}
 
   getEmail() {
     return this.props.email;

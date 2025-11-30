@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { EUser } from '../../infrastructure/database/entities/user.entity';
@@ -24,13 +24,14 @@ import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.
 // Services
 import { UserService } from './domain/services/user.service';
 import { UserPreferencesService } from './domain/services/user-preferences.service';
-import { RgpdExportService } from './domain/services/rgpd-export.service';
-
+import { RequestRgpdExportDto } from './application/dto/request-export-rgpd.dto';
+import { RequestRgpdExportUseCase } from './application/use-cases/request-rgpd-export.use-case';
 // Use cases
 import { GetMyProfileUseCase } from './application/use-cases/get-my-profile.use-case';
 import { UpdateMyProfileUseCase } from './application/use-cases/update-my-profile.use-case';
 import { DeleteMyAccountUseCase } from './application/use-cases/delete-my-account.use-case';
-
+import { GetMyPreferencesUseCase } from './application/use-cases/get-my-preferences.use-case';
+import { UpdateUserPreferencesUseCase } from './application/use-cases/update-user-preferences.use-case';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -43,7 +44,7 @@ import { AuthModule } from '../auth/auth.module';
       RoleEntity,
       RoleLimitEntity,
     ]),
-    AuthModule,
+    forwardRef(() => AuthModule),
   ],
 
   controllers: [UserController],
@@ -53,11 +54,13 @@ import { AuthModule } from '../auth/auth.module';
     GetMyProfileUseCase,
     UpdateMyProfileUseCase,
     DeleteMyAccountUseCase,
+    GetMyPreferencesUseCase,
+    UpdateUserPreferencesUseCase,
+    RequestRgpdExportUseCase,
 
     // SERVICES
     UserService,
     UserPreferencesService,
-    RgpdExportService,
 
     // INFRASTRUCTURE REPOS
     UserTypeOrmRepository,
@@ -81,7 +84,7 @@ import { AuthModule } from '../auth/auth.module';
     User_SessionRepository,
     UserService,
     UserPreferencesService,
-    RgpdExportService,
+    UserPreferencesRepository,
   ],
 })
 export class UsersModule {}
