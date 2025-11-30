@@ -139,7 +139,7 @@ export class UserController {
 
   @Post('export-data')
   @HttpCode(HttpStatus.ACCEPTED)
-  @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 requête par heure
+  @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 request per hour
   @ApiOperation({ summary: 'Request RGPD data export' })
   @ApiBody({ type: CreateRgpdExportDto })
   @ApiResponse({
@@ -216,7 +216,7 @@ export class UserController {
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 requête par jour
+  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 request per day
   @ApiOperation({ summary: 'Delete current user account (RGPD right to deletion)' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
