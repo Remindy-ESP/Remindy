@@ -26,6 +26,7 @@
     "migration:show": "npm run typeorm -- migration:show"
   },
   "dependencies": {
+    "@anatine/zod-nestjs": "^2.0.12",
     "@neondatabase/serverless": "^1.0.1",
     "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^11.0.1",
@@ -51,7 +52,8 @@
     "reflect-metadata": "^0.2.2",
     "rrule": "^2.8.1",
     "rxjs": "^7.8.1",
-    "typeorm": "^0.3.26"
+    "typeorm": "^0.3.26",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

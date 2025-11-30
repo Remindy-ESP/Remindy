@@ -18,19 +18,22 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { UserService } from '../../domain/services/user.service';
 import { UserPreferencesService } from '../../domain/services/user-preferences.service';
-import { RgpdExportService } from '../../domain/services/rgpd-export.service';
 import { UpdateUserProfileDto, UserProfileResponseDto } from '../dto/user-profile.dto';
 import { UpdateUserMeRequestDto } from '../../application/dto/update-user-profile.request.dto';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from '../dto/user-preferences.dto';
-import { CreateRgpdExportDto, RgpdExportResponseDto } from '../dto/rgpd-export.dto';
+import { RgpdExportResponseDto } from '../dto/rgpd-export.dto';
 import { GetMyProfileUseCase } from '../../application/use-cases/get-my-profile.use-case';
 import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case'; 
 import { DeleteMyAccountUseCase } from '../../application/use-cases/delete-my-account.use-case';
+import { GetMyPreferencesUseCase } from '../../application/use-cases/get-my-preferences.use-case';
 import { UserMeResponseDto } from '../dto/user-me.response.dto';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { UserPresenter } from '../mappers/user.presenter';
+import { UpdateUserPreferencesUseCase } from '../../application/use-cases/update-user-preferences.use-case';
 import type { RequestWithUser } from 'src/types/request-with-user.interface';
-
+import { UserPreferencesMapper } from '../mappers/user-preferences.mapper';
+import { RequestRgpdExportDto } from '../../application/dto/request-export-rgpd.dto';
+import { RequestRgpdExportUseCase } from '../../application/use-cases/request-rgpd-export.use-case';
 // TODO: Import your JWT authentication guard
 // import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
@@ -42,13 +45,16 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userPreferencesService: UserPreferencesService,
-    private readonly rgpdExportService: RgpdExportService,
     private readonly getMyProfileUseCase: GetMyProfileUseCase,
     private readonly updateMyProfileUseCase: UpdateMyProfileUseCase,
     private readonly deleteMyAccountUseCase: DeleteMyAccountUseCase,
+    private readonly getMyPreferencesUseCase: GetMyPreferencesUseCase,
+    private readonly updateUserPreferencesUseCase: UpdateUserPreferencesUseCase,
+    private readonly requestRgpdExportUseCase: RequestRgpdExportUseCase,
   ) {}
 
   @Get('profile')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -70,7 +76,6 @@ export class UserController {
     return this.userService.getUserProfile(userId);
   }
 @Get('me')
-@UseGuards(JwtAuthGuard)
 async getMe(@Req() req: any) {
   const userId = req.user?.userId;
 
@@ -149,26 +154,15 @@ async deleteMe(
     return this.userService.updateUserProfile(userId, updateDto);
   }
 
-  @Get('preferences')
-  @ApiOperation({ summary: 'Get current user preferences' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User preferences retrieved successfully',
-    type: UserPreferencesResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async getPreferences(@Req() req: Request): Promise<UserPreferencesResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.userPreferencesService.getUserPreferences(userId);
-  }
+@Get('preferences')
+async getPreferences(@Req() req: RequestWithUser) {
+  const userId = req.user.userId;
+
+  const prefs = await this.getMyPreferencesUseCase.execute(userId);
+
+  return UserPreferencesResponseDto.fromEntity(prefs);
+}
+
 
   @Put('preferences')
   @ApiOperation({ summary: 'Update current user preferences' })
@@ -191,90 +185,117 @@ async deleteMe(
     description: 'Unauthorized',
   })
   async updatePreferences(
-    @Req() req: Request,
-    @Body() updateDto: UpdateUserPreferencesDto,
-  ): Promise<UserPreferencesResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.userPreferencesService.updateUserPreferences(userId, updateDto);
-  }
+  @Req() req: RequestWithUser,
+  @Body() dto: UpdateUserPreferencesDto,
+) {
+  const userId = req.user.userId;
 
-  @Post('export-data')
-  @HttpCode(HttpStatus.ACCEPTED)
-  @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 requête par heure
-  @ApiOperation({ summary: 'Request RGPD data export' })
-  @ApiBody({ type: CreateRgpdExportDto })
-  @ApiResponse({
-    status: HttpStatus.ACCEPTED,
-    description: 'Export request created successfully',
-    type: RgpdExportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data or pending export already exists',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async exportData(
-    @Req() req: Request,
-    @Body() createDto: CreateRgpdExportDto,
-  ): Promise<RgpdExportResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    const ipAddress = req.ip || 'unknown';
-    return this.rgpdExportService.createExportRequest(userId, createDto, ipAddress);
-  }
+  const input = UserPreferencesMapper.toInput(dto);
 
-  @Get('exports')
-  @ApiOperation({ summary: 'Get all export requests for current user' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Export requests retrieved successfully',
-    type: [RgpdExportResponseDto],
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async getExports(@Req() req: Request): Promise<RgpdExportResponseDto[]> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.rgpdExportService.getUserExports(userId);
-  }
+  const updated = await this.updateUserPreferencesUseCase.execute(
+    userId,
+    input,
+  );
 
-  @Get('exports/:exportId')
-  @ApiOperation({ summary: 'Get export request status' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Export request status retrieved successfully',
-    type: RgpdExportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Export request not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async getExportStatus(
-    @Req() req: Request,
-    @Param('exportId') exportId: string,
-  ): Promise<RgpdExportResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.rgpdExportService.getExportStatus(userId, exportId);
-  }
+  return UserPreferencesResponseDto.fromEntity(updated);
+}
+
+@Post('export-data')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+async exportData(
+  @Req() req: RequestWithUser,
+  @Body() dto: RequestRgpdExportDto,
+): Promise<RgpdExportResponseDto> {
+  const result = await this.requestRgpdExportUseCase.execute(
+    req.user.userId,
+    dto,
+  );
+
+  return {
+    id: result.id,
+    status: result.status,
+    format: result.format,
+    createdAt: result.createdAt,
+  };
+}
+
+  // @Post('export-data')
+  // @HttpCode(HttpStatus.ACCEPTED)
+  // @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 requête par heure
+  // @ApiOperation({ summary: 'Request RGPD data export' })
+  // @ApiBody({ type: CreateRgpdExportDto })
+  // @ApiResponse({
+  //   status: HttpStatus.ACCEPTED,
+  //   description: 'Export request created successfully',
+  //   type: RgpdExportResponseDto,
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.BAD_REQUEST,
+  //   description: 'Invalid input data or pending export already exists',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.NOT_FOUND,
+  //   description: 'User not found',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.UNAUTHORIZED,
+  //   description: 'Unauthorized',
+  // })
+  // async exportData(
+  //   @Req() req: Request,
+  //   @Body() createDto: CreateRgpdExportDto,
+  // ): Promise<RgpdExportResponseDto> {
+  //   // TODO: Implement JWT guard and extract user ID from token
+  //   const userId = this.extractUserIdFromRequest(req);
+  //   const ipAddress = req.ip || 'unknown';
+  //   return this.rgpdExportService.createExportRequest(userId, createDto, ipAddress);
+  // }
+
+  // @Get('exports')
+  // @ApiOperation({ summary: 'Get all export requests for current user' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Export requests retrieved successfully',
+  //   type: [RgpdExportResponseDto],
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.NOT_FOUND,
+  //   description: 'User not found',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.UNAUTHORIZED,
+  //   description: 'Unauthorized',
+  // })
+  // async getExports(@Req() req: Request): Promise<RgpdExportResponseDto[]> {
+  //   // TODO: Implement JWT guard and extract user ID from token
+  //   const userId = this.extractUserIdFromRequest(req);
+  //   return this.rgpdExportService.getUserExports(userId);
+  // }
+
+  // @Get('exports/:exportId')
+  // @ApiOperation({ summary: 'Get export request status' })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   description: 'Export request status retrieved successfully',
+  //   type: RgpdExportResponseDto,
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.NOT_FOUND,
+  //   description: 'Export request not found',
+  // })
+  // @ApiResponse({
+  //   status: HttpStatus.UNAUTHORIZED,
+  //   description: 'Unauthorized',
+  // })
+  // async getExportStatus(
+  //   @Req() req: Request,
+  //   @Param('exportId') exportId: string,
+  // ): Promise<RgpdExportResponseDto> {
+  //   // TODO: Implement JWT guard and extract user ID from token
+  //   const userId = this.extractUserIdFromRequest(req);
+  //   return this.rgpdExportService.getExportStatus(userId, exportId);
+  // }
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)

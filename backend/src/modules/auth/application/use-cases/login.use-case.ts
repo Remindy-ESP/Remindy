@@ -3,8 +3,12 @@ import { IUserAuthRepository } from '../../domain/repositories/user-auth.reposit
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { IPasswordService } from '../../domain/services/password.service';
 import { ITokenService } from '../../domain/services/token.service';
-import { LoginRequestDto } from '../../presentation/dto/login-request.dto';
+import { LoginRequestDto } from '../dto/login-request.dto';
 import { LoginResponseDto } from '../../presentation/dto/login-response.dto';
+import { User } from 'express';
+import { UserPreferencesRepository } from 'src/modules/user/infrastructure/repositories/user-preferences.repository';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
 @Injectable()
 export class LoginUseCase {
@@ -15,31 +19,38 @@ export class LoginUseCase {
     private readonly tokenService: ITokenService,
   ) {}
 
-  async execute(dto: LoginRequestDto): Promise<LoginResponseDto> {
-    const user = await this.userRepo.findByEmail(dto.email);
+  async execute(params: {
+    email: string;
+    password: string;
+    ipAddress: string;
+    userAgent: string;
+    deviceName?: string;
+  }): Promise<LoginResponseDto> {
+    const user = await this.userRepo.findByEmail(params.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const isValid = await this.passwordService.compare(
-      dto.password,
+      params.password,
       user.getPasswordHash(),
     );
 
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
-const refreshToken = this.tokenService.generateRefreshToken({
-  sub: user.getId(),
-});
+    const refreshToken = this.tokenService.generateRefreshToken({
+      sub: user.getId(),
+    });
+
     const refreshTokenHash = await this.passwordService.hash(refreshToken);
 
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
-    const session = await this.sessionRepo.createSession({
-      userId: user.getId() || '',  
+    await this.sessionRepo.createSession({
+      userId: user.getId()!,
       refreshTokenHash,
-      ipAddress: dto.ipAddress,
-      userAgent: dto.userAgent,
-      deviceName: dto.deviceName,
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+      deviceName: params.deviceName ?? 'unknown',
       expiresAt,
     });
 
@@ -51,7 +62,7 @@ const refreshToken = this.tokenService.generateRefreshToken({
     return {
       accessToken,
       refreshToken,
-      userId: user.getId() || '',
+      userId: user.getId()!,
     };
   }
 }
