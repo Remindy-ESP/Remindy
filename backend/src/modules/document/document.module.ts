@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DocumentEntity } from './infrastructure/persistence/document.entity';
 import { DocumentController } from './presentation/controllers/document.controller';
 import { DocumentRepository } from './infrastructure/repositories/document.repository';
@@ -11,9 +12,12 @@ import { ReprocessOcrUseCase } from './application/use-cases/reprocess-ocr.use-c
 import { CloudflareR2Service } from './infrastructure/services/cloudflare-r2.service';
 import { OcrService } from './infrastructure/services/ocr.service';
 import { GeminiParserService } from './infrastructure/services/gemini-parser.service';
+import { QuotaService } from './application/services/quota.service';
+import { InMemoryQueueService } from './infrastructure/queue/in-memory-queue.service';
+import { OcrEventListener } from './application/events/ocr-event.listener';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DocumentEntity])],
+  imports: [TypeOrmModule.forFeature([DocumentEntity]), EventEmitterModule.forRoot()],
   controllers: [DocumentController],
   providers: [
     {
@@ -23,11 +27,14 @@ import { GeminiParserService } from './infrastructure/services/gemini-parser.ser
     CloudflareR2Service,
     OcrService,
     GeminiParserService,
+    QuotaService,
     UploadDocumentUseCase,
     FindAllDocumentsUseCase,
     DeleteDocumentUseCase,
     ReprocessOcrUseCase,
+    InMemoryQueueService,
+    OcrEventListener,
   ],
-  exports: [DOCUMENT_REPOSITORY],
+  exports: [DOCUMENT_REPOSITORY, InMemoryQueueService],
 })
 export class DocumentModule {}

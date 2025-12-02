@@ -145,8 +145,10 @@ export class OcrService {
       text
         // Remplacer les sauts de ligne multiples par un seul
         .replace(/\n{3,}/g, '\n\n')
+        // Remplacer les tabs par des espaces
+        .replace(/\t/g, ' ')
         // Remplacer les espaces multiples par un seul
-        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/[ ]{2,}/g, ' ')
         // Supprimer les espaces en début et fin de ligne
         .split('\n')
         .map(line => line.trim())

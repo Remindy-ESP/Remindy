@@ -56,8 +56,8 @@ export class GeminiParserService {
       return parsedData;
     } catch (error) {
       this.logger.error(`Gemini parsing failed: ${error.message}`, error.stack);
-      // Retourner un objet vide plutôt que de throw pour ne pas bloquer l'upload
-      return { confidence: 0 };
+      // Utiliser le fallback parsing en cas d'échec Gemini
+      return this.fallbackParsing(ocrText);
     }
   }
 
@@ -151,8 +151,8 @@ RÉPONDS MAINTENANT :`;
       this.logger.error(`Failed to parse Gemini response: ${error.message}`);
       this.logger.debug(`Raw response: ${responseText}`);
 
-      // Fallback : essayer d'extraire avec des regex simples
-      return this.fallbackParsing(responseText);
+      // Fallback parsing sera appelé par le catch parent
+      throw error;
     }
   }
 
