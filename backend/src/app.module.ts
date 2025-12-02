@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { typeOrmAsyncConfig } from './infrastructure/config/database.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { UsersModule } from './modules/user/user.module';
@@ -35,6 +36,15 @@ import { SeedModule } from './modules/seed/seed.module';
         limit: 100,
       },
     ]),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      newListener: false,
+      removeListener: false,
+      maxListeners: 10,
+      verboseMemoryLeak: false,
+      ignoreErrors: false,
+    }),
     InfrastructureModule,
     AuthModule,
     UsersModule,

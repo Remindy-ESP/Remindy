@@ -21,6 +21,14 @@ export class DocumentMapper {
       uploadedAt: entity.uploadedAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
+      // Champs parsed par Gemini
+      parsedProvider: entity.parsedProvider,
+      parsedAmount: entity.parsedAmount,
+      parsedCurrency: entity.parsedCurrency,
+      parsedDate: entity.parsedDate,
+      parsedFrequency: entity.parsedFrequency,
+      parsedCategory: entity.parsedCategory,
+      parsingConfidence: entity.parsingConfidence,
     });
 
     return document;
@@ -54,6 +62,14 @@ export class DocumentMapper {
     if (document.deletedAt) {
       entity.deletedAt = document.deletedAt;
     }
+    // Champs parsed par Gemini
+    entity.parsedProvider = document.parsedProvider;
+    entity.parsedAmount = document.parsedAmount;
+    entity.parsedCurrency = document.parsedCurrency;
+    entity.parsedDate = document.parsedDate;
+    entity.parsedFrequency = document.parsedFrequency;
+    entity.parsedCategory = document.parsedCategory;
+    entity.parsingConfidence = document.parsingConfidence;
 
     return entity;
   }

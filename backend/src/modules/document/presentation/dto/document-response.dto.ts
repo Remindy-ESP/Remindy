@@ -97,4 +97,49 @@ export class DocumentResponseDto {
     example: '2025-01-20T14:00:00Z',
   })
   deleted_at?: string;
+
+  // Champs parsed par Gemini
+  @ApiPropertyOptional({
+    description: 'Nom du fournisseur/service extrait par Gemini',
+    example: 'Netflix',
+  })
+  parsed_provider?: string;
+
+  @ApiPropertyOptional({
+    description: "Montant de l'abonnement extrait",
+    example: 12.99,
+  })
+  parsed_amount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Devise (EUR, USD, etc.)',
+    example: 'EUR',
+  })
+  parsed_currency?: string;
+
+  @ApiPropertyOptional({
+    description: "Date de début ou d'échéance",
+    example: '2025-01-15',
+  })
+  parsed_date?: string;
+
+  @ApiPropertyOptional({
+    description: 'Fréquence: mensuel, trimestriel, annuel, ponctuel',
+    example: 'mensuel',
+    enum: ['mensuel', 'trimestriel', 'semestriel', 'annuel', 'ponctuel'],
+  })
+  parsed_frequency?: string;
+
+  @ApiPropertyOptional({
+    description: 'Catégorie: énergie, internet, assurance, SaaS, etc.',
+    example: 'streaming',
+    enum: ['énergie', 'internet', 'assurance', 'SaaS', 'téléphone', 'streaming', 'autre'],
+  })
+  parsed_category?: string;
+
+  @ApiPropertyOptional({
+    description: 'Score de confiance du parsing (0-1)',
+    example: 0.95,
+  })
+  parsing_confidence?: number;
 }

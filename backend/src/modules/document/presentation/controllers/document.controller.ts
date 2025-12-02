@@ -31,8 +31,11 @@ import {
   ApiQuery,
   ApiConsumes,
   ApiBody,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import { DocumentResponseDto } from '../dto/document-response.dto';
 import { DocumentFilterDto } from '../dto/document-filter.dto';
 import { ReprocessOcrDto } from '../dto/reprocess-ocr.dto';
@@ -46,10 +49,13 @@ import { CloudflareR2Service } from '../../infrastructure/services/cloudflare-r2
 import { DOCUMENT_REPOSITORY } from '../../application/ports/document-repository.interface';
 import { Inject } from '@nestjs/common';
 import type { IDocumentRepository } from '../../application/ports/document-repository.interface';
+import { QuotaService } from '../../application/services/quota.service';
+import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 
 @ApiTags('Documents')
+@ApiBearerAuth()
 @Controller('documents')
-@UseGuards(ThrottlerGuard)
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 export class DocumentController {
   constructor(
     private readonly uploadDocumentUseCase: UploadDocumentUseCase,
@@ -59,6 +65,8 @@ export class DocumentController {
     private readonly r2Service: CloudflareR2Service,
     @Inject(DOCUMENT_REPOSITORY)
     private readonly documentRepository: IDocumentRepository,
+    private readonly quotaService: QuotaService,
+    private readonly queueService: InMemoryQueueService,
   ) {}
 
   @Post('upload')
@@ -107,10 +115,11 @@ export class DocumentController {
       }),
     )
     file: Express.Multer.File,
+    @CurrentUser('id') userId: string,
     @Body('subscription_id') subscriptionId?: string,
     @Body('contract_id') contractId?: string,
+    @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
-    // Extract userId from JWT token
     const { user } = req as Request & { user: { userId: string; role: string } };
     const userId = user.userId;
 
@@ -128,7 +137,9 @@ export class DocumentController {
       contractId: contractId ? parseInt(contractId, 10) : undefined,
     };
 
-    const document = await this.uploadDocumentUseCase.execute(appDto);
+    const role = (userRole as 'freemium' | 'premium' | 'admin') || 'freemium';
+
+    const document = await this.uploadDocumentUseCase.execute(appDto, role);
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
@@ -142,11 +153,11 @@ export class DocumentController {
   })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   async findOne(
-      @Param('id') id: string,
-      @Req() req: Request
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto> {
-      const { user } = req as Request & { user: { userId: string; role: string } };
-      const userId = user.userId;
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
     const document = await this.documentRepository.findById(id);
 
     if (!document) {
@@ -193,12 +204,11 @@ export class DocumentController {
     type: [DocumentResponseDto],
   })
   async findAll(
-    @Req() req: Request,
     @Query() filters: DocumentFilterDto,
+    @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto[]> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const userId = user.userId;
-
     const appFilters = DocumentPresentationMapper.toFilterAppDto(userId, filters);
     const documents = await this.findAllDocumentsUseCase.execute(appFilters);
     return DocumentPresentationMapper.toResponseDtoArray(documents);
@@ -256,11 +266,10 @@ export class DocumentController {
   @ApiParam({ name: 'id', description: 'ID du document' })
   @ApiResponse({ status: 204, description: 'Document supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
-
-    await this.deleteDocumentUseCase.execute(id, userId);
+  async delete(@Req() req: Request, @CurrentUser('id') userId: string): Promise<void> {
+      const { user } = req as Request & { user: { userId: string; role: string } };
+      const userId = user.userId;
+      await this.deleteDocumentUseCase.execute(id, userId);
   }
 
   @Post(':id/reprocess-ocr')
@@ -276,8 +285,8 @@ export class DocumentController {
   @ApiResponse({ status: 400, description: 'OCR déjà complété (utilisez force=true pour forcer)' })
   async reprocessOcr(
     @Req() req: Request,
-    @Param('id') id: string,
     @Body() reprocessDto: ReprocessOcrDto,
+    @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto> {
     // Extract userId from JWT token
     const { user } = req as Request & { user: { userId: string; role: string } };
@@ -295,12 +304,11 @@ export class DocumentController {
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   @Header('Content-Disposition', 'attachment')
   async downloadDocument(
-      @Param('id') id: string,
-      @Req() req: Request
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
   ): Promise<StreamableFile> {
-      const { user } = req as Request & { user: { userId: string; role: string } };
-      const userId = user.userId;
-
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
     const document = await this.documentRepository.findById(id);
 
     if (!document) {
@@ -317,5 +325,85 @@ export class DocumentController {
       type: document.mimeType,
       disposition: `attachment; filename="${document.filename}"`,
     });
+  }
+
+  @Get('quota')
+  @ApiOperation({ summary: "Consulter l'utilisation des quotas utilisateur" })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistiques des quotas',
+    schema: {
+      type: 'object',
+      properties: {
+        documentsCount: { type: 'number', example: 15 },
+        maxDocuments: { type: 'number', example: 50 },
+        storageUsed: { type: 'number', example: 25600000 },
+        maxStorage: { type: 'number', example: 104857600 },
+        storageUsedPercent: { type: 'number', example: 24.41 },
+        documentsUsedPercent: { type: 'number', example: 30 },
+        storageUsedFormatted: { type: 'string', example: '24.41 MB' },
+        maxStorageFormatted: { type: 'string', example: '100.00 MB' },
+      },
+    },
+  })
+  async getQuota(
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole?: string,
+  ): Promise<any> {
+    const role = (userRole as 'freemium' | 'premium' | 'admin') || 'freemium';
+
+    const usage = await this.quotaService.getUserQuotaUsage(userId, role);
+
+    return {
+      ...usage,
+      storageUsedFormatted: this.quotaService.formatBytes(usage.storageUsed),
+      maxStorageFormatted: this.quotaService.formatBytes(usage.maxStorage),
+    };
+  }
+
+  @Get('queue/stats')
+  @ApiOperation({ summary: 'Obtenir les statistiques de la queue OCR' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistiques de la queue',
+    schema: {
+      type: 'object',
+      properties: {
+        waiting: { type: 'number', example: 5 },
+        active: { type: 'number', example: 2 },
+        completed: { type: 'number', example: 150 },
+        failed: { type: 'number', example: 3 },
+        delayed: { type: 'number', example: 0 },
+      },
+    },
+  })
+  async getQueueStats(): Promise<any> {
+    return await this.queueService.getQueueStats();
+  }
+
+  @Get('job/:jobId/status')
+  @ApiOperation({ summary: "Consulter le statut d'un job OCR spécifique" })
+  @ApiParam({ name: 'jobId', description: 'ID du job OCR' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statut du job',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', example: '123' },
+        status: { type: 'string', example: 'completed' },
+        progress: { type: 'number', example: 100 },
+        attempts: { type: 'number', example: 1 },
+        result: { type: 'object' },
+      },
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Job non trouvé' })
+  async getJobStatus(@Param('jobId') jobId: string): Promise<any> {
+    try {
+      return await this.queueService.getJobStatus(jobId);
+    } catch (error) {
+      throw new NotFoundException(`Job ${jobId} not found`);
+    }
   }
 }

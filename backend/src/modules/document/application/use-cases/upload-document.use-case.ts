@@ -1,12 +1,13 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { IDocumentRepository } from '../ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../ports/document-repository.interface';
 import { Document } from '../../domain/document.entity';
 import { UploadDocumentAppDto } from '../dto/upload-document-app.dto';
 import { CloudflareR2Service } from '../../infrastructure/services/cloudflare-r2.service';
-import { OcrService } from '../../infrastructure/services/ocr.service';
-import { GeminiParserService } from '../../infrastructure/services/gemini-parser.service';
+import { QuotaService, UserRole } from '../services/quota.service';
+import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 
 @Injectable()
 export class UploadDocumentUseCase {
@@ -16,13 +17,18 @@ export class UploadDocumentUseCase {
     @Inject(DOCUMENT_REPOSITORY)
     private readonly documentRepository: IDocumentRepository,
     private readonly r2Service: CloudflareR2Service,
-    private readonly ocrService: OcrService,
-    private readonly geminiParser: GeminiParserService,
+    private readonly quotaService: QuotaService,
+    private readonly queueService: InMemoryQueueService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(dto: UploadDocumentAppDto): Promise<Document> {
+  async execute(dto: UploadDocumentAppDto, userRole: UserRole = 'freemium'): Promise<Document> {
     try {
       this.logger.log(`Starting document upload for user ${dto.userId}`);
+
+      // Vérifier les quotas utilisateur AVANT l'upload
+      await this.quotaService.checkUserQuota(dto.userId, userRole, dto.fileSize);
+      this.logger.log(`Quota check passed for user ${dto.userId}`);
 
       // Generate file hash
       const fileHash = createHash('sha256').update(dto.fileBuffer).digest('hex');
@@ -41,7 +47,7 @@ export class UploadDocumentUseCase {
         dto.subscriptionId && dto.subscriptionId.trim() !== '' ? dto.subscriptionId : undefined;
       const contractId = dto.contractId && dto.contractId > 0 ? dto.contractId : undefined;
 
-      // Create domain entity
+      // Create domain entity avec statut "pending" (sera traité par la queue)
       const document = new Document({
         userId: dto.userId,
         subscriptionId,
@@ -52,74 +58,48 @@ export class UploadDocumentUseCase {
         fileHash,
         fileSize: dto.fileSize,
         mimeType: dto.mimeType,
-        ocrStatus: 'processing',
+        ocrStatus: 'pending', // La queue changera à "processing"
       });
 
-      // Save to database (avec statut processing)
-      let savedDocument = await this.documentRepository.create(document);
+      // Save to database
+      const savedDocument = await this.documentRepository.create(document);
 
-      // ÉTAPE 2 : Extraire le texte (OCR) de manière asynchrone
+      // ÉTAPE 2 : Ajouter le document à la queue pour traitement OCR asynchrone
       if (savedDocument.id) {
-        this.processOcrAndParsing(savedDocument.id, dto.fileBuffer, dto.mimeType).catch(error => {
-          this.logger.error(
-            `Background OCR/Parsing failed for document ${savedDocument.id}: ${error.message}`,
+        this.logger.log(`Adding document ${savedDocument.id} to OCR queue`);
+
+        try {
+          const jobId = await this.queueService.addDocumentToQueue(
+            savedDocument.id,
+            dto.userId,
+            r2Key,
+            dto.mimeType,
+            dto.filename,
           );
-        });
+
+          this.logger.log(`Document ${savedDocument.id} added to queue with job ID ${jobId}`);
+
+          // Émettre un événement pour notifier le début du traitement
+          this.eventEmitter.emit('ocr.started', {
+            documentId: savedDocument.id,
+            userId: dto.userId,
+            filename: dto.filename,
+          });
+        } catch (error) {
+          this.logger.error(`Failed to add document to queue: ${error.message}`);
+          // Marquer comme failed si on ne peut pas ajouter à la queue
+          await this.documentRepository.updateOcrStatus(
+            savedDocument.id,
+            'failed',
+            `Failed to queue for processing: ${error.message}`,
+          );
+        }
       }
 
       return savedDocument;
     } catch (error) {
       this.logger.error(`Upload failed: ${error.message}`, error.stack);
       throw error;
-    }
-  }
-
-  /**
-   * Traite l'OCR et le parsing en arrière-plan
-   */
-  private async processOcrAndParsing(
-    documentId: string,
-    fileBuffer: Buffer,
-    mimeType: string,
-  ): Promise<void> {
-    try {
-      // ÉTAPE 2 : Extraction OCR
-      this.logger.log(`Starting OCR for document ${documentId}`);
-      const ocrText = await this.ocrService.extractText(fileBuffer, mimeType);
-      const cleanedText = this.ocrService.cleanExtractedText(ocrText);
-
-      if (!cleanedText || cleanedText.length === 0) {
-        this.logger.warn(`OCR returned empty text for document ${documentId}`);
-        await this.documentRepository.updateOcrStatus(documentId, 'completed', '', undefined);
-        return;
-      }
-
-      this.logger.log(
-        `OCR completed for document ${documentId} (${cleanedText.length} characters)`,
-      );
-
-      // ÉTAPE 3 : Parsing intelligent avec Gemini
-      this.logger.log(`Starting Gemini parsing for document ${documentId}`);
-      const parsedData = await this.geminiParser.parseDocument(cleanedText);
-      this.logger.log(`Gemini parsing completed for document ${documentId}`);
-
-      // ÉTAPE 4 : Mettre à jour le document avec OCR + données parsées
-      await this.documentRepository.updateOcrAndParsedData(documentId, {
-        ocrText: cleanedText,
-        ocrStatus: 'completed',
-        parsedProvider: parsedData.provider,
-        parsedAmount: parsedData.amount,
-        parsedCurrency: parsedData.currency,
-        parsedDate: parsedData.date,
-        parsedFrequency: parsedData.frequency,
-        parsedCategory: parsedData.category,
-        parsingConfidence: parsedData.confidence,
-      });
-
-      this.logger.log(`Document ${documentId} fully processed (OCR + Parsing)`);
-    } catch (error) {
-      this.logger.error(`OCR/Parsing failed for document ${documentId}: ${error.message}`);
-      await this.documentRepository.updateOcrStatus(documentId, 'failed', undefined, error.message);
     }
   }
 }

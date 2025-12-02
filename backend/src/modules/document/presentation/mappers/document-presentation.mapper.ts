@@ -24,6 +24,14 @@ export class DocumentPresentationMapper {
       uploaded_at: document.uploadedAt!.toISOString(),
       updated_at: document.updatedAt!.toISOString(),
       deleted_at: document.deletedAt?.toISOString(),
+      // Champs parsed par Gemini
+      parsed_provider: document.parsedProvider,
+      parsed_amount: document.parsedAmount,
+      parsed_currency: document.parsedCurrency,
+      parsed_date: document.parsedDate?.toISOString().split('T')[0],
+      parsed_frequency: document.parsedFrequency,
+      parsed_category: document.parsedCategory,
+      parsing_confidence: document.parsingConfidence,
     };
   }
 
