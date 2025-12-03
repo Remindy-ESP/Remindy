@@ -1,5 +1,5 @@
-import { Controller, Post, Body, Req, Res, UnauthorizedException} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Post, Body, Req, Res, UnauthorizedException, HttpStatus} from '@nestjs/common';
+import { ApiTags, ApiResponse } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { RegisterRequestDto } from '../../application/dto/register-request.dto';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
@@ -11,7 +11,8 @@ import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-passwo
 import { ForgotPasswordRequestDto } from '../../application/dto/forgot-password-request.dto';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
 import { ResetPasswordRequestDto } from '../../application/dto/reset-password-request.dto';
-
+import { RegisterUserResponseDto } from '../dto/register-response.dto';
+import { LoginResponseDto } from '../dto/login-response.dto';
 @ApiTags('Authentification')
 @Controller('auth')
 export class AuthController {
@@ -25,12 +26,38 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(@Body() dto: RegisterRequestDto) {
+@ApiResponse({
+  status: HttpStatus.CREATED,
+  description: 'Registration successful',
+  type: RegisterUserResponseDto,
+})
+@ApiResponse({
+  status: HttpStatus.BAD_REQUEST,
+  description: 'Invalid data',
+})
+@ApiResponse({
+  status: HttpStatus.CONFLICT,
+  description: 'Email already in use',
+})
+  async register(@Body() dto: RegisterRequestDto,) {
     const user = await this.registerUserUseCase.execute(dto);
     return { success: true, userId: user.getId() };
   }
 
 @Post('login')
+@ApiResponse({
+  status: HttpStatus.OK,
+  description: 'Connexion réussie',
+  type: LoginResponseDto,
+})
+@ApiResponse({
+  status: HttpStatus.UNAUTHORIZED,
+  description: 'Email ou mot de passe incorrect',
+})
+@ApiResponse({
+  status: HttpStatus.BAD_REQUEST,
+  description: 'Données invalides',
+})
 async login(
   @Req() req: Request,
   @Body() dto: LoginRequestDto,
