@@ -89,6 +89,19 @@ async getMe(@Req() req: any) {
 
 @Put('me')
 @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User profile updated successfully',
+    type: UserMeResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'User not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
 async updateMe(
   @Req() req: Request & { user: { userId: string } },
   @Body() dto: UpdateUserMeRequestDto,
