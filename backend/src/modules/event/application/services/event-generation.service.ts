@@ -21,15 +21,15 @@ export class EventGenerationService {
   ) {}
 
   /**
-   * Job CRON qui s'exécute tous les jours à minuit
-   * Génère les événements pour les 12 prochains mois pour tous les abonnements actifs
+   * CRON job that runs every day at midnight
+   * Generates events for the next 12 months for all active subscriptions
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async generateEventsForAllSubscriptions() {
     this.logger.log('Starting automatic event generation job...');
 
     try {
-      // Récupérer tous les abonnements actifs
+      // Fetch all active subscriptions
       const subscriptions = await this.subscriptionRepository.findAll({
         status: 'active',
       });
@@ -50,7 +50,7 @@ export class EventGenerationService {
             continue;
           }
 
-          // Générer les occurrences pour les 12 prochains mois
+          // Generate occurrences for the next 12 months
           const now = new Date();
           const endDate = new Date();
           endDate.setMonth(endDate.getMonth() + 12);
@@ -62,7 +62,7 @@ export class EventGenerationService {
             365, // Max 365 occurrences
           );
 
-          // Créer les événements
+          // Create events
           const events = await this.generateEventsForSubscriptionUseCase.execute({
             subscriptionId: subscription.id!,
             subscriptionName: subscription.name,
@@ -94,8 +94,8 @@ export class EventGenerationService {
   }
 
   /**
-   * Méthode manuelle pour générer les événements d'un abonnement spécifique
-   * Peut être appelée via un endpoint ou un événement
+   * Manual method to generate events for a specific subscription
+   * Can be called via an endpoint or an event
    */
   async generateEventsForSubscription(subscriptionId: string): Promise<number> {
     this.logger.log(`Generating events for subscription ${subscriptionId}`);
@@ -112,7 +112,7 @@ export class EventGenerationService {
       throw new Error(`No event series found for subscription ${subscriptionId}`);
     }
 
-    // Générer les occurrences pour les 12 prochains mois
+    // Generate occurrences for the next 12 months
     const now = new Date();
     const endDate = new Date();
     endDate.setMonth(endDate.getMonth() + 12);
