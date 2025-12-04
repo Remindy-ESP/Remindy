@@ -118,4 +118,35 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 20,
   },
+  // Styles pour la liste des catégories
+  categoriesContainer: {
+    position: 'absolute',
+    top: 64,
+    alignSelf: 'center',
+    minWidth: 146,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  categoryItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1F1F39',
+    textAlign: 'center',
+  },
 });
