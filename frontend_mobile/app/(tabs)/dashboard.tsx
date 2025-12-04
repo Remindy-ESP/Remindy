@@ -13,6 +13,11 @@ export default function DashboardScreen() {
     setActivePeriod,
     filtersOpen,
     setFiltersOpen,
+    categoriesOpen,
+    setCategoriesOpen,
+    selectedCategory,
+    setSelectedCategory,
+    categories,
     timePeriods,
     getContentForPeriod,
   } = useDashboard();
@@ -22,12 +27,29 @@ export default function DashboardScreen() {
       <View style={styles.header}>
       </View>
 
-      {/* Bouton Filtres */}
      <Button
-        onPress={() => setFiltersOpen(!filtersOpen)}
-        label="Filtres"
-        isOpen={filtersOpen}
+        onPress={() => setCategoriesOpen(!categoriesOpen)}
+        label={selectedCategory || "Catégories"}
+        isOpen={categoriesOpen}
       />
+
+      {categoriesOpen && (
+        <View style={styles.categoriesContainer}>
+          {categories.map((category, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.categoryItem}
+              onPress={() => {
+                setSelectedCategory(category);
+                setCategoriesOpen(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.categoryText}>{category}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       <View style={styles.calendarContainer}>
         <Calendar
