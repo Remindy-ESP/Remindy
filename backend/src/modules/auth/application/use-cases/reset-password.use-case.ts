@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
+import { JwtPayload } from 'jsonwebtoken';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IPasswordService } from '../../domain/services/password.service';
 
@@ -11,22 +12,28 @@ export class ResetPasswordUseCase {
   ) {}
 
   async execute(params: { token: string; newPassword: string }): Promise<void> {
-    interface PasswordResetJwtPayload {
-      sub: string;
-    }
-
-    let payload: PasswordResetJwtPayload;
+    let decoded: JwtPayload;
 
     try {
-      payload = jwt.verify(
+      const verified = jwt.verify(
         params.token,
         process.env.JWT_PASSWORD_RESET_SECRET!,
-      ) as PasswordResetJwtPayload;
+      );
+
+      if (typeof verified === 'string') {
+        throw new UnauthorizedException('Invalid token payload');
+      }
+
+      decoded = verified;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
 
-    const user = await this.userRepo.findById(payload.sub);
+    if (!decoded.sub) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
+
+    const user = await this.userRepo.findById(decoded.sub);
 
     if (!user) {
       throw new UnauthorizedException('User not found');

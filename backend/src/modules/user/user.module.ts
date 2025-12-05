@@ -13,7 +13,7 @@ import { UserController } from './presentation/controllers/user.controller';
 
 // Domain repositories (TOKENS)
 import { UserRepository } from './domain/repositories/user-user.repository';
-import { User_SessionRepository } from './domain/repositories/user-session-repository';
+import { AbstractUserSessionRepository } from './domain/repositories/user-session-repository';
 
 // Infrastructure repositories (IMPLEMENTATIONS)
 import { UserTypeOrmRepository } from './infrastructure/repositories/user-typeorm.repository ';
@@ -73,14 +73,14 @@ import { AuthModule } from '../auth/auth.module';
       useClass: UserTypeOrmRepository,
     },
     {
-      provide: User_SessionRepository,
+      provide: AbstractUserSessionRepository,
       useClass: UserSessionRepository,
     },
   ],
 
   exports: [
     UserRepository,
-    User_SessionRepository,
+    AbstractUserSessionRepository,
     UserService,
     UserPreferencesService,
     UserPreferencesRepository,
