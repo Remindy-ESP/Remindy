@@ -11,7 +11,7 @@ export class UserTypeOrmRepository implements UserRepository {
     private readonly userRepository: Repository<EUser>,
   ) {}
 
-  async findById(id: string): Promise<EUser | null> {
+  async findByIdWithPreferences(id: string): Promise<EUser | null> {
     return this.userRepository.findOne({
       where: { id, deletedAt: IsNull() },
       relations: ['preferences'],
@@ -27,11 +27,8 @@ export class UserTypeOrmRepository implements UserRepository {
     });
   }
 
-  async findByIdWithPreferences(id: string): Promise<EUser | null> {
-    return this.userRepository.findOne({
-      where: { id, deletedAt: IsNull() },
-      relations: ['preferences'],
-    });
+  async findById(id: string): Promise<EUser | null> {
+    return this.findByIdWithPreferences(id);
   }
 
   async updateProfile(userId: string, data: Partial<EUser>): Promise<void> {

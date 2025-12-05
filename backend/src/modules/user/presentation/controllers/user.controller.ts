@@ -70,8 +70,6 @@ export class UserController {
     description: 'Unauthorized',
   })
   async getProfile(@Req() req: Request): Promise<UserProfileResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    // When JWT guard is implemented, use: const userId = req.user.id;
     const userId = this.extractUserIdFromRequest(req);
     return this.userService.getUserProfile(userId);
   }
@@ -222,83 +220,6 @@ export class UserController {
     };
   }
 
-  // @Post('export-data')
-  // @HttpCode(HttpStatus.ACCEPTED)
-  // @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 requête par heure
-  // @ApiOperation({ summary: 'Request RGPD data export' })
-  // @ApiBody({ type: CreateRgpdExportDto })
-  // @ApiResponse({
-  //   status: HttpStatus.ACCEPTED,
-  //   description: 'Export request created successfully',
-  //   type: RgpdExportResponseDto,
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.BAD_REQUEST,
-  //   description: 'Invalid input data or pending export already exists',
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.NOT_FOUND,
-  //   description: 'User not found',
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.UNAUTHORIZED,
-  //   description: 'Unauthorized',
-  // })
-  // async exportData(
-  //   @Req() req: Request,
-  //   @Body() createDto: CreateRgpdExportDto,
-  // ): Promise<RgpdExportResponseDto> {
-  //   // TODO: Implement JWT guard and extract user ID from token
-  //   const userId = this.extractUserIdFromRequest(req);
-  //   const ipAddress = req.ip || 'unknown';
-  //   return this.rgpdExportService.createExportRequest(userId, createDto, ipAddress);
-  // }
-
-  // @Get('exports')
-  // @ApiOperation({ summary: 'Get all export requests for current user' })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   description: 'Export requests retrieved successfully',
-  //   type: [RgpdExportResponseDto],
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.NOT_FOUND,
-  //   description: 'User not found',
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.UNAUTHORIZED,
-  //   description: 'Unauthorized',
-  // })
-  // async getExports(@Req() req: Request): Promise<RgpdExportResponseDto[]> {
-  //   // TODO: Implement JWT guard and extract user ID from token
-  //   const userId = this.extractUserIdFromRequest(req);
-  //   return this.rgpdExportService.getUserExports(userId);
-  // }
-
-  // @Get('exports/:exportId')
-  // @ApiOperation({ summary: 'Get export request status' })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   description: 'Export request status retrieved successfully',
-  //   type: RgpdExportResponseDto,
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.NOT_FOUND,
-  //   description: 'Export request not found',
-  // })
-  // @ApiResponse({
-  //   status: HttpStatus.UNAUTHORIZED,
-  //   description: 'Unauthorized',
-  // })
-  // async getExportStatus(
-  //   @Req() req: Request,
-  //   @Param('exportId') exportId: string,
-  // ): Promise<RgpdExportResponseDto> {
-  //   // TODO: Implement JWT guard and extract user ID from token
-  //   const userId = this.extractUserIdFromRequest(req);
-  //   return this.rgpdExportService.getExportStatus(userId, exportId);
-  // }
-
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 request per day
@@ -316,7 +237,6 @@ export class UserController {
     description: 'Unauthorized',
   })
   async deleteAccount(@Req() req: Request): Promise<void> {
-    // TODO: Implement JWT guard and extract user ID from token
     const userId = this.extractUserIdFromRequest(req);
     await this.userService.deleteAccount(userId);
   }
@@ -327,16 +247,13 @@ export class UserController {
    * @param req Express Request object
    * @returns User ID from token or throws error
    */
-  private extractUserIdFromRequest(_req: Request): string {
-    // TODO: Implement actual JWT extraction
-    // This is a temporary placeholder that should be replaced with:
-    // const user = req.user as JwtPayload;
-    // if (!user?.id) throw new UnauthorizedException('Invalid token');
-    // return user.id;
+  private extractUserIdFromRequest(req: Request): string {
+    const user = req.user as { id?: string };
 
-    // For now, throw error to indicate JWT is not implemented
-    throw new Error(
-      'JWT authentication not yet implemented. Please implement JWT guard and token extraction.',
-    );
+    if (!user?.id) {
+      throw new UnauthorizedException('Invalid or missing JWT token');
+    }
+
+    return user.id;
   }
 }
