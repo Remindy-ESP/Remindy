@@ -22,12 +22,9 @@ export class UserPreferencesService {
     }
 
     // Get or create preferences
-    let preferences = await this.userPreferencesRepository.findByUserId(userId);
-
-    if (!preferences) {
-      // Create default preferences if they don't exist
-      preferences = await this.userPreferencesRepository.createDefaultPreferences(userId);
-    }
+    const preferences =
+      (await this.userPreferencesRepository.findByUserId(userId)) ??
+      (await this.userPreferencesRepository.createDefaultPreferences(userId));
 
     return {
       userId: preferences.userId,
@@ -54,11 +51,9 @@ export class UserPreferencesService {
     }
 
     // Get existing preferences or create default ones
-    let preferences = await this.userPreferencesRepository.findByUserId(userId);
-
-    if (!preferences) {
-      preferences = await this.userPreferencesRepository.createDefaultPreferences(userId);
-    }
+    // const preferences =
+    //   (await this.userPreferencesRepository.findByUserId(userId)) ??
+    //   (await this.userPreferencesRepository.createDefaultPreferences(userId));
 
     // Validate currency format if provided
     if (updateDto.currency !== undefined) {

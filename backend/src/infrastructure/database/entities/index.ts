@@ -3,7 +3,6 @@ export { EUser } from './user.entity';
 export type { UserStatus } from './user.entity';
 
 export { UserPreferenceEntity } from './user-preference.entity';
-// export type { ThemeType } from './user-preference.entity';
 
 export { UserSessionEntity } from './user-session.entity';
 
