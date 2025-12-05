@@ -1,3 +1,3 @@
-export abstract class User_SessionRepository {
+export abstract class AbstractUserSessionRepository {
   abstract revokeAllForUser(userId: string): Promise<void>;
 }

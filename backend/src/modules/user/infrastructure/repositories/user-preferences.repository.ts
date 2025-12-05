@@ -34,10 +34,7 @@ export class UserPreferencesRepository {
   async update(userId: string, data: Partial<UserPreferenceEntity>): Promise<UserPreferenceEntity> {
     let prefs = await this.findByUserId(userId);
 
-    // si pas encore de prefs → on crée avec les valeurs par défaut
-    if (!prefs) {
-      prefs = await this.createDefaultPreferences(userId);
-    }
+    prefs ??= await this.createDefaultPreferences(userId);
 
     // merge proprement les champs envoyés
     if (data.theme !== undefined) prefs.theme = data.theme;

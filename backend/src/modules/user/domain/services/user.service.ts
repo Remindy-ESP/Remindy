@@ -98,11 +98,15 @@ export class UserService {
     };
   }
 
-  private isValidPhoneNumber(phone: string): boolean {
-    // Basic validation: should contain only numbers, +, -, spaces, and parentheses
-    const phoneRegex = /^[\d\s+\-()]+$/;
-    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
-  }
+private isValidPhoneNumber(phone: string): boolean {
+  const phoneRegex = /^[\d\s+\-()]+$/;
+
+  return (
+    phoneRegex.test(phone) &&
+    phone.replaceAll(/\D/g, '').length >= 10
+  );
+}
+
 
   private isValidTimezone(timezone: string): boolean {
     // Common timezone validation
