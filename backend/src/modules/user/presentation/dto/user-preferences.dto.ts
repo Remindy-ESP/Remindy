@@ -46,7 +46,6 @@ export class UserPreferencesResponseDto {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
-
   }
 }
 

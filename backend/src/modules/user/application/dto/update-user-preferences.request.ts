@@ -1,6 +1,6 @@
-import { Theme } from "src/infrastructure/database/entities/user-preference.entity";
+import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
 
-export class UpdateUserPreferencesRequest{
+export class UpdateUserPreferencesRequest {
   theme?: Theme;
 
   notificationEmail?: boolean;

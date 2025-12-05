@@ -14,10 +14,7 @@ export class SendgridEmailService implements IEmailService {
     SendGrid.setApiKey(process.env.SENDGRID_API_KEY);
   }
 
-  async sendPasswordResetEmail(params: {
-    to: string;
-    resetLink: string;
-  }): Promise<void> {
+  async sendPasswordResetEmail(params: { to: string; resetLink: string }): Promise<void> {
     const { to, resetLink } = params;
 
     try {

@@ -57,7 +57,7 @@ export class UserSessionEntity {
   deletedAt: Date;
 
   // Relations
-  @ManyToOne(() => EUser, (user) => user.sessions, {
+  @ManyToOne(() => EUser, user => user.sessions, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })

@@ -24,7 +24,6 @@ import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.
 // Services
 import { UserService } from './domain/services/user.service';
 import { UserPreferencesService } from './domain/services/user-preferences.service';
-import { RequestRgpdExportDto } from './application/dto/request-export-rgpd.dto';
 import { RequestRgpdExportUseCase } from './application/use-cases/request-rgpd-export.use-case';
 // Use cases
 import { GetMyProfileUseCase } from './application/use-cases/get-my-profile.use-case';

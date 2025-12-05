@@ -1,8 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { UserRepository } from "../../domain/repositories/user-user.repository";
-import { User_SessionRepository } from "../../domain/repositories/user-session-repository";
-
-
+import { Injectable } from '@nestjs/common';
+import { UserRepository } from '../../domain/repositories/user-user.repository';
+import { User_SessionRepository } from '../../domain/repositories/user-session-repository';
 
 @Injectable()
 export class DeleteMyAccountUseCase {

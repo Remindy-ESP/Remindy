@@ -19,7 +19,7 @@ export class ForgotPasswordUseCase {
     }
 
     const token = this.tokenService.generatePasswordResetToken({
-      sub: user.getId()!,
+      sub: user.getId(),
     });
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
@@ -30,4 +30,3 @@ export class ForgotPasswordUseCase {
     });
   }
 }
-

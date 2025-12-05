@@ -1,64 +1,54 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import { Injectable } from '@nestjs/common';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import type { StringValue } from 'ms';
+import { JwtAccessPayload, JwtRefreshPayload } from '../../domain/services/token.service';
 
 @Injectable()
 export class JwtTokenService {
-  
-  generateAccessToken(payload: any): string {
-    return jwt.sign(
-      payload,
-      process.env.JWT_ACCESS_TOKEN_SECRET!,   
-      { 
-        expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRATION as string | number || '15m'  
-      } as jwt.SignOptions 
-    );
-  }
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
-  generateRefreshToken(payload: any): string {
-    const exp = process.env.JWT_REFRESH_TOKEN_EXPIRATION || '30d';
-
-    if (!exp || typeof exp !== 'string') {
-      throw new Error(`Invalid JWT_REFRESH_TOKEN_EXPIRATION: "${exp}"`);
-    }
-
-    return jwt.sign(
-      payload, 
-      process.env.JWT_REFRESH_TOKEN_SECRET!, 
-      {
-        expiresIn: exp,
-      } as jwt.SignOptions 
-    );
-  }
-  verifyRefreshToken(token: string): any {
-    try {
-      return jwt.verify(
-        token,
-        process.env.JWT_REFRESH_TOKEN_SECRET!,
-      );
-    } catch {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-  }
-  verifyAccessToken(token: string): any {
-    try {
-      return jwt.verify(
-        token,
-        process.env.JWT_ACCESS_TOKEN_SECRET!,
-      );
-    } catch {
-      throw new UnauthorizedException('Invalid or expired access token');
-    }
-  }
   generatePasswordResetToken(payload: { sub: string }): string {
-    return jwt.sign(
+    return this.jwtService.sign(
       {
-        ...payload,
-        type: 'password-reset',
+        sub: payload.sub,
       },
-      process.env.JWT_PASSWORD_RESET_SECRET!,
       {
+        secret: this.configService.get<string>('JWT_PASSWORD_RESET_SECRET')!,
         expiresIn: '15m',
       },
     );
+  }
+  generateAccessToken(payload: JwtAccessPayload): string {
+    const options: JwtSignOptions = {
+      secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET')!,
+      expiresIn: this.configService.get<StringValue>('JWT_ACCESS_TOKEN_EXPIRATION')!,
+    };
+
+    return this.jwtService.sign(payload, options);
+  }
+
+  verifyAccessToken(token: string): JwtAccessPayload {
+    return this.jwtService.verify<JwtAccessPayload>(token, {
+      secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET')!,
+    });
+  }
+
+  generateRefreshToken(payload: JwtRefreshPayload): string {
+    const options: JwtSignOptions = {
+      secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET')!,
+      expiresIn: this.configService.get<StringValue>('JWT_REFRESH_TOKEN_EXPIRATION')!,
+    };
+
+    return this.jwtService.sign(payload, options);
+  }
+
+  verifyRefreshToken(token: string): JwtRefreshPayload {
+    return this.jwtService.verify<JwtRefreshPayload>(token, {
+      secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET')!,
+    });
   }
 }

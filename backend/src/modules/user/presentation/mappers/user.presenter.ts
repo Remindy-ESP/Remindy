@@ -1,5 +1,5 @@
-import { EUser } from "src/infrastructure/database/entities";
-import { UserMeResponseDto } from "../dto/user-me.response.dto";
+import { EUser } from 'src/infrastructure/database/entities';
+import { UserMeResponseDto } from '../dto/user-me.response.dto';
 
 export class UserPresenter {
   static toMe(user: EUser): UserMeResponseDto {

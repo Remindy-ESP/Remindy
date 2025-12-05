@@ -5,7 +5,6 @@ import {
   Post,
   Delete,
   Body,
-  Param,
   Req,
   HttpStatus,
   HttpCode,
@@ -13,8 +12,8 @@ import {
   UseGuards,
   Res,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiOkResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { UserService } from '../../domain/services/user.service';
 import { UserPreferencesService } from '../../domain/services/user-preferences.service';
@@ -23,17 +22,18 @@ import { UpdateUserMeRequestDto } from '../../application/dto/update-user-profil
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from '../dto/user-preferences.dto';
 import { RgpdExportResponseDto } from '../dto/rgpd-export.dto';
 import { GetMyProfileUseCase } from '../../application/use-cases/get-my-profile.use-case';
-import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case'; 
+import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case';
 import { DeleteMyAccountUseCase } from '../../application/use-cases/delete-my-account.use-case';
 import { GetMyPreferencesUseCase } from '../../application/use-cases/get-my-preferences.use-case';
 import { UserMeResponseDto } from '../dto/user-me.response.dto';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
-import { UserPresenter } from '../mappers/user.presenter';
 import { UpdateUserPreferencesUseCase } from '../../application/use-cases/update-user-preferences.use-case';
 import type { RequestWithUser } from 'src/types/request-with-user.interface';
 import { UserPreferencesMapper } from '../mappers/user-preferences.mapper';
 import { RequestRgpdExportDto } from '../../application/dto/request-export-rgpd.dto';
 import { RequestRgpdExportUseCase } from '../../application/use-cases/request-rgpd-export.use-case';
+import { Roles } from 'src/modules/auth/presentation/decorators/roles.decorator';
+import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 // TODO: Import your JWT authentication guard
 // import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
@@ -75,20 +75,19 @@ export class UserController {
     const userId = this.extractUserIdFromRequest(req);
     return this.userService.getUserProfile(userId);
   }
-@Get('me')
-async getMe(@Req() req: any) {
-  const userId = req.user?.userId;
+  @Get('me')
+  async getMe(@Req() req: any) {
+    const userId = req.user?.userId;
 
-  if (!userId) {
-    throw new UnauthorizedException('User ID not found in request');
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found in request');
+    }
+
+    return this.getMyProfileUseCase.execute({ userId });
   }
 
-  return this.getMyProfileUseCase.execute({ userId });
-}
-
-
-@Put('me')
-@UseGuards(JwtAuthGuard)
+  @Put('me')
+  @UseGuards(JwtAuthGuard)
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'User profile updated successfully',
@@ -102,41 +101,41 @@ async getMe(@Req() req: any) {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
   })
-async updateMe(
-  @Req() req: Request & { user: { userId: string } },
-  @Body() dto: UpdateUserMeRequestDto,
-) {
-  const userId = req.user.userId;
+  async updateMe(
+    @Req() req: Request & { user: { userId: string } },
+    @Body() dto: UpdateUserMeRequestDto,
+  ) {
+    const userId = req.user.userId;
 
-  if (!userId) {
-    throw new UnauthorizedException('User ID not found in request');
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found in request');
+    }
+
+    await this.updateMyProfileUseCase.execute(userId, dto);
+
+    return { success: true };
   }
 
-  await this.updateMyProfileUseCase.execute(userId, dto);
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  async deleteMe(
+    @Req() req: Request & { user: { userId: string } },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const userId = req.user.userId;
 
-  return { success: true };
-}
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found');
+    }
 
-@Delete('me')
-@UseGuards(JwtAuthGuard)
-async deleteMe(
-  @Req() req: Request & { user: { userId: string } },
-  @Res({ passthrough: true }) res: Response,
-) {
-  const userId = req.user.userId;
+    await this.deleteMyAccountUseCase.execute(userId);
 
-  if (!userId) {
-    throw new UnauthorizedException('User ID not found');
+    res.clearCookie('refreshToken', {
+      path: '/',
+    });
+
+    return { success: true };
   }
-
-  await this.deleteMyAccountUseCase.execute(userId);
-
-  res.clearCookie('refreshToken', {
-    path: '/',
-  });
-
-  return { success: true };
-}
 
   @Put('profile')
   @ApiOperation({ summary: 'Update current user profile' })
@@ -167,15 +166,14 @@ async deleteMe(
     return this.userService.updateUserProfile(userId, updateDto);
   }
 
-@Get('preferences')
-async getPreferences(@Req() req: RequestWithUser) {
-  const userId = req.user.userId;
+  @Get('preferences')
+  async getPreferences(@Req() req: RequestWithUser) {
+    const userId = req.user.userId;
 
-  const prefs = await this.getMyPreferencesUseCase.execute(userId);
+    const prefs = await this.getMyPreferencesUseCase.execute(userId);
 
-  return UserPreferencesResponseDto.fromEntity(prefs);
-}
-
+    return UserPreferencesResponseDto.fromEntity(prefs);
+  }
 
   @Put('preferences')
   @ApiOperation({ summary: 'Update current user preferences' })
@@ -197,41 +195,32 @@ async getPreferences(@Req() req: RequestWithUser) {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
   })
-  async updatePreferences(
-  @Req() req: RequestWithUser,
-  @Body() dto: UpdateUserPreferencesDto,
-) {
-  const userId = req.user.userId;
+  async updatePreferences(@Req() req: RequestWithUser, @Body() dto: UpdateUserPreferencesDto) {
+    const userId = req.user.userId;
 
-  const input = UserPreferencesMapper.toInput(dto);
+    const input = UserPreferencesMapper.toInput(dto);
 
-  const updated = await this.updateUserPreferencesUseCase.execute(
-    userId,
-    input,
-  );
+    const updated = await this.updateUserPreferencesUseCase.execute(userId, input);
 
-  return UserPreferencesResponseDto.fromEntity(updated);
-}
+    return UserPreferencesResponseDto.fromEntity(updated);
+  }
+  @Post('export-data')
+  @Roles(Role.USER_PREMIUM)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async exportData(
+    @Req() req: RequestWithUser,
+    @Body() dto: RequestRgpdExportDto,
+  ): Promise<RgpdExportResponseDto> {
+    const result = await this.requestRgpdExportUseCase.execute(req.user.userId, dto);
 
-@Post('export-data')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
-async exportData(
-  @Req() req: RequestWithUser,
-  @Body() dto: RequestRgpdExportDto,
-): Promise<RgpdExportResponseDto> {
-  const result = await this.requestRgpdExportUseCase.execute(
-    req.user.userId,
-    dto,
-  );
-
-  return {
-    id: result.id,
-    status: result.status,
-    format: result.format,
-    createdAt: result.createdAt,
-  };
-}
+    return {
+      id: result.id,
+      status: result.status,
+      format: result.format,
+      createdAt: result.createdAt,
+    };
+  }
 
   // @Post('export-data')
   // @HttpCode(HttpStatus.ACCEPTED)

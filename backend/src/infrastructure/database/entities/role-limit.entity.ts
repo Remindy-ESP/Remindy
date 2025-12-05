@@ -46,7 +46,7 @@ export class RoleLimitEntity {
   updatedAt: Date;
 
   // Relations
-  @OneToOne(() => RoleEntity, (role) => role.roleLimit, {
+  @OneToOne(() => RoleEntity, role => role.roleLimit, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'role' })

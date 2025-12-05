@@ -14,6 +14,7 @@ import {
 import { RoleEntity } from './role.entity';
 import { UserSessionEntity } from './user-session.entity';
 import { UserPreferenceEntity } from './user-preference.entity';
+import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 
 export enum UserStatus {
   ACTIVE = 'active',
@@ -52,7 +53,7 @@ export class EUser {
   photoR2Key: string;
 
   @Column({ type: 'text', nullable: false })
-  role_key: string;
+  role_key: Role;
 
   @Column({
     type: 'enum',
@@ -95,13 +96,13 @@ export class EUser {
   deletedAt: Date;
 
   // Relations
-  @ManyToOne(() => RoleEntity, (role) => role.users)
+  @ManyToOne(() => RoleEntity, role => role.users)
   @JoinColumn({ name: 'role_key', referencedColumnName: 'key' })
   roleEntity: RoleEntity;
 
-  @OneToMany(() => UserSessionEntity, (session) => session.user)
+  @OneToMany(() => UserSessionEntity, session => session.user)
   sessions: UserSessionEntity[];
 
-  @OneToOne(() => UserPreferenceEntity, (preference) => preference.user)
+  @OneToOne(() => UserPreferenceEntity, preference => preference.user)
   preferences: UserPreferenceEntity;
 }

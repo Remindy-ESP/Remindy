@@ -3,9 +3,7 @@ import { UpdateUserPreferencesRequest } from '../../application/dto/update-user-
 import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
 
 export class UserPreferencesMapper {
-  static toInput(
-    dto: UpdateUserPreferencesDto,
-  ): UpdateUserPreferencesRequest {
+  static toInput(dto: UpdateUserPreferencesDto): UpdateUserPreferencesRequest {
     return {
       theme: dto.theme as Theme | undefined,
       notificationEmail: dto.notificationEmail,

@@ -28,8 +28,8 @@ async function bootstrap(): Promise<void> {
         scheme: 'bearer',
         bearerFormat: 'JWT',
       },
-    'access-token',
-    )
+      'access-token',
+    );
 
   const config = swaggerConfigBuilder.build();
 

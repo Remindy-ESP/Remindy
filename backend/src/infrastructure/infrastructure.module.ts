@@ -8,7 +8,17 @@ import { RoleEntity } from './database/entities/role.entity';
 import { UserPreferenceEntity } from './database/entities/user-preference.entity';
 import { UserSessionEntity } from './database/entities/user-session.entity';
 @Module({
-  imports: [TypeOrmModule.forFeature([EUser, ContractEntity, RoleLimitEntity, RgpdExportEntity, RoleEntity, UserPreferenceEntity, UserSessionEntity])],
+  imports: [
+    TypeOrmModule.forFeature([
+      EUser,
+      ContractEntity,
+      RoleLimitEntity,
+      RgpdExportEntity,
+      RoleEntity,
+      UserPreferenceEntity,
+      UserSessionEntity,
+    ]),
+  ],
   providers: [],
   exports: [],
 })

@@ -7,8 +7,5 @@ export abstract class IUserAuthRepository {
 
   abstract save(user: AuthUser): Promise<AuthUser>;
 
-  abstract updatePassword(
-    userId: string,
-    passwordHash: string,
-  ): Promise<void>;
+  abstract updatePassword(userId: string, passwordHash: string): Promise<void>;
 }

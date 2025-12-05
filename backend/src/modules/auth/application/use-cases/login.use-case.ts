@@ -3,12 +3,7 @@ import { IUserAuthRepository } from '../../domain/repositories/user-auth.reposit
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { IPasswordService } from '../../domain/services/password.service';
 import { ITokenService } from '../../domain/services/token.service';
-import { LoginRequestDto } from '../dto/login-request.dto';
 import { LoginResponseDto } from '../../presentation/dto/login-response.dto';
-import { User } from 'express';
-import { UserPreferencesRepository } from 'src/modules/user/infrastructure/repositories/user-preferences.repository';
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
 
 @Injectable()
 export class LoginUseCase {
@@ -29,10 +24,7 @@ export class LoginUseCase {
     const user = await this.userRepo.findByEmail(params.email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const isValid = await this.passwordService.compare(
-      params.password,
-      user.getPasswordHash(),
-    );
+    const isValid = await this.passwordService.compare(params.password, user.getPasswordHash());
 
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
@@ -46,7 +38,7 @@ export class LoginUseCase {
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await this.sessionRepo.createSession({
-      userId: user.getId()!,
+      userId: user.getId(),
       refreshTokenHash,
       ipAddress: params.ipAddress,
       userAgent: params.userAgent,
@@ -62,7 +54,7 @@ export class LoginUseCase {
     return {
       accessToken,
       refreshToken,
-      userId: user.getId()!,
+      userId: user.getId(),
     };
   }
 }

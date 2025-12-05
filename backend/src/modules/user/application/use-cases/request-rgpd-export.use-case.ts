@@ -4,13 +4,11 @@ import { RequestRgpdExportDto } from '../dto/request-export-rgpd.dto';
 
 @Injectable()
 export class RequestRgpdExportUseCase {
-  constructor(
-    private readonly rgpdExportRepo: RgpdExportRepository,
-  ) {}
+  constructor(private readonly rgpdExportRepo: RgpdExportRepository) {}
 
   async execute(userId: string, dto: RequestRgpdExportDto) {
-  const format = dto.format ?? 'json';
+    const format = dto.format ?? 'json';
 
-  return this.rgpdExportRepo.createRequest(userId, format);
-}
+    return this.rgpdExportRepo.createRequest(userId, format);
+  }
 }
