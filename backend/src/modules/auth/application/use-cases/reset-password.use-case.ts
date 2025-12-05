@@ -11,10 +11,16 @@ export class ResetPasswordUseCase {
   ) {}
 
   async execute(params: { token: string; newPassword: string }): Promise<void> {
+    const secret = process.env.JWT_PASSWORD_RESET_SECRET;
+
+    if (!secret) {
+      throw new Error('JWT_PASSWORD_RESET_SECRET is not configured');
+    }
+
     let verified: string | jwt.JwtPayload;
 
     try {
-      verified = jwt.verify(params.token, process.env.JWT_PASSWORD_RESET_SECRET!);
+      verified = jwt.verify(params.token, secret);
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
