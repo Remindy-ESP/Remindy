@@ -113,9 +113,6 @@ export class UserSessionRepository {
     return result.affected || 0;
   }
   async revokeAllForUser(userId: string): Promise<void> {
-    await this.sessionRepository.update(
-      { userId, isRevoked: false },
-      { isRevoked: true },
-    );
+    await this.sessionRepository.update({ userId, isRevoked: false }, { isRevoked: true });
   }
 }

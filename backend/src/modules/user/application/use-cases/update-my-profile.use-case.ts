@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
 import { UpdateUserMeRequestDto } from '../dto/update-user-profile.request.dto';
 @Injectable()
@@ -19,5 +19,3 @@ export class UpdateMyProfileUseCase {
     });
   }
 }
-
-

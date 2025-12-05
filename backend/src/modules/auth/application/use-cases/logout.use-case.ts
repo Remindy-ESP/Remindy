@@ -12,8 +12,7 @@ export class LogoutUseCase {
   async execute(refreshToken: string): Promise<void> {
     const refreshTokenHash = await this.passwordService.hash(refreshToken);
 
-    const session =
-      await this.sessionRepo.findActiveByRefreshTokenHash(refreshTokenHash);
+    const session = await this.sessionRepo.findActiveByRefreshTokenHash(refreshTokenHash);
 
     if (!session) {
       return;

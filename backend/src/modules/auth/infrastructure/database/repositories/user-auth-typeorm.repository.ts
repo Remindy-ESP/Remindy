@@ -24,32 +24,26 @@ export class UserAuthTypeOrmRepository implements IUserAuthRepository {
     return this.mapper.toDomain(saved);
   }
   async findById(id: string): Promise<AuthUser | null> {
-  const entity = await this.repo.findOne({
-    where: {
-      id,
-      deletedAt: IsNull(),
-    },
-  });
+    const entity = await this.repo.findOne({
+      where: {
+        id,
+        deletedAt: IsNull(),
+      },
+    });
 
-  if (!entity) return null;
+    if (!entity) return null;
 
-  return this.mapper.toDomain(entity);
+    return this.mapper.toDomain(entity);
+  }
+
+  async updatePassword(userId: string, passwordHash: string): Promise<void> {
+    await this.repo.update(
+      { id: userId },
+      {
+        passwordHash,
+        passwordChangedAt: new Date(),
+        failedLoginCount: 0,
+      },
+    );
+  }
 }
-
-  async updatePassword(
-  userId: string,
-  passwordHash: string,
-): Promise<void> {
-  await this.repo.update(
-    { id: userId },
-    {
-      passwordHash,
-      passwordChangedAt: new Date(),
-      failedLoginCount: 0,
-    },
-  );
-}
-
-}
-  
-

@@ -1,4 +1,6 @@
+import { APP_GUARD } from '@nestjs/core';
 import { forwardRef, Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './presentation/controllers/auth.controller';
 import { UserAuthTypeOrmRepository } from './infrastructure/database/repositories/user-auth-typeorm.repository';
 import { IUserAuthRepository } from './domain/repositories/user-auth.repository';
@@ -22,11 +24,15 @@ import { SendgridEmailService } from './infrastructure/services/sendgrid-email.s
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 import { UsersModule } from '../user/user.module';
-
+import { JwtRefreshGuard } from './presentation/guards/jwt-refresh.guard';
+import { JwtRefreshStrategy } from './infrastructure/strategies/jwt-refresh.strategy';
+import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
+import { RolesGuard } from './presentation/guards/roles.guard';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
     TypeOrmModule.forFeature([EUser, UserSessionEntity]),
+    JwtModule.register({}),
   ],
   controllers: [AuthController],
   providers: [
@@ -37,8 +43,18 @@ import { UsersModule } from '../user/user.module';
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
     JwtTokenService,
-    JwtAuthGuard,
+    JwtRefreshStrategy,
+    JwtStrategy,
+    JwtRefreshGuard,
     UserOrmMapper,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
     {
       provide: ITokenService,
       useClass: JwtTokenService,
@@ -61,8 +77,6 @@ import { UsersModule } from '../user/user.module';
       useClass: SendgridEmailService,
     },
   ],
-  exports: [
-    JwtTokenService,
-  ]
+  exports: [JwtTokenService],
 })
 export class AuthModule {}

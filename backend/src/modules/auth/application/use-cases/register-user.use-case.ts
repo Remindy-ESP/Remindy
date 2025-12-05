@@ -4,7 +4,7 @@ import { RegisterRequestDto } from '../dto/register-request.dto';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IPasswordService } from '../../domain/services/password.service';
 import { UserPreferencesRepository } from 'src/modules/user/infrastructure/repositories/user-preferences.repository';
-
+import { Role } from '../../domain/value-objects/role.enum';
 @Injectable()
 export class RegisterUserUseCase {
   constructor(
@@ -27,7 +27,7 @@ export class RegisterUserUseCase {
       firstName: dto.firstName || '',
       lastName: dto.lastName || '',
       phone: dto.phone || '',
-      role_key: 'user_freemium',
+      role_key: Role.USER_FREEMIUM,
     });
 
     const savedUser = await this.userRepo.save(user);

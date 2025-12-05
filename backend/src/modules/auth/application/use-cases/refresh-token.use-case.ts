@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ITokenService } from '../../domain/services/token.service';
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { IPasswordService } from '../../domain/services/password.service';
+import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 
 @Injectable()
 export class RefreshTokenUseCase {
@@ -9,20 +10,14 @@ export class RefreshTokenUseCase {
     private readonly tokenService: ITokenService,
     private readonly sessionRepo: IUserSessionRepository,
     private readonly passwordService: IPasswordService,
+    private readonly userRepo: IUserAuthRepository,
   ) {}
 
-  async execute(params: {
-    refreshToken: string;
-    ipAddress?: string;
-    userAgent?: string;
-  }): Promise<{
+  async execute(params: { refreshToken: string; ipAddress?: string; userAgent?: string }): Promise<{
     accessToken: string;
     refreshToken: string;
   }> {
-
-    const payload = this.tokenService.verifyRefreshToken(
-      params.refreshToken,
-    );
+    const payload = this.tokenService.verifyRefreshToken(params.refreshToken);
 
     if (!payload?.sub) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -30,9 +25,7 @@ export class RefreshTokenUseCase {
 
     const userId = payload.sub;
 
-    const session = await this.sessionRepo.findActiveSessionById(
-      payload.sessionId!,
-    );
+    const session = await this.sessionRepo.findActiveSessionById(payload.sessionId!);
 
     if (!session || session.isRevoked || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Session expired or revoked');
@@ -46,9 +39,15 @@ export class RefreshTokenUseCase {
     if (!isValid) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+    const user = await this.userRepo.findById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
 
     const newAccessToken = this.tokenService.generateAccessToken({
       sub: userId,
+      role: user.getRoleKey(),
     });
 
     const newRefreshToken = this.tokenService.generateRefreshToken({
@@ -56,8 +55,7 @@ export class RefreshTokenUseCase {
       sessionId: session.id,
     });
 
-    const newRefreshTokenHash =
-      await this.passwordService.hash(newRefreshToken);
+    const newRefreshTokenHash = await this.passwordService.hash(newRefreshToken);
 
     await this.sessionRepo.updateRefreshToken(session.id, {
       refreshTokenHash: newRefreshTokenHash,
@@ -70,4 +68,3 @@ export class RefreshTokenUseCase {
     };
   }
 }
-

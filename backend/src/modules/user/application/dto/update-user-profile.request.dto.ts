@@ -1,11 +1,11 @@
 import { IsOptional, IsString } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserMeRequestDto {
   @ApiPropertyOptional({
     example: 'Jean',
     type: String,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -14,7 +14,7 @@ export class UpdateUserMeRequestDto {
   @ApiPropertyOptional({
     example: 'Dupont',
     type: String,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -23,7 +23,7 @@ export class UpdateUserMeRequestDto {
   @ApiPropertyOptional({
     example: '+33123456789',
     type: String,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -33,7 +33,7 @@ export class UpdateUserMeRequestDto {
     example: 'fr',
     type: String,
     required: false,
-    enum: ['fr', 'en', 'es', 'de', 'it', 'pt']
+    enum: ['fr', 'en', 'es', 'de', 'it', 'pt'],
   })
   @IsOptional()
   @IsString()
@@ -42,7 +42,7 @@ export class UpdateUserMeRequestDto {
   @ApiPropertyOptional({
     example: 'Europe/Paris',
     type: String,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
@@ -51,7 +51,7 @@ export class UpdateUserMeRequestDto {
   @ApiPropertyOptional({
     example: 'users/123/photos/profile.jpg',
     type: String,
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()

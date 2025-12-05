@@ -1,5 +1,4 @@
 export abstract class IUserSessionRepository {
-
   abstract createSession(params: {
     userId: string;
     refreshTokenHash: string;
@@ -25,9 +24,7 @@ export abstract class IUserSessionRepository {
     },
   ): Promise<void>;
 
-  abstract findActiveByRefreshTokenHash(
-    hash: string,
-  ): Promise<{ id: string } | null>;
+  abstract findActiveByRefreshTokenHash(hash: string): Promise<{ id: string } | null>;
 
   abstract revokeSession(sessionId: string): Promise<void>;
 }

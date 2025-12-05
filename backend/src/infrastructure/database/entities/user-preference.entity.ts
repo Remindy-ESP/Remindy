@@ -58,7 +58,7 @@ export class UserPreferenceEntity {
   deletedAt: Date;
 
   // Relations
-  @OneToOne(() => EUser, (user) => user.preferences, {
+  @OneToOne(() => EUser, user => user.preferences, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })

@@ -1,11 +1,4 @@
-import {
-  Entity,
-  PrimaryColumn,
-  Column,
-  CreateDateColumn,
-  OneToMany,
-  OneToOne,
-} from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn, OneToMany, OneToOne } from 'typeorm';
 import { EUser } from './user.entity';
 import { RoleLimitEntity } from './role-limit.entity';
 
@@ -24,9 +17,9 @@ export class RoleEntity {
   createdAt: Date;
 
   // Relations
-  @OneToMany(() => EUser, (user) => user.role_key)
+  @OneToMany(() => EUser, user => user.role_key)
   users: EUser[];
 
-  @OneToOne(() => RoleLimitEntity, (roleLimit) => roleLimit.role)
+  @OneToOne(() => RoleLimitEntity, roleLimit => roleLimit.role)
   roleLimit: RoleLimitEntity;
 }

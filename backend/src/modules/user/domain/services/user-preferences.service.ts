@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
 import {
@@ -73,29 +69,21 @@ export class UserPreferencesService {
 
     // Validate reminder delay if provided
     if (updateDto.defaultReminderDelay !== undefined) {
-      if (
-        updateDto.defaultReminderDelay < 1 ||
-        updateDto.defaultReminderDelay > 365
-      ) {
-        throw new BadRequestException(
-          'Default reminder delay must be between 1 and 365 days',
-        );
+      if (updateDto.defaultReminderDelay < 1 || updateDto.defaultReminderDelay > 365) {
+        throw new BadRequestException('Default reminder delay must be between 1 and 365 days');
       }
     }
 
     // Update preferences
-    const updatedPreferences = await this.userPreferencesRepository.update(
-      userId,
-      {
-        theme: updateDto.theme as Theme | undefined,
-        notificationEmail: updateDto.notificationEmail,
-        notificationPush: updateDto.notificationPush,
-        notificationSms: updateDto.notificationSms,
-        defaultReminderDelay: updateDto.defaultReminderDelay,
-        currency: updateDto.currency?.toUpperCase(),
-        showOnlineStatus: updateDto.showOnlineStatus,
-      },
-    );
+    const updatedPreferences = await this.userPreferencesRepository.update(userId, {
+      theme: updateDto.theme as Theme | undefined,
+      notificationEmail: updateDto.notificationEmail,
+      notificationPush: updateDto.notificationPush,
+      notificationSms: updateDto.notificationSms,
+      defaultReminderDelay: updateDto.defaultReminderDelay,
+      currency: updateDto.currency?.toUpperCase(),
+      showOnlineStatus: updateDto.showOnlineStatus,
+    });
 
     if (!updatedPreferences) {
       throw new NotFoundException('Preferences not found after update');

@@ -34,20 +34,13 @@ export class UserTypeOrmRepository implements UserRepository {
     });
   }
 
-  async updateProfile(
-  userId: string,
-  data: Partial<EUser>,
-): Promise<void> {
-  if (!userId) {
-    throw new Error('updateProfile called without userId');
+  async updateProfile(userId: string, data: Partial<EUser>): Promise<void> {
+    if (!userId) {
+      throw new Error('updateProfile called without userId');
+    }
+
+    await this.userRepository.update({ id: userId }, data);
   }
-
-  await this.userRepository.update(
-    { id: userId },
-    data,
-  );
-}
-
 
   async save(user: EUser): Promise<EUser> {
     return this.userRepository.save(user);
