@@ -98,15 +98,11 @@ export class UserService {
     };
   }
 
-private isValidPhoneNumber(phone: string): boolean {
-  const phoneRegex = /^[\d\s+\-()]+$/;
+  private isValidPhoneNumber(phone: string): boolean {
+    const phoneRegex = /^[\d\s+\-()]+$/;
 
-  return (
-    phoneRegex.test(phone) &&
-    phone.replaceAll(/\D/g, '').length >= 10
-  );
-}
-
+    return phoneRegex.test(phone) && phone.replaceAll(/\D/g, '').length >= 10;
+  }
 
   private isValidTimezone(timezone: string): boolean {
     // Common timezone validation
