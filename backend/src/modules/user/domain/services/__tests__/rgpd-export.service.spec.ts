@@ -3,7 +3,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { RgpdExportService } from '../rgpd-export.service';
 import { RgpdExportRepository } from '../../../infrastructure/repositories/rgpd-export.repository';
 import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
-const TEST_IP_ADDRESS = '192.168.1.1';
+const TEST_IP_ADDRESS = '192.0.2.1';
 describe('RgpdExportService', () => {
   let service: RgpdExportService;
   let rgpdExportRepository: jest.Mocked<RgpdExportRepository>;
