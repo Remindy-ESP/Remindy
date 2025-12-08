@@ -7,7 +7,7 @@ export interface JwtAccessPayload {
 
 export interface JwtRefreshPayload {
   sub: string;
-  sessionId?: string;
+  sessionId: string;
 }
 
 export abstract class ITokenService {

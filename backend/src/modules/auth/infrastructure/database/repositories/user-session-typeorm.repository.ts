@@ -11,6 +11,7 @@ export class UserSessionTypeOrmRepository implements IUserSessionRepository {
     private readonly repo: Repository<UserSessionEntity>,
   ) {}
   async createSession(params: {
+    id: string;
     userId: string;
     refreshTokenHash: string;
     ipAddress: string;
@@ -19,6 +20,7 @@ export class UserSessionTypeOrmRepository implements IUserSessionRepository {
     expiresAt: Date;
   }): Promise<{ id: string }> {
     const session = this.repo.create({
+      id: params.id,
       userId: params.userId,
       refreshTokenHash: params.refreshTokenHash,
       ipAddress: params.ipAddress,

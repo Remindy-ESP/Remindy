@@ -1,11 +1,14 @@
 export abstract class IUserSessionRepository {
   abstract createSession(params: {
+    id: string;
     userId: string;
     refreshTokenHash: string;
     ipAddress: string;
     userAgent?: string;
     deviceName?: string;
     expiresAt: Date;
+    lastActivity: Date;
+    isRevoked?: boolean;
   }): Promise<{ id: string }>;
 
   abstract findActiveSessionById(sessionId: string): Promise<{

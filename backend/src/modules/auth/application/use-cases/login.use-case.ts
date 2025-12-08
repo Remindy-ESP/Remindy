@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { IPasswordService } from '../../domain/services/password.service';
@@ -22,14 +23,24 @@ export class LoginUseCase {
     deviceName?: string;
   }): Promise<LoginResponseDto> {
     const user = await this.userRepo.findByEmail(params.email);
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    const isValid = await this.passwordService.compare(params.password, user.getPasswordHash());
+    const isPasswordValid = await this.passwordService.compare(
+      params.password,
+      user.getPasswordHash(),
+    );
 
-    if (!isValid) throw new UnauthorizedException('Invalid credentials');
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const sessionId = randomUUID();
 
     const refreshToken = this.tokenService.generateRefreshToken({
       sub: user.getId(),
+      sessionId,
     });
 
     const refreshTokenHash = await this.passwordService.hash(refreshToken);
@@ -38,12 +49,15 @@ export class LoginUseCase {
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     await this.sessionRepo.createSession({
+      id: sessionId,
       userId: user.getId(),
       refreshTokenHash,
       ipAddress: params.ipAddress,
       userAgent: params.userAgent,
-      deviceName: params.deviceName ?? 'unknown',
+      deviceName: params.deviceName ?? 'web',
       expiresAt,
+      lastActivity: new Date(),
+      isRevoked: false,
     });
 
     const accessToken = this.tokenService.generateAccessToken({

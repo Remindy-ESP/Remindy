@@ -25,7 +25,7 @@ export class RefreshTokenUseCase {
 
     const userId = payload.sub;
 
-    const session = await this.sessionRepo.findActiveSessionById(payload.sessionId!);
+    const session = await this.sessionRepo.findActiveSessionById(payload.sessionId);
 
     if (!session || session.isRevoked || session.expiresAt < new Date()) {
       throw new UnauthorizedException('Session expired or revoked');
