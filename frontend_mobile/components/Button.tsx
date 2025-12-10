@@ -2,9 +2,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ButtonProps {
-    onPress: () => void;
-    label: string;
-    isOpen: boolean;
+    readonly onPress: () => void;
+    readonly label: string;
+    readonly isOpen: boolean;
 }
 
 export default function Button({onPress, label, isOpen}: ButtonProps) {
