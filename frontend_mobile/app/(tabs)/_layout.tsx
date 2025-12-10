@@ -2,6 +2,27 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+interface TabIconProps {
+  color: string;
+  size: number;
+}
+
+function CalendarIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="calendar" size={size} color={color} />;
+}
+
+function StatsIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="stats-chart-outline" size={size} color={color} />;
+}
+
+function SubscriptionIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="document-text-outline" size={size} color={color} />;
+}
+
+function ProfileIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="person" size={size} color={color} />;
+}
+
 export default function TabLayout() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
@@ -29,9 +50,7 @@ export default function TabLayout() {
           options={{
             tabBarLabel: '',
               title: ' ',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="calendar" size={size} color={color} />
-            ),
+            tabBarIcon: CalendarIcon,
           }}
         />
         <Tabs.Screen
@@ -39,9 +58,7 @@ export default function TabLayout() {
           options={{
             tabBarLabel: '',
               title: ' ',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="stats-chart-outline" size={size} color={color} />
-            ),
+            tabBarIcon: StatsIcon,
           }}
         />
         <Tabs.Screen
@@ -49,9 +66,7 @@ export default function TabLayout() {
           options={{
             tabBarLabel: '',
               title: ' ',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="document-text-outline" size={size} color={color} />
-            ),
+            tabBarIcon: SubscriptionIcon,
           }}
         />
               <Tabs.Screen
@@ -59,9 +74,7 @@ export default function TabLayout() {
           options={{
             tabBarLabel: '',
               title: ' ',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="person" size={size} color={color} />
-            ),
+            tabBarIcon: ProfileIcon,
           }}
         />
       </Tabs>
