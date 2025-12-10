@@ -5,7 +5,6 @@ export type TimePeriod = 'day' | 'week' | 'month' | 'year';
 export function useDashboard() {
   const [selected, setSelected] = useState('');
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -15,9 +14,6 @@ export function useDashboard() {
     { key: 'month', label: 'Mensuel', value: '3' },
     { key: 'year', label: 'Année', value: '4' },
   ];
-
-  // Catégories hardcodées pour l'instant
-  const categories = ['Streaming', 'Sport', 'Banque'];
 
   const getContentForPeriod = (period: TimePeriod): string => {
     const periodData = timePeriods.find((p) => p.key === period);
@@ -29,13 +25,10 @@ export function useDashboard() {
     setSelected,
     activePeriod,
     setActivePeriod,
-    filtersOpen,
-    setFiltersOpen,
     categoriesOpen,
     setCategoriesOpen,
     selectedCategory,
     setSelectedCategory,
-    categories,
     timePeriods,
     getContentForPeriod,
   };
