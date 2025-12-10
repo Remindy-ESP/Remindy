@@ -127,10 +127,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <AddOperationButton
-        onPress={() => {
-          console.log('Add operation pressed');
-          // TODO: Ouvrir le modal/écran d'ajout d'opération
-        }}
+        onPress={() => {console.log('Add operation pressed')}}
       />
     </View>
   );
