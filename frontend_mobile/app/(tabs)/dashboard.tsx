@@ -4,6 +4,8 @@ import { Calendar } from 'react-native-calendars';
 import { styles } from './dashboard.styles';
 import { useDashboard } from '@/hooks/useDashboard';
 import Button from '@/components/Button';
+import AddOperationButton from '@/components/AddOperationButton';
+import { MOCK_CATEGORIES, Category } from '@/constants/categories';
 
 export default function DashboardScreen() {
   const {
@@ -11,119 +13,125 @@ export default function DashboardScreen() {
     setSelected,
     activePeriod,
     setActivePeriod,
-    filtersOpen,
-    setFiltersOpen,
     categoriesOpen,
     setCategoriesOpen,
     selectedCategory,
     setSelectedCategory,
-    categories,
     timePeriods,
     getContentForPeriod,
   } = useDashboard();
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-      </View>
-
-     <Button
-        onPress={() => setCategoriesOpen(!categoriesOpen)}
-        label={selectedCategory || "Catégories"}
-        isOpen={categoriesOpen}
-      />
-
-      {categoriesOpen && (
-        <View style={styles.categoriesContainer}>
-          {categories.map((category, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.categoryItem}
-              onPress={() => {
-                setSelectedCategory(category);
-                setCategoriesOpen(false);
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.categoryText}>{category}</Text>
-            </TouchableOpacity>
-          ))}
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
         </View>
-      )}
 
-      <View style={styles.calendarContainer}>
-        <Calendar
-          testID="calendar"
-          onDayPress={(day) => {
-            setSelected(day.dateString);
-          }}
-          markedDates={{
-            [selected]: {
-              selected: true,
-              selectedColor: '#4f46e5',
-            },
-          }}
-          theme={{
-            backgroundColor: '#2a2a5e',
-            calendarBackground: '#373848',
-            textSectionTitleColor: '#fff',
-            selectedDayBackgroundColor: '#4f46e5',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#4f46e5',
-            dayTextColor: '#e0e0e0',
-            textDisabledColor: '#5a5a7a',
-            dotColor: '#4f46e5',
-            selectedDotColor: '#ffffff',
-            arrowColor: '#fff',
-            monthTextColor: '#fff',
-            indicatorColor: '#4f46e5',
-            textDayFontWeight: '300',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '500',
-            textDayFontSize: 16,
-            textMonthFontSize: 18,
-            textDayHeaderFontSize: 14,
-          }}
+       <Button
+          onPress={() => setCategoriesOpen(!categoriesOpen)}
+          label={selectedCategory || "Catégories"}
+          isOpen={categoriesOpen}
         />
-      </View>
 
-      <View style={styles.timePeriodSection}>
-        <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
-        <View style={styles.timePeriodMenu}>
-          {timePeriods.map((period) => (
-            <TouchableOpacity
-              key={period.key}
-              testID={`period-${period.key}`}
-              style={[
-                styles.timePeriodTab,
-                activePeriod === period.key
-                  ? styles.timePeriodTabActive
-                  : styles.timePeriodTabInactive,
-              ]}
-              onPress={() => setActivePeriod(period.key)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.timePeriodTabText,
-                  activePeriod === period.key
-                    ? styles.timePeriodTabTextActive
-                    : styles.timePeriodTabTextInactive,
-                ]}
+        {categoriesOpen && (
+          <View style={styles.categoriesContainer}>
+            {MOCK_CATEGORIES.map((category: Category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={styles.categoryItem}
+                onPress={() => {
+                  setSelectedCategory(category.name);
+                  setCategoriesOpen(false);
+                }}
+                activeOpacity={0.7}
               >
-                {period.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+                <Text style={styles.categoryText}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
-      {/* Contenu en fonction de la période sélectionnée */}
-      <View style={styles.contentSection}>
-        <Text style={styles.contentText} testID="period-content">
-          {getContentForPeriod(activePeriod)}
-        </Text>
-      </View>
-    </ScrollView>
+        <View style={styles.calendarContainer}>
+          <Calendar
+            testID="calendar"
+            onDayPress={(day) => {
+              setSelected(day.dateString);
+            }}
+            markedDates={{
+              [selected]: {
+                selected: true,
+                selectedColor: '#4f46e5',
+              },
+            }}
+            theme={{
+              backgroundColor: '#2a2a5e',
+              calendarBackground: '#373848',
+              textSectionTitleColor: '#fff',
+              selectedDayBackgroundColor: '#4f46e5',
+              selectedDayTextColor: '#ffffff',
+              todayTextColor: '#4f46e5',
+              dayTextColor: '#e0e0e0',
+              textDisabledColor: '#5a5a7a',
+              dotColor: '#4f46e5',
+              selectedDotColor: '#ffffff',
+              arrowColor: '#fff',
+              monthTextColor: '#fff',
+              indicatorColor: '#4f46e5',
+              textDayFontWeight: '300',
+              textMonthFontWeight: 'bold',
+              textDayHeaderFontWeight: '500',
+              textDayFontSize: 16,
+              textMonthFontSize: 18,
+              textDayHeaderFontSize: 14,
+            }}
+          />
+        </View>
+
+        <View style={styles.timePeriodSection}>
+          <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
+          <View style={styles.timePeriodMenu}>
+            {timePeriods.map((period) => (
+              <TouchableOpacity
+                key={period.key}
+                testID={`period-${period.key}`}
+                style={[
+                  styles.timePeriodTab,
+                  activePeriod === period.key
+                    ? styles.timePeriodTabActive
+                    : styles.timePeriodTabInactive,
+                ]}
+                onPress={() => setActivePeriod(period.key)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.timePeriodTabText,
+                    activePeriod === period.key
+                      ? styles.timePeriodTabTextActive
+                      : styles.timePeriodTabTextInactive,
+                  ]}
+                >
+                  {period.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Contenu en fonction de la période sélectionnée */}
+        <View style={styles.contentSection}>
+          <Text style={styles.contentText} testID="period-content">
+            {getContentForPeriod(activePeriod)}
+          </Text>
+        </View>
+      </ScrollView>
+
+      <AddOperationButton
+        onPress={() => {
+          console.log('Add operation pressed');
+          // TODO: Ouvrir le modal/écran d'ajout d'opération
+        }}
+      />
+    </View>
   );
 }
