@@ -6,7 +6,7 @@ import {
   UserPreferencesResponseDto,
 } from '../../presentation/dto/user-preferences.dto';
 import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
-
+import { ISO_CURRENCY_REGEX } from 'src/utils/regex';
 @Injectable()
 export class UserPreferencesService {
   constructor(
@@ -49,11 +49,6 @@ export class UserPreferencesService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
-    // Get existing preferences or create default ones
-    // const preferences =
-    //   (await this.userPreferencesRepository.findByUserId(userId)) ??
-    //   (await this.userPreferencesRepository.createDefaultPreferences(userId));
 
     // Validate currency format if provided
     if (updateDto.currency !== undefined) {
@@ -100,6 +95,6 @@ export class UserPreferencesService {
 
   private isValidCurrency(currency: string): boolean {
     // Check if it's a valid 3-letter ISO currency code
-    return /^[A-Z]{3}$/.test(currency);
+    return ISO_CURRENCY_REGEX.test(currency);
   }
 }

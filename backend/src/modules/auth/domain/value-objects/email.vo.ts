@@ -1,10 +1,10 @@
+import { EMAIL_REGEX } from 'src/utils/regex';
+
 export class Email {
   private readonly value: string;
 
   constructor(value: string) {
-    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
-
-    if (!emailRegex.test(value)) {
+    if (!EMAIL_REGEX.test(value)) {
       throw new Error('Invalid email format');
     }
 

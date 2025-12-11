@@ -6,7 +6,7 @@ import {
   UserProfileResponseDto,
 } from '../../presentation/dto/user-profile.dto';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
-
+import { PHONE_FORMAT_REGEX, PHONE_MIN_DIGITS } from 'src/utils/regex';
 @Injectable()
 export class UserService {
   constructor(
@@ -99,9 +99,8 @@ export class UserService {
   }
 
   private isValidPhoneNumber(phone: string): boolean {
-    const phoneRegex = /^[\d\s+\-()]+$/;
-
-    return phoneRegex.test(phone) && phone.replaceAll(/\D/g, '').length >= 10;
+    const digitsOnly = phone.replaceAll(/\D/g, '');
+    return PHONE_FORMAT_REGEX.test(phone) && digitsOnly.length >= PHONE_MIN_DIGITS;
   }
 
   private isValidTimezone(timezone: string): boolean {
