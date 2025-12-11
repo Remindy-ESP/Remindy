@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { ScreenWithFooter } from '@/components/ui/ScreenWithFooter';
 
 export default function DashboardScreen() {
   const [selected, setSelected] = useState('');
 
   return (
-    <ScrollView style={styles.container}>
+    <ScreenWithFooter>
+      <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
         <Text style={styles.headerSubtitle}>
@@ -67,6 +69,7 @@ export default function DashboardScreen() {
         )}
       </View>
     </ScrollView>
+    </ScreenWithFooter>
   );
 }
 

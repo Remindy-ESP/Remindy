@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { ScreenWithFooter } from '@/components/ui/ScreenWithFooter';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -17,7 +18,8 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScreenWithFooter>
+      <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
           <Ionicons name="person-circle" size={100} color="#6366f1" />
@@ -87,6 +89,7 @@ export default function ProfileScreen() {
         <Text style={styles.logoutButtonText}>Déconnexion</Text>
       </TouchableOpacity>
     </ScrollView>
+    </ScreenWithFooter>
   );
 }
 

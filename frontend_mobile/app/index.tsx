@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ScreenWithFooter } from '@/components/ui/ScreenWithFooter';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,10 +24,11 @@ export default function AuthScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
+    <ScreenWithFooter>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
       <View style={styles.content}>
         <Text style={styles.title}>Remindy</Text>
         <Text style={styles.subtitle}>
@@ -90,6 +92,7 @@ export default function AuthScreen() {
         </View>
       </View>
     </KeyboardAvoidingView>
+    </ScreenWithFooter>
   );
 }
 
