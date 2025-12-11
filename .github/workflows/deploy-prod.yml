@@ -1,0 +1,98 @@
+name: Deploy to Production (Azure Container Apps)
+
+on:
+  push:
+    branches:
+      - production
+
+env:
+  DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/remindy-backend
+  TERRAFORM_DIR: infrastructure/terraform/prod
+  DOCKER_CONTEXT: ./backend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: sha
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.DOCKER_CONTEXT }}
+          push: true
+          tags: |
+            ${{ env.DOCKERHUB_REPO }}:${{ steps.sha.outputs.SHORT_SHA }}
+            ${{ env.DOCKERHUB_REPO }}:prod-latest
+            ${{ env.DOCKERHUB_REPO }}:latest
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: |
+          terraform plan \
+            -var="image_tag=${{ steps.sha.outputs.SHORT_SHA }}" \
+            -var="dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }}" \
+            -var="dockerhub_token=${{ secrets.DOCKERHUB_TOKEN }}" \
+            -var="dockerhub_repo=${{ env.DOCKERHUB_REPO }}" \
+            -var="neon_database_url_dev=${{ secrets.NEON_DATABASE_URL_DEV }}" \
+            -var="neon_database_url_staging=${{ secrets.NEON_DATABASE_URL_STAGING }}" \
+            -var="neon_database_url_prod=${{ secrets.NEON_DATABASE_URL_PROD }}"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: |
+          terraform apply -auto-approve \
+            -var="image_tag=${{ steps.sha.outputs.SHORT_SHA }}" \
+            -var="dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }}" \
+            -var="dockerhub_token=${{ secrets.DOCKERHUB_TOKEN }}" \
+            -var="dockerhub_repo=${{ env.DOCKERHUB_REPO }}" \
+            -var="neon_database_url_dev=${{ secrets.NEON_DATABASE_URL_DEV }}" \
+            -var="neon_database_url_staging=${{ secrets.NEON_DATABASE_URL_STAGING }}" \
+            -var="neon_database_url_prod=${{ secrets.NEON_DATABASE_URL_PROD }}"
+
+      - name: Get deployment outputs
+        id: terraform_output
+        working-directory: ${{ env.TERRAFORM_DIR }}
+        run: |
+          echo "app_url=$(terraform output -raw application_url)" >> $GITHUB_OUTPUT
+
+      - name: Deployment Summary
+        run: |
+          echo "## Production Deployment Successful :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit SHA:** ${{ steps.sha.outputs.SHORT_SHA }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** ${{ env.DOCKERHUB_REPO }}:${{ steps.sha.outputs.SHORT_SHA }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Application URL:** ${{ steps.terraform_output.outputs.app_url }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify deployment
+        if: success()
+        run: |
+          echo "Production deployment completed successfully!"
+          echo "Application is now live at: ${{ steps.terraform_output.outputs.app_url }}"

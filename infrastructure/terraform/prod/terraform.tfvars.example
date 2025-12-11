@@ -1,5 +1,5 @@
 # Environment Configuration
-environment = "dev"
+environment = "prod"
 location    = "francecentral"
 
 # Docker Configuration
@@ -10,13 +10,13 @@ dockerhub_repo     = "your-dockerhub-username/remindy-backend"
 
 # Container Configuration
 container_port = 3000
-min_replicas   = 0  # Scale to 0 for dev to save costs
-max_replicas   = 1
-cpu            = 0.25
-memory         = "0.5Gi"
+min_replicas   = 1  # Always at least 1 replica for prod
+max_replicas   = 3
+cpu            = 0.5
+memory         = "1Gi"
 
 # Application Configuration
-node_env = "development"
+node_env = "production"
 
 # Database Configuration (Neon)
 neon_database_url_dev     = "postgresql://neondb_owner:npg_XXX@ep-xxx.eu-central-1.aws.neon.tech/Dev_db_Remindy?sslmode=require&channel_binding=require"

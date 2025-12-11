@@ -2,3 +2,6 @@
 .vscode
 node_modules/
 .claude
+.DS_Store
+DEPLOYMENT.md
+TODO.md
