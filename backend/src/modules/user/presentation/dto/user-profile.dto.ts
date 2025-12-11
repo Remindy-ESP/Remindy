@@ -21,7 +21,7 @@ export class UserProfileResponseDto {
   photoR2Key?: string;
 
   @ApiProperty({ description: 'User role' })
-  role: string;
+  role_key: string;
 
   @ApiProperty({ description: 'User status', enum: ['active', 'verified', 'banned', 'inactive'] })
   status: string;

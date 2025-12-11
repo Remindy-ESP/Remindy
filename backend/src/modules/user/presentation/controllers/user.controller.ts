@@ -5,38 +5,56 @@ import {
   Post,
   Delete,
   Body,
-  Param,
   Req,
   HttpStatus,
   HttpCode,
+  UnauthorizedException,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import type { Request } from 'express';
-import { UserService } from '../../application/services/user.service';
-import { UserPreferencesService } from '../../application/services/user-preferences.service';
-import { RgpdExportService } from '../../application/services/rgpd-export.service';
+import { Throttle } from '@nestjs/throttler';
+import type { Request, Response } from 'express';
+import { UserService } from '../../domain/services/user.service';
+import { UserPreferencesService } from '../../domain/services/user-preferences.service';
 import { UpdateUserProfileDto, UserProfileResponseDto } from '../dto/user-profile.dto';
+import { UpdateUserMeRequestDto } from '../../application/dto/update-user-profile.request.dto';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from '../dto/user-preferences.dto';
-import { CreateRgpdExportDto, RgpdExportResponseDto } from '../dto/rgpd-export.dto';
-
+import { RgpdExportResponseDto } from '../dto/rgpd-export.dto';
+import { GetMyProfileUseCase } from '../../application/use-cases/get-my-profile.use-case';
+import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case';
+import { DeleteMyAccountUseCase } from '../../application/use-cases/delete-my-account.use-case';
+import { GetMyPreferencesUseCase } from '../../application/use-cases/get-my-preferences.use-case';
+import { UserMeResponseDto } from '../dto/user-me.response.dto';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
+import { UpdateUserPreferencesUseCase } from '../../application/use-cases/update-user-preferences.use-case';
+import type { RequestWithUser } from 'src/types/request-with-user.interface';
+import { UserPreferencesMapper } from '../mappers/user-preferences.mapper';
+import { RequestRgpdExportDto } from '../../application/dto/request-export-rgpd.dto';
+import { RequestRgpdExportUseCase } from '../../application/use-cases/request-rgpd-export.use-case';
+import { Roles } from 'src/modules/auth/presentation/decorators/roles.decorator';
+import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 // TODO: Import your JWT authentication guard
 // import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(ThrottlerGuard)
-// @UseGuards(JwtAuthGuard) // Uncomment when JWT guard is implemented
-@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('access-token')
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userPreferencesService: UserPreferencesService,
-    private readonly rgpdExportService: RgpdExportService,
+    private readonly getMyProfileUseCase: GetMyProfileUseCase,
+    private readonly updateMyProfileUseCase: UpdateMyProfileUseCase,
+    private readonly deleteMyAccountUseCase: DeleteMyAccountUseCase,
+    private readonly getMyPreferencesUseCase: GetMyPreferencesUseCase,
+    private readonly updateUserPreferencesUseCase: UpdateUserPreferencesUseCase,
+    private readonly requestRgpdExportUseCase: RequestRgpdExportUseCase,
   ) {}
 
   @Get('profile')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -52,10 +70,62 @@ export class UserController {
     description: 'Unauthorized',
   })
   async getProfile(@Req() req: Request): Promise<UserProfileResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    // When JWT guard is implemented, use: const userId = req.user.id;
     const userId = this.extractUserIdFromRequest(req);
     return this.userService.getUserProfile(userId);
+  }
+  @Get('me')
+  async getMe(@Req() req: Request) {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+
+    const userId = user.userId;
+
+    return this.getMyProfileUseCase.execute({ userId });
+  }
+
+  @Put('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'User profile updated successfully',
+    type: UserMeResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'User not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  async updateMe(@Req() req: Request, @Body() dto: UpdateUserMeRequestDto) {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+
+    const userId = user.userId;
+
+    await this.updateMyProfileUseCase.execute(userId, dto);
+
+    return { success: true };
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  async deleteMe(
+    @Req() req: Request & { user: { userId: string } },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const userId = req.user.userId;
+
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found');
+    }
+
+    await this.deleteMyAccountUseCase.execute(userId);
+
+    res.clearCookie('refreshToken', {
+      path: '/',
+    });
+
+    return { success: true };
   }
 
   @Put('profile')
@@ -88,24 +158,12 @@ export class UserController {
   }
 
   @Get('preferences')
-  @ApiOperation({ summary: 'Get current user preferences' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User preferences retrieved successfully',
-    type: UserPreferencesResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async getPreferences(@Req() req: Request): Promise<UserPreferencesResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.userPreferencesService.getUserPreferences(userId);
+  async getPreferences(@Req() req: RequestWithUser) {
+    const userId = req.user.userId;
+
+    const prefs = await this.getMyPreferencesUseCase.execute(userId);
+
+    return UserPreferencesResponseDto.fromEntity(prefs);
   }
 
   @Put('preferences')
@@ -128,90 +186,31 @@ export class UserController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
   })
-  async updatePreferences(
-    @Req() req: Request,
-    @Body() updateDto: UpdateUserPreferencesDto,
-  ): Promise<UserPreferencesResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.userPreferencesService.updateUserPreferences(userId, updateDto);
-  }
+  async updatePreferences(@Req() req: RequestWithUser, @Body() dto: UpdateUserPreferencesDto) {
+    const userId = req.user.userId;
 
+    const input = UserPreferencesMapper.toInput(dto);
+
+    const updated = await this.updateUserPreferencesUseCase.execute(userId, input);
+
+    return UserPreferencesResponseDto.fromEntity(updated);
+  }
   @Post('export-data')
-  @HttpCode(HttpStatus.ACCEPTED)
-  @Throttle({ default: { limit: 1, ttl: 3600000 } }) // 1 request per hour
-  @ApiOperation({ summary: 'Request RGPD data export' })
-  @ApiBody({ type: CreateRgpdExportDto })
-  @ApiResponse({
-    status: HttpStatus.ACCEPTED,
-    description: 'Export request created successfully',
-    type: RgpdExportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data or pending export already exists',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @Roles(Role.USER_PREMIUM)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async exportData(
-    @Req() req: Request,
-    @Body() createDto: CreateRgpdExportDto,
+    @Req() req: RequestWithUser,
+    @Body() dto: RequestRgpdExportDto,
   ): Promise<RgpdExportResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    const ipAddress = req.ip || 'unknown';
-    return this.rgpdExportService.createExportRequest(userId, createDto, ipAddress);
-  }
+    const result = await this.requestRgpdExportUseCase.execute(req.user.userId, dto);
 
-  @Get('exports')
-  @ApiOperation({ summary: 'Get all export requests for current user' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Export requests retrieved successfully',
-    type: [RgpdExportResponseDto],
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async getExports(@Req() req: Request): Promise<RgpdExportResponseDto[]> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.rgpdExportService.getUserExports(userId);
-  }
-
-  @Get('exports/:exportId')
-  @ApiOperation({ summary: 'Get export request status' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Export request status retrieved successfully',
-    type: RgpdExportResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Export request not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async getExportStatus(
-    @Req() req: Request,
-    @Param('exportId') exportId: string,
-  ): Promise<RgpdExportResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
-    const userId = this.extractUserIdFromRequest(req);
-    return this.rgpdExportService.getExportStatus(userId, exportId);
+    return {
+      id: result.id,
+      status: result.status,
+      format: result.format,
+      createdAt: result.createdAt,
+    };
   }
 
   @Delete('me')
@@ -231,7 +230,6 @@ export class UserController {
     description: 'Unauthorized',
   })
   async deleteAccount(@Req() req: Request): Promise<void> {
-    // TODO: Implement JWT guard and extract user ID from token
     const userId = this.extractUserIdFromRequest(req);
     await this.userService.deleteAccount(userId);
   }
@@ -242,16 +240,13 @@ export class UserController {
    * @param req Express Request object
    * @returns User ID from token or throws error
    */
-  private extractUserIdFromRequest(_req: Request): string {
-    // TODO: Implement actual JWT extraction
-    // This is a temporary placeholder that should be replaced with:
-    // const user = req.user as JwtPayload;
-    // if (!user?.id) throw new UnauthorizedException('Invalid token');
-    // return user.id;
+  private extractUserIdFromRequest(req: Request): string {
+    const { user } = req as Request & { user: { userId: string; role: string } };
 
-    // For now, throw error to indicate JWT is not implemented
-    throw new Error(
-      'JWT authentication not yet implemented. Please implement JWT guard and token extraction.',
-    );
+    if (!user?.userId) {
+      throw new UnauthorizedException('Invalid or missing JWT token');
+    }
+
+    return user.userId;
   }
 }
