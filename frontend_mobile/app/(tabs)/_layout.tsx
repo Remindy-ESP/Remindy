@@ -1,47 +1,83 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+interface TabIconProps {
+  color: string;
+  size: number;
+}
+
+function CalendarIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="calendar" size={size} color={color} />;
+}
+
+function StatsIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="stats-chart-outline" size={size} color={color} />;
+}
+
+function SubscriptionIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="document-text-outline" size={size} color={color} />;
+}
+
+function ProfileIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="person" size={size} color={color} />;
+}
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: '#6366f1',
-        tabBarInactiveTintColor: '#9ca3af',
-        tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        headerStyle: {
-          backgroundColor: '#6366f1',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
-          ),
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: '#6366f1',
+          tabBarInactiveTintColor: '#9ca3af',
+          tabBarStyle: {
+            backgroundColor: '#06071D',
+            height: 60,
+            paddingBottom: 8,
+            paddingTop: 8,
+          },
+          headerStyle: {
+            backgroundColor: '#11112A',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
         }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="dashboard"
+          options={{
+            tabBarLabel: '',
+              title: ' ',
+            tabBarIcon: CalendarIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="stats"
+          options={{
+            tabBarLabel: '',
+              title: ' ',
+            tabBarIcon: StatsIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="subscription"
+          options={{
+            tabBarLabel: '',
+              title: ' ',
+            tabBarIcon: SubscriptionIcon,
+          }}
+        />
+              <Tabs.Screen
+          name="profile"
+          options={{
+            tabBarLabel: '',
+              title: ' ',
+            tabBarIcon: ProfileIcon,
+          }}
+        />
+      </Tabs>
+    </SafeAreaView>
   );
 }
