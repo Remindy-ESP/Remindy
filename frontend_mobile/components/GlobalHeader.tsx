@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import BurgerMenu from './BurgerMenu';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -20,6 +21,7 @@ export default function GlobalHeader() {
     const headerHeight = SCREEN_HEIGHT * 0.07 + insets.top;
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isProfileMenuVisible, setIsProfileMenuVisible] = useState(false);
+    const router = useRouter();
 
     const toggleProfileMenu = () => {
         setIsProfileMenuVisible(!isProfileMenuVisible);
@@ -27,6 +29,11 @@ export default function GlobalHeader() {
 
     const closeProfileMenu = () => {
         setIsProfileMenuVisible(false);
+    };
+
+    const traverseToProfile = () => {
+        closeProfileMenu();
+        router.push('/(tabs)/profile');
     };
 
     return (
@@ -80,15 +87,24 @@ export default function GlobalHeader() {
                                 { top: headerHeight - 10, right: 20 },
                             ]}
                         >
-                            <TouchableOpacity style={styles.menuItem} onPress={closeProfileMenu}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={traverseToProfile}
+                            >
                                 <Text style={styles.menuItemText}>Profil</Text>
                             </TouchableOpacity>
                             <View style={styles.separator} />
-                            <TouchableOpacity style={styles.menuItem} onPress={closeProfileMenu}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={closeProfileMenu}
+                            >
                                 <Text style={styles.menuItemText}>Catégories</Text>
                             </TouchableOpacity>
                             <View style={styles.separator} />
-                            <TouchableOpacity style={styles.menuItem} onPress={closeProfileMenu}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={closeProfileMenu}
+                            >
                                 <Text style={styles.menuItemText}>Réglages</Text>
                             </TouchableOpacity>
                         </View>
