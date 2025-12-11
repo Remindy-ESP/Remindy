@@ -24,10 +24,9 @@ export default function DashboardScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-        </View>
+        <View style={styles.header} />
 
-       <Button
+        <Button
           onPress={() => setCategoriesOpen(!categoriesOpen)}
           label={selectedCategory || "Catégories"}
           isOpen={categoriesOpen}
@@ -127,7 +126,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <AddOperationButton
-        onPress={() => {console.log('Add operation pressed')}}
+        onPress={() => { console.log('Add operation pressed') }}
       />
     </View>
   );

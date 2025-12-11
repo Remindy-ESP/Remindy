@@ -1,34 +1,32 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 
 export default function RootLayout() {
   return (
     <>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#6366f1',
-          },
-          headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            headerShown: false,
+      <StatusBar style="light" />
+      <View style={{ flex: 1 }}>
+        <Stack
+          screenOptions={{
+            headerShown: false, // Hide default headers since we have a global one
+            contentStyle: { backgroundColor: '#fff' },
           }}
-        />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-          }}
-        />
-      </Stack>
+        >
+          <Stack.Screen
+            name="index"
+            options={{
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false,
+            }}
+          />
+        </Stack>
+      </View>
     </>
   );
 }
