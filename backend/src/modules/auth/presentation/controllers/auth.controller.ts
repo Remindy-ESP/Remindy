@@ -110,7 +110,7 @@ export class AuthController {
 
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'development',
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: 'strict',
       path: '/',
       maxAge: 30 * 24 * 60 * 60 * 1000,
