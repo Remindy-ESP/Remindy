@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import GlobalHeader from '../../components/GlobalHeader';
 
 interface TabIconProps {
   color: string;
@@ -26,10 +27,12 @@ function ProfileIcon({ color, size }: Readonly<TabIconProps>) {
 export default function TabLayout() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
+      <GlobalHeader />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: '#6366f1',
           tabBarInactiveTintColor: '#9ca3af',
+          headerShown: false, // Hide default tab headers
           tabBarStyle: {
             backgroundColor: '#06071D',
             height: 60,
@@ -49,7 +52,7 @@ export default function TabLayout() {
           name="dashboard"
           options={{
             tabBarLabel: '',
-              title: ' ',
+            title: ' ',
             tabBarIcon: CalendarIcon,
           }}
         />
@@ -57,7 +60,7 @@ export default function TabLayout() {
           name="stats"
           options={{
             tabBarLabel: '',
-              title: ' ',
+            title: ' ',
             tabBarIcon: StatsIcon,
           }}
         />
@@ -65,15 +68,15 @@ export default function TabLayout() {
           name="subscription"
           options={{
             tabBarLabel: '',
-              title: ' ',
+            title: ' ',
             tabBarIcon: SubscriptionIcon,
           }}
         />
-              <Tabs.Screen
+        <Tabs.Screen
           name="profile"
           options={{
             tabBarLabel: '',
-              title: ' ',
+            title: ' ',
             tabBarIcon: ProfileIcon,
           }}
         />
