@@ -25,11 +25,6 @@ import { LoginResponseDto } from '../dto/login-response.dto';
 import { JwtRefreshGuard } from '../guards/jwt-refresh.guard';
 import { Public } from '../decorators/public.decorator';
 
-interface JwtUser {
-  sub: string;
-  email: string;
-}
-
 @ApiTags('Authentification')
 @Controller('auth')
 export class AuthController {
@@ -126,8 +121,10 @@ export class AuthController {
 
   @Post('logout')
   @ApiBearerAuth('access-token')
-  async logout(@Req() req: Request & { user: JwtUser }, @Res({ passthrough: true }) res: Response) {
-    const userId = req.user.userId;
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+
+    const userId = user.userId;
 
     await this.logoutUseCase.execute(userId);
 

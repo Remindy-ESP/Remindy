@@ -74,12 +74,10 @@ export class UserController {
     return this.userService.getUserProfile(userId);
   }
   @Get('me')
-  async getMe(@Req() req: any) {
-    const userId = req.user?.userId;
+  async getMe(@Req() req: Request) {
+    const { user } = req as Request & { user: { userId: string; role: string } };
 
-    if (!userId) {
-      throw new UnauthorizedException('User ID not found in request');
-    }
+    const userId = user.userId;
 
     return this.getMyProfileUseCase.execute({ userId });
   }
@@ -99,15 +97,10 @@ export class UserController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
   })
-  async updateMe(
-    @Req() req: Request & { user: { userId: string } },
-    @Body() dto: UpdateUserMeRequestDto,
-  ) {
-    const userId = req.user.userId;
+  async updateMe(@Req() req: Request, @Body() dto: UpdateUserMeRequestDto) {
+    const { user } = req as Request & { user: { userId: string; role: string } };
 
-    if (!userId) {
-      throw new UnauthorizedException('User ID not found in request');
-    }
+    const userId = user.userId;
 
     await this.updateMyProfileUseCase.execute(userId, dto);
 
@@ -248,12 +241,12 @@ export class UserController {
    * @returns User ID from token or throws error
    */
   private extractUserIdFromRequest(req: Request): string {
-    const user = req.user as { id?: string };
+    const { user } = req as Request & { user: { userId: string; role: string } };
 
-    if (!user?.id) {
+    if (!user?.userId) {
       throw new UnauthorizedException('Invalid or missing JWT token');
     }
 
-    return user.id;
+    return user.userId;
   }
 }
