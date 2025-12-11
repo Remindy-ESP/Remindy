@@ -1,7 +1,7 @@
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "dev"
+  default     = "prod"
 }
 
 variable "location" {
@@ -40,31 +40,31 @@ variable "container_port" {
 variable "min_replicas" {
   description = "Minimum number of replicas"
   type        = number
-  default     = 0
+  default     = 1
 }
 
 variable "max_replicas" {
   description = "Maximum number of replicas"
   type        = number
-  default     = 1
+  default     = 3
 }
 
 variable "cpu" {
   description = "CPU allocation"
   type        = number
-  default     = 0.25
+  default     = 0.5
 }
 
 variable "memory" {
   description = "Memory allocation"
   type        = string
-  default     = "0.5Gi"
+  default     = "1Gi"
 }
 
 variable "node_env" {
   description = "Node environment"
   type        = string
-  default     = "development"
+  default     = "production"
 }
 
 variable "neon_database_url_dev" {

@@ -13,7 +13,7 @@ terraform {
   #   resource_group_name  = "tfstate-rg"
   #   storage_account_name = "remindytfstate"
   #   container_name       = "tfstate"
-  #   key                  = "remindy-dev.tfstate"
+  #   key                  = "remindy-prod.tfstate"
   # }
 }
 

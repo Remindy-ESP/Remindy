@@ -1,11 +1,14 @@
 variable "environment" {
-  description = "Environment name"
+  description = "Environment name (dev/prod)"
   type        = string
-  default     = "dev"
+  validation {
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "Environment must be dev or prod."
+  }
 }
 
 variable "location" {
-  description = "Azure region where resources will be created"
+  description = "Azure region"
   type        = string
   default     = "francecentral"
 }
@@ -27,7 +30,7 @@ variable "dockerhub_token" {
 }
 
 variable "dockerhub_repo" {
-  description = "Docker Hub repository (username/repo-name)"
+  description = "Docker Hub repository name"
   type        = string
 }
 
@@ -61,26 +64,15 @@ variable "memory" {
   default     = "0.5Gi"
 }
 
-variable "node_env" {
-  description = "Node environment"
-  type        = string
-  default     = "development"
+variable "app_env_vars" {
+  description = "Application environment variables"
+  type        = map(string)
+  default     = {}
 }
 
-variable "neon_database_url_dev" {
-  description = "Neon database URL for dev environment"
-  type        = string
-  sensitive   = true
-}
-
-variable "neon_database_url_staging" {
-  description = "Neon database URL for staging environment"
-  type        = string
-  sensitive   = true
-}
-
-variable "neon_database_url_prod" {
-  description = "Neon database URL for prod environment"
-  type        = string
+variable "app_secrets" {
+  description = "Application secrets"
+  type        = map(string)
+  default     = {}
   sensitive   = true
 }
