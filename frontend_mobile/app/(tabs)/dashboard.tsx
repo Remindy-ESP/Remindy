@@ -1,132 +1,134 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import { styles } from './dashboard.styles';
+import { useDashboard } from '@/hooks/useDashboard';
+import Button from '@/components/Button';
+import AddOperationButton from '@/components/AddOperationButton';
+import { MOCK_CATEGORIES, Category } from '@/constants/categories';
 
 export default function DashboardScreen() {
-  const [selected, setSelected] = useState('');
+  const {
+    selected,
+    setSelected,
+    activePeriod,
+    setActivePeriod,
+    categoriesOpen,
+    setCategoriesOpen,
+    selectedCategory,
+    setSelectedCategory,
+    timePeriods,
+    getContentForPeriod,
+  } = useDashboard();
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dashboard</Text>
-        <Text style={styles.headerSubtitle}>
-          Gérez vos rappels et événements
-        </Text>
-      </View>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+        </View>
 
-      <View style={styles.calendarContainer}>
-        <Calendar
-          testID="calendar"
-          onDayPress={(day) => {
-            setSelected(day.dateString);
-          }}
-          markedDates={{
-            [selected]: {
-              selected: true,
-              selectedColor: '#6366f1',
-            },
-          }}
-          theme={{
-            backgroundColor: '#ffffff',
-            calendarBackground: '#ffffff',
-            textSectionTitleColor: '#6366f1',
-            selectedDayBackgroundColor: '#6366f1',
-            selectedDayTextColor: '#ffffff',
-            todayTextColor: '#6366f1',
-            dayTextColor: '#2d4150',
-            textDisabledColor: '#d9e1e8',
-            dotColor: '#6366f1',
-            selectedDotColor: '#ffffff',
-            arrowColor: '#6366f1',
-            monthTextColor: '#6366f1',
-            indicatorColor: '#6366f1',
-            textDayFontWeight: '300',
-            textMonthFontWeight: 'bold',
-            textDayHeaderFontWeight: '500',
-            textDayFontSize: 16,
-            textMonthFontSize: 18,
-            textDayHeaderFontSize: 14,
-          }}
+       <Button
+          onPress={() => setCategoriesOpen(!categoriesOpen)}
+          label={selectedCategory || "Catégories"}
+          isOpen={categoriesOpen}
         />
-      </View>
 
-      <View style={styles.remindersSection}>
-        <Text style={styles.sectionTitle}>Rappels du jour</Text>
-        {selected ? (
-          <View style={styles.reminderCard}>
-            <Text style={styles.reminderText}>
-              Aucun rappel pour le {selected}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.reminderCard}>
-            <Text style={styles.reminderText}>
-              Sélectionnez une date pour voir vos rappels
-            </Text>
+        {categoriesOpen && (
+          <View style={styles.categoriesContainer}>
+            {MOCK_CATEGORIES.map((category: Category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={styles.categoryItem}
+                onPress={() => {
+                  setSelectedCategory(category.name);
+                  setCategoriesOpen(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.categoryText}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         )}
-      </View>
-    </ScrollView>
+
+        <View style={styles.calendarContainer}>
+          <Calendar
+            testID="calendar"
+            onDayPress={(day) => {
+              setSelected(day.dateString);
+            }}
+            markedDates={{
+              [selected]: {
+                selected: true,
+                selectedColor: '#4f46e5',
+              },
+            }}
+            theme={{
+              backgroundColor: '#2a2a5e',
+              calendarBackground: '#373848',
+              textSectionTitleColor: '#fff',
+              selectedDayBackgroundColor: '#4f46e5',
+              selectedDayTextColor: '#ffffff',
+              todayTextColor: '#4f46e5',
+              dayTextColor: '#e0e0e0',
+              textDisabledColor: '#5a5a7a',
+              dotColor: '#4f46e5',
+              selectedDotColor: '#ffffff',
+              arrowColor: '#fff',
+              monthTextColor: '#fff',
+              indicatorColor: '#4f46e5',
+              textDayFontWeight: '300',
+              textMonthFontWeight: 'bold',
+              textDayHeaderFontWeight: '500',
+              textDayFontSize: 16,
+              textMonthFontSize: 18,
+              textDayHeaderFontSize: 14,
+            }}
+          />
+        </View>
+
+        <View style={styles.timePeriodSection}>
+          <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
+          <View style={styles.timePeriodMenu}>
+            {timePeriods.map((period) => (
+              <TouchableOpacity
+                key={period.key}
+                testID={`period-${period.key}`}
+                style={[
+                  styles.timePeriodTab,
+                  activePeriod === period.key
+                    ? styles.timePeriodTabActive
+                    : styles.timePeriodTabInactive,
+                ]}
+                onPress={() => setActivePeriod(period.key)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.timePeriodTabText,
+                    activePeriod === period.key
+                      ? styles.timePeriodTabTextActive
+                      : styles.timePeriodTabTextInactive,
+                  ]}
+                >
+                  {period.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Contenu en fonction de la période sélectionnée */}
+        <View style={styles.contentSection}>
+          <Text style={styles.contentText} testID="period-content">
+            {getContentForPeriod(activePeriod)}
+          </Text>
+        </View>
+      </ScrollView>
+
+      <AddOperationButton
+        onPress={() => {console.log('Add operation pressed')}}
+      />
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#6366f1',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
-  },
-  calendarContainer: {
-    margin: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  remindersSection: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  reminderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  reminderText: {
-    fontSize: 16,
-    color: '#666',
-  },
-});
