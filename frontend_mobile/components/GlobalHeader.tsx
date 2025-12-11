@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Platform, Dimensions, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import BurgerMenu from './BurgerMenu';
