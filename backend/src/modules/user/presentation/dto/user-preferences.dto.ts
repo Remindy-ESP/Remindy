@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsString, IsInt, IsOptional, Min, Max, MaxLength, IsIn } from 'class-validator';
+import { UserPreferenceEntity } from 'src/infrastructure/database/entities/user-preference.entity';
 
 export class UserPreferencesResponseDto {
   @ApiProperty({ description: 'User ID' })
@@ -31,6 +32,21 @@ export class UserPreferencesResponseDto {
 
   @ApiProperty({ description: 'Update date' })
   updatedAt: Date;
+
+  static fromEntity(entity: UserPreferenceEntity): UserPreferencesResponseDto {
+    return {
+      userId: entity.userId,
+      theme: entity.theme,
+      notificationEmail: entity.notificationEmail,
+      notificationPush: entity.notificationPush,
+      notificationSms: entity.notificationSms,
+      defaultReminderDelay: entity.defaultReminderDelay,
+      currency: entity.currency,
+      showOnlineStatus: entity.showOnlineStatus,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    };
+  }
 }
 
 export class UpdateUserPreferencesDto {

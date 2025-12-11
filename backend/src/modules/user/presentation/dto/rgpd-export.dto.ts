@@ -1,54 +1,15 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional } from 'class-validator';
-
-export class CreateRgpdExportDto {
-  @ApiPropertyOptional({
-    description: 'Export format',
-    enum: ['json', 'csv'],
-    default: 'json',
-  })
-  @IsOptional()
-  @IsIn(['json', 'csv'], { message: 'Format must be json or csv' })
-  format?: string;
-}
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RgpdExportResponseDto {
-  @ApiProperty({ description: 'Export ID' })
+  @ApiProperty()
   id: string;
 
-  @ApiProperty({ description: 'User ID' })
-  userId: string;
-
-  @ApiProperty({
-    description: 'Export status',
-    enum: ['pending', 'processing', 'completed', 'failed', 'expired'],
-  })
+  @ApiProperty({ example: 'pending' })
   status: string;
 
-  @ApiProperty({ description: 'Export format', enum: ['json', 'csv'] })
+  @ApiProperty({ example: 'json' })
   format: string;
 
-  @ApiPropertyOptional({ description: 'File R2 key' })
-  fileR2Key?: string;
-
-  @ApiPropertyOptional({ description: 'File size in bytes' })
-  fileSize?: number;
-
-  @ApiPropertyOptional({ description: 'Signed URL for download' })
-  signedUrl?: string;
-
-  @ApiPropertyOptional({ description: 'URL expiration date' })
-  expiresAt?: Date;
-
-  @ApiPropertyOptional({ description: 'Error message if failed' })
-  errorMessage?: string;
-
-  @ApiProperty({ description: 'Who requested the export', enum: ['user', 'admin', 'automated'] })
-  requestedBy: string;
-
-  @ApiProperty({ description: 'Request date' })
+  @ApiProperty()
   createdAt: Date;
-
-  @ApiPropertyOptional({ description: 'Completion date' })
-  completedAt?: Date;
 }

@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { UserPreferenceEntity } from '../../../../infrastructure/database/entities/user-preference.entity';
+import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
 
 @Injectable()
 export class UserPreferencesRepository {
@@ -12,14 +13,14 @@ export class UserPreferencesRepository {
 
   async findByUserId(userId: string): Promise<UserPreferenceEntity | null> {
     return this.preferencesRepository.findOne({
-      where: { userId },
+      where: { userId, deletedAt: IsNull() },
     });
   }
 
   async createDefaultPreferences(userId: string): Promise<UserPreferenceEntity> {
     const preferences = this.preferencesRepository.create({
       userId,
-      theme: 'light',
+      theme: Theme.LIGHT,
       notificationEmail: true,
       notificationPush: true,
       notificationSms: false,
@@ -30,12 +31,23 @@ export class UserPreferencesRepository {
     return this.preferencesRepository.save(preferences);
   }
 
-  async update(
-    userId: string,
-    data: Partial<UserPreferenceEntity>,
-  ): Promise<UserPreferenceEntity | null> {
-    await this.preferencesRepository.update({ userId }, data);
-    return this.findByUserId(userId);
+  async update(userId: string, data: Partial<UserPreferenceEntity>): Promise<UserPreferenceEntity> {
+    let prefs = await this.findByUserId(userId);
+
+    prefs ??= await this.createDefaultPreferences(userId);
+
+    // merge proprement les champs envoyés
+    if (data.theme !== undefined) prefs.theme = data.theme;
+    if (data.notificationEmail !== undefined) prefs.notificationEmail = data.notificationEmail;
+    if (data.notificationPush !== undefined) prefs.notificationPush = data.notificationPush;
+    if (data.notificationSms !== undefined) prefs.notificationSms = data.notificationSms;
+    if (data.defaultReminderDelay !== undefined)
+      prefs.defaultReminderDelay = data.defaultReminderDelay;
+    if (data.currency !== undefined) prefs.currency = data.currency;
+    if (data.showOnlineStatus !== undefined) prefs.showOnlineStatus = data.showOnlineStatus;
+
+    const saved = await this.preferencesRepository.save(prefs);
+    return saved;
   }
 
   async save(preferences: UserPreferenceEntity): Promise<UserPreferenceEntity> {

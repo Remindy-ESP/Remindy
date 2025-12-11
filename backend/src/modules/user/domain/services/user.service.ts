@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { UserRepository } from '../../infrastructure/repositories/user.repository';
+import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import {
   UpdateUserProfileDto,
   UserProfileResponseDto,
 } from '../../presentation/dto/user-profile.dto';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
-
+import { PHONE_FORMAT_REGEX, PHONE_MIN_DIGITS } from 'src/utils/regex';
 @Injectable()
 export class UserService {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: UserTypeOrmRepository,
     private readonly userPreferencesRepository: UserPreferencesRepository,
   ) {}
 
@@ -67,8 +67,9 @@ export class UserService {
       updateData.language = updateDto.language;
     }
 
-    // Update user profile
-    const updatedUser = await this.userRepository.updateProfile(userId, updateData);
+    await this.userRepository.updateProfile(userId, updateData);
+
+    const updatedUser = await this.userRepository.findById(userId);
 
     if (!updatedUser) {
       throw new NotFoundException('User not found after update');
@@ -85,7 +86,7 @@ export class UserService {
       lastName: user.lastName,
       phone: user.phone,
       photoR2Key: user.photoR2Key,
-      role: user.role,
+      role_key: user.role_key,
       status: user.status,
       timezone: user.timezone,
       language: user.language,
@@ -98,9 +99,8 @@ export class UserService {
   }
 
   private isValidPhoneNumber(phone: string): boolean {
-    // Basic validation: should contain only numbers, +, -, spaces, and parentheses
-    const phoneRegex = /^[\d\s+\-()]+$/;
-    return phoneRegex.test(phone) && phone.replace(/\D/g, '').length >= 10;
+    const digitsOnly = phone.replaceAll(/\D/g, '');
+    return PHONE_FORMAT_REGEX.test(phone) && digitsOnly.length >= PHONE_MIN_DIGITS;
   }
 
   private isValidTimezone(timezone: string): boolean {
