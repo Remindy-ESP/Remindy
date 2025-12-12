@@ -12,12 +12,11 @@ FROM node:22-alpine AS production
 
 WORKDIR /app
 
-COPY --chown=node:node package*.json ./
-RUN chmod 444 package*.json
-RUN npm ci --omit=dev
+COPY package*.json ./
+RUN chown node:node package*.json && chmod 444 package*.json && npm ci --omit=dev
 
-COPY --chown=node:node --from=builder /app/dist ./dist
-RUN chmod -R 555 ./dist
+COPY --from=builder /app/dist ./dist
+RUN chown -R node:node ./dist && chmod -R 555 ./dist
 
 USER node
 
