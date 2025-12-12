@@ -15,11 +15,13 @@ import { EventGenerationService } from './application/services/event-generation.
 import { EventController } from './presentation/controllers/event.controller';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { EventSeriesModule } from '../event-series/event-series.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([EventEntity]),
     forwardRef(() => SubscriptionModule),
+    forwardRef(() => AuthModule),
     EventSeriesModule,
   ],
   controllers: [EventController],

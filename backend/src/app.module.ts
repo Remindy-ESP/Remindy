@@ -16,6 +16,7 @@ import { EventSeriesModule } from './modules/event-series/event-series.module';
 import { DocumentModule } from './modules/document/document.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ReminderModule } from './modules/reminder/reminder.module';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { ReminderModule } from './modules/reminder/reminder.module';
     NotificationModule,
     ReminderModule,
     AuditModule,
+    SchedulerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

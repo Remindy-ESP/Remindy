@@ -118,4 +118,11 @@ export class SubscriptionResponseDto {
     type: String,
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: "Nombre d'événements de paiement générés",
+    example: 12,
+    required: false,
+  })
+  eventsGenerated?: number;
 }

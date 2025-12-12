@@ -15,7 +15,7 @@ export class SubscriptionPresentationMapper {
       : this.calculateNextDueDate(startDate, dto.frequency);
 
     return {
-      userId: dto.userId,
+      userId: dto.userId!,
       contractId: dto.contractId,
       name: dto.name,
       amount: dto.amount,
@@ -28,6 +28,9 @@ export class SubscriptionPresentationMapper {
       status: dto.status ?? 'active',
       color: dto.color,
       notes: dto.notes,
+      generateEvents: dto.generateEvents ?? true,
+      eventsToGenerate: dto.eventsToGenerate ?? 12,
+      timezone: dto.timezone ?? 'Europe/Paris',
     };
   }
 

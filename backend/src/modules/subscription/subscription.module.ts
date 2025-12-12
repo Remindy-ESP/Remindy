@@ -13,16 +13,23 @@ import { FindSubscriptionsByPeriodUseCase } from './application/use-cases/find-s
 import { PauseSubscriptionUseCase } from './application/use-cases/pause-subscription.use-case';
 import { ResumeSubscriptionUseCase } from './application/use-cases/resume-subscription.use-case';
 import { FindSubscriptionEventsUseCase } from './application/use-cases/find-subscription-events.use-case';
+import { SubscriptionEventGeneratorService } from './application/services/subscription-event-generator.service';
 import { EventModule } from '../event/event.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SubscriptionEntity]), forwardRef(() => EventModule)],
+  imports: [
+    TypeOrmModule.forFeature([SubscriptionEntity]),
+    forwardRef(() => EventModule),
+    forwardRef(() => AuthModule),
+  ],
   controllers: [SubscriptionController],
   providers: [
     {
       provide: SUBSCRIPTION_REPOSITORY,
       useClass: SubscriptionRepository,
     },
+    SubscriptionEventGeneratorService,
     CreateSubscriptionUseCase,
     UpdateSubscriptionUseCase,
     DeleteSubscriptionUseCase,
@@ -35,6 +42,7 @@ import { EventModule } from '../event/event.module';
   ],
   exports: [
     SUBSCRIPTION_REPOSITORY,
+    SubscriptionEventGeneratorService,
     CreateSubscriptionUseCase,
     UpdateSubscriptionUseCase,
     DeleteSubscriptionUseCase,
