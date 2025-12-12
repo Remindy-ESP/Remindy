@@ -143,7 +143,7 @@ export class SubscriptionEventGeneratorService {
 
     // Trouver la date du dernier événement
     const lastEventDate = existingEvents.reduce((latest, event) => {
-      return event.startsAt > latest ? event.startsAt : latest;
+      return new Date(Math.max(event.startsAt.getTime(), latest.getTime()));
     }, new Date(0));
 
     // Calculer la date seuil (maintenant + threshold mois)

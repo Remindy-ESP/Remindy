@@ -105,12 +105,12 @@ export class EventController {
     const { user } = req as Request & { user: { userId: string; role: string } };
 
     const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({ userId: user.userId });
-    const userSubscriptionIds = userSubscriptions.map(sub => sub.id!);
+    const userSubscriptionIds = new Set(userSubscriptions.map(sub => sub.id!));
 
     const appFilters = EventPresentationMapper.toFilterAppDto(filters);
     const events = await this.findAllEventsUseCase.execute(appFilters);
 
-    const userEvents = events.filter(event => userSubscriptionIds.includes(event.subscriptionId));
+    const userEvents = events.filter(event => userSubscriptionIds.has(event.subscriptionId));
     return EventPresentationMapper.toResponseDtoArray(userEvents);
   }
 
