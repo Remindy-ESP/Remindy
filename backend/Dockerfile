@@ -17,6 +17,8 @@ RUN npm ci --omit=dev
 
 COPY --chown=node:node --from=builder /app/dist ./dist
 
+RUN chmod -R a-w /app
+
 USER node
 
 EXPOSE 3000
