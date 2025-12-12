@@ -49,7 +49,7 @@ export default function AuthScreen() {
           const message = Array.isArray(data.message)
             ? data.message.join('\n')
             : data.message || "Erreur lors de la connexion";
-          Alert.alert('Erreur', message);
+          Alert.alert('Erreur', 'Connexion echouée, verifiez vos identifiants');
         }
       } catch (error: any) {
         console.error('Login error details:', error);
@@ -177,7 +177,10 @@ export default function AuthScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setIsLogin(!isLogin)}
+            onPress={() => {
+              setIsLogin(!isLogin);
+              setPassword('');
+            }}
             testID="toggle-auth-mode"
           >
             <Text style={styles.toggleText}>
