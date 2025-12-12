@@ -10,8 +10,11 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { EventResponseDto } from '../dto/event-response.dto';
 import { EventFilterDto } from '../dto/event-filter.dto';
@@ -25,10 +28,14 @@ import { DeleteEventUseCase } from '../../application/use-cases/delete-event.use
 import { UpdateEventStatusUseCase } from '../../application/use-cases/update-event-status.use-case';
 import { UpdateEventPaymentStatusUseCase } from '../../application/use-cases/update-event-payment-status.use-case';
 import { EventPresentationMapper } from '../mappers/event-presentation.mapper';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
+import { FindSubscriptionUseCase } from 'src/modules/subscription/application/use-cases/find-subscription.use-case';
+import { FindAllSubscriptionsUseCase } from 'src/modules/subscription/application/use-cases/find-all-subscriptions.use-case';
 
 @ApiTags('Calendar - Événements')
 @Controller('calendar')
-@UseGuards(ThrottlerGuard)
+@UseGuards(ThrottlerGuard, JwtAuthGuard)
+@ApiBearerAuth('access-token')
 export class EventController {
   constructor(
     private readonly findAllEventsUseCase: FindAllEventsUseCase,
@@ -37,6 +44,8 @@ export class EventController {
     private readonly deleteEventUseCase: DeleteEventUseCase,
     private readonly updateEventStatusUseCase: UpdateEventStatusUseCase,
     private readonly updateEventPaymentStatusUseCase: UpdateEventPaymentStatusUseCase,
+    private readonly findSubscriptionUseCase: FindSubscriptionUseCase,
+    private readonly findAllSubscriptionsUseCase: FindAllSubscriptionsUseCase,
   ) {}
 
   @Get('events')
@@ -89,10 +98,20 @@ export class EventController {
     description: 'Liste des événements',
     type: [EventResponseDto],
   })
-  async findAll(@Query() filters: EventFilterDto): Promise<EventResponseDto[]> {
+  async findAll(
+    @Req() req: Request,
+    @Query() filters: EventFilterDto,
+  ): Promise<EventResponseDto[]> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+
+    const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({ userId: user.userId });
+    const userSubscriptionIds = userSubscriptions.map(sub => sub.id!);
+
     const appFilters = EventPresentationMapper.toFilterAppDto(filters);
     const events = await this.findAllEventsUseCase.execute(appFilters);
-    return EventPresentationMapper.toResponseDtoArray(events);
+
+    const userEvents = events.filter(event => userSubscriptionIds.includes(event.subscriptionId));
+    return EventPresentationMapper.toResponseDtoArray(userEvents);
   }
 
   @Get('event/:id')
@@ -104,8 +123,15 @@ export class EventController {
     type: EventResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Événement non trouvé' })
-  async findOne(@Param('id') id: string): Promise<EventResponseDto> {
+  async findOne(@Req() req: Request, @Param('id') id: string): Promise<EventResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
     const event = await this.getEventByIdUseCase.execute(id);
+
+    const subscription = await this.findSubscriptionUseCase.findById(event.subscriptionId);
+    if (subscription.userId !== user.userId) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
     return EventPresentationMapper.toResponseDto(event);
   }
 
@@ -121,9 +147,18 @@ export class EventController {
   @ApiResponse({ status: 404, description: 'Événement non trouvé' })
   @ApiResponse({ status: 400, description: 'Données invalides' })
   async reschedule(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() rescheduleDto: RescheduleEventDto,
   ): Promise<EventResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.getEventByIdUseCase.execute(id);
+
+    const subscription = await this.findSubscriptionUseCase.findById(existing.subscriptionId);
+    if (subscription.userId !== user.userId) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
     const appDto = EventPresentationMapper.toRescheduleAppDto(rescheduleDto);
     const event = await this.rescheduleEventUseCase.execute(id, appDto);
     return EventPresentationMapper.toResponseDto(event);
@@ -141,9 +176,18 @@ export class EventController {
   @ApiResponse({ status: 404, description: 'Événement non trouvé' })
   @ApiResponse({ status: 400, description: 'Transition de statut invalide' })
   async updateStatus(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateEventStatusDto,
   ): Promise<EventResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.getEventByIdUseCase.execute(id);
+
+    const subscription = await this.findSubscriptionUseCase.findById(existing.subscriptionId);
+    if (subscription.userId !== user.userId) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
     const event = await this.updateEventStatusUseCase.execute(id, updateStatusDto.status);
     return EventPresentationMapper.toResponseDto(event);
   }
@@ -159,9 +203,18 @@ export class EventController {
   })
   @ApiResponse({ status: 404, description: 'Événement non trouvé' })
   async updatePaymentStatus(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() updatePaymentStatusDto: UpdateEventPaymentStatusDto,
   ): Promise<EventResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.getEventByIdUseCase.execute(id);
+
+    const subscription = await this.findSubscriptionUseCase.findById(existing.subscriptionId);
+    if (subscription.userId !== user.userId) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
     const event = await this.updateEventPaymentStatusUseCase.execute(
       id,
       updatePaymentStatusDto.paymentStatus,
@@ -178,7 +231,15 @@ export class EventController {
     description: 'Événement supprimé avec succès',
   })
   @ApiResponse({ status: 404, description: 'Événement non trouvé' })
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.getEventByIdUseCase.execute(id);
+
+    const subscription = await this.findSubscriptionUseCase.findById(existing.subscriptionId);
+    if (subscription.userId !== user.userId) {
+      throw new NotFoundException(`Event with id ${id} not found`);
+    }
+
     await this.deleteEventUseCase.execute(id);
   }
 }

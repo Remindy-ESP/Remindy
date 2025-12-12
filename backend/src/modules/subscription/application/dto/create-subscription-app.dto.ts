@@ -14,4 +14,8 @@ export interface CreateSubscriptionAppDto {
   status: SubscriptionStatus;
   color?: string;
   notes?: string;
+  // Options de génération d'événements
+  generateEvents?: boolean;
+  eventsToGenerate?: number;
+  timezone?: string;
 }
