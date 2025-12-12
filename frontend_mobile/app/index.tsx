@@ -66,7 +66,6 @@ export default function AuthScreen() {
           }),
         });
         if (response.ok) {
-          console.log('Registration successful', response);
           Alert.alert('Succès', 'Compte créé avec succès, veuillez vous connecter');
           setIsLogin(true);
           setPassword('');
