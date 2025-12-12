@@ -74,9 +74,7 @@ export default function AuthScreen() {
           setLastName('');
         } else {
           const data = await response.json();
-          const message = Array.isArray(data.message)
-            ? data.message.join('\n')
-            : data.message || "Erreur lors de l'inscription";
+          const message = Array.isArray(data.message) ? data.message.join('\n') : data.message || "Erreur lors de l'inscription";
           Alert.alert('Erreur', message);
         }
       } catch (error: any) {
