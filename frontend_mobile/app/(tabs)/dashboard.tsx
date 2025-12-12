@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { styles } from './dashboard.styles';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import { MOCK_CATEGORIES, Category } from '@/constants/categories';
@@ -20,6 +21,9 @@ export default function DashboardScreen() {
     timePeriods,
     getContentForPeriod,
   } = useDashboard();
+
+  const { token } = useAuth();
+  console.log('Current Token:', token);
 
   return (
     <View style={{ flex: 1 }}>

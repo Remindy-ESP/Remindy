@@ -3,13 +3,25 @@ import { render, fireEvent } from '@testing-library/react-native';
 import AuthScreen from '../index';
 
 // Mock expo-router
+// Mock expo-router
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     replace: jest.fn(),
   }),
 }));
 
+// Mock fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+  })
+) as jest.Mock;
+
 describe('AuthScreen', () => {
+  beforeEach(() => {
+    (global.fetch as jest.Mock).mockClear();
+  });
   it('renders login mode by default', () => {
     const { getByText } = render(<AuthScreen />);
     expect(getByText('Bienvenue')).toBeTruthy();
@@ -33,6 +45,8 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('toggle-auth-mode'));
     expect(getByText('Créer un compte')).toBeTruthy();
     expect(getByTestId('confirm-password-input')).toBeTruthy();
+    expect(getByTestId('firstname-input')).toBeTruthy();
+    expect(getByTestId('lastname-input')).toBeTruthy();
 
     // Toggle back to login mode
     fireEvent.press(getByTestId('toggle-auth-mode'));
@@ -67,12 +81,33 @@ describe('AuthScreen', () => {
     expect(getByTestId('confirm-password-input')).toBeTruthy();
   });
 
-  it('calls submit button handler', () => {
+  it('calls submit button handler with api call for registration', async () => {
     const { getByTestId } = render(<AuthScreen />);
-    const submitButton = getByTestId('submit-button');
 
+    // Switch to register mode
+    fireEvent.press(getByTestId('toggle-auth-mode'));
+
+    // Fill inputs
+    fireEvent.changeText(getByTestId('firstname-input'), 'John');
+    fireEvent.changeText(getByTestId('lastname-input'), 'Doe');
+    fireEvent.changeText(getByTestId('email-input'), 'john@example.com');
+    fireEvent.changeText(getByTestId('password-input'), 'password123');
+    fireEvent.changeText(getByTestId('confirm-password-input'), 'password123');
+
+    const submitButton = getByTestId('submit-button');
     fireEvent.press(submitButton);
-    // In a real app, this would trigger navigation
-    expect(submitButton).toBeTruthy();
+
+    expect(global.fetch).toHaveBeenCalledWith('http://localhost:3000/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: 'john@example.com',
+        password: 'password123',
+        firstName: 'John',
+        lastName: 'Doe',
+      }),
+    });
   });
 });
