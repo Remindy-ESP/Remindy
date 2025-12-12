@@ -36,34 +36,22 @@ export default function AuthScreen() {
             password
           }),
         });
-        console.log('Response status:', response.status);
         if (response.ok) {
           const data = await response.json();
-          console.log('Login successful', response);
           await signIn(data.accessToken || data.token || 'dummy_token'); // Adapt to actual response structure
           Alert.alert('Succès', 'Connexion reussie');
           router.replace('/(tabs)/dashboard');
         } else {
-          const data = await response.json();
-          console.log('Error data:', data);
-          const message = Array.isArray(data.message)
-            ? data.message.join('\n')
-            : data.message || "Erreur lors de la connexion";
           Alert.alert('Erreur', 'Connexion echouée, verifiez vos identifiants');
         }
       } catch (error: any) {
-        console.error('Login error details:', error);
         Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
       }
     } else {
-      console.log('Authenticating... Register');
       if (password !== confirmPassword || password == '') {
         Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
         return;
       }
-      console.log('Attempting registration with URL:', API_URL);
-      console.log('Payload:', { email, firstName, lastName, password: '***' });
-
       try {
         const response = await fetch(`${API_URL}/auth/register`, {
           method: 'POST',
@@ -77,7 +65,6 @@ export default function AuthScreen() {
             lastName,
           }),
         });
-        console.log('Response status:', response.status);
         if (response.ok) {
           console.log('Registration successful', response);
           Alert.alert('Succès', 'Compte créé avec succès, veuillez vous connecter');
@@ -88,14 +75,12 @@ export default function AuthScreen() {
           setLastName('');
         } else {
           const data = await response.json();
-          console.log('Error data:', data);
           const message = Array.isArray(data.message)
             ? data.message.join('\n')
             : data.message || "Erreur lors de l'inscription";
           Alert.alert('Erreur', message);
         }
       } catch (error: any) {
-        console.error('Registration error details:', error);
         Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
       }
     }
