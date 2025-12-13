@@ -10,6 +10,13 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
+// Mock AuthContext
+jest.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({
+    signIn: jest.fn(),
+  }),
+}));
+
 // Mock fetch
 global.fetch = jest.fn(() =>
   Promise.resolve({
