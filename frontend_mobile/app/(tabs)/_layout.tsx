@@ -20,8 +20,9 @@ function SubscriptionIcon({ color, size }: Readonly<TabIconProps>) {
   return <Ionicons name="document-text-outline" size={size} color={color} />;
 }
 
-function ProfileIcon({ color, size }: Readonly<TabIconProps>) {
-  return <Ionicons name="person" size={size} color={color} />;
+
+function NotificationsIcon({ color, size }: Readonly<TabIconProps>) {
+  return <Ionicons name="notifications-outline" size={size} color={color} />;
 }
 
 export default function TabLayout() {
@@ -32,7 +33,7 @@ export default function TabLayout() {
         screenOptions={{
           tabBarActiveTintColor: '#6366f1',
           tabBarInactiveTintColor: '#9ca3af',
-          headerShown: false, // Hide default tab headers
+          headerShown: false,
           tabBarStyle: {
             backgroundColor: '#06071D',
             height: 60,
@@ -57,7 +58,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="stats"
+          name="statistics"
           options={{
             tabBarLabel: '',
             title: ' ',
@@ -73,11 +74,17 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile"
+          name="notifications"
           options={{
             tabBarLabel: '',
             title: ' ',
-            tabBarIcon: ProfileIcon,
+            tabBarIcon: NotificationsIcon,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            href: null,
           }}
         />
       </Tabs>

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 interface BurgerMenuProps {
     isVisible: boolean;
@@ -11,17 +12,25 @@ interface BurgerMenuProps {
 const { width } = Dimensions.get('window');
 
 const MENU_ITEMS = [
-    'Accueil',
-    'Dashboard',
-    'Abonnements',
-    'Notifications',
-    'Cloud',
-    'Promos',
-    'Légal',
+    { label: 'Accueil', route: '/(tabs)/dashboard' },
+    { label: 'Dashboard', route: '/(tabs)/dashboard' },
+    { label: 'Abonnements', route: '/(tabs)/subscription' },
+    { label: 'Notifications', route: null },
+    { label: 'Cloud', route: null },
+    { label: 'Promos', route: null },
+    { label: 'Légal', route: null },
 ];
 
 export default function BurgerMenu({ isVisible, onClose }: BurgerMenuProps) {
     const insets = useSafeAreaInsets();
+    const router = useRouter();
+
+    const handleNavigation = (route: string | null) => {
+        if (route) {
+            onClose();
+            router.push(route as any);
+        }
+    };
 
     return (
         <Modal
@@ -39,8 +48,12 @@ export default function BurgerMenu({ isVisible, onClose }: BurgerMenuProps) {
 
                 <View style={styles.menuCard}>
                     {MENU_ITEMS.map((item, index) => (
-                        <TouchableOpacity key={index} style={styles.menuItem}>
-                            <Text style={styles.menuItemText}>{item}</Text>
+                        <TouchableOpacity
+                            key={index}
+                            style={styles.menuItem}
+                            onPress={() => handleNavigation(item.route)}
+                        >
+                            <Text style={styles.menuItemText}>{item.label}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
