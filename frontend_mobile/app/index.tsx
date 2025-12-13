@@ -23,63 +23,71 @@ export default function AuthScreen() {
   const router = useRouter();
   const { signIn } = useAuth();
 
+  const handleLogin = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        await signIn(data.accessToken || data.token || 'dummy_token'); // Adapt to actual response structure
+        Alert.alert('Succès', 'Connexion reussie');
+        router.replace('/(tabs)/dashboard');
+      } else {
+        Alert.alert('Erreur', 'Connexion echouée, verifiez vos identifiants');
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (password !== confirmPassword || password == '') {
+      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+        }),
+      });
+      if (response.ok) {
+        Alert.alert('Succès', 'Compte créé avec succès, veuillez vous connecter');
+        setIsLogin(true);
+        setPassword('');
+        setConfirmPassword('');
+        setFirstName('');
+        setLastName('');
+      } else {
+        const data = await response.json();
+        const message = Array.isArray(data.message) ? data.message.join('\n') : data.message || "Erreur lors de l'inscription";
+        Alert.alert('Erreur', message);
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
+    }
+  };
+
   const handleAuth = async () => {
     if (isLogin) {
-      try {
-        const response = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password
-          }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          await signIn(data.accessToken || data.token || 'dummy_token'); // Adapt to actual response structure
-          Alert.alert('Succès', 'Connexion reussie');
-          router.replace('/(tabs)/dashboard');
-        } else {
-          Alert.alert('Erreur', 'Connexion echouée, verifiez vos identifiants');
-        }
-      } catch (error: any) {
-        Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
-      }
+      await handleLogin();
     } else {
-      if (password !== confirmPassword || password == '') {
-        Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
-        return;
-      }
-      try {
-        const response = await fetch(`${API_URL}/auth/register`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            password,
-            firstName,
-            lastName,
-          }),
-        });
-        if (response.ok) {
-          Alert.alert('Succès', 'Compte créé avec succès, veuillez vous connecter');
-          setIsLogin(true);
-          setPassword('');
-          setConfirmPassword('');
-          setFirstName('');
-          setLastName('');
-        } else {
-          const data = await response.json();
-          const message = Array.isArray(data.message) ? data.message.join('\n') : data.message || "Erreur lors de l'inscription";
-          Alert.alert('Erreur', message);
-        }
-      } catch (error: any) {
-        Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
-      }
+      await handleRegister();
     }
   };
 
