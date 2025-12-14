@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { NotificationController } from './notification.controller';
@@ -13,6 +14,15 @@ describe('NotificationController', () => {
   let findAllNotificationsUseCase: jest.Mocked<FindAllNotificationsUseCase>;
   let snoozeNotificationUseCase: jest.Mocked<SnoozeNotificationUseCase>;
   let markNotificationAsReadUseCase: jest.Mocked<MarkNotificationAsReadUseCase>;
+
+  const mockUser = {
+    userId: 'user-123',
+    role: 'user_premium',
+  };
+
+  const mockRequest = {
+    user: mockUser,
+  } as any;
 
   const mockNotification = {
     id: 'notification-123',
@@ -55,6 +65,8 @@ describe('NotificationController', () => {
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<NotificationController>(NotificationController);
@@ -68,13 +80,13 @@ describe('NotificationController', () => {
       const filters: NotificationFilterDto = {};
       findAllNotificationsUseCase.execute.mockResolvedValue([mockNotification]);
 
-      const result = await controller.findAll(filters);
+      const result = await controller.findAll(mockRequest, filters);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
       expect(findAllNotificationsUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '123e4567-e89b-12d3-a456-426614174000',
+          userId: 'user-123',
         }),
       );
     });
@@ -88,11 +100,11 @@ describe('NotificationController', () => {
       };
       findAllNotificationsUseCase.execute.mockResolvedValue([mockNotification]);
 
-      await controller.findAll(filters);
+      await controller.findAll(mockRequest, filters);
 
       expect(findAllNotificationsUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '123e4567-e89b-12d3-a456-426614174000',
+          userId: 'user-123',
           type: 'reminder',
           channel: 'email',
           status: 'sent',
@@ -109,18 +121,18 @@ describe('NotificationController', () => {
       };
       const snoozedNotification = {
         ...mockNotification,
-        snoozedUntil: new Date('2025-01-20T10:00:00.000Z'),
+        snoozeUntil: new Date('2025-01-20T10:00:00.000Z'),
         updatedAt: new Date('2025-01-02'),
       } as unknown as Notification;
       snoozeNotificationUseCase.execute.mockResolvedValue(snoozedNotification);
 
-      const result = await controller.snooze('notification-123', snoozeDto);
+      const result = await controller.snooze(mockRequest, 'notification-123', snoozeDto);
 
       expect(result).toBeDefined();
       expect(result.snoozed_until).toBe('2025-01-20T10:00:00.000Z');
       expect(snoozeNotificationUseCase.execute).toHaveBeenCalledWith(
         'notification-123',
-        '123e4567-e89b-12d3-a456-426614174000',
+        'user-123',
         expect.objectContaining({
           snoozedUntil: expect.any(Date),
         }),
@@ -139,13 +151,13 @@ describe('NotificationController', () => {
       } as unknown as Notification;
       markNotificationAsReadUseCase.execute.mockResolvedValue(readNotification);
 
-      const result = await controller.markAsRead('notification-123');
+      const result = await controller.markAsRead(mockRequest, 'notification-123');
 
       expect(result).toBeDefined();
       expect(result.read_at).toBeDefined();
       expect(markNotificationAsReadUseCase.execute).toHaveBeenCalledWith(
         'notification-123',
-        '123e4567-e89b-12d3-a456-426614174000',
+        'user-123',
       );
     });
   });

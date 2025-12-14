@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { RgpdExportService } from '../rgpd-export.service';
+import { RgpdExportService }
 import { RgpdExportRepository } from '../../../infrastructure/repositories/rgpd-export.repository';
-import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
+import { UserTypeOrmRepository } from '../../../infrastructure/repositories/user-typeorm.repository';
 const TEST_IP_ADDRESS = '192.0.2.1';
 describe('RgpdExportService', () => {
   let service: RgpdExportService;
   let rgpdExportRepository: jest.Mocked<RgpdExportRepository>;
-  let userRepository: jest.Mocked<UserRepository>;
+  let userRepository: jest.Mocked<UserTypeOrmRepository>;
 
   const mockUser = {
     id: 'user-123',
@@ -44,7 +44,7 @@ describe('RgpdExportService', () => {
           useValue: mockRgpdExportRepo,
         },
         {
-          provide: UserRepository,
+          provide: UserTypeOrmRepository,
           useValue: mockUserRepo,
         },
       ],
@@ -52,7 +52,7 @@ describe('RgpdExportService', () => {
 
     service = module.get<RgpdExportService>(RgpdExportService);
     rgpdExportRepository = module.get(RgpdExportRepository);
-    userRepository = module.get(UserRepository);
+    userRepository = module.get(UserTypeOrmRepository);
   });
 
   it('should be defined', () => {

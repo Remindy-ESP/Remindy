@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserService } from '../user.service';
-import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
+import { UserTypeOrmRepository } from '../../../infrastructure/repositories/user-typeorm.repository';
 import { UserPreferencesRepository } from '../../../infrastructure/repositories/user-preferences.repository';
 
 describe('UserService', () => {
   let service: UserService;
-  let userRepository: jest.Mocked<UserRepository>;
+  let userRepository: jest.Mocked<UserTypeOrmRepository>;
+  let userPreferencesRepository: jest.Mocked<UserPreferencesRepository>;
 
   const mockUser = {
     id: 'user-123',
@@ -15,7 +16,7 @@ describe('UserService', () => {
     lastName: 'Doe',
     phone: '+33612345678',
     photoR2Key: null,
-    role: 'user_premium',
+    role_key: 'user_premium',
     status: 'verified',
     timezone: 'Europe/Paris',
     language: 'fr',
@@ -32,18 +33,20 @@ describe('UserService', () => {
       findByIdWithPreferences: jest.fn(),
       updateProfile: jest.fn(),
       save: jest.fn(),
+      softDelete: jest.fn(),
     };
 
     const mockUserPreferencesRepository = {
       findByUserId: jest.fn(),
       createDefaultPreferences: jest.fn(),
+      softDelete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
         {
-          provide: UserRepository,
+          provide: UserTypeOrmRepository,
           useValue: mockUserRepository,
         },
         {
@@ -54,7 +57,8 @@ describe('UserService', () => {
     }).compile();
 
     service = module.get<UserService>(UserService);
-    userRepository = module.get(UserRepository);
+    userRepository = module.get(UserTypeOrmRepository);
+    userPreferencesRepository = module.get(UserPreferencesRepository);
   });
 
   it('should be defined', () => {
@@ -74,7 +78,7 @@ describe('UserService', () => {
         lastName: mockUser.lastName,
         phone: mockUser.phone,
         photoR2Key: mockUser.photoR2Key,
-        role: mockUser.role,
+        role_key: mockUser.role_key,
         status: mockUser.status,
         timezone: mockUser.timezone,
         language: mockUser.language,
@@ -105,11 +109,14 @@ describe('UserService', () => {
         language: 'en',
       };
 
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      userRepository.updateProfile.mockResolvedValue({
+      const updatedUser = {
         ...mockUser,
         ...updateDto,
-      } as any);
+        updatedAt: new Date('2025-01-16T10:00:00Z'),
+      };
+
+      userRepository.findById.mockResolvedValueOnce(mockUser as any);
+      userRepository.findById.mockResolvedValueOnce(updatedUser as any);
 
       const result = await service.updateUserProfile('user-123', updateDto);
 
@@ -118,7 +125,13 @@ describe('UserService', () => {
       expect(result.phone).toBe('+33698765432');
       expect(result.timezone).toBe('America/New_York');
       expect(result.language).toBe('en');
-      expect(userRepository.updateProfile).toHaveBeenCalledWith('user-123', updateDto);
+      expect(userRepository.updateProfile).toHaveBeenCalledWith('user-123', {
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '+33698765432',
+        timezone: 'America/New_York',
+        language: 'en',
+      });
     });
 
     it('should throw NotFoundException when user not found', async () => {
@@ -164,16 +177,21 @@ describe('UserService', () => {
         firstName: 'UpdatedName',
       };
 
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      userRepository.updateProfile.mockResolvedValue({
+      const updatedUser = {
         ...mockUser,
         firstName: 'UpdatedName',
-      } as any);
+        updatedAt: new Date('2025-01-16T10:00:00Z'),
+      };
+
+      userRepository.findById.mockResolvedValueOnce(mockUser as any);
+      userRepository.findById.mockResolvedValueOnce(updatedUser as any);
 
       const result = await service.updateUserProfile('user-123', updateDto);
 
       expect(result.firstName).toBe('UpdatedName');
-      expect(userRepository.updateProfile).toHaveBeenCalled();
+      expect(userRepository.updateProfile).toHaveBeenCalledWith('user-123', {
+        firstName: 'UpdatedName',
+      });
     });
   });
 });

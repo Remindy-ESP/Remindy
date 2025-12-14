@@ -12,7 +12,14 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { ReminderResponseDto } from '../dto/reminder-response.dto';
@@ -103,7 +110,10 @@ export class ReminderController {
     type: ReminderResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Données invalides' })
-  async create(@Req() req: Request, @Body() createDto: CreateReminderDto): Promise<ReminderResponseDto> {
+  async create(
+    @Req() req: Request,
+    @Body() createDto: CreateReminderDto,
+  ): Promise<ReminderResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const userId = user.userId;
 

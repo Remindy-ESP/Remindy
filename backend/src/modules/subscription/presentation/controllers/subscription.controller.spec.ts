@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { SubscriptionController } from './subscription.controller';
 import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription.use-case';
 import { UpdateSubscriptionUseCase } from '../../application/use-cases/update-subscription.use-case';
@@ -90,6 +91,8 @@ describe('SubscriptionController', () => {
       ],
     })
       .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

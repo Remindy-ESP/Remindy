@@ -13,7 +13,14 @@ import {
   Req,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { EventResponseDto } from '../dto/event-response.dto';
@@ -104,7 +111,9 @@ export class EventController {
   ): Promise<EventResponseDto[]> {
     const { user } = req as Request & { user: { userId: string; role: string } };
 
-    const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({ userId: user.userId });
+    const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({
+      userId: user.userId,
+    });
     const userSubscriptionIds = new Set(userSubscriptions.map(sub => sub.id!));
 
     const appFilters = EventPresentationMapper.toFilterAppDto(filters);
