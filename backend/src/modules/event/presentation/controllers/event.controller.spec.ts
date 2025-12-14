@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { EventController } from './event.controller';
 import { FindAllEventsUseCase } from '../../application/use-cases/find-all-events.use-case';
 import { GetEventByIdUseCase } from '../../application/use-cases/get-event-by-id.use-case';
@@ -81,6 +82,8 @@ describe('EventController', () => {
       ],
     })
       .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

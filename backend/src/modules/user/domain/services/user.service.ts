@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository ';
+import { UserTypeOrmRepository } from '../../infrastructure/repositories/user-typeorm.repository';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import {
   UpdateUserProfileDto,

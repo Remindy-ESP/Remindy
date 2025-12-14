@@ -16,7 +16,7 @@ import { UserRepository } from './domain/repositories/user-user.repository';
 import { AbstractUserSessionRepository } from './domain/repositories/user-session-repository';
 
 // Infrastructure repositories (IMPLEMENTATIONS)
-import { UserTypeOrmRepository } from './infrastructure/repositories/user-typeorm.repository ';
+import { UserTypeOrmRepository } from './infrastructure/repositories/user-typeorm.repository';
 import { UserPreferencesRepository } from './infrastructure/repositories/user-preferences.repository';
 import { UserSessionRepository } from './infrastructure/repositories/user-session.repository';
 import { RgpdExportRepository } from './infrastructure/repositories/rgpd-export.repository';

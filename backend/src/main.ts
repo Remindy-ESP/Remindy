@@ -4,9 +4,20 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+
+  const configService = app.get(ConfigService);
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  const port = configService.get<number>('BACKEND_PORT') || 3000;
+
+  // Enable CORS
+  app.enableCors({
+    origin: frontendUrl,
+    credentials: true,
+  });
 
   app.use(cookieParser());
 
@@ -37,7 +48,9 @@ async function bootstrap(): Promise<void> {
 
   SwaggerModule.setup('swagger/v1', app, document);
 
-  await app.listen(3000);
+  await app.listen(port);
+  console.log(`🚀 Application is running on: http://localhost:${port}`);
+  console.log(`📚 Swagger documentation: http://localhost:${port}/swagger/v1`);
 }
 
 bootstrap().catch(err => {
