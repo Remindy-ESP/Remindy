@@ -7,19 +7,88 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { API_URL } from '../constants/config';
+import { useAuth } from '../context/AuthContext';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const router = useRouter();
+  const { signIn } = useAuth();
 
-  const handleAuth = () => {
-    // TODO: Implement authentication logic
-    router.replace('/(tabs)/dashboard');
+  const handleLogin = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        await signIn(data.accessToken || data.token || 'dummy_token'); // Adapt to actual response structure
+        Alert.alert('Succès', 'Connexion reussie');
+        router.replace('/(tabs)/dashboard');
+      } else {
+        Alert.alert('Erreur', 'Connexion echouée, verifiez vos identifiants');
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (password !== confirmPassword || password == '') {
+      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+        }),
+      });
+      if (response.ok) {
+        Alert.alert('Succès', 'Compte créé avec succès, veuillez vous connecter');
+        setIsLogin(true);
+        setPassword('');
+        setConfirmPassword('');
+        setFirstName('');
+        setLastName('');
+      } else {
+        const data = await response.json();
+        const message = Array.isArray(data.message) ? data.message.join('\n') : data.message || "Erreur lors de l'inscription";
+        Alert.alert('Erreur', message);
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
+    }
+  };
+
+  const handleAuth = async () => {
+    if (isLogin) {
+      await handleLogin();
+    } else {
+      await handleRegister();
+    }
   };
 
   return (
@@ -34,6 +103,26 @@ export default function AuthScreen() {
         </Text>
 
         <View style={styles.form}>
+          {!isLogin && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Prénom"
+                placeholderTextColor="#999"
+                value={firstName}
+                onChangeText={setFirstName}
+                testID="firstname-input"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nom"
+                placeholderTextColor="#999"
+                value={lastName}
+                onChangeText={setLastName}
+                testID="lastname-input"
+              />
+            </>
+          )}
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -78,7 +167,10 @@ export default function AuthScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => setIsLogin(!isLogin)}
+            onPress={() => {
+              setIsLogin(!isLogin);
+              setPassword('');
+            }}
             testID="toggle-auth-mode"
           >
             <Text style={styles.toggleText}>

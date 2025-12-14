@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
+
 export default function StatsScreen() {
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
