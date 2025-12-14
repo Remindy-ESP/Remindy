@@ -10,8 +10,11 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
+  NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from '../dto/update-subscription.dto';
@@ -27,10 +30,12 @@ import { PauseSubscriptionUseCase } from '../../application/use-cases/pause-subs
 import { ResumeSubscriptionUseCase } from '../../application/use-cases/resume-subscription.use-case';
 import { FindSubscriptionEventsUseCase } from '../../application/use-cases/find-subscription-events.use-case';
 import { SubscriptionPresentationMapper } from '../mappers/subscription-presentation.mapper';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 @ApiTags('Abonnements')
 @Controller('subscriptions')
-@UseGuards(ThrottlerGuard)
+@UseGuards(ThrottlerGuard, JwtAuthGuard)
+@ApiBearerAuth('access-token')
 export class SubscriptionController {
   constructor(
     private readonly createSubscriptionUseCase: CreateSubscriptionUseCase,
@@ -53,15 +58,22 @@ export class SubscriptionController {
     type: SubscriptionResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Données invalides' })
-  async create(@Body() createDto: CreateSubscriptionDto): Promise<SubscriptionResponseDto> {
+  async create(
+    @Req() req: Request,
+    @Body() createDto: CreateSubscriptionDto,
+  ): Promise<SubscriptionResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    createDto.userId = user.userId;
+
     const appDto = SubscriptionPresentationMapper.toCreateAppDto(createDto);
-    const subscription = await this.createSubscriptionUseCase.execute(appDto);
-    return SubscriptionPresentationMapper.toResponseDto(subscription);
+    const result = await this.createSubscriptionUseCase.execute(appDto);
+    const responseDto = SubscriptionPresentationMapper.toResponseDto(result.subscription);
+    responseDto.eventsGenerated = result.eventsGenerated;
+    return responseDto;
   }
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les abonnements avec filtres optionnels' })
-  @ApiQuery({ name: 'userId', required: false, description: 'Filtrer par ID utilisateur' })
   @ApiQuery({ name: 'contractId', required: false, description: 'Filtrer par ID de contrat' })
   @ApiQuery({ name: 'name', required: false, description: 'Filtrer par nom (recherche partielle)' })
   @ApiQuery({ name: 'currency', required: false, description: 'Filtrer par devise' })
@@ -82,7 +94,13 @@ export class SubscriptionController {
     description: 'Liste des abonnements',
     type: [SubscriptionResponseDto],
   })
-  async findAll(@Query() filters: SubscriptionFilterDto): Promise<SubscriptionResponseDto[]> {
+  async findAll(
+    @Req() req: Request,
+    @Query() filters: SubscriptionFilterDto,
+  ): Promise<SubscriptionResponseDto[]> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    filters.userId = user.userId;
+
     const appFilters = SubscriptionPresentationMapper.toFilterAppDto(filters);
     const subscriptions = await this.findAllSubscriptionsUseCase.execute(appFilters);
     return SubscriptionPresentationMapper.toResponseDtoArray(subscriptions);
@@ -101,9 +119,14 @@ export class SubscriptionController {
     type: [SubscriptionResponseDto],
   })
   @ApiResponse({ status: 400, description: 'Fréquence invalide' })
-  async findByFrequency(@Param('type') type: string): Promise<SubscriptionResponseDto[]> {
+  async findByFrequency(
+    @Req() req: Request,
+    @Param('type') type: string,
+  ): Promise<SubscriptionResponseDto[]> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
     const subscriptions = await this.findSubscriptionsByPeriodUseCase.execute(type);
-    return SubscriptionPresentationMapper.toResponseDtoArray(subscriptions);
+    const userSubscriptions = subscriptions.filter(sub => sub.userId === user.userId);
+    return SubscriptionPresentationMapper.toResponseDtoArray(userSubscriptions);
   }
 
   @Get(':id')
@@ -115,8 +138,14 @@ export class SubscriptionController {
     type: SubscriptionResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
-  async findById(@Param('id') id: string): Promise<SubscriptionResponseDto> {
+  async findById(@Req() req: Request, @Param('id') id: string): Promise<SubscriptionResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
     const subscription = await this.findSubscriptionUseCase.findById(id);
+
+    if (subscription.userId !== user.userId) {
+      throw new NotFoundException(`Subscription with id ${id} not found`);
+    }
+
     return SubscriptionPresentationMapper.toResponseDto(subscription);
   }
 
@@ -131,9 +160,17 @@ export class SubscriptionController {
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
   @ApiResponse({ status: 400, description: 'Données invalides' })
   async update(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() updateDto: UpdateSubscriptionDto,
   ): Promise<SubscriptionResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.findSubscriptionUseCase.findById(id);
+
+    if (existing.userId !== user.userId) {
+      throw new NotFoundException(`Subscription with id ${id} not found`);
+    }
+
     const appDto = SubscriptionPresentationMapper.toUpdateAppDto(updateDto);
     const subscription = await this.updateSubscriptionUseCase.execute(id, appDto);
     return SubscriptionPresentationMapper.toResponseDto(subscription);
@@ -145,7 +182,14 @@ export class SubscriptionController {
   @ApiParam({ name: 'id', description: "ID de l'abonnement" })
   @ApiResponse({ status: 204, description: 'Abonnement supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.findSubscriptionUseCase.findById(id);
+
+    if (existing.userId !== user.userId) {
+      throw new NotFoundException(`Subscription with id ${id} not found`);
+    }
+
     await this.deleteSubscriptionUseCase.execute(id);
   }
 
@@ -159,7 +203,14 @@ export class SubscriptionController {
     type: SubscriptionResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
-  async pause(@Param('id') id: string): Promise<SubscriptionResponseDto> {
+  async pause(@Req() req: Request, @Param('id') id: string): Promise<SubscriptionResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.findSubscriptionUseCase.findById(id);
+
+    if (existing.userId !== user.userId) {
+      throw new NotFoundException(`Subscription with id ${id} not found`);
+    }
+
     const subscription = await this.pauseSubscriptionUseCase.execute(id);
     return SubscriptionPresentationMapper.toResponseDto(subscription);
   }
@@ -174,7 +225,14 @@ export class SubscriptionController {
     type: SubscriptionResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
-  async resume(@Param('id') id: string): Promise<SubscriptionResponseDto> {
+  async resume(@Req() req: Request, @Param('id') id: string): Promise<SubscriptionResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.findSubscriptionUseCase.findById(id);
+
+    if (existing.userId !== user.userId) {
+      throw new NotFoundException(`Subscription with id ${id} not found`);
+    }
+
     const subscription = await this.resumeSubscriptionUseCase.execute(id);
     return SubscriptionPresentationMapper.toResponseDto(subscription);
   }
@@ -199,7 +257,7 @@ export class SubscriptionController {
           endsAt: { type: 'string', format: 'date-time' },
           status: { type: 'string' },
           paymentStatus: { type: 'string' },
-          notes: { type: 'string' },
+          notes: { type: 'string', format: 'date-time' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },
@@ -207,7 +265,14 @@ export class SubscriptionController {
     },
   })
   @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
-  async getEvents(@Param('id') id: string) {
+  async getEvents(@Req() req: Request, @Param('id') id: string) {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const existing = await this.findSubscriptionUseCase.findById(id);
+
+    if (existing.userId !== user.userId) {
+      throw new NotFoundException(`Subscription with id ${id} not found`);
+    }
+
     return await this.findSubscriptionEventsUseCase.execute(id);
   }
 }

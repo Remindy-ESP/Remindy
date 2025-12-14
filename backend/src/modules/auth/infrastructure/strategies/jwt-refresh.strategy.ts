@@ -15,7 +15,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
           return typeof token === 'string' ? token : null;
         },
       ]),
-      secretOrKey: configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
+      secretOrKey: configService.get<string>('JWT_REFRESH_TOKEN_SECRET')!,
     });
   }
 
