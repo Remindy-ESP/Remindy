@@ -10,9 +10,11 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import type { Request } from 'express';
 import { ReminderResponseDto } from '../dto/reminder-response.dto';
 import { ReminderFilterDto } from '../dto/reminder-filter.dto';
 import { CreateReminderDto } from '../dto/create-reminder.dto';
@@ -23,10 +25,12 @@ import { CreateReminderUseCase } from '../../application/use-cases/create-remind
 import { UpdateReminderUseCase } from '../../application/use-cases/update-reminder.use-case';
 import { DeleteReminderUseCase } from '../../application/use-cases/delete-reminder.use-case';
 import { ReminderPresentationMapper } from '../mappers/reminder-presentation.mapper';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 @ApiTags('Reminders')
 @Controller('reminders')
-@UseGuards(ThrottlerGuard)
+@UseGuards(ThrottlerGuard, JwtAuthGuard)
+@ApiBearerAuth('access-token')
 export class ReminderController {
   constructor(
     private readonly findAllRemindersUseCase: FindAllRemindersUseCase,
@@ -61,9 +65,12 @@ export class ReminderController {
     description: 'Liste des rappels',
     type: [ReminderResponseDto],
   })
-  async findAll(@Query() filters: ReminderFilterDto): Promise<ReminderResponseDto[]> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+  async findAll(
+    @Req() req: Request,
+    @Query() filters: ReminderFilterDto,
+  ): Promise<ReminderResponseDto[]> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     const appFilters = ReminderPresentationMapper.toFilterAppDto(userId, filters);
     const reminders = await this.findAllRemindersUseCase.execute(appFilters);
@@ -79,9 +86,9 @@ export class ReminderController {
     type: ReminderResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Rappel non trouvé' })
-  async findOne(@Param('id') id: string): Promise<ReminderResponseDto> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+  async findOne(@Req() req: Request, @Param('id') id: string): Promise<ReminderResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     const reminder = await this.findReminderByIdUseCase.execute(id, userId);
     return ReminderPresentationMapper.toResponseDto(reminder);
@@ -96,9 +103,9 @@ export class ReminderController {
     type: ReminderResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Données invalides' })
-  async create(@Body() createDto: CreateReminderDto): Promise<ReminderResponseDto> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+  async create(@Req() req: Request, @Body() createDto: CreateReminderDto): Promise<ReminderResponseDto> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     const appDto = ReminderPresentationMapper.toCreateAppDto(userId, createDto);
     const reminder = await this.createReminderUseCase.execute(appDto);
@@ -117,11 +124,12 @@ export class ReminderController {
   @ApiResponse({ status: 404, description: 'Rappel non trouvé' })
   @ApiResponse({ status: 400, description: 'Données invalides' })
   async update(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() updateDto: UpdateReminderDto,
   ): Promise<ReminderResponseDto> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     const appDto = ReminderPresentationMapper.toUpdateAppDto(updateDto);
     const reminder = await this.updateReminderUseCase.execute(id, userId, appDto);
@@ -137,9 +145,9 @@ export class ReminderController {
     description: 'Rappel supprimé avec succès',
   })
   @ApiResponse({ status: 404, description: 'Rappel non trouvé' })
-  async delete(@Param('id') id: string): Promise<void> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+  async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     await this.deleteReminderUseCase.execute(id, userId);
   }

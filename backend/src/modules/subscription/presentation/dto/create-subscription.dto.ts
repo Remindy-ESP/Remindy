@@ -6,6 +6,9 @@ import {
   IsDateString,
   IsOptional,
   IsInt,
+  IsBoolean,
+  Min,
+  Max,
   Matches,
 } from 'class-validator';
 import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
@@ -14,9 +17,11 @@ export class CreateSubscriptionDto {
   @ApiProperty({
     description: "ID de l'utilisateur propriétaire de l'abonnement",
     example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
   })
+  @IsOptional()
   @IsString()
-  userId: string;
+  userId?: string;
 
   @ApiProperty({
     description: 'ID de la catégorie de contrat (optionnel)',
@@ -128,4 +133,38 @@ export class CreateSubscriptionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiProperty({
+    description: 'Générer automatiquement les événements de paiement',
+    example: true,
+    default: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  generateEvents?: boolean;
+
+  @ApiProperty({
+    description: "Nombre d'événements à générer (en mois)",
+    example: 12,
+    default: 12,
+    minimum: 1,
+    maximum: 24,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(24)
+  eventsToGenerate?: number;
+
+  @ApiProperty({
+    description: 'Fuseau horaire pour les événements',
+    example: 'Europe/Paris',
+    default: 'Europe/Paris',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  timezone?: string;
 }

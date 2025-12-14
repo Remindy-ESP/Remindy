@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ReminderEntity } from './infrastructure/persistence/reminder.entity';
 import { ReminderController } from './presentation/controllers/reminder.controller';
@@ -9,9 +9,13 @@ import { FindReminderByIdUseCase } from './application/use-cases/find-reminder-b
 import { CreateReminderUseCase } from './application/use-cases/create-reminder.use-case';
 import { UpdateReminderUseCase } from './application/use-cases/update-reminder.use-case';
 import { DeleteReminderUseCase } from './application/use-cases/delete-reminder.use-case';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ReminderEntity])],
+  imports: [
+    TypeOrmModule.forFeature([ReminderEntity]),
+    forwardRef(() => AuthModule),
+  ],
   controllers: [ReminderController],
   providers: [
     {
