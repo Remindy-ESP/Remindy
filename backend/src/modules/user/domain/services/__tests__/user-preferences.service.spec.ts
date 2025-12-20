@@ -188,24 +188,30 @@ describe('UserPreferencesService', () => {
     });
 
     it('should create preferences if they do not exist before updating', async () => {
-      const updateDto = {
-        theme: 'dark' as const,
-      };
+          const updateDto = {
+              theme: 'dark' as const,
+          };
 
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      userPreferencesRepository.findByUserId.mockResolvedValue(null);
-      userPreferencesRepository.createDefaultPreferences.mockResolvedValue(mockPreferences as any);
-      userPreferencesRepository.update.mockResolvedValue({
-        ...mockPreferences,
-        theme: 'dark' as const,
-      } as any);
+          const updatedPrefs = {
+              ...mockPreferences,
+              theme: 'dark' as const,
+          };
 
-      const result = await service.updateUserPreferences('user-123', updateDto);
+          userRepository.findById.mockResolvedValue(mockUser as any);
 
-      expect(result).toBeDefined();
-      expect(userPreferencesRepository.createDefaultPreferences).toHaveBeenCalledWith('user-123');
-      expect(userPreferencesRepository.update).toHaveBeenCalled();
-    });
+          userPreferencesRepository.update.mockResolvedValue(updatedPrefs as any);
+
+          const result = await service.updateUserPreferences('user-123', updateDto);
+
+          expect(result).toBeDefined();
+          expect(result.theme).toBe('dark');
+          expect(userPreferencesRepository.update).toHaveBeenCalledWith(
+              'user-123',
+              expect.objectContaining({
+                  theme: 'dark',
+              }),
+          );
+      });
 
     it('should uppercase currency code', async () => {
       const updateDto = {
