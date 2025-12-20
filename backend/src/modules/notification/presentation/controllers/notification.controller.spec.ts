@@ -15,6 +15,8 @@ describe('NotificationController', () => {
   let snoozeNotificationUseCase: jest.Mocked<SnoozeNotificationUseCase>;
   let markNotificationAsReadUseCase: jest.Mocked<MarkNotificationAsReadUseCase>;
 
+  jest.mock('../mappers/notification-presentation.mapper');
+
   const mockUser = {
     userId: 'user-123',
     role: 'user_premium',
@@ -27,6 +29,8 @@ describe('NotificationController', () => {
   const mockNotification = {
     id: 'notification-123',
     userId: 'user-123',
+    eventId: undefined,
+    reminderId: undefined,
     type: 'reminder',
     channel: 'email',
     title: 'Payment Due',
@@ -34,9 +38,13 @@ describe('NotificationController', () => {
     status: 'pending',
     isRead: false,
     sentAt: new Date('2025-01-15'),
-    snoozeUntil: null,
+    readAt: undefined,
+    snoozedUntil: null,
+    errorMessage: undefined,
+    metadata: undefined,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
+    deletedAt: undefined,
   } as unknown as Notification;
 
   beforeEach(async () => {
@@ -121,8 +129,8 @@ describe('NotificationController', () => {
       };
       const snoozedNotification = {
         ...mockNotification,
-        snoozeUntil: new Date('2025-01-20T10:00:00.000Z'),
-        updatedAt: new Date('2025-01-02'),
+        snoozedUntil: new Date('2025-01-20T10:00:00.000Z'),
+        updatedAt: new Date('2025-01-30T10:00:00.000Z'),
       } as unknown as Notification;
       snoozeNotificationUseCase.execute.mockResolvedValue(snoozedNotification);
 
