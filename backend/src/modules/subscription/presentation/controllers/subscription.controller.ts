@@ -13,7 +13,14 @@ import {
   Req,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateSubscriptionDto } from '../dto/create-subscription.dto';

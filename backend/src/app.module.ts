@@ -17,6 +17,7 @@ import { DocumentModule } from './modules/document/document.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ReminderModule } from './modules/reminder/reminder.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
+import { SeedModule } from './modules/seed/seed.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
     ReminderModule,
     AuditModule,
     SchedulerModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

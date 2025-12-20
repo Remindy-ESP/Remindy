@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ReminderController } from './reminder.controller';
@@ -19,6 +20,15 @@ describe('ReminderController', () => {
   let updateReminderUseCase: jest.Mocked<UpdateReminderUseCase>;
   let deleteReminderUseCase: jest.Mocked<DeleteReminderUseCase>;
 
+  const mockUser = {
+    userId: '123e4567-e89b-12d3-a456-426614174000',
+    role: 'user_premium',
+  };
+
+  const mockRequest = {
+    user: mockUser,
+  } as any;
+
   const mockReminder = {
     id: 'reminder-123',
     userId: '123e4567-e89b-12d3-a456-426614174000',
@@ -29,6 +39,7 @@ describe('ReminderController', () => {
     channel: 'email',
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
+    deletedAt: undefined,
   } as Reminder;
 
   beforeEach(async () => {
@@ -69,6 +80,8 @@ describe('ReminderController', () => {
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<ReminderController>(ReminderController);
@@ -84,7 +97,7 @@ describe('ReminderController', () => {
       const filters: ReminderFilterDto = {};
       findAllRemindersUseCase.execute.mockResolvedValue([mockReminder]);
 
-      const result = await controller.findAll(filters);
+      const result = await controller.findAll(mockRequest, filters);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -103,10 +116,11 @@ describe('ReminderController', () => {
       };
       findAllRemindersUseCase.execute.mockResolvedValue([mockReminder]);
 
-      await controller.findAll(filters);
+      await controller.findAll(mockRequest, filters);
 
       expect(findAllRemindersUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
+          userId: '123e4567-e89b-12d3-a456-426614174000',
           subscriptionId: 'subscription-123',
           type: 'payment_due',
           enabled: true,
@@ -119,7 +133,7 @@ describe('ReminderController', () => {
     it('should return a single reminder', async () => {
       findReminderByIdUseCase.execute.mockResolvedValue(mockReminder);
 
-      const result = await controller.findOne('reminder-123');
+      const result = await controller.findOne(mockRequest, 'reminder-123');
 
       expect(result).toBeDefined();
       expect(result.id).toBe('reminder-123');
@@ -141,7 +155,7 @@ describe('ReminderController', () => {
       };
       createReminderUseCase.execute.mockResolvedValue(mockReminder);
 
-      const result = await controller.create(createDto);
+      const result = await controller.create(mockRequest, createDto);
 
       expect(result).toBeDefined();
       expect(result.id).toBe('reminder-123');
@@ -165,19 +179,14 @@ describe('ReminderController', () => {
         enabled: false,
       };
       const updatedReminder = {
-        id: 'reminder-123',
-        userId: '123e4567-e89b-12d3-a456-426614174000',
-        subscriptionId: 'subscription-123',
-        type: 'payment_due',
+        ...mockReminder,
         daysBefore: 5,
         enabled: false,
-        channel: 'email',
-        createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
       } as Reminder;
       updateReminderUseCase.execute.mockResolvedValue(updatedReminder);
 
-      const result = await controller.update('reminder-123', updateDto);
+      const result = await controller.update(mockRequest, 'reminder-123', updateDto);
 
       expect(result).toBeDefined();
       expect(result.days_before).toBe(5);
@@ -197,7 +206,7 @@ describe('ReminderController', () => {
     it('should delete a reminder', async () => {
       deleteReminderUseCase.execute.mockResolvedValue(undefined);
 
-      await controller.delete('reminder-123');
+      await controller.delete(mockRequest, 'reminder-123');
 
       expect(deleteReminderUseCase.execute).toHaveBeenCalledWith(
         'reminder-123',

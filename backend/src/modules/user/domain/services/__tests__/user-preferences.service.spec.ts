@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserPreferencesService } from '../user-preferences.service';
 import { UserPreferencesRepository } from '../../../infrastructure/repositories/user-preferences.repository';
-import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
+import { UserTypeOrmRepository } from '../../../infrastructure/repositories/user-typeorm.repository';
 
 describe('UserPreferencesService', () => {
   let service: UserPreferencesService;
   let userPreferencesRepository: jest.Mocked<UserPreferencesRepository>;
-  let userRepository: jest.Mocked<UserRepository>;
+  let userRepository: jest.Mocked<UserTypeOrmRepository>;
 
   const mockUser = {
     id: 'user-123',
@@ -46,7 +46,7 @@ describe('UserPreferencesService', () => {
           useValue: mockUserPreferencesRepo,
         },
         {
-          provide: UserRepository,
+          provide: UserTypeOrmRepository,
           useValue: mockUserRepo,
         },
       ],
@@ -54,7 +54,7 @@ describe('UserPreferencesService', () => {
 
     service = module.get<UserPreferencesService>(UserPreferencesService);
     userPreferencesRepository = module.get(UserPreferencesRepository);
-    userRepository = module.get(UserRepository);
+    userRepository = module.get(UserTypeOrmRepository);
   });
 
   it('should be defined', () => {
@@ -192,19 +192,25 @@ describe('UserPreferencesService', () => {
         theme: 'dark' as const,
       };
 
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      userPreferencesRepository.findByUserId.mockResolvedValue(null);
-      userPreferencesRepository.createDefaultPreferences.mockResolvedValue(mockPreferences as any);
-      userPreferencesRepository.update.mockResolvedValue({
+      const updatedPrefs = {
         ...mockPreferences,
         theme: 'dark' as const,
-      } as any);
+      };
+
+      userRepository.findById.mockResolvedValue(mockUser as any);
+
+      userPreferencesRepository.update.mockResolvedValue(updatedPrefs as any);
 
       const result = await service.updateUserPreferences('user-123', updateDto);
 
       expect(result).toBeDefined();
-      expect(userPreferencesRepository.createDefaultPreferences).toHaveBeenCalledWith('user-123');
-      expect(userPreferencesRepository.update).toHaveBeenCalled();
+      expect(result.theme).toBe('dark');
+      expect(userPreferencesRepository.update).toHaveBeenCalledWith(
+        'user-123',
+        expect.objectContaining({
+          theme: 'dark',
+        }),
+      );
     });
 
     it('should uppercase currency code', async () => {

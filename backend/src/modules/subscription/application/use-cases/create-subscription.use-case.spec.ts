@@ -6,14 +6,20 @@ import {
 } from '../ports/subscription-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { CreateSubscriptionAppDto } from '../dto/create-subscription-app.dto';
+import { SubscriptionEventGeneratorService } from '../services/subscription-event-generator.service';
 
 describe('CreateSubscriptionUseCase', () => {
   let useCase: CreateSubscriptionUseCase;
   let repository: jest.Mocked<ISubscriptionRepository>;
+  let eventGeneratorService: jest.Mocked<SubscriptionEventGeneratorService>;
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<ISubscriptionRepository>> = {
       create: jest.fn(),
+    };
+
+    const mockEventGeneratorService: Partial<jest.Mocked<SubscriptionEventGeneratorService>> = {
+      generateEventsForSubscription: jest.fn().mockResolvedValue([]),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -23,11 +29,16 @@ describe('CreateSubscriptionUseCase', () => {
           provide: SUBSCRIPTION_REPOSITORY,
           useValue: mockRepository,
         },
+        {
+          provide: SubscriptionEventGeneratorService,
+          useValue: mockEventGeneratorService,
+        },
       ],
     }).compile();
 
     useCase = module.get<CreateSubscriptionUseCase>(CreateSubscriptionUseCase);
     repository = module.get(SUBSCRIPTION_REPOSITORY);
+    eventGeneratorService = module.get(SubscriptionEventGeneratorService);
   });
 
   it('should be defined', () => {
@@ -63,10 +74,12 @@ describe('CreateSubscriptionUseCase', () => {
     });
 
     repository.create.mockResolvedValue(expectedSubscription);
+    eventGeneratorService.generateEventsForSubscription.mockResolvedValue([]);
 
     const result = await useCase.execute(dto);
 
-    expect(result).toBe(expectedSubscription);
+    expect(result.subscription).toBe(expectedSubscription);
+    expect(result.eventsGenerated).toBe(0);
     expect(repository.create).toHaveBeenCalledTimes(1);
     expect(repository.create).toHaveBeenCalledWith(expect.any(Subscription));
   });
@@ -81,6 +94,7 @@ describe('CreateSubscriptionUseCase', () => {
       startDate: new Date('2025-01-01'),
       nextDueDate: new Date('2025-02-01'),
       status: 'active',
+      generateEvents: false,
     };
 
     const expectedSubscription = new Subscription({
@@ -136,6 +150,7 @@ describe('CreateSubscriptionUseCase', () => {
       startDate: new Date('2025-01-01'),
       nextDueDate: new Date('2025-04-01'),
       status: 'active',
+      generateEvents: false,
     };
 
     const expectedSubscription = new Subscription({

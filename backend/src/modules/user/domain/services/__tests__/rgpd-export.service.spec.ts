@@ -1,13 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { RgpdExportService } from '../rgpd-export.service';
-import { RgpdExportRepository } from '../../../infrastructure/repositories/rgpd-export.repository';
-import { UserRepository } from '../../../infrastructure/repositories/user-typeorm.repository ';
+import { RgpdExportService } from '../../../application/services/rgpd-export.service';
+import { RgpdExportRepository } from '../../../../user/infrastructure/repositories/rgpd-export.repository';
+import { UserTypeOrmRepository } from '../../../../user/infrastructure/repositories/user-typeorm.repository';
+
 const TEST_IP_ADDRESS = '192.0.2.1';
+
 describe('RgpdExportService', () => {
   let service: RgpdExportService;
   let rgpdExportRepository: jest.Mocked<RgpdExportRepository>;
-  let userRepository: jest.Mocked<UserRepository>;
+  let userRepository: jest.Mocked<UserTypeOrmRepository>;
 
   const mockUser = {
     id: 'user-123',
@@ -21,7 +23,13 @@ describe('RgpdExportService', () => {
     format: 'json' as const,
     requestedBy: 'user' as const,
     ipAddress: '127.0.0.1',
-    createdAt: new Date(),
+    fileR2Key: undefined,
+    fileSize: undefined,
+    signedUrl: undefined,
+    expiresAt: undefined,
+    errorMessage: undefined,
+    createdAt: new Date('2025-01-01'),
+    completedAt: undefined,
   };
 
   beforeEach(async () => {
@@ -44,7 +52,7 @@ describe('RgpdExportService', () => {
           useValue: mockRgpdExportRepo,
         },
         {
-          provide: UserRepository,
+          provide: UserTypeOrmRepository,
           useValue: mockUserRepo,
         },
       ],
@@ -52,7 +60,7 @@ describe('RgpdExportService', () => {
 
     service = module.get<RgpdExportService>(RgpdExportService);
     rgpdExportRepository = module.get(RgpdExportRepository);
-    userRepository = module.get(UserRepository);
+    userRepository = module.get(UserTypeOrmRepository);
   });
 
   it('should be defined', () => {
@@ -61,7 +69,7 @@ describe('RgpdExportService', () => {
 
   describe('createExportRequest', () => {
     it('should create export request successfully', async () => {
-      const createDto = { format: 'json' };
+      const createDto = { format: 'json' as const };
       const ipAddress = TEST_IP_ADDRESS;
 
       userRepository.findById.mockResolvedValue(mockUser as any);
@@ -207,7 +215,10 @@ describe('RgpdExportService', () => {
 
   describe('getUserExports', () => {
     it('should return all user exports', async () => {
-      const mockExports = [mockExport, { ...mockExport, id: 'export-456', status: 'completed' }];
+      const mockExports = [
+        mockExport,
+        { ...mockExport, id: 'export-456', status: 'completed' as const },
+      ];
 
       userRepository.findById.mockResolvedValue(mockUser as any);
       rgpdExportRepository.findByUserId.mockResolvedValue(mockExports as any);
@@ -265,13 +276,15 @@ describe('RgpdExportService', () => {
       const mockError = new Error('Processing failed');
 
       rgpdExportRepository.findById.mockResolvedValue(mockExport as any);
+
       rgpdExportRepository.update
         .mockResolvedValueOnce(mockExport as any)
-        .mockRejectedValueOnce(mockError);
+        .mockRejectedValueOnce(mockError)
+        .mockResolvedValueOnce(mockExport as any);
 
       await service.processExport('export-123');
 
-      expect(rgpdExportRepository.update).toHaveBeenCalledWith(
+      expect(rgpdExportRepository.update).toHaveBeenLastCalledWith(
         'export-123',
         expect.objectContaining({
           status: 'failed',
