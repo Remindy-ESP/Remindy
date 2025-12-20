@@ -44,7 +44,7 @@ export class RgpdExportService {
     const exportEntity = await this.rgpdExportRepository.create({
       userId,
       status: 'pending',
-      format: format as 'json' | 'csv',
+      format: format,
       requestedBy: 'user',
       ipAddress,
     });

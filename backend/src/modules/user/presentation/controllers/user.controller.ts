@@ -34,8 +34,7 @@ import { RequestRgpdExportDto } from '../../application/dto/request-export-rgpd.
 import { RequestRgpdExportUseCase } from '../../application/use-cases/request-rgpd-export.use-case';
 import { Roles } from 'src/modules/auth/presentation/decorators/roles.decorator';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
-// TODO: Import your JWT authentication guard
-// import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RgpdExportService } from '../../../user/application/services/rgpd-export.service';
 
 @ApiTags('Users')
 @Controller('users')
@@ -51,6 +50,7 @@ export class UserController {
     private readonly getMyPreferencesUseCase: GetMyPreferencesUseCase,
     private readonly updateUserPreferencesUseCase: UpdateUserPreferencesUseCase,
     private readonly requestRgpdExportUseCase: RequestRgpdExportUseCase,
+    private readonly rgpdExportService: RgpdExportService,
   ) {}
 
   @Get('profile')
@@ -203,14 +203,13 @@ export class UserController {
     @Req() req: RequestWithUser,
     @Body() dto: RequestRgpdExportDto,
   ): Promise<RgpdExportResponseDto> {
-    const result = await this.requestRgpdExportUseCase.execute(req.user.userId, dto);
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
 
-    return {
-      id: result.id,
-      status: result.status,
-      format: result.format,
-      createdAt: result.createdAt,
-    };
+    return await this.rgpdExportService.createExportRequest(
+      req.user.userId,
+      { format: dto.format },
+      ipAddress,
+    );
   }
 
   @Delete('me')
