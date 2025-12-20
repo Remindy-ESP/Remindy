@@ -45,11 +45,7 @@ export class SubscriptionEventGeneratorService {
   /**
    * Calcule les dates d'occurrence à partir de la fréquence
    */
-  calculateOccurrences(
-    startDate: Date,
-    frequency: SubscriptionFrequency,
-    count: number,
-  ): Date[] {
+  calculateOccurrences(startDate: Date, frequency: SubscriptionFrequency, count: number): Date[] {
     const occurrences: Date[] = [];
     let currentDate = new Date(startDate);
 
@@ -87,7 +83,7 @@ export class SubscriptionEventGeneratorService {
 
     // Récupérer les événements existants pour éviter les doublons
     const existingEvents = await this.eventRepository.findBySubscriptionId(subscription.id!);
-    const existingDates = new Set(existingEvents.map((e) => toUTCDateString(e.startsAt)));
+    const existingDates = new Set(existingEvents.map(e => toUTCDateString(e.startsAt)));
 
     // Calculer les occurrences
     const occurrences = this.calculateOccurrences(
@@ -97,7 +93,7 @@ export class SubscriptionEventGeneratorService {
     );
 
     // Filtrer les occurrences qui existent déjà
-    const newOccurrences = occurrences.filter((date) => {
+    const newOccurrences = occurrences.filter(date => {
       const dateKey = toUTCDateString(date);
       return !existingDates.has(dateKey);
     });
@@ -108,7 +104,7 @@ export class SubscriptionEventGeneratorService {
 
     // Créer les nouveaux événements
     const events = newOccurrences.map(
-      (startsAt) =>
+      startsAt =>
         new Event({
           subscriptionId: subscription.id!,
           title: `Paiement ${subscription.name}`,

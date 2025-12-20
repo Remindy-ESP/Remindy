@@ -10,10 +10,7 @@ import { MarkNotificationAsReadUseCase } from './application/use-cases/mark-noti
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([NotificationEntity]),
-    forwardRef(() => AuthModule),
-  ],
+  imports: [TypeOrmModule.forFeature([NotificationEntity]), forwardRef(() => AuthModule)],
   controllers: [NotificationController],
   providers: [
     {

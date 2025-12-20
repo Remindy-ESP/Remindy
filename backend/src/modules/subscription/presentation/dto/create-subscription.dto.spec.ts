@@ -35,7 +35,7 @@ describe('CreateSubscriptionDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('should fail if userId is missing', async () => {
+  it('should pass validation even if userId is missing (optional field)', async () => {
     const dto = plainToClass(CreateSubscriptionDto, {
       name: 'Netflix',
       amount: 9.99,
@@ -43,7 +43,7 @@ describe('CreateSubscriptionDto', () => {
       startDate: '2025-01-01',
     });
     const errors = await validate(dto);
-    expect(errors.length).toBeGreaterThan(0);
+    expect(errors.length).toBe(0);
   });
 
   it('should fail if name is missing', async () => {

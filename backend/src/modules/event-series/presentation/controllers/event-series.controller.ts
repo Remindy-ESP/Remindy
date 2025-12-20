@@ -11,7 +11,14 @@ import {
   Req,
   NotFoundException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateEventSeriesDto } from '../dto/create-event-series.dto';
@@ -134,10 +141,17 @@ export class EventSeriesController {
     const endDate = end ? new Date(end) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // +1 year
     const maxOccurrences = max ? Number(max) : 365;
 
-    const occurrences = await this.generateEventsUseCase.execute(id, startDate, endDate, maxOccurrences);
+    const occurrences = await this.generateEventsUseCase.execute(
+      id,
+      startDate,
+      endDate,
+      maxOccurrences,
+    );
 
     if (occurrences.length > 0) {
-      const subscription = await this.findSubscriptionUseCase.findById(occurrences[0].subscriptionId);
+      const subscription = await this.findSubscriptionUseCase.findById(
+        occurrences[0].subscriptionId,
+      );
       if (subscription.userId !== user.userId) {
         throw new NotFoundException(`Event series with id ${id} not found`);
       }

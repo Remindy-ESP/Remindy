@@ -12,10 +12,7 @@ import { DeleteReminderUseCase } from './application/use-cases/delete-reminder.u
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([ReminderEntity]),
-    forwardRef(() => AuthModule),
-  ],
+  imports: [TypeOrmModule.forFeature([ReminderEntity]), forwardRef(() => AuthModule)],
   controllers: [ReminderController],
   providers: [
     {
