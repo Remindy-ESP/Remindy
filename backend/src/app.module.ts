@@ -16,6 +16,7 @@ import { EventSeriesModule } from './modules/event-series/event-series.module';
 import { DocumentModule } from './modules/document/document.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ReminderModule } from './modules/reminder/reminder.module';
+import { CategoryModule } from './modules/category/category.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SeedModule } from './modules/seed/seed.module';
 
@@ -37,6 +38,7 @@ import { SeedModule } from './modules/seed/seed.module';
     UsersModule,
     RolesModule,
     SubscriptionModule,
+    CategoryModule,
     EventModule,
     EventSeriesModule,
     DocumentModule,

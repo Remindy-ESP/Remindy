@@ -1,29 +1,90 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, logout, isLoading } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    router.replace('/');
+  const handleLogout = async () => {
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Déconnexion',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoggingOut(true);
+              await logout();
+              router.replace('/');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Erreur', 'Échec de la déconnexion. Veuillez réessayer.');
+            } finally {
+              setLoggingOut(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#6366f1" />
+        <Text style={{ marginTop: 16, color: '#666' }}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  // Get user initials for avatar
+  const getInitials = () => {
+    if (!user) return '?';
+    const firstInitial = user.firstName?.[0]?.toUpperCase() || '';
+    const lastInitial = user.lastName?.[0]?.toUpperCase() || '';
+    return `${firstInitial}${lastInitial}` || '?';
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={100} color="#6366f1" />
+          {user ? (
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>{getInitials()}</Text>
+            </View>
+          ) : (
+            <Ionicons name="person-circle" size={100} color="#6366f1" />
+          )}
         </View>
-        <Text style={styles.name}>Utilisateur</Text>
-        <Text style={styles.email}>utilisateur@remindy.com</Text>
+        <Text style={styles.name}>
+          {user ? `${user.firstName} ${user.lastName}` : 'Utilisateur'}
+        </Text>
+        <Text style={styles.email}>{user?.email || 'utilisateur@remindy.com'}</Text>
+        {user && (
+          <View style={styles.roleTag}>
+            <Text style={styles.roleText}>{user.role}</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -79,12 +140,19 @@ export default function ProfileScreen() {
       </View>
 
       <TouchableOpacity
-        style={styles.logoutButton}
+        style={[styles.logoutButton, loggingOut && styles.logoutButtonDisabled]}
         onPress={handleLogout}
         testID="logout-button"
+        disabled={loggingOut}
       >
-        <Ionicons name="log-out-outline" size={24} color="#fff" />
-        <Text style={styles.logoutButtonText}>Déconnexion</Text>
+        {loggingOut ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+            <Text style={styles.logoutButtonText}>Déconnexion</Text>
+          </>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );
@@ -105,6 +173,19 @@ const styles = StyleSheet.create({
   avatarContainer: {
     marginBottom: 16,
   },
+  avatarCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -114,6 +195,20 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 16,
     color: '#666',
+    marginBottom: 8,
+  },
+  roleTag: {
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  roleText: {
+    color: '#4338ca',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   section: {
     marginTop: 24,
@@ -154,6 +249,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 32,
+  },
+  logoutButtonDisabled: {
+    backgroundColor: '#9ca3af',
   },
   logoutButtonText: {
     color: '#fff',

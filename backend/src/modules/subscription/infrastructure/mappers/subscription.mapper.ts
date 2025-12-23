@@ -42,6 +42,7 @@ export class SubscriptionMapper {
     entity.nextDueDate = domain.nextDueDate;
     entity.trialStartDate = domain.trialStartDate;
     entity.trialEndDate = domain.trialEndDate;
+
     // isTrialActive is GENERATED, no need to set
     entity.status = domain.status;
     entity.color = domain.color;

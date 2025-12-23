@@ -52,9 +52,35 @@ export class AuthController {
     status: HttpStatus.CONFLICT,
     description: 'Email already in use',
   })
-  async register(@Body() dto: RegisterRequestDto) {
+  async register(
+    @Req() req: Request,
+    @Body() dto: RegisterRequestDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const user = await this.registerUserUseCase.execute(dto);
-    return { success: true, userId: user.getId() };
+
+    // Auto-login after registration - generate tokens
+    const { accessToken, refreshToken } = await this.loginUseCase.execute({
+      email: dto.email,
+      password: dto.password,
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.headers['user-agent'] ?? 'unknown',
+      deviceName: 'web',
+    });
+
+    // Set refresh token in cookie (same as login)
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return {
+      success: true,
+      userId: user.getId(),
+      accessToken,
+      refreshToken, // Return for mobile clients
+    };
   }
   @Public()
   @Post('login')
@@ -90,13 +116,19 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    return { accessToken };
+    // Return both tokens for mobile clients
+    return { accessToken, refreshToken };
   }
   @Public()
   @Post('refresh-token')
   @UseGuards(JwtRefreshGuard)
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const refreshToken: string | undefined = req.cookies?.refreshToken;
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body() body?: { refreshToken?: string },
+  ) {
+    // Accept refresh token from either cookies (web) or request body (mobile)
+    const refreshToken: string | undefined = req.cookies?.refreshToken || body?.refreshToken;
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token missing');
@@ -108,6 +140,7 @@ export class AuthController {
       userAgent: req.headers['user-agent'],
     });
 
+    // Set cookie for web clients
     res.cookie('refreshToken', newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV !== 'development',
@@ -116,7 +149,8 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    return { accessToken };
+    // Return both tokens for mobile clients
+    return { accessToken, refreshToken: newRefreshToken };
   }
 
   @Post('logout')

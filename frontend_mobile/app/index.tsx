@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { API_URL } from '../constants/config';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -20,76 +22,116 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const router = useRouter();
-  const { signIn } = useAuth();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password
-        }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        await signIn(data.accessToken || data.token || 'dummy_token'); // Adapt to actual response structure
-        Alert.alert('Succès', 'Connexion reussie');
-        router.replace('/(tabs)/dashboard');
-      } else {
-        Alert.alert('Erreur', 'Connexion echouée, verifiez vos identifiants');
-      }
-    } catch (error: any) {
-      Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
+  const router = useRouter();
+  const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      router.replace('/(tabs)/dashboard');
     }
+  }, [isAuthenticated, authLoading]);
+
+  // Validation functions
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleRegister = async () => {
-    if (password !== confirmPassword || password == '') {
-      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
-      return;
+  const validateForm = (): string | null => {
+    if (!email.trim()) {
+      return 'Email is required';
     }
-    try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          firstName,
-          lastName,
-        }),
-      });
-      if (response.ok) {
-        Alert.alert('Succès', 'Compte créé avec succès, veuillez vous connecter');
-        setIsLogin(true);
-        setPassword('');
-        setConfirmPassword('');
-        setFirstName('');
-        setLastName('');
-      } else {
-        const data = await response.json();
-        const message = Array.isArray(data.message) ? data.message.join('\n') : data.message || "Erreur lors de l'inscription";
-        Alert.alert('Erreur', message);
+
+    if (!validateEmail(email)) {
+      return 'Please enter a valid email address';
+    }
+
+    if (!password) {
+      return 'Password is required';
+    }
+
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+
+    if (!isLogin) {
+      if (!firstName.trim()) {
+        return 'First name is required';
       }
-    } catch (error: any) {
-      Alert.alert('Erreur', `Erreur de connexion: ${error.message}`);
+
+      if (!lastName.trim()) {
+        return 'Last name is required';
+      }
+
+      if (!confirmPassword) {
+        return 'Please confirm your password';
+      }
+
+      if (password !== confirmPassword) {
+        return 'Passwords do not match';
+      }
     }
+
+    return null;
   };
 
   const handleAuth = async () => {
-    if (isLogin) {
-      await handleLogin();
-    } else {
-      await handleRegister();
+    setError('');
+
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        await login(email.trim(), password);
+      } else {
+        await register(
+          email.trim(),
+          password,
+          firstName.trim(),
+          lastName.trim()
+        );
+      }
+
+      // Navigation will happen automatically via useEffect when isAuthenticated changes
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        `${isLogin ? 'Login' : 'Registration'} failed. Please try again.`;
+
+      setError(errorMessage);
+      Alert.alert(
+        isLogin ? 'Login Failed' : 'Registration Failed',
+        errorMessage
+      );
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Show loading during initial auth check
+  if (authLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#6366f1" />
+        <Text style={{ marginTop: 16, color: '#666' }}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -103,6 +145,14 @@ export default function AuthScreen() {
         </Text>
 
         <View style={styles.form}>
+          {/* Error message */}
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          {/* Registration-only fields */}
           {!isLogin && (
             <>
               <TextInput
@@ -111,18 +161,24 @@ export default function AuthScreen() {
                 placeholderTextColor="#999"
                 value={firstName}
                 onChangeText={setFirstName}
-                testID="firstname-input"
+                autoCapitalize="words"
+                testID="firstName-input"
+                editable={!loading}
               />
+
               <TextInput
                 style={styles.input}
                 placeholder="Nom"
                 placeholderTextColor="#999"
                 value={lastName}
                 onChangeText={setLastName}
-                testID="lastname-input"
+                autoCapitalize="words"
+                testID="lastName-input"
+                editable={!loading}
               />
             </>
           )}
+
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -132,6 +188,7 @@ export default function AuthScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             testID="email-input"
+            editable={!loading}
           />
 
           <TextInput
@@ -142,6 +199,7 @@ export default function AuthScreen() {
             onChangeText={setPassword}
             secureTextEntry
             testID="password-input"
+            editable={!loading}
           />
 
           {!isLogin && (
@@ -153,27 +211,34 @@ export default function AuthScreen() {
               onChangeText={setConfirmPassword}
               secureTextEntry
               testID="confirm-password-input"
+              editable={!loading}
             />
           )}
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleAuth}
             testID="submit-button"
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>
-              {isLogin ? 'Se connecter' : "S'inscrire"}
-            </Text>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>
+                {isLogin ? 'Se connecter' : "S'inscrire"}
+              </Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => {
               setIsLogin(!isLogin);
-              setPassword('');
+              setError('');
             }}
             testID="toggle-auth-mode"
+            disabled={loading}
           >
-            <Text style={styles.toggleText}>
+            <Text style={[styles.toggleText, loading && styles.toggleTextDisabled]}>
               {isLogin
                 ? "Pas de compte ? S'inscrire"
                 : 'Déjà un compte ? Se connecter'}
@@ -211,6 +276,18 @@ const styles = StyleSheet.create({
   form: {
     width: '100%',
   },
+  errorContainer: {
+    backgroundColor: '#fee2e2',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ef4444',
+  },
+  errorText: {
+    color: '#991b1b',
+    fontSize: 14,
+  },
   input: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -227,6 +304,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
+  buttonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
   buttonText: {
     color: '#fff',
     fontSize: 18,
@@ -237,5 +317,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
+  },
+  toggleTextDisabled: {
+    color: '#9ca3af',
   },
 });
