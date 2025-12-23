@@ -9,6 +9,11 @@ import { SubscriptionFilterAppDto } from '../../application/dto/subscription-fil
 
 export class SubscriptionPresentationMapper {
   static toCreateAppDto(dto: CreateSubscriptionDto): CreateSubscriptionAppDto {
+    // userId is required - should be injected by controller from JWT token
+    if (!dto.userId) {
+      throw new Error('userId is required for creating subscriptions');
+    }
+
     const startDate = new Date(dto.startDate);
     const nextDueDate = dto.nextDueDate
       ? new Date(dto.nextDueDate)

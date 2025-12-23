@@ -15,7 +15,8 @@ import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/sub
 
 export class CreateSubscriptionDto {
   @ApiProperty({
-    description: "ID de l'utilisateur propriétaire de l'abonnement",
+    description:
+      "ID de l'utilisateur propriétaire de l'abonnement (automatically set from JWT token)",
     example: '123e4567-e89b-12d3-a456-426614174000',
     required: false,
   })

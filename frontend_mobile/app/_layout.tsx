@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
-import { AuthProvider } from '../context/AuthContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export default function RootLayout() {
   return (
