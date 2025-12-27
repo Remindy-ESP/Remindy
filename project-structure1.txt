@@ -1,0 +1,151 @@
+.
+├── MERGE_STRATEGY.md
+├── README.md
+├── backend
+│   ├── README.md
+│   ├── docs
+│   │   ├── assets
+│   │   │   └── architecture.svg
+│   │   └── data modelisations
+│   │       ├── ERD_diagram.svg
+│   │       ├── ERD_diagram_code.md
+│   │       ├── data_modelisation.md
+│   │       └── data_modelisation_clean.md
+│   ├── eslint.config.mjs
+│   ├── nest-cli.json
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   ├── app.controller.spec.ts
+│   │   ├── app.controller.ts
+│   │   ├── app.module.ts
+│   │   ├── app.service.ts
+│   │   ├── infrastructure
+│   │   │   ├── config
+│   │   │   ├── database
+│   │   │   └── infrastructure.module.ts
+│   │   ├── main.ts
+│   │   ├── modules
+│   │   │   ├── audit
+│   │   │   ├── auth
+│   │   │   ├── category
+│   │   │   ├── document
+│   │   │   ├── event
+│   │   │   ├── event-series
+│   │   │   ├── notification
+│   │   │   ├── reminder
+│   │   │   ├── roles
+│   │   │   ├── subscription
+│   │   │   └── user
+│   │   ├── types
+│   │   │   └── request-with-user.interface.ts
+│   │   └── utils
+│   │       ├── date.utils.ts
+│   │       └── regex.ts
+│   ├── test
+│   │   ├── app.e2e-spec.ts
+│   │   └── jest-e2e.json
+│   ├── tsconfig.build.json
+│   └── tsconfig.json
+├── frontend_admin
+│   ├── CLEAN_ARCHITECTURE.md
+│   ├── README.md
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── playwright.config.ts
+│   ├── public
+│   │   └── vite.svg
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── tests
+│   │   └── example.spec.ts
+│   ├── tests-examples
+│   │   └── demo-todo-app.spec.ts
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── frontend_mobile
+│   ├── CLEAN_ARCHITECTURE.md
+│   ├── README.md
+│   ├── app
+│   │   ├── (tabs)
+│   │   │   ├── __tests__
+│   │   │   ├── _layout.tsx
+│   │   │   ├── dashboard.tsx
+│   │   │   ├── profile.tsx
+│   │   │   ├── stats.tsx
+│   │   │   └── subscription.tsx
+│   │   ├── __tests__
+│   │   │   └── index.test.tsx
+│   │   ├── _layout.tsx
+│   │   └── index.tsx
+│   ├── app.json
+│   ├── assets
+│   │   ├── fonts
+│   │   │   └── SpaceMono-Regular.ttf
+│   │   └── images
+│   │       ├── adaptive-icon.png
+│   │       ├── favicon.png
+│   │       ├── icon.png
+│   │       ├── partial-react-logo.png
+│   │       ├── react-logo.png
+│   │       ├── react-logo@2x.png
+│   │       ├── react-logo@3x.png
+│   │       └── splash-icon.png
+│   ├── components
+│   │   ├── AddOperationButton.tsx
+│   │   ├── BurgerMenu.tsx
+│   │   ├── Button.tsx
+│   │   ├── Collapsible.tsx
+│   │   ├── ExternalLink.tsx
+│   │   ├── GlobalHeader.tsx
+│   │   ├── HapticTab.tsx
+│   │   ├── HelloWave.tsx
+│   │   ├── ParallaxScrollView.tsx
+│   │   ├── ThemedText.tsx
+│   │   ├── ThemedView.tsx
+│   │   └── ui
+│   │       ├── IconSymbol.ios.tsx
+│   │       ├── IconSymbol.tsx
+│   │       ├── TabBarBackground.ios.tsx
+│   │       └── TabBarBackground.tsx
+│   ├── constants
+│   │   ├── Colors.ts
+│   │   └── categories.ts
+│   ├── contexts
+│   │   └── AuthContext.tsx
+│   ├── eslint.config.js
+│   ├── expo-env.d.ts
+│   ├── hooks
+│   │   ├── useColorScheme.ts
+│   │   ├── useColorScheme.web.ts
+│   │   ├── useDashboard.ts
+│   │   └── useThemeColor.ts
+│   ├── jest.config.js
+│   ├── jest.setup.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── scripts
+│   │   └── reset-project.js
+│   ├── services
+│   │   └── api
+│   │       ├── auth.service.ts
+│   │       ├── category.service.ts
+│   │       ├── client.ts
+│   │       ├── event.service.ts
+│   │       ├── index.ts
+│   │       ├── subscription.service.ts
+│   │       ├── types.ts
+│   │       └── user.service.ts
+│   └── tsconfig.json
+├── project-structure.txt
+└── project-structure1.txt
+
+46 directories, 103 files

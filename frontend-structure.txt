@@ -1,0 +1,78 @@
+frontend_mobile
+├── CLEAN_ARCHITECTURE.md
+├── README.md
+├── app
+│   ├── (tabs)
+│   │   ├── __tests__
+│   │   │   ├── dashboard.test.tsx
+│   │   │   └── profile.test.tsx
+│   │   ├── _layout.tsx
+│   │   ├── dashboard.tsx
+│   │   ├── profile.tsx
+│   │   ├── stats.tsx
+│   │   └── subscription.tsx
+│   ├── __tests__
+│   │   └── index.test.tsx
+│   ├── _layout.tsx
+│   └── index.tsx
+├── app.json
+├── assets
+│   ├── fonts
+│   │   └── SpaceMono-Regular.ttf
+│   └── images
+│       ├── adaptive-icon.png
+│       ├── favicon.png
+│       ├── icon.png
+│       ├── partial-react-logo.png
+│       ├── react-logo.png
+│       ├── react-logo@2x.png
+│       ├── react-logo@3x.png
+│       └── splash-icon.png
+├── components
+│   ├── AddOperationButton.tsx
+│   ├── BurgerMenu.tsx
+│   ├── Button.tsx
+│   ├── Collapsible.tsx
+│   ├── ExternalLink.tsx
+│   ├── GlobalHeader.tsx
+│   ├── HapticTab.tsx
+│   ├── HelloWave.tsx
+│   ├── ParallaxScrollView.tsx
+│   ├── ThemedText.tsx
+│   ├── ThemedView.tsx
+│   └── ui
+│       ├── IconSymbol.ios.tsx
+│       ├── IconSymbol.tsx
+│       ├── TabBarBackground.ios.tsx
+│       └── TabBarBackground.tsx
+├── constants
+│   ├── Colors.ts
+│   └── categories.ts
+├── contexts
+│   └── AuthContext.tsx
+├── eslint.config.js
+├── expo-env.d.ts
+├── hooks
+│   ├── useColorScheme.ts
+│   ├── useColorScheme.web.ts
+│   ├── useDashboard.ts
+│   └── useThemeColor.ts
+├── jest.config.js
+├── jest.setup.js
+├── package-lock.json
+├── package.json
+├── scripts
+│   └── reset-project.js
+├── services
+│   └── api
+│       ├── auth.service.ts
+│       ├── category.service.ts
+│       ├── client.ts
+│       ├── event.service.ts
+│       ├── index.ts
+│       ├── subscription.service.ts
+│       ├── types.ts
+│       └── user.service.ts
+└── tsconfig.json
+
+16 directories, 60 files
