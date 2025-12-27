@@ -89,32 +89,25 @@ export interface Subscription {
 
 export interface CreateSubscriptionRequest {
   name: string;
-  amount: number;
-  currency?: string;
-  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  description?: string;
+  price: number;
+  billingCycle: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY';
   startDate: string;
-  nextDueDate?: string;
-  trialStartDate?: string;
-  trialEndDate?: string;
-  status?: 'active' | 'paused' | 'cancelled' | 'trial';
-  color?: string;
-  notes?: string;
-  contractId?: number;
+  endDate?: string;
+  categoryId?: string;
+  reminderDays?: number;
 }
 
 export interface UpdateSubscriptionRequest {
   name?: string;
-  amount?: number;
-  currency?: string;
-  frequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  description?: string;
+  price?: number;
+  billingCycle?: 'MONTHLY' | 'YEARLY' | 'WEEKLY' | 'DAILY';
   startDate?: string;
-  nextDueDate?: string;
-  trialStartDate?: string;
-  trialEndDate?: string;
-  status?: 'active' | 'paused' | 'cancelled' | 'trial';
-  color?: string;
-  notes?: string;
-  contractId?: number;
+  endDate?: string;
+  status?: 'ACTIVE' | 'PAUSED' | 'CANCELLED';
+  categoryId?: string;
+  reminderDays?: number;
 }
 
 // Event Types

@@ -17,6 +17,18 @@ import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
 import { Subscription, Category, CreateSubscriptionRequest, UpdateSubscriptionRequest } from '../../services/api/types';
 
+// Internal form data type (UI-friendly names)
+interface SubscriptionFormData {
+  name: string;
+  description: string;
+  price: number;
+  billingCycle: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  startDate: string;
+  endDate?: string;
+  categoryId: string;
+  reminderDays: number;
+}
+
 export default function SubscriptionScreen() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,7 +41,7 @@ export default function SubscriptionScreen() {
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
   // Form states
-  const [formData, setFormData] = useState<CreateSubscriptionRequest>({
+  const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
     description: '',
     price: 0,
@@ -139,10 +151,10 @@ export default function SubscriptionScreen() {
     setPriceInput(subscription.amount?.toString() || '0'); // Set amount as string for editing
 
     // Map backend frequency to frontend billingCycle format for form
-    const frequencyToBillingCycle: Record<string, string> = {
+    const frequencyToBillingCycle: Record<string, 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
       'weekly': 'WEEKLY',
       'monthly': 'MONTHLY',
-      'quarterly': 'MONTHLY', // Map quarterly to monthly (closest match)
+      'quarterly': 'QUARTERLY',
       'yearly': 'YEARLY',
     };
 
@@ -163,11 +175,11 @@ export default function SubscriptionScreen() {
   /**
    * Map frontend billingCycle to backend frequency format
    */
-  const mapBillingCycleToFrequency = (cycle: string): string => {
-    const mapping: Record<string, string> = {
-      'DAILY': 'weekly',    // Map DAILY to weekly (closest match)
+  const mapBillingCycleToFrequency = (cycle: string): 'weekly' | 'monthly' | 'quarterly' | 'yearly' => {
+    const mapping: Record<string, 'weekly' | 'monthly' | 'quarterly' | 'yearly'> = {
       'WEEKLY': 'weekly',
       'MONTHLY': 'monthly',
+      'QUARTERLY': 'quarterly',
       'YEARLY': 'yearly',
     };
     return mapping[cycle] || 'monthly'; // Default to monthly
@@ -187,13 +199,13 @@ export default function SubscriptionScreen() {
 
     try {
       // Prepare data matching backend DTO contract exactly
-      const requestData: any = {
-        name: formData.name, // Required
-        amount: parsedPrice, // Required - Backend expects 'amount'
-        frequency: mapBillingCycleToFrequency(formData.billingCycle), // Required - Backend expects 'frequency' (lowercase)
-        startDate: formData.startDate, // Required
+      const requestData: CreateSubscriptionRequest = {
+        name: formData.name,
+        amount: parsedPrice,
+        frequency: mapBillingCycleToFrequency(formData.billingCycle),
+        startDate: formData.startDate,
         currency: 'EUR',
-        status: 'active' as const,
+        status: 'active',
       };
 
       // Add optional fields only if they have values
@@ -201,26 +213,30 @@ export default function SubscriptionScreen() {
         requestData.nextDueDate = formData.endDate;
       }
       if (formData.description) {
-        requestData.notes = formData.description; // Backend uses 'notes', not 'description'
+        requestData.notes = formData.description;
       }
-      if (formData.reminderDays) {
-        requestData.notes = requestData.notes
-          ? `${requestData.notes}\nReminder ${formData.reminderDays} days before`
-          : `Reminder ${formData.reminderDays} days before`;
+      if (formData.reminderDays && requestData.notes) {
+        requestData.notes = `${requestData.notes}\nReminder ${formData.reminderDays} days before`;
+      } else if (formData.reminderDays) {
+        requestData.notes = `Reminder ${formData.reminderDays} days before`;
       }
 
-      // Note: categoryId (UUID) is not supported by backend DTO
-      // Backend only has contractId (integer) for contract categories
-      // We'll skip categoryId for now until backend adds support
+      // Map categoryId to contractId if it's a valid number
+      if (formData.categoryId) {
+        const contractId = parseInt(formData.categoryId, 10);
+        if (!isNaN(contractId)) {
+          requestData.contractId = contractId;
+        }
+      }
 
       console.log('[Subscription] Sending request:', JSON.stringify(requestData, null, 2));
 
       if (editingSubscription) {
-        const updated = await subscriptionService.update(editingSubscription.id, requestData as any);
+        const updated = await subscriptionService.update(editingSubscription.id, requestData);
         setSubscriptions(subscriptions.map(s => s.id === updated.id ? updated : s));
         Alert.alert('Success', 'Subscription updated successfully');
       } else {
-        const created = await subscriptionService.create(requestData as any);
+        const created = await subscriptionService.create(requestData);
         setSubscriptions([created, ...subscriptions]);
         Alert.alert('Success', 'Subscription created successfully');
       }
@@ -494,10 +510,10 @@ export default function SubscriptionScreen() {
                       style={styles.picker}
                       dropdownIconColor="#fff"
                     >
-                      <Picker.Item label="Monthly" value="MONTHLY" />
-                      <Picker.Item label="Yearly" value="YEARLY" />
                       <Picker.Item label="Weekly" value="WEEKLY" />
-                      <Picker.Item label="Daily" value="DAILY" />
+                      <Picker.Item label="Monthly" value="MONTHLY" />
+                      <Picker.Item label="Quarterly" value="QUARTERLY" />
+                      <Picker.Item label="Yearly" value="YEARLY" />
                     </Picker>
                   </View>
                 </View>
