@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DeepPartial } from 'typeorm';
 import { RgpdExportEntity } from '../../../../infrastructure/database/entities/rgpd-export.entity';
 
 @Injectable()
@@ -62,5 +62,23 @@ export class RgpdExportRepository {
     });
 
     return this.repo.save(exportRequest);
+  }
+
+  async findById(id: string) {
+    return this.repo.findOne({ where: { id } });
+  }
+
+  async findByUserId(userId: string) {
+    return this.repo.find({ where: { userId } });
+  }
+
+  async create(data: DeepPartial<RgpdExportEntity>) {
+    const exportRequest = this.repo.create(data);
+    return this.repo.save(exportRequest);
+  }
+
+  async update(id: string, data: DeepPartial<RgpdExportEntity>) {
+    await this.repo.update(id, data);
+    return this.findById(id);
   }
 }

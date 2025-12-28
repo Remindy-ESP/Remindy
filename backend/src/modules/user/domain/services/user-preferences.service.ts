@@ -64,6 +64,12 @@ export class UserPreferencesService {
       }
     }
 
+    // Check if preferences exist, create if not
+    let preferences = await this.userPreferencesRepository.findByUserId(userId);
+    if (!preferences) {
+      preferences = await this.userPreferencesRepository.createDefaultPreferences(userId);
+    }
+
     // Update preferences
     const updatedPreferences = await this.userPreferencesRepository.update(userId, {
       theme: updateDto.theme as Theme | undefined,

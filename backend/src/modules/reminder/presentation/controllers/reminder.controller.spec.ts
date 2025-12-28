@@ -128,10 +128,7 @@ describe('ReminderController', () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBe('reminder-123');
-      expect(findReminderByIdUseCase.execute).toHaveBeenCalledWith(
-        'reminder-123',
-        mockUserId,
-      );
+      expect(findReminderByIdUseCase.execute).toHaveBeenCalledWith('reminder-123', mockUserId);
     });
   });
 
@@ -204,10 +201,7 @@ describe('ReminderController', () => {
 
       await controller.delete(mockRequest, 'reminder-123');
 
-      expect(deleteReminderUseCase.execute).toHaveBeenCalledWith(
-        'reminder-123',
-        mockUserId,
-      );
+      expect(deleteReminderUseCase.execute).toHaveBeenCalledWith('reminder-123', mockUserId);
     });
   });
 });
