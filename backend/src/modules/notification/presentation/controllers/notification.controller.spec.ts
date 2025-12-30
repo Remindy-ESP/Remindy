@@ -7,6 +7,7 @@ import { MarkNotificationAsReadUseCase } from '../../application/use-cases/mark-
 import { Notification } from '../../domain/notification.entity';
 import { NotificationFilterDto } from '../dto/notification-filter.dto';
 import { SnoozeNotificationDto } from '../dto/snooze-notification.dto';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 describe('NotificationController', () => {
   let controller: NotificationController;
@@ -59,6 +60,8 @@ describe('NotificationController', () => {
       ],
     })
       .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

@@ -29,8 +29,19 @@ jest.mock('../../../hooks/useDashboard', () => ({
     setCategoriesOpen: jest.fn(),
     selectedCategory: null,
     setSelectedCategory: jest.fn(),
-    timePeriods: ['Tout', 'Aujourd\'hui', 'Semaine', 'Mois'],
+    timePeriods: [
+      { key: 'Tout', label: 'Tout' },
+      { key: 'Aujourd\'hui', label: 'Aujourd\'hui' },
+      { key: 'Semaine', label: 'Semaine' },
+      { key: 'Mois', label: 'Mois' },
+    ],
     getContentForPeriod: jest.fn(() => 'No content'),
+    categories: [],
+    events: [],
+    loading: false,
+    error: null,
+    getEventsForDate: jest.fn(() => []),
+    getEventsByCategory: jest.fn(() => []),
   })),
 }));
 
@@ -84,8 +95,19 @@ describe('DashboardScreen', () => {
       setCategoriesOpen: mockSetCategoriesOpen,
       selectedCategory: null,
       setSelectedCategory: jest.fn(),
-      timePeriods: ['Tout', 'Aujourd\'hui', 'Semaine', 'Mois'],
+      timePeriods: [
+        { key: 'Tout', label: 'Tout' },
+        { key: 'Aujourd\'hui', label: 'Aujourd\'hui' },
+        { key: 'Semaine', label: 'Semaine' },
+        { key: 'Mois', label: 'Mois' },
+      ],
       getContentForPeriod: jest.fn(),
+      categories: [],
+      events: [],
+      loading: false,
+      error: null,
+      getEventsForDate: jest.fn(() => []),
+      getEventsByCategory: jest.fn(() => []),
     });
 
     const { getByText } = render(<DashboardScreen />);
