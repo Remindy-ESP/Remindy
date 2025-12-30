@@ -10,6 +10,7 @@ import { Reminder } from '../../domain/reminder.entity';
 import { CreateReminderDto } from '../dto/create-reminder.dto';
 import { UpdateReminderDto } from '../dto/update-reminder.dto';
 import { ReminderFilterDto } from '../dto/reminder-filter.dto';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 describe('ReminderController', () => {
   let controller: ReminderController;
@@ -73,6 +74,8 @@ describe('ReminderController', () => {
       ],
     })
       .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

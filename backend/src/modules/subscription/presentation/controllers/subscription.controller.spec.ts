@@ -14,6 +14,7 @@ import { Subscription } from '../../domain/subscription.entity';
 import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from '../dto/update-subscription.dto';
 import { SubscriptionFilterDto } from '../dto/subscription-filter.dto';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 describe('SubscriptionController', () => {
   let controller: SubscriptionController;
@@ -96,6 +97,8 @@ describe('SubscriptionController', () => {
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => true })
       .compile();
 
     controller = module.get<SubscriptionController>(SubscriptionController);
@@ -121,7 +124,10 @@ describe('SubscriptionController', () => {
         startDate: '2025-01-01',
         status: 'active',
       };
-      createSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
+      createSubscriptionUseCase.execute.mockResolvedValue({
+        subscription: mockSubscription,
+        eventsGenerated: 1,
+      });
 
       const result = await controller.create(mockRequest, createDto);
 
@@ -136,7 +142,7 @@ describe('SubscriptionController', () => {
       const filters: SubscriptionFilterDto = {};
       findAllSubscriptionsUseCase.execute.mockResolvedValue([mockSubscription]);
 
-      const result = await controller.findAll(filters);
+      const result = await controller.findAll(mockRequest, filters);
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -151,11 +157,11 @@ describe('SubscriptionController', () => {
       };
       findAllSubscriptionsUseCase.execute.mockResolvedValue([mockSubscription]);
 
-      await controller.findAll(filters);
+      await controller.findAll(mockRequest, filters);
 
       expect(findAllSubscriptionsUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: 'user-123',
+          userId: mockUserId,
           frequency: 'monthly',
           status: 'active',
         }),
@@ -167,7 +173,7 @@ describe('SubscriptionController', () => {
     it('should return subscriptions by frequency', async () => {
       findSubscriptionsByPeriodUseCase.execute.mockResolvedValue([mockSubscription]);
 
-      const result = await controller.findByFrequency('monthly');
+      const result = await controller.findByFrequency(mockRequest, 'monthly');
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
@@ -179,7 +185,7 @@ describe('SubscriptionController', () => {
     it('should return a single subscription', async () => {
       findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
 
-      const result = await controller.findById('subscription-123');
+      const result = await controller.findById(mockRequest, 'subscription-123');
 
       expect(result).toBeDefined();
       expect(result.id).toBe('subscription-123');
@@ -199,9 +205,10 @@ describe('SubscriptionController', () => {
         amount: 12.99,
         updatedAt: new Date('2025-01-02'),
       } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
       updateSubscriptionUseCase.execute.mockResolvedValue(updatedSubscription);
 
-      const result = await controller.update('subscription-123', updateDto);
+      const result = await controller.update(mockRequest, 'subscription-123', updateDto);
 
       expect(result).toBeDefined();
       expect(result.name).toBe('Netflix Standard');
@@ -218,9 +225,10 @@ describe('SubscriptionController', () => {
 
   describe('delete', () => {
     it('should delete a subscription', async () => {
+      findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
       deleteSubscriptionUseCase.execute.mockResolvedValue(undefined);
 
-      await controller.delete('subscription-123');
+      await controller.delete(mockRequest, 'subscription-123');
 
       expect(deleteSubscriptionUseCase.execute).toHaveBeenCalledWith('subscription-123');
     });
@@ -233,9 +241,10 @@ describe('SubscriptionController', () => {
         status: 'paused',
         updatedAt: new Date('2025-01-02'),
       } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
       pauseSubscriptionUseCase.execute.mockResolvedValue(pausedSubscription);
 
-      const result = await controller.pause('subscription-123');
+      const result = await controller.pause(mockRequest, 'subscription-123');
 
       expect(result).toBeDefined();
       expect(result.status).toBe('paused');
@@ -245,9 +254,10 @@ describe('SubscriptionController', () => {
 
   describe('resume', () => {
     it('should resume a subscription', async () => {
+      findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
       resumeSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
 
-      const result = await controller.resume('subscription-123');
+      const result = await controller.resume(mockRequest, 'subscription-123');
 
       expect(result).toBeDefined();
       expect(result.status).toBe('active');
@@ -269,9 +279,10 @@ describe('SubscriptionController', () => {
           updatedAt: new Date('2025-01-01'),
         },
       ];
+      findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
       findSubscriptionEventsUseCase.execute.mockResolvedValue(mockEvents as any);
 
-      const result = await controller.getEvents('subscription-123');
+      const result = await controller.getEvents(mockRequest, 'subscription-123');
 
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
