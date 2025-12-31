@@ -13,6 +13,6 @@ export class GetMyProfileUseCase {
       throw new Error('User not found');
     }
 
-    return user as EUser;
+    return user;
   }
 }
