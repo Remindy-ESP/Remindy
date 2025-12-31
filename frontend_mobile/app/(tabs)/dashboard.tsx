@@ -19,28 +19,24 @@ export default function DashboardScreen() {
     setSelectedCategory,
     timePeriods,
     getContentForPeriod,
-    // API data
     categories,
     events,
     loading,
     error,
-    // Helper functions
     getEventsForDate,
     getEventsByCategory,
   } = useDashboard();
 
     const { token } = useAuth();
     console.log('Current Token:', token);
-  // Get events for selected date
+
   const selectedDateEvents = selected ? getEventsForDate(selected) : [];
-
-
-  // Filter events by category if one is selected
   const filteredEvents = selectedCategory
     ? getEventsByCategory(selectedCategory)
     : events;
 
   // Create marked dates for calendar (events as dots)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const markedDates = React.useMemo(() => {
     const marks: any = {};
 
@@ -52,7 +48,6 @@ export default function DashboardScreen() {
       };
     });
 
-    // Add selection to marked dates
     if (selected) {
       marks[selected] = {
         ...marks[selected],
@@ -206,7 +201,7 @@ export default function DashboardScreen() {
                   )}
                   {event.subscription && (
                     <Text style={{ color: '#4f46e5', fontSize: 12, marginTop: 4 }}>
-                      {event.subscription.name} - ${event.subscription.price}
+                      {event.subscription.name} - ${event.subscription.amount}
                     </Text>
                   )}
                   <Text

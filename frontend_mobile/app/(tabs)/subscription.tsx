@@ -15,9 +15,8 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
-import { Subscription, Category, CreateSubscriptionRequest, UpdateSubscriptionRequest } from '../../services/api/types';
+import { Subscription, Category, CreateSubscriptionRequest } from '../../services/api/types';
 
-// Internal form data type (UI-friendly names)
 interface SubscriptionFormData {
   name: string;
   description: string;
@@ -36,11 +35,9 @@ export default function SubscriptionScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal states
   const [modalVisible, setModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
 
-  // Form states
   const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
     description: '',
@@ -52,7 +49,6 @@ export default function SubscriptionScreen() {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Store price as string to preserve user input (allows comma)
   const [priceInput, setPriceInput] = useState<string>('');
 
   useEffect(() => {
@@ -83,10 +79,6 @@ export default function SubscriptionScreen() {
     setRefreshing(false);
   };
 
-  /**
-   * Parse price input supporting both comma (15,99) and dot (15.99) as decimal separator
-   * Returns the parsed number or null if invalid
-   */
   const parsePriceInput = (input: string): number | null => {
     if (!input || input.trim() === '') {
       return null;
@@ -116,7 +108,6 @@ export default function SubscriptionScreen() {
       errors.name = 'Name is required';
     }
 
-    // Validate price input
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
       errors.price = 'Price must be a valid number greater than 0 (e.g., 15.99 or 15,99)';
@@ -132,7 +123,7 @@ export default function SubscriptionScreen() {
 
   const openAddModal = () => {
     setEditingSubscription(null);
-    setPriceInput(''); // Reset price input
+    setPriceInput('');
     setFormData({
       name: '',
       description: '',
@@ -148,9 +139,8 @@ export default function SubscriptionScreen() {
 
   const openEditModal = (subscription: Subscription) => {
     setEditingSubscription(subscription);
-    setPriceInput(subscription.amount?.toString() || '0'); // Set amount as string for editing
+    setPriceInput(subscription.amount?.toString() || '0');
 
-    // Map backend frequency to frontend billingCycle format for form
     const frequencyToBillingCycle: Record<string, 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
       'weekly': 'WEEKLY',
       'monthly': 'MONTHLY',
