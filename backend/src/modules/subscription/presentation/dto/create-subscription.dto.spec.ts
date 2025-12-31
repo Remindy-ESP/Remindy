@@ -35,7 +35,7 @@ describe('CreateSubscriptionDto', () => {
     expect(errors.length).toBe(0);
   });
 
-  it('should pass validation even if userId is missing (optional field)', async () => {
+  it('should allow userId to be omitted (injected by controller from JWT)', async () => {
     const dto = plainToClass(CreateSubscriptionDto, {
       name: 'Netflix',
       amount: 9.99,

@@ -1,6 +1,15 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import ProfileScreen from '../profile';
+
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+  clear: jest.fn(),
+}));
 
 // Mock expo-router
 const mockReplace = jest.fn();
@@ -10,14 +19,35 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
+// Mock Alert
+jest.spyOn(Alert, 'alert');
+
+// Mock AuthContext
+const mockLogout = jest.fn();
+jest.mock('@/contexts/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: {
+      id: 'test-user-id',
+      email: 'utilisateur@remindy.com',
+      firstName: 'Test',
+      lastName: 'User',
+      role: 'user_freemium',
+    },
+    logout: mockLogout,
+    isLoading: false,
+  })),
+}));
+
 describe('ProfileScreen', () => {
   beforeEach(() => {
     mockReplace.mockClear();
+    mockLogout.mockClear();
+    jest.clearAllMocks();
   });
 
   it('renders user profile information', () => {
     const { getByText } = render(<ProfileScreen />);
-    expect(getByText('Utilisateur')).toBeTruthy();
+    expect(getByText('Test User')).toBeTruthy();
     expect(getByText('utilisateur@remindy.com')).toBeTruthy();
   });
 
@@ -41,12 +71,23 @@ describe('ProfileScreen', () => {
     expect(getByText('Déconnexion')).toBeTruthy();
   });
 
-  it('calls logout handler when logout button is pressed', () => {
+  it('calls logout handler when logout button is pressed', async () => {
+    (Alert.alert as jest.Mock).mockImplementation((title, message, buttons) => {
+      // Simulate pressing the "Déconnexion" button (second button)
+      if (buttons && buttons[1] && buttons[1].onPress) {
+        buttons[1].onPress();
+      }
+    });
+
     const { getByTestId } = render(<ProfileScreen />);
     const logoutButton = getByTestId('logout-button');
 
     fireEvent.press(logoutButton);
-    expect(mockReplace).toHaveBeenCalledWith('/');
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+      expect(mockReplace).toHaveBeenCalledWith('/');
+    });
   });
 
   it('renders all menu items with correct testIDs', () => {

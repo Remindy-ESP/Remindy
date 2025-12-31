@@ -15,7 +15,9 @@ import {
   FileTypeValidator,
   BadRequestException,
   UseGuards,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
@@ -82,6 +84,7 @@ export class DocumentController {
   })
   @ApiResponse({ status: 400, description: 'Fichier invalide ou trop volumineux' })
   async upload(
+    @Req() req: Request,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -96,8 +99,9 @@ export class DocumentController {
     @Body('subscription_id') subscriptionId?: string,
     @Body('contract_id') contractId?: string,
   ): Promise<DocumentResponseDto> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+    // Extract userId from JWT token
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     if (!file) {
       throw new BadRequestException('File is required');
@@ -149,9 +153,13 @@ export class DocumentController {
     description: 'Liste des documents',
     type: [DocumentResponseDto],
   })
-  async findAll(@Query() filters: DocumentFilterDto): Promise<DocumentResponseDto[]> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+  async findAll(
+    @Req() req: Request,
+    @Query() filters: DocumentFilterDto,
+  ): Promise<DocumentResponseDto[]> {
+    // Extract userId from JWT token
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     const appFilters = DocumentPresentationMapper.toFilterAppDto(userId, filters);
     const documents = await this.findAllDocumentsUseCase.execute(appFilters);
@@ -164,9 +172,10 @@ export class DocumentController {
   @ApiParam({ name: 'id', description: 'ID du document' })
   @ApiResponse({ status: 204, description: 'Document supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  async delete(@Param('id') id: string): Promise<void> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+  async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
+    // Extract userId from JWT token
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     await this.deleteDocumentUseCase.execute(id, userId);
   }
@@ -183,11 +192,13 @@ export class DocumentController {
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   @ApiResponse({ status: 400, description: 'OCR déjà complété (utilisez force=true pour forcer)' })
   async reprocessOcr(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() reprocessDto: ReprocessOcrDto,
   ): Promise<DocumentResponseDto> {
-    // TODO: Get userId from authenticated user (for now, using a placeholder)
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
+    // Extract userId from JWT token
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const userId = user.userId;
 
     const appDto = DocumentPresentationMapper.toReprocessOcrAppDto(reprocessDto);
     const document = await this.reprocessOcrUseCase.execute(id, userId, appDto);

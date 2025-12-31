@@ -1,7 +1,10 @@
-import { Tabs } from 'expo-router';
+import { useEffect } from 'react';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, ActivityIndicator } from 'react-native';
 import GlobalHeader from '../../components/GlobalHeader';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TabIconProps {
   color: string;
@@ -26,6 +29,30 @@ function NotificationsIcon({ color, size }: Readonly<TabIconProps>) {
 }
 
 export default function TabLayout() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Protected route: redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#06071D' }}>
+        <ActivityIndicator size="large" color="#6366f1" />
+      </View>
+    );
+  }
+
+  // Don't render tabs if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
       <GlobalHeader />
