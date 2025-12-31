@@ -1,12 +1,11 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { styles } from './dashboard.styles';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
-import { MOCK_CATEGORIES, Category } from '@/constants/categories';
+import type { Category } from '@/services/api';
 
 export default function DashboardScreen() {
   const {
@@ -20,10 +19,69 @@ export default function DashboardScreen() {
     setSelectedCategory,
     timePeriods,
     getContentForPeriod,
+    categories,
+    events,
+    loading,
+    error,
+    getEventsForDate,
+    getEventsByCategory,
   } = useDashboard();
 
-  const { token } = useAuth();
-  console.log('Current Token:', token);
+    const { token } = useAuth();
+    console.log('Current Token:', token);
+
+  const selectedDateEvents = selected ? getEventsForDate(selected) : [];
+  const filteredEvents = selectedCategory
+    ? getEventsByCategory(selectedCategory)
+    : events;
+
+  // Create marked dates for calendar (events as dots)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const markedDates = React.useMemo(() => {
+    const marks: any = {};
+
+    filteredEvents.forEach((event) => {
+      const dateKey = new Date(event.dueDate).toISOString().split('T')[0];
+      marks[dateKey] = {
+        marked: true,
+        dotColor: '#4f46e5',
+      };
+    });
+
+    if (selected) {
+      marks[selected] = {
+        ...marks[selected],
+        selected: true,
+        selectedColor: '#4f46e5',
+      };
+    }
+
+    return marks;
+  }, [filteredEvents, selected]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+        <Text style={{ color: '#fff', marginTop: 16 }}>Loading dashboard...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Text style={{ color: '#ff6b6b', fontSize: 16, textAlign: 'center' }}>
+          Error: {error}
+        </Text>
+        <Text style={{ color: '#999', marginTop: 8, textAlign: 'center' }}>
+          Make sure the backend server is running on http://10.68.241.248:3000
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -38,19 +96,39 @@ export default function DashboardScreen() {
 
         {categoriesOpen && (
           <View style={styles.categoriesContainer}>
-            {MOCK_CATEGORIES.map((category: Category) => (
-              <TouchableOpacity
-                key={category.id}
-                style={styles.categoryItem}
-                onPress={() => {
-                  setSelectedCategory(category.name);
-                  setCategoriesOpen(false);
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.categoryText}>{category.name}</Text>
-              </TouchableOpacity>
-            ))}
+            {categories.length === 0 ? (
+              <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
+                No categories available. Please add some categories first.
+              </Text>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.categoryItem}
+                  onPress={() => {
+                    setSelectedCategory(null);
+                    setCategoriesOpen(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.categoryText}>All Categories</Text>
+                </TouchableOpacity>
+                {categories.map((category: Category) => (
+                  <TouchableOpacity
+                    key={category.id}
+                    style={styles.categoryItem}
+                    onPress={() => {
+                      setSelectedCategory(category.name);
+                      setCategoriesOpen(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.categoryText}>
+                      {category.icon} {category.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
           </View>
         )}
 
@@ -89,6 +167,58 @@ export default function DashboardScreen() {
             }}
           />
         </View>
+
+        {/* Events for selected date */}
+        {selected && (
+          <View style={{ padding: 16, backgroundColor: '#2a2a5e', marginTop: 16, borderRadius: 8 }}>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
+              Events on {selected}
+            </Text>
+            {selectedDateEvents.length === 0 ? (
+              <Text style={{ color: '#999', fontStyle: 'italic' }}>
+                No events for this date
+              </Text>
+            ) : (
+              selectedDateEvents.map((event) => (
+                <View
+                  key={event.id}
+                  style={{
+                    backgroundColor: '#373848',
+                    padding: 12,
+                    borderRadius: 6,
+                    marginBottom: 8,
+                    borderLeftWidth: 4,
+                    borderLeftColor: event.status === 'COMPLETED' ? '#4ade80' : '#4f46e5',
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+                    {event.title}
+                  </Text>
+                  {event.description && (
+                    <Text style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
+                      {event.description}
+                    </Text>
+                  )}
+                  {event.subscription && (
+                    <Text style={{ color: '#4f46e5', fontSize: 12, marginTop: 4 }}>
+                      {event.subscription.name} - ${event.subscription.amount}
+                    </Text>
+                  )}
+                  <Text
+                    style={{
+                      color: event.status === 'COMPLETED' ? '#4ade80' : '#fbbf24',
+                      fontSize: 11,
+                      marginTop: 4,
+                      fontWeight: '500',
+                    }}
+                  >
+                    {event.status}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        )}
 
         <View style={styles.timePeriodSection}>
           <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
@@ -135,3 +265,150 @@ export default function DashboardScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#11112A',
+  },
+  header: {
+    padding: 20,
+    backgroundColor: '#11112A',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#e0e7ff',
+  },
+  calendarContainer: {
+    margin: 16,
+    marginTop: 0,
+    backgroundColor: '#373848',
+    borderRadius: 12,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  timePeriodSection: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  timePeriodTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 12,
+    textAlign: 'left',
+  },
+  timePeriodMenu: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  timePeriodTab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timePeriodTabActive: {
+    backgroundColor: '#000',
+  },
+  timePeriodTabInactive: {
+    backgroundColor: 'transparent',
+  },
+  timePeriodTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  timePeriodTabTextActive: {
+    color: '#fff',
+  },
+  timePeriodTabTextInactive: {
+    color: '#000',
+    opacity: 0.6,
+  },
+  contentSection: {
+    backgroundColor: '#2a2a5e',
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 20,
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  contentTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 16,
+  },
+  contentText: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#6366f1',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  categoriesContainer: {
+    position: 'absolute',
+    top: 64,
+    alignSelf: 'center',
+    minWidth: 146,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  categoryItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1F1F39',
+    textAlign: 'center',
+  },
+});

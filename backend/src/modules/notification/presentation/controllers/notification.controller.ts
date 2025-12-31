@@ -62,6 +62,7 @@ export class NotificationController {
     @Req() req: Request,
     @Query() filters: NotificationFilterDto,
   ): Promise<NotificationResponseDto[]> {
+    // Extract userId from JWT token
     const { user } = req as Request & { user: { userId: string; role: string } };
     const userId = user.userId;
 

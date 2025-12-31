@@ -1,4 +1,3 @@
-import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ReminderController } from './reminder.controller';
@@ -11,6 +10,7 @@ import { Reminder } from '../../domain/reminder.entity';
 import { CreateReminderDto } from '../dto/create-reminder.dto';
 import { UpdateReminderDto } from '../dto/update-reminder.dto';
 import { ReminderFilterDto } from '../dto/reminder-filter.dto';
+import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 describe('ReminderController', () => {
   let controller: ReminderController;
@@ -20,18 +20,14 @@ describe('ReminderController', () => {
   let updateReminderUseCase: jest.Mocked<UpdateReminderUseCase>;
   let deleteReminderUseCase: jest.Mocked<DeleteReminderUseCase>;
 
-  const mockUser = {
-    userId: '123e4567-e89b-12d3-a456-426614174000',
-    role: 'user_premium',
-  };
-
+  const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockRequest = {
-    user: mockUser,
+    user: { userId: mockUserId, role: 'user_freemium' },
   } as any;
 
   const mockReminder = {
     id: 'reminder-123',
-    userId: '123e4567-e89b-12d3-a456-426614174000',
+    userId: mockUserId,
     subscriptionId: 'subscription-123',
     type: 'payment_due',
     daysBefore: 3,
@@ -39,7 +35,6 @@ describe('ReminderController', () => {
     channel: 'email',
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
-    deletedAt: undefined,
   } as Reminder;
 
   beforeEach(async () => {
@@ -103,7 +98,7 @@ describe('ReminderController', () => {
       expect(Array.isArray(result)).toBe(true);
       expect(findAllRemindersUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '123e4567-e89b-12d3-a456-426614174000',
+          userId: mockUserId,
         }),
       );
     });
@@ -120,7 +115,6 @@ describe('ReminderController', () => {
 
       expect(findAllRemindersUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '123e4567-e89b-12d3-a456-426614174000',
           subscriptionId: 'subscription-123',
           type: 'payment_due',
           enabled: true,
@@ -137,10 +131,7 @@ describe('ReminderController', () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBe('reminder-123');
-      expect(findReminderByIdUseCase.execute).toHaveBeenCalledWith(
-        'reminder-123',
-        '123e4567-e89b-12d3-a456-426614174000',
-      );
+      expect(findReminderByIdUseCase.execute).toHaveBeenCalledWith('reminder-123', mockUserId);
     });
   });
 
@@ -161,7 +152,7 @@ describe('ReminderController', () => {
       expect(result.id).toBe('reminder-123');
       expect(createReminderUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: '123e4567-e89b-12d3-a456-426614174000',
+          userId: mockUserId,
           subscriptionId: 'subscription-123',
           type: 'payment_due',
           daysBefore: 3,
@@ -179,9 +170,14 @@ describe('ReminderController', () => {
         enabled: false,
       };
       const updatedReminder = {
-        ...mockReminder,
+        id: 'reminder-123',
+        userId: mockUserId,
+        subscriptionId: 'subscription-123',
+        type: 'payment_due',
         daysBefore: 5,
         enabled: false,
+        channel: 'email',
+        createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-02'),
       } as Reminder;
       updateReminderUseCase.execute.mockResolvedValue(updatedReminder);
@@ -193,7 +189,7 @@ describe('ReminderController', () => {
       expect(result.enabled).toBe(false);
       expect(updateReminderUseCase.execute).toHaveBeenCalledWith(
         'reminder-123',
-        '123e4567-e89b-12d3-a456-426614174000',
+        mockUserId,
         expect.objectContaining({
           daysBefore: 5,
           enabled: false,
@@ -208,10 +204,7 @@ describe('ReminderController', () => {
 
       await controller.delete(mockRequest, 'reminder-123');
 
-      expect(deleteReminderUseCase.execute).toHaveBeenCalledWith(
-        'reminder-123',
-        '123e4567-e89b-12d3-a456-426614174000',
-      );
+      expect(deleteReminderUseCase.execute).toHaveBeenCalledWith('reminder-123', mockUserId);
     });
   });
 });
