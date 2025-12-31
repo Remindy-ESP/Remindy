@@ -2,7 +2,6 @@
  * API Types and Interfaces
  */
 
-// Auth Types
 export interface LoginRequest {
   email: string;
   password: string;
@@ -25,7 +24,6 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
-// User Types
 export interface User {
   id: string;
   email: string;
@@ -42,7 +40,6 @@ export interface UpdateUserRequest {
   email?: string;
 }
 
-// Category Types
 export interface Category {
   id: string;
   name: string;
@@ -66,25 +63,25 @@ export interface UpdateCategoryRequest {
   color?: string;
 }
 
-// Subscription Types
 export interface Subscription {
   id: string;
   userId: string;
   contractId?: number;
   name: string;
-  amount: number; // Backend uses 'amount', not 'price'
+  amount: number;
   currency: string;
-  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly'; // Backend uses 'frequency', not 'billingCycle'
+  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
   nextDueDate: string;
   trialStartDate?: string;
   trialEndDate?: string;
   isTrialActive?: boolean;
-  status: 'active' | 'paused' | 'cancelled' | 'trial'; // Backend uses lowercase
+  status: 'active' | 'paused' | 'cancelled' | 'trial';
   color?: string;
-  notes?: string; // Backend uses 'notes', not 'description'
+  notes?: string;
   createdAt: string;
   updatedAt: string;
+  category?: Category;
 }
 
 export interface CreateSubscriptionRequest {
@@ -131,14 +128,12 @@ export interface Event {
   updatedAt: string;
 }
 
-// API Response wrapper
 export interface ApiResponse<T> {
   data: T;
   message?: string;
   statusCode?: number;
 }
 
-// Pagination
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

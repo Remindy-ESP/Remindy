@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { API_URL } from '../constants/config';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthScreen() {
@@ -27,14 +26,12 @@ export default function AuthScreen() {
   const router = useRouter();
   const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
       router.replace('/(tabs)/dashboard');
     }
   }, [isAuthenticated, authLoading]);
 
-  // Validation functions
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -81,7 +78,6 @@ export default function AuthScreen() {
   const handleAuth = async () => {
     setError('');
 
-    // Validate form
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -102,7 +98,6 @@ export default function AuthScreen() {
         );
       }
 
-      // Navigation will happen automatically via useEffect when isAuthenticated changes
     } catch (err: any) {
       console.error('Auth error:', err);
       const errorMessage =
@@ -120,7 +115,6 @@ export default function AuthScreen() {
     }
   };
 
-  // Show loading during initial auth check
   if (authLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -142,14 +136,12 @@ export default function AuthScreen() {
         </Text>
 
         <View style={styles.form}>
-          {/* Error message */}
           {error ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
 
-          {/* Registration-only fields */}
           {!isLogin && (
             <>
               <TextInput
