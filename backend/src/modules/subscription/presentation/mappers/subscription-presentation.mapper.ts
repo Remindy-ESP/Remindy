@@ -20,7 +20,7 @@ export class SubscriptionPresentationMapper {
       : this.calculateNextDueDate(startDate, dto.frequency);
 
     return {
-      userId: dto.userId!,
+      userId: dto.userId,
       contractId: dto.contractId,
       name: dto.name,
       amount: dto.amount,

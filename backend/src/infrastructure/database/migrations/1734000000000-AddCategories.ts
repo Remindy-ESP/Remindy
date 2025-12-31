@@ -65,13 +65,13 @@ export class AddCategories1734000000000 implements MigrationInterface {
     await queryRunner.query(`
       INSERT INTO "categories" ("id", "name", "icon", "color", "user_id", "is_system", "created_at", "updated_at")
       VALUES
-        (uuid_generate_v4(), 'Streaming', '<¬', '#E50914', NULL, true, now(), now()),
+        (uuid_generate_v4(), 'Streaming', '<ï¿½', '#E50914', NULL, true, now(), now()),
         (uuid_generate_v4(), 'Internet', '<', '#4285F4', NULL, true, now(), now()),
-        (uuid_generate_v4(), 'Mobile', '=ñ', '#34A853', NULL, true, now(), now()),
-        (uuid_generate_v4(), 'Insurance', '=á', '#0088CC', NULL, true, now(), now()),
-        (uuid_generate_v4(), 'Utilities', '¡', '#FBBC04', NULL, true, now(), now()),
-        (uuid_generate_v4(), 'Subscriptions', '=æ', '#9C27B0', NULL, true, now(), now()),
-        (uuid_generate_v4(), 'Other', '=Ë', '#607D8B', NULL, true, now(), now())
+        (uuid_generate_v4(), 'Mobile', '=ï¿½', '#34A853', NULL, true, now(), now()),
+        (uuid_generate_v4(), 'Insurance', '=ï¿½', '#0088CC', NULL, true, now(), now()),
+        (uuid_generate_v4(), 'Utilities', 'ï¿½', '#FBBC04', NULL, true, now(), now()),
+        (uuid_generate_v4(), 'Subscriptions', '=ï¿½', '#9C27B0', NULL, true, now(), now()),
+        (uuid_generate_v4(), 'Other', '=ï¿½', '#607D8B', NULL, true, now(), now())
     `);
   }
 
