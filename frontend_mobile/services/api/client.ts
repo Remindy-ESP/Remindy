@@ -2,8 +2,8 @@ import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'ax
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Use IP address for mobile device access (not localhost)
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.68.241.248:3000';
-const API_TIMEOUT = Number(process.env.EXPO_PUBLIC_API_TIMEOUT) || 30000;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL;
+const API_TIMEOUT = Number(process.env.EXPO_PUBLIC_BACKEND_API_TIMEOUT) || 30000;
 
 // Storage keys
 const ACCESS_TOKEN_KEY = '@remindy_access_token';

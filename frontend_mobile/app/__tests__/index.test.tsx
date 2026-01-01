@@ -10,7 +10,7 @@ jest.mock('expo-router', () => ({
 }));
 
 // Mock AuthContext
-jest.mock('@/contexts/AuthContext', () => ({
+jest.mock('@/context/AuthContext', () => ({
   useAuth: () => ({
     login: jest.fn(),
     register: jest.fn(),
