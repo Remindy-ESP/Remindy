@@ -2,6 +2,14 @@ import { AuditLogMapper } from './audit-log.mapper';
 import { AuditLog } from '../../domain/entities/audit-log.entity';
 import { AdminAuditLogEntity } from 'src/infrastructure/database/entities/admin-audit-log.entity';
 import { Severity } from '../../domain/enums/severity.enum';
+import { createMockAuditLog, createMockAuditLogResponse } from '../../test/audit-log.factory';
+
+function createMockEntity(overrides: Partial<AdminAuditLogEntity> = {}): AdminAuditLogEntity {
+  const defaults = createMockAuditLogResponse({ createdAt: new Date('2025-01-01T10:00:00.000Z') });
+  const entity = new AdminAuditLogEntity();
+  Object.assign(entity, defaults, overrides);
+  return entity;
+}
 
 describe('AuditLogMapper', () => {
   let mapper: AuditLogMapper;
@@ -12,20 +20,7 @@ describe('AuditLogMapper', () => {
 
   describe('toDomain', () => {
     it('should map AdminAuditLogEntity to AuditLog domain with all fields', () => {
-      const entity = new AdminAuditLogEntity();
-      entity.id = 'audit-123';
-      entity.actorUserId = 'user-123';
-      entity.action = 'user.ban';
-      entity.resourceType = 'user';
-      entity.resourceId = 'target-456';
-      entity.before = { status: 'active' };
-      entity.after = { status: 'banned' };
-      entity.ipAddress = '192.168.1.1';
-      entity.userAgent = 'Mozilla/5.0';
-      entity.severity = Severity.WARNING;
-      entity.success = true;
-      entity.errorMessage = null;
-      entity.createdAt = new Date('2025-01-01T10:00:00.000Z');
+      const entity = createMockEntity();
 
       const domain = mapper.toDomain(entity);
 
@@ -45,20 +40,18 @@ describe('AuditLogMapper', () => {
     });
 
     it('should map AdminAuditLogEntity with null optional fields', () => {
-      const entity = new AdminAuditLogEntity();
-      entity.id = 'audit-456';
-      entity.actorUserId = null;
-      entity.action = 'system.cleanup';
-      entity.resourceType = 'sessions';
-      entity.resourceId = null;
-      entity.before = null;
-      entity.after = null;
-      entity.ipAddress = null;
-      entity.userAgent = null;
-      entity.severity = Severity.INFO;
-      entity.success = true;
-      entity.errorMessage = null;
-      entity.createdAt = new Date();
+      const entity = createMockEntity({
+        id: 'audit-456',
+        actorUserId: null,
+        action: 'system.cleanup',
+        resourceType: 'sessions',
+        resourceId: null,
+        before: null,
+        after: null,
+        ipAddress: null,
+        userAgent: null,
+        severity: Severity.INFO,
+      });
 
       const domain = mapper.toDomain(entity);
 
@@ -72,20 +65,18 @@ describe('AuditLogMapper', () => {
     });
 
     it('should map failed audit log with error message', () => {
-      const entity = new AdminAuditLogEntity();
-      entity.id = 'audit-789';
-      entity.actorUserId = 'user-123';
-      entity.action = 'user.delete';
-      entity.resourceType = 'user';
-      entity.resourceId = 'target-999';
-      entity.before = null;
-      entity.after = null;
-      entity.ipAddress = '10.0.0.1';
-      entity.userAgent = 'Test Agent';
-      entity.severity = Severity.CRITICAL;
-      entity.success = false;
-      entity.errorMessage = 'User not found';
-      entity.createdAt = new Date();
+      const entity = createMockEntity({
+        id: 'audit-789',
+        action: 'user.delete',
+        resourceId: 'target-999',
+        before: null,
+        after: null,
+        ipAddress: '127.0.0.1',
+        userAgent: 'Test Agent',
+        severity: Severity.CRITICAL,
+        success: false,
+        errorMessage: 'User not found',
+      });
 
       const domain = mapper.toDomain(entity);
 
@@ -97,21 +88,7 @@ describe('AuditLogMapper', () => {
 
   describe('toEntity', () => {
     it('should map AuditLog domain to AdminAuditLogEntity', () => {
-      const domain = AuditLog.fromProps({
-        id: 'audit-123',
-        actorUserId: 'user-123',
-        action: 'user.ban',
-        resourceType: 'user',
-        resourceId: 'target-456',
-        before: { status: 'active' },
-        after: { status: 'banned' },
-        ipAddress: '192.168.1.1',
-        userAgent: 'Mozilla/5.0',
-        severity: Severity.WARNING,
-        success: true,
-        errorMessage: null,
-        createdAt: new Date('2025-01-01T10:00:00.000Z'),
-      });
+      const domain = createMockAuditLog({ createdAt: new Date('2025-01-01T10:00:00.000Z') });
 
       const entity = mapper.toEntity(domain);
 
@@ -146,7 +123,7 @@ describe('AuditLogMapper', () => {
     });
 
     it('should map AuditLog domain with null values', () => {
-      const domain = AuditLog.fromProps({
+      const domain = createMockAuditLog({
         id: 'audit-system',
         actorUserId: null,
         action: 'system.cleanup',
@@ -157,9 +134,6 @@ describe('AuditLogMapper', () => {
         ipAddress: null,
         userAgent: null,
         severity: Severity.INFO,
-        success: true,
-        errorMessage: null,
-        createdAt: new Date(),
       });
 
       const entity = mapper.toEntity(domain);
@@ -175,19 +149,9 @@ describe('AuditLogMapper', () => {
 
   describe('bidirectional mapping', () => {
     it('should maintain data integrity when mapping to entity and back to domain', () => {
-      const originalDomain = AuditLog.fromProps({
-        id: 'audit-123',
-        actorUserId: 'user-123',
-        action: 'user.ban',
-        resourceType: 'user',
-        resourceId: 'target-456',
+      const originalDomain = createMockAuditLog({
         before: { status: 'active', role: 'user' },
         after: { status: 'banned', role: 'user' },
-        ipAddress: '192.168.1.1',
-        userAgent: 'Mozilla/5.0',
-        severity: Severity.WARNING,
-        success: true,
-        errorMessage: null,
         createdAt: new Date('2025-01-01T10:00:00.000Z'),
       });
 
