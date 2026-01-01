@@ -16,3 +16,6 @@ export type {
 // Other entities
 export { RoleEntity } from './role.entity';
 export { ContractEntity } from './contract.entity';
+
+// Audit entities
+export { AdminAuditLogEntity } from './admin-audit-log.entity';
