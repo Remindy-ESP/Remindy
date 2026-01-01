@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsInt,
   IsBoolean,
+  IsUUID,
   Min,
   Max,
   Matches,
@@ -25,13 +26,22 @@ export class CreateSubscriptionDto {
   userId?: string;
 
   @ApiProperty({
-    description: 'ID de la catégorie de contrat (optionnel)',
+    description: 'ID de la catégorie de contrat (optionnel, deprecated - use categoryId)',
     example: 1,
     required: false,
   })
   @IsOptional()
   @IsInt()
   contractId?: number;
+
+  @ApiProperty({
+    description: 'ID de la catégorie (optionnel)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 
   @ApiProperty({
     description: "Nom de l'abonnement",

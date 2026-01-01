@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 import { ContractEntity } from '../../../../infrastructure/database/entities/contract.entity';
+import { CategoryEntity } from '../../../category/infrastructure/persistence/category.entity';
 import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 import { isTrialActive as checkTrialActive } from '../../../../utils/date.utils';
 
@@ -32,6 +33,13 @@ export class SubscriptionEntity {
   @JoinColumn({ name: 'contract_id' })
   contract?: ContractEntity;
 
+  @Column({ name: 'category_id', type: 'uuid', nullable: true })
+  categoryId?: string;
+
+  @ManyToOne(() => CategoryEntity, { eager: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'category_id' })
+  category?: CategoryEntity;
+
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
@@ -44,16 +52,46 @@ export class SubscriptionEntity {
   @Column({ type: 'varchar', length: 20 })
   frequency: SubscriptionFrequency;
 
-  @Column({ name: 'start_date', type: 'date' })
+  @Column({
+    name: 'start_date',
+    type: 'date',
+    transformer: {
+      to: (value: Date | string) => value,
+      from: (value: Date) => value?.toISOString?.() || value,
+    },
+  })
   startDate: Date;
 
-  @Column({ name: 'next_due_date', type: 'date' })
+  @Column({
+    name: 'next_due_date',
+    type: 'date',
+    transformer: {
+      to: (value: Date | string) => value,
+      from: (value: Date) => value?.toISOString?.() || value,
+    },
+  })
   nextDueDate: Date;
 
-  @Column({ name: 'trial_start_date', type: 'date', nullable: true })
+  @Column({
+    name: 'trial_start_date',
+    type: 'date',
+    nullable: true,
+    transformer: {
+      to: (value: Date | string) => value,
+      from: (value: Date) => value?.toISOString?.() || value,
+    },
+  })
   trialStartDate?: Date;
 
-  @Column({ name: 'trial_end_date', type: 'date', nullable: true })
+  @Column({
+    name: 'trial_end_date',
+    type: 'date',
+    nullable: true,
+    transformer: {
+      to: (value: Date | string) => value,
+      from: (value: Date) => value?.toISOString?.() || value,
+    },
+  })
   trialEndDate?: Date;
 
   get isTrialActive(): boolean {

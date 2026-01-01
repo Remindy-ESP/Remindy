@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { getErrorMessage } from '@/services/api';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -100,10 +101,10 @@ export default function AuthScreen() {
 
     } catch (err: any) {
       console.error('Auth error:', err);
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        `${isLogin ? 'Login' : 'Registration'} failed. Please try again.`;
+      const errorMessage = getErrorMessage(
+        err,
+        `${isLogin ? 'Login' : 'Registration'} failed. Please try again.`
+      );
 
       setError(errorMessage);
       Alert.alert(

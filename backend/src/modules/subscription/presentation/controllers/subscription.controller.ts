@@ -38,6 +38,11 @@ import { ResumeSubscriptionUseCase } from '../../application/use-cases/resume-su
 import { FindSubscriptionEventsUseCase } from '../../application/use-cases/find-subscription-events.use-case';
 import { SubscriptionPresentationMapper } from '../mappers/subscription-presentation.mapper';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { SubscriptionEntity } from '../../infrastructure/persistence/subscription.entity';
+import { CategoryPresentationMapper } from '../../../category/presentation/mappers/category-presentation.mapper';
+import { CategoryMapper } from '../../../category/infrastructure/mappers/category.mapper';
 
 @ApiTags('Abonnements')
 @Controller('subscriptions')
@@ -54,6 +59,8 @@ export class SubscriptionController {
     private readonly pauseSubscriptionUseCase: PauseSubscriptionUseCase,
     private readonly resumeSubscriptionUseCase: ResumeSubscriptionUseCase,
     private readonly findSubscriptionEventsUseCase: FindSubscriptionEventsUseCase,
+    @InjectRepository(SubscriptionEntity)
+    private readonly subscriptionRepository: Repository<SubscriptionEntity>,
   ) {}
 
   @Post()
@@ -76,6 +83,19 @@ export class SubscriptionController {
     const result = await this.createSubscriptionUseCase.execute(appDto);
     const responseDto = SubscriptionPresentationMapper.toResponseDto(result.subscription);
     responseDto.eventsGenerated = result.eventsGenerated;
+
+    // Enrichir avec la catégorie si présente
+    if (result.subscription.categoryId) {
+      const entity = await this.subscriptionRepository.findOne({
+        where: { id: result.subscription.id },
+        relations: ['category'],
+      });
+      if (entity?.category) {
+        const categoryDomain = CategoryMapper.toDomain(entity.category);
+        responseDto.category = CategoryPresentationMapper.toResponseDto(categoryDomain);
+      }
+    }
+
     return responseDto;
   }
 
@@ -110,7 +130,24 @@ export class SubscriptionController {
 
     const appFilters = SubscriptionPresentationMapper.toFilterAppDto(filters);
     const subscriptions = await this.findAllSubscriptionsUseCase.execute(appFilters);
-    return SubscriptionPresentationMapper.toResponseDtoArray(subscriptions);
+    const responseDtos = SubscriptionPresentationMapper.toResponseDtoArray(subscriptions);
+    const subscriptionIds = subscriptions
+      .map(s => s.id)
+      .filter((id): id is string => id !== undefined);
+    const entities = await this.subscriptionRepository.find({
+      where: subscriptionIds.map(id => ({ id })),
+      relations: ['category'],
+    });
+
+    responseDtos.forEach(dto => {
+      const entity = entities?.find(e => e.id === dto.id);
+      if (entity?.category) {
+        const categoryDomain = CategoryMapper.toDomain(entity.category);
+        dto.category = CategoryPresentationMapper.toResponseDto(categoryDomain);
+      }
+    });
+
+    return responseDtos;
   }
 
   @Get('frequency/:type')
@@ -153,7 +190,20 @@ export class SubscriptionController {
       throw new NotFoundException(`Subscription with id ${id} not found`);
     }
 
-    return SubscriptionPresentationMapper.toResponseDto(subscription);
+    const responseDto = SubscriptionPresentationMapper.toResponseDto(subscription);
+
+    if (subscription.categoryId) {
+      const entity = await this.subscriptionRepository.findOne({
+        where: { id },
+        relations: ['category'],
+      });
+      if (entity?.category) {
+        const categoryDomain = CategoryMapper.toDomain(entity.category);
+        responseDto.category = CategoryPresentationMapper.toResponseDto(categoryDomain);
+      }
+    }
+
+    return responseDto;
   }
 
   @Put(':id')

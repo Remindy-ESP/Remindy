@@ -3,6 +3,7 @@ import { authService, userService, type User } from '@/services/api';
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if user is already authenticated on mount
@@ -28,15 +30,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isAuth = await authService.isAuthenticated();
 
       if (isAuth) {
-        // Fetch user data if authenticated
+        // Fetch user data and token if authenticated
         const userData = await userService.getMe();
+        const accessToken = await authService.getAccessToken();
         setUser(userData);
+        setToken(accessToken);
       } else {
         setUser(null);
+        setToken(null);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       setUser(null);
+      setToken(null);
       // Clear tokens if auth check fails
       await authService.clearAuth();
     } finally {
@@ -48,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authService.login({ email, password });
       setUser(response.user);
+      setToken(response.accessToken);
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -68,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastName,
       });
       setUser(response.user);
+      setToken(response.accessToken);
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -82,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       // Clear user state regardless of API call success
       setUser(null);
+      setToken(null);
     }
   };
 
@@ -97,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
+    token,
     isAuthenticated: !!user,
     isLoading,
     login,

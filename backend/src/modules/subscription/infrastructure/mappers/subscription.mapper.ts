@@ -7,6 +7,7 @@ export class SubscriptionMapper {
       id: entity.id,
       userId: entity.userId,
       contractId: entity.contractId,
+      categoryId: entity.categoryId,
       name: entity.name,
       amount: Number(entity.amount),
       currency: entity.currency,
@@ -34,6 +35,7 @@ export class SubscriptionMapper {
 
     entity.userId = domain.userId;
     entity.contractId = domain.contractId;
+    entity.categoryId = domain.categoryId;
     entity.name = domain.name;
     entity.amount = domain.amount;
     entity.currency = domain.currency;

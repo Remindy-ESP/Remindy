@@ -67,6 +67,7 @@ export interface Subscription {
   id: string;
   userId: string;
   contractId?: number;
+  categoryId?: string;
   name: string;
   amount: number;
   currency: string;
@@ -97,6 +98,7 @@ export interface CreateSubscriptionRequest {
   color?: string;
   notes?: string;
   contractId?: number;
+  categoryId?: string;
 }
 
 export interface UpdateSubscriptionRequest {
@@ -112,6 +114,7 @@ export interface UpdateSubscriptionRequest {
   color?: string;
   notes?: string;
   contractId?: number;
+  categoryId?: string;
 }
 
 // Event Types
