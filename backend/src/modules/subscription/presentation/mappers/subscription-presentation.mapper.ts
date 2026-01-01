@@ -22,6 +22,7 @@ export class SubscriptionPresentationMapper {
     return {
       userId: dto.userId,
       contractId: dto.contractId,
+      categoryId: dto.categoryId,
       name: dto.name,
       amount: dto.amount,
       currency: dto.currency ?? 'EUR',
@@ -42,6 +43,7 @@ export class SubscriptionPresentationMapper {
   static toUpdateAppDto(dto: UpdateSubscriptionDto): UpdateSubscriptionAppDto {
     return {
       contractId: dto.contractId,
+      categoryId: dto.categoryId,
       name: dto.name,
       amount: dto.amount,
       currency: dto.currency,
@@ -72,6 +74,7 @@ export class SubscriptionPresentationMapper {
     response.id = subscription.id!;
     response.userId = subscription.userId;
     response.contractId = subscription.contractId;
+    response.categoryId = subscription.categoryId;
     response.name = subscription.name;
     response.amount = subscription.amount;
     response.currency = subscription.currency;

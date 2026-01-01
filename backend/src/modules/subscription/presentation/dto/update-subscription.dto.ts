@@ -6,19 +6,29 @@ import {
   IsDateString,
   IsOptional,
   IsInt,
+  IsUUID,
   Matches,
 } from 'class-validator';
 import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
 
 export class UpdateSubscriptionDto {
   @ApiProperty({
-    description: 'ID de la catégorie de contrat (optionnel)',
+    description: 'ID de la catégorie de contrat (optionnel, deprecated - use categoryId)',
     example: 1,
     required: false,
   })
   @IsOptional()
   @IsInt()
   contractId?: number;
+
+  @ApiProperty({
+    description: 'ID de la catégorie (optionnel)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
 
   @ApiProperty({
     description: "Nom de l'abonnement",

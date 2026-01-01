@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { SubscriptionController } from './subscription.controller';
 import { CreateSubscriptionUseCase } from '../../application/use-cases/create-subscription.use-case';
 import { UpdateSubscriptionUseCase } from '../../application/use-cases/update-subscription.use-case';
@@ -11,6 +12,7 @@ import { PauseSubscriptionUseCase } from '../../application/use-cases/pause-subs
 import { ResumeSubscriptionUseCase } from '../../application/use-cases/resume-subscription.use-case';
 import { FindSubscriptionEventsUseCase } from '../../application/use-cases/find-subscription-events.use-case';
 import { Subscription } from '../../domain/subscription.entity';
+import { SubscriptionEntity } from '../../infrastructure/persistence/subscription.entity';
 import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from '../dto/update-subscription.dto';
 import { SubscriptionFilterDto } from '../dto/subscription-filter.dto';
@@ -92,6 +94,13 @@ describe('SubscriptionController', () => {
         {
           provide: FindSubscriptionEventsUseCase,
           useValue: { execute: jest.fn() },
+        },
+        {
+          provide: getRepositoryToken(SubscriptionEntity),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+          },
         },
       ],
     })
