@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { AuditLog } from '../../domain/entities/audit-log.entity';
 import { IAuditLogRepository } from '../../domain/repositories/audit-log.repository';
 import { AuditLogFilterDto } from '../dto/audit-log-filter.dto';
-import { AuditLogResponseDto, PaginatedAuditLogsResponseDto } from '../dto/audit-log-response.dto';
+import { PaginatedAuditLogsResponseDto } from '../dto/audit-log-response.dto';
+import { AuditLogResponseMapper } from '../mappers/audit-log-response.mapper';
 
 @Injectable()
 export class FindAllAuditLogsUseCase {
@@ -26,29 +26,11 @@ export class FindAllAuditLogsUseCase {
     });
 
     return {
-      data: result.data.map(log => this.toResponseDto(log)),
+      data: AuditLogResponseMapper.toDtoArray(result.data),
       total: result.total,
       page: result.page,
       limit: result.limit,
       totalPages: result.totalPages,
-    };
-  }
-
-  private toResponseDto(auditLog: AuditLog): AuditLogResponseDto {
-    return {
-      id: auditLog.getId(),
-      actorUserId: auditLog.getActorUserId(),
-      action: auditLog.getAction(),
-      resourceType: auditLog.getResourceType(),
-      resourceId: auditLog.getResourceId(),
-      before: auditLog.getBefore(),
-      after: auditLog.getAfter(),
-      ipAddress: auditLog.getIpAddress(),
-      userAgent: auditLog.getUserAgent(),
-      severity: auditLog.getSeverity(),
-      success: auditLog.isSuccess(),
-      errorMessage: auditLog.getErrorMessage(),
-      createdAt: auditLog.getCreatedAt(),
     };
   }
 }

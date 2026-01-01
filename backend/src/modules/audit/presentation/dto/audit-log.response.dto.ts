@@ -50,7 +50,7 @@ export class AuditLogResponseDto {
 
   @ApiPropertyOptional({
     description: 'Client IP address',
-    example: '192.168.1.1',
+    example: '127.0.0.1',
     nullable: true,
   })
   ipAddress: string | null;
