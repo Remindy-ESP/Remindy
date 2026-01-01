@@ -19,6 +19,9 @@ import { AuditLogTypeOrmRepository } from './infrastructure/repositories/audit-l
 import { AuditLogMapper } from './infrastructure/mappers/audit-log.mapper';
 import { AuditExportService } from './infrastructure/services/audit-export.service';
 
+// Presentation
+import { AuditInterceptor } from './presentation/interceptors/audit.interceptor';
+
 @Module({
   imports: [TypeOrmModule.forFeature([AdminAuditLogEntity])],
   providers: [
@@ -43,8 +46,11 @@ import { AuditExportService } from './infrastructure/services/audit-export.servi
     FindAuditLogByIdUseCase,
     GetAuditStatsUseCase,
     ExportAuditLogsUseCase,
+
+    // Interceptors
+    AuditInterceptor,
   ],
   controllers: [AuditController],
-  exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase],
+  exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase, AuditInterceptor],
 })
 export class AuditModule {}
