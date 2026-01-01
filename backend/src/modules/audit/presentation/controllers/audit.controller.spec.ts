@@ -11,6 +11,7 @@ import { MfaRequiredGuard } from '../guards/mfa-required.guard';
 import { Severity } from '../../domain/enums/severity.enum';
 import { CreateAuditLogRequestDto } from '../dto/create-audit-log.request.dto';
 import { AuditLogFilterRequestDto } from '../dto/audit-log-filter.request.dto';
+import { createMockAuditLogResponse } from '../../test/audit-log.factory';
 import type { Response } from 'express';
 
 describe('AuditController', () => {
@@ -30,7 +31,7 @@ describe('AuditController', () => {
     user: mockUser,
     headers: {
       'user-agent': 'Mozilla/5.0 Test',
-      'x-forwarded-for': '192.168.1.100',
+      'x-forwarded-for': '127.0.0.1',
     },
     socket: {
       remoteAddress: '127.0.0.1',
@@ -38,21 +39,10 @@ describe('AuditController', () => {
     ip: '127.0.0.1',
   } as any;
 
-  const mockAuditLogResponse = {
-    id: 'audit-123',
+  const mockAuditLogResponse = createMockAuditLogResponse({
     actorUserId: 'admin-123',
-    action: 'user.ban',
-    resourceType: 'user',
-    resourceId: 'target-456',
-    before: { status: 'active' },
-    after: { status: 'banned' },
-    ipAddress: '192.168.1.100',
     userAgent: 'Mozilla/5.0 Test',
-    severity: Severity.WARNING,
-    success: true,
-    errorMessage: null,
-    createdAt: new Date('2025-01-01'),
-  };
+  });
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -123,7 +113,7 @@ describe('AuditController', () => {
           actorUserId: 'admin-123',
           action: 'user.ban',
           resourceType: 'user',
-          ipAddress: '192.168.1.100',
+          ipAddress: '127.0.0.1',
           userAgent: 'Mozilla/5.0 Test',
         }),
       );
@@ -141,7 +131,7 @@ describe('AuditController', () => {
 
       expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
-          ipAddress: '192.168.1.100',
+          ipAddress: '127.0.0.1',
         }),
       );
     });

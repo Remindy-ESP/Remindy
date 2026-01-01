@@ -3,6 +3,7 @@ import { AuditLog } from '../../domain/entities/audit-log.entity';
 import { IAuditLogRepository } from '../../domain/repositories/audit-log.repository';
 import { CreateAuditLogDto } from '../dto/create-audit-log.dto';
 import { AuditLogResponseDto } from '../dto/audit-log-response.dto';
+import { AuditLogResponseMapper } from '../mappers/audit-log-response.mapper';
 
 @Injectable()
 export class CreateAuditLogUseCase {
@@ -25,24 +26,6 @@ export class CreateAuditLogUseCase {
 
     const savedLog = await this.auditLogRepository.create(auditLog);
 
-    return this.toResponseDto(savedLog);
-  }
-
-  private toResponseDto(auditLog: AuditLog): AuditLogResponseDto {
-    return {
-      id: auditLog.getId(),
-      actorUserId: auditLog.getActorUserId(),
-      action: auditLog.getAction(),
-      resourceType: auditLog.getResourceType(),
-      resourceId: auditLog.getResourceId(),
-      before: auditLog.getBefore(),
-      after: auditLog.getAfter(),
-      ipAddress: auditLog.getIpAddress(),
-      userAgent: auditLog.getUserAgent(),
-      severity: auditLog.getSeverity(),
-      success: auditLog.isSuccess(),
-      errorMessage: auditLog.getErrorMessage(),
-      createdAt: auditLog.getCreatedAt(),
-    };
+    return AuditLogResponseMapper.toDto(savedLog);
   }
 }
