@@ -47,8 +47,11 @@ import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
     FindAuditLogByIdUseCase,
     GetAuditStatsUseCase,
     ExportAuditLogsUseCase,
+
+    // Interceptors
+    AuditInterceptor,
   ],
   controllers: [AuditController],
-  exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase],
+  exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase, AuditInterceptor],
 })
 export class AuditModule {}
