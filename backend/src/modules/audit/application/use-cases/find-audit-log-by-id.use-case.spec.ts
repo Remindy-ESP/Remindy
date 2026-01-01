@@ -67,7 +67,7 @@ describe('FindAuditLogByIdUseCase', () => {
       resourceId: 'target-456',
       before: { status: 'active' },
       after: { status: 'banned' },
-      ipAddress: '192.168.1.1',
+      ipAddress: '127.0.0.1',
       userAgent: 'Mozilla/5.0',
       severity: Severity.WARNING,
       success: true,
