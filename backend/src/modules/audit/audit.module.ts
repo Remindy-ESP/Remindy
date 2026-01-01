@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminAuditLogEntity } from 'src/infrastructure/database/entities/admin-audit-log.entity';
+import { EUser } from 'src/infrastructure/database/entities/user.entity';
 import { AuditController } from './presentation/controllers/audit.controller';
 
 // Domain
@@ -21,9 +22,10 @@ import { AuditExportService } from './infrastructure/services/audit-export.servi
 
 // Presentation
 import { AuditInterceptor } from './presentation/interceptors/audit.interceptor';
+import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminAuditLogEntity])],
+  imports: [TypeOrmModule.forFeature([AdminAuditLogEntity, EUser])],
   providers: [
     // Mappers
     AuditLogMapper,
@@ -47,8 +49,9 @@ import { AuditInterceptor } from './presentation/interceptors/audit.interceptor'
     GetAuditStatsUseCase,
     ExportAuditLogsUseCase,
 
-    // Interceptors
+    // Interceptors & Guards
     AuditInterceptor,
+    MfaRequiredGuard,
   ],
   controllers: [AuditController],
   exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase, AuditInterceptor],
