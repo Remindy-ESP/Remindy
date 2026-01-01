@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
+import { CategoryResponseDto } from '../../../category/presentation/dto/category-response.dto';
 
 export class SubscriptionResponseDto {
   @ApiProperty({
@@ -20,6 +21,20 @@ export class SubscriptionResponseDto {
     required: false,
   })
   contractId?: number;
+
+  @ApiProperty({
+    description: 'ID de la catégorie',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  categoryId?: string;
+
+  @ApiProperty({
+    description: "Catégorie associée à l'abonnement",
+    type: () => CategoryResponseDto,
+    required: false,
+  })
+  category?: CategoryResponseDto;
 
   @ApiProperty({
     description: "Nom de l'abonnement",

@@ -41,11 +41,18 @@ export default function DashboardScreen() {
     const marks: any = {};
 
     filteredEvents.forEach((event) => {
-      const dateKey = new Date(event.dueDate).toISOString().split('T')[0];
-      marks[dateKey] = {
-        marked: true,
-        dotColor: '#4f46e5',
-      };
+      if (!event.dueDate) return;
+      try {
+        const eventDateObj = new Date(event.dueDate);
+        if (isNaN(eventDateObj.getTime())) return;
+        const dateKey = eventDateObj.toISOString().split('T')[0];
+        marks[dateKey] = {
+          marked: true,
+          dotColor: '#4f46e5',
+        };
+      } catch (error) {
+        console.error('Error parsing event date:', error);
+      }
     });
 
     if (selected) {
@@ -77,7 +84,7 @@ export default function DashboardScreen() {
           Error: {error}
         </Text>
         <Text style={{ color: '#999', marginTop: 8, textAlign: 'center' }}>
-          Make sure the backend server is running on http://10.68.241.248:3000
+          Make sure the backend server is running and your network connection is stable
         </Text>
       </View>
     );

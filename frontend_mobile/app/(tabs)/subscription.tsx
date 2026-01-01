@@ -15,7 +15,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
-import { Subscription, Category, CreateSubscriptionRequest } from '../../services/api/types';
+import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
 
 interface SubscriptionFormData {
   name: string;
@@ -67,7 +67,7 @@ export default function SubscriptionScreen() {
       setCategories(categoriesData);
     } catch (err: any) {
       console.error('Error fetching data:', err);
-      setError(err.response?.data?.message || err.message || 'Failed to load subscriptions');
+      setError(getErrorMessage(err, 'Failed to load subscriptions'));
     } finally {
       setLoading(false);
     }
@@ -105,16 +105,16 @@ export default function SubscriptionScreen() {
     const errors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      errors.name = 'Name is required';
+      errors.name = 'Le nom est requis';
     }
 
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
-      errors.price = 'Price must be a valid number greater than 0 (e.g., 15.99 or 15,99)';
+      errors.price = 'Le prix doit être supérieur à 0 (ex : 15.99 ou 15,99)';
     }
 
     if (!formData.startDate) {
-      errors.startDate = 'Start date is required';
+      errors.startDate = 'La date de début est requis';
     }
 
     setFormErrors(errors);
@@ -151,12 +151,12 @@ export default function SubscriptionScreen() {
     setFormData({
       name: subscription.name,
       description: subscription.notes || '',
-      price: subscription.amount || 0, // Internal form uses 'price' for now
+      price: subscription.amount || 0,
       billingCycle: frequencyToBillingCycle[subscription.frequency] || 'MONTHLY',
-      startDate: subscription.startDate.split('T')[0],
+      startDate: subscription.startDate ? subscription.startDate.split('T')[0] : new Date().toISOString().split('T')[0],
       endDate: subscription.nextDueDate ? subscription.nextDueDate.split('T')[0] : undefined,
-      categoryId: subscription.contractId?.toString() || '',
-      reminderDays: 0, // Default value since backend doesn't store this
+      categoryId: subscription.categoryId || '',
+      reminderDays: 0,
     });
     setFormErrors({});
     setModalVisible(true);
@@ -172,7 +172,7 @@ export default function SubscriptionScreen() {
       'QUARTERLY': 'quarterly',
       'YEARLY': 'yearly',
     };
-    return mapping[cycle] || 'monthly'; // Default to monthly
+    return mapping[cycle] || 'monthly';
   };
 
   const handleSubmit = async () => {
@@ -198,78 +198,55 @@ export default function SubscriptionScreen() {
         status: 'active',
       };
 
-      // Add optional fields only if they have values
       if (formData.endDate) {
         requestData.nextDueDate = formData.endDate;
       }
       if (formData.description) {
         requestData.notes = formData.description;
+        requestData.notes = formData.description;
       }
       if (formData.reminderDays && requestData.notes) {
-        requestData.notes = `${requestData.notes}\nReminder ${formData.reminderDays} days before`;
+        requestData.notes = `${requestData.notes}\nRappel ${formData.reminderDays} jour(s) avant`;
       } else if (formData.reminderDays) {
-        requestData.notes = `Reminder ${formData.reminderDays} days before`;
+        requestData.notes = `Rappel ${formData.reminderDays} jour(s) avant`;
       }
 
-      // Map categoryId to contractId if it's a valid number
-      if (formData.categoryId) {
-        const contractId = parseInt(formData.categoryId, 10);
-        if (!isNaN(contractId)) {
-          requestData.contractId = contractId;
-        }
+      // Add categoryId if selected
+      if (formData.categoryId && formData.categoryId.trim() !== '') {
+        requestData.categoryId = formData.categoryId;
       }
-
-      console.log('[Subscription] Sending request:', JSON.stringify(requestData, null, 2));
 
       if (editingSubscription) {
-        const updated = await subscriptionService.update(editingSubscription.id, requestData);
-        setSubscriptions(subscriptions.map(s => s.id === updated.id ? updated : s));
-        Alert.alert('Success', 'Subscription updated successfully');
+        await subscriptionService.update(editingSubscription.id, requestData);
+        Alert.alert('Succès', 'Abonnement modifié avec succès');
       } else {
-        const created = await subscriptionService.create(requestData);
-        setSubscriptions([created, ...subscriptions]);
-        Alert.alert('Success', 'Subscription created successfully');
+        await subscriptionService.create(requestData);
+        Alert.alert('Succès', 'Abonnement créé avec succès');
       }
       setModalVisible(false);
+      await fetchData();
     } catch (err: any) {
-      console.error('[Subscription] Save error:', err);
-      console.error('[Subscription] Error response:', err.response?.data);
-
-      // Extract detailed error message
-      let errorMessage = 'Failed to save subscription';
-      if (err.response?.data) {
-        const { message, error, errors } = err.response.data;
-        if (Array.isArray(errors) && errors.length > 0) {
-          errorMessage = errors.join(', ');
-        } else if (message) {
-          errorMessage = Array.isArray(message) ? message.join(', ') : message;
-        } else if (error) {
-          errorMessage = error;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      Alert.alert('Error', errorMessage);
+      const errorMessage = getErrorMessage(err, 'Échec de l\'enregistrement de l\'abonnement');
+      Alert.alert('Erreur', errorMessage);
     }
   };
 
   const handleDelete = (subscription: Subscription) => {
     Alert.alert(
-      'Delete Subscription',
-      `Are you sure you want to delete "${subscription.name}"?`,
+      'Supprimer l\'abonnement',
+      `Êtes-vous sûr de vouloir supprimer votre abonnement "${subscription.name}"?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Annuler', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
             try {
               await subscriptionService.delete(subscription.id);
-              setSubscriptions(subscriptions.filter(s => s.id !== subscription.id));
-              Alert.alert('Success', 'Subscription deleted successfully');
+              Alert.alert('Succès', 'Abonnement supprimé avec succès');
+              await fetchData();
             } catch (err: any) {
-              Alert.alert('Error', err.response?.data?.message || err.message || 'Failed to delete subscription');
+              Alert.alert('Erreur', getErrorMessage(err, 'Échec de la suppression de l\'abonnement'));
             }
           },
         },
@@ -279,14 +256,15 @@ export default function SubscriptionScreen() {
 
   const handlePauseResume = async (subscription: Subscription) => {
     try {
-      const updated = subscription.status === 'active'
-        ? await subscriptionService.pause(subscription.id)
-        : await subscriptionService.resume(subscription.id);
-
-      setSubscriptions(subscriptions.map(s => s.id === updated.id ? updated : s));
-      Alert.alert('Success', `Subscription ${subscription.status === 'active' ? 'paused' : 'resumed'} successfully`);
+      if (subscription.status === 'active') {
+        await subscriptionService.pause(subscription.id);
+      } else {
+        await subscriptionService.resume(subscription.id);
+      }
+      Alert.alert('Succès', `Abonnement ${subscription.status === 'active' ? 'mis en pause' : 'repris'} avec succès`);
+      await fetchData();
     } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.message || err.message || 'Failed to update subscription');
+      Alert.alert('Erreur', getErrorMessage(err, 'Échec de la mise à jour de l\'abonnement'));
     }
   };
 
@@ -304,11 +282,29 @@ export default function SubscriptionScreen() {
   const getBillingCycleLabel = (cycle: string) => {
     const lowerCycle = cycle?.toLowerCase();
     switch (lowerCycle) {
-      case 'monthly': return 'Monthly';
-      case 'yearly': return 'Yearly';
-      case 'weekly': return 'Weekly';
-      case 'quarterly': return 'Quarterly';
+      case 'monthly': return 'Mensuel';
+      case 'yearly': return 'Annuel';
+      case 'weekly': return 'Hebdomadaire';
+      case 'quarterly': return 'Trimestriel';
       default: return cycle;
+    }
+  };
+
+  const formatDate = (dateString: string | undefined): string => {
+    if (!dateString) {
+      return 'N/A';
+    }
+
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      return date.toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
     }
   };
 
@@ -316,7 +312,9 @@ export default function SubscriptionScreen() {
     <View style={styles.subscriptionCard}>
       <View style={styles.cardHeader}>
         <View style={styles.cardTitleContainer}>
-          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardTitle}>
+            {item.name.length > 30 ? `${item.name.substring(0, 30)}...` : item.name}
+          </Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusText}>{item.status}</Text>
           </View>
@@ -331,9 +329,11 @@ export default function SubscriptionScreen() {
       )}
 
       <View style={styles.cardDetails}>
-        <Text style={styles.detailText}>
-          {getBillingCycleLabel(item.frequency)}
-        </Text>
+        <View style={styles.frequencyBadge}>
+          <Text style={styles.frequencyText}>
+            {getBillingCycleLabel(item.frequency)}
+          </Text>
+        </View>
         {item.category && (
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryIcon}>{item.category.icon}</Text>
@@ -344,7 +344,7 @@ export default function SubscriptionScreen() {
 
       <View style={styles.cardFooter}>
         <Text style={styles.dateText}>
-          Start: {new Date(item.startDate).toLocaleDateString()}
+          Début: {formatDate(item.startDate)}
         </Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -376,11 +376,11 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Subscriptions</Text>
+          <Text style={styles.headerTitle}>Abonnements</Text>
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Loading subscriptions...</Text>
+          <Text style={styles.loadingText}>Chargement des abonnements...</Text>
         </View>
       </View>
     );
@@ -390,12 +390,12 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Subscriptions</Text>
+          <Text style={styles.headerTitle}>Abonnements</Text>
         </View>
         <View style={styles.centerContent}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>Réessayer</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -406,20 +406,20 @@ export default function SubscriptionScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Subscriptions</Text>
+          <Text style={styles.headerTitle}>Abonnements</Text>
           <Text style={styles.headerSubtitle}>
-            {subscriptions.length} subscription{subscriptions.length !== 1 ? 's' : ''}
+            {subscriptions.length} abonnement{subscriptions.length !== 1 ? 's' : ''}
           </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-          <Text style={styles.addButtonText}>+ Add</Text>
+          <Text style={styles.addButtonText}>+ Ajouter</Text>
         </TouchableOpacity>
       </View>
 
       {subscriptions.length === 0 ? (
         <View style={styles.centerContent}>
-          <Text style={styles.emptyText}>No subscriptions yet</Text>
-          <Text style={styles.emptySubtext}>Tap the + Add button to create your first subscription</Text>
+          <Text style={styles.emptyText}>Pas d'abonnements.</Text>
+          <Text style={styles.emptySubtext}>Appuyez sur le bouton + pour créer votre premier abonnement.</Text>
         </View>
       ) : (
         <FlatList
@@ -433,7 +433,6 @@ export default function SubscriptionScreen() {
         />
       )}
 
-      {/* Add/Edit Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -445,7 +444,7 @@ export default function SubscriptionScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>
-                  {editingSubscription ? 'Edit Subscription' : 'Add Subscription'}
+                  {editingSubscription ? 'Modifier l\'abonnement' : 'Ajouter un abonnement'}
                 </Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                   <Text style={styles.closeButton}>✕</Text>
@@ -453,12 +452,12 @@ export default function SubscriptionScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Name *</Text>
+                <Text style={styles.label}>Nom *</Text>
                 <TextInput
                   style={[styles.input, formErrors.name && styles.inputError]}
                   value={formData.name}
                   onChangeText={(text) => setFormData({ ...formData, name: text })}
-                  placeholder="e.g., Netflix, Spotify"
+                  placeholder="Ex: Netflix, Spotify"
                   placeholderTextColor="#9ca3af"
                 />
                 {formErrors.name && <Text style={styles.errorLabel}>{formErrors.name}</Text>}
@@ -470,7 +469,7 @@ export default function SubscriptionScreen() {
                   style={[styles.input, styles.textArea]}
                   value={formData.description}
                   onChangeText={(text) => setFormData({ ...formData, description: text })}
-                  placeholder="Optional description"
+                  placeholder="Description optionnelle..."
                   placeholderTextColor="#9ca3af"
                   multiline
                   numberOfLines={3}
@@ -479,12 +478,12 @@ export default function SubscriptionScreen() {
 
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Price *</Text>
+                  <Text style={styles.label}>Prix *</Text>
                   <TextInput
                     style={[styles.input, formErrors.price && styles.inputError]}
                     value={priceInput}
                     onChangeText={(text) => setPriceInput(text)}
-                    placeholder="15.99 or 15,99"
+                    placeholder="15.99 ou 15,99"
                     placeholderTextColor="#9ca3af"
                     keyboardType="decimal-pad"
                   />
@@ -492,7 +491,7 @@ export default function SubscriptionScreen() {
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Billing Cycle *</Text>
+                  <Text style={styles.label}>Cycle de paiement *</Text>
                   <View style={styles.pickerContainer}>
                     <Picker
                       selectedValue={formData.billingCycle}
@@ -500,17 +499,17 @@ export default function SubscriptionScreen() {
                       style={styles.picker}
                       dropdownIconColor="#fff"
                     >
-                      <Picker.Item label="Weekly" value="WEEKLY" />
-                      <Picker.Item label="Monthly" value="MONTHLY" />
-                      <Picker.Item label="Quarterly" value="QUARTERLY" />
-                      <Picker.Item label="Yearly" value="YEARLY" />
+                      <Picker.Item label="Semaine" value="WEEKLY" />
+                      <Picker.Item label="Mois" value="MONTHLY" />
+                      <Picker.Item label="Trimestre" value="QUARTERLY" />
+                      <Picker.Item label="Annuel" value="YEARLY" />
                     </Picker>
                   </View>
                 </View>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Category</Text>
+                <Text style={styles.label}>Catégorie</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={formData.categoryId}
@@ -518,7 +517,7 @@ export default function SubscriptionScreen() {
                     style={styles.picker}
                     dropdownIconColor="#fff"
                   >
-                    <Picker.Item label="No category" value="" />
+                    <Picker.Item label="Aucune catégorie" value="" />
                     {categories.map((cat) => (
                       <Picker.Item key={cat.id} label={`${cat.icon} ${cat.name}`} value={cat.id} />
                     ))}
@@ -528,7 +527,7 @@ export default function SubscriptionScreen() {
 
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Start Date *</Text>
+                  <Text style={styles.label}>Date de début *</Text>
                   <TextInput
                     style={[styles.input, formErrors.startDate && styles.inputError]}
                     value={formData.startDate}
@@ -540,7 +539,7 @@ export default function SubscriptionScreen() {
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>End Date</Text>
+                  <Text style={styles.label}>Date de fin</Text>
                   <TextInput
                     style={styles.input}
                     value={formData.endDate || ''}
@@ -552,7 +551,7 @@ export default function SubscriptionScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Reminder Days Before</Text>
+                <Text style={styles.label}>Rappel de notifications</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.reminderDays?.toString() || '3'}
@@ -568,14 +567,14 @@ export default function SubscriptionScreen() {
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>Annuler</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.submitButton]}
                   onPress={handleSubmit}
                 >
                   <Text style={styles.submitButtonText}>
-                    {editingSubscription ? 'Update' : 'Create'}
+                    {editingSubscription ? 'Mettre à jour' : 'Créer'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -715,6 +714,17 @@ const styles = StyleSheet.create({
   detailText: {
     color: '#e0e0e0',
     fontSize: 14,
+  },
+  frequencyBadge: {
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  frequencyText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   categoryBadge: {
     flexDirection: 'row',

@@ -22,6 +22,7 @@ export class CreateSubscriptionUseCase {
     const subscription = new Subscription({
       userId: dto.userId,
       contractId: dto.contractId,
+      categoryId: dto.categoryId,
       name: dto.name,
       amount: dto.amount,
       currency: dto.currency.toUpperCase(),

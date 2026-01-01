@@ -5,6 +5,7 @@ export interface SubscriptionProps {
   id?: string;
   userId: string;
   contractId?: number;
+  categoryId?: string;
   name: string;
   amount: number;
   currency: string;
@@ -26,6 +27,7 @@ export class Subscription {
   private readonly _id?: string;
   private _userId: string;
   private _contractId?: number;
+  private _categoryId?: string;
   private _name: string;
   private _amount: number;
   private _currency: string;
@@ -46,6 +48,7 @@ export class Subscription {
     this._id = props.id;
     this._userId = props.userId;
     this._contractId = props.contractId;
+    this._categoryId = props.categoryId;
     this._name = props.name;
     this._amount = props.amount;
     this._currency = props.currency;
@@ -76,6 +79,10 @@ export class Subscription {
 
   get contractId(): number | undefined {
     return this._contractId;
+  }
+
+  get categoryId(): string | undefined {
+    return this._categoryId;
   }
 
   get name(): string {
@@ -254,6 +261,10 @@ export class Subscription {
     this._contractId = contractId;
   }
 
+  public updateCategoryId(categoryId?: string): void {
+    this._categoryId = categoryId;
+  }
+
   public pause(): void {
     this._status = 'paused';
   }
@@ -307,6 +318,7 @@ export class Subscription {
       id: this._id,
       userId: this._userId,
       contractId: this._contractId,
+      categoryId: this._categoryId,
       name: this._name,
       amount: this._amount,
       currency: this._currency,

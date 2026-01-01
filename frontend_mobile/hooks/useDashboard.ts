@@ -56,8 +56,15 @@ export function useDashboard() {
   // Filter events by selected date
   const getEventsForDate = (date: string): Event[] => {
     return events.filter((event) => {
-      const eventDate = new Date(event.dueDate).toISOString().split('T')[0];
-      return eventDate === date;
+      if (!event.dueDate) return false;
+      try {
+        const eventDateObj = new Date(event.dueDate);
+        if (isNaN(eventDateObj.getTime())) return false;
+        const eventDate = eventDateObj.toISOString().split('T')[0];
+        return eventDate === date;
+      } catch {
+        return false;
+      }
     });
   };
 

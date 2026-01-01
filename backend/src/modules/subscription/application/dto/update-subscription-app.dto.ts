@@ -2,6 +2,7 @@ import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/sub
 
 export interface UpdateSubscriptionAppDto {
   contractId?: number;
+  categoryId?: string;
   name?: string;
   amount?: number;
   currency?: string;
