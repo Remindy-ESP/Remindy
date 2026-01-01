@@ -134,6 +134,9 @@ describe('AuditLogMapper', () => {
         ipAddress: null,
         userAgent: null,
         severity: Severity.INFO,
+        success: true,
+        errorMessage: null,
+        createdAt: new Date(),
       });
 
       const entity = mapper.toEntity(domain);
@@ -152,6 +155,11 @@ describe('AuditLogMapper', () => {
       const originalDomain = createMockAuditLog({
         before: { status: 'active', role: 'user' },
         after: { status: 'banned', role: 'user' },
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0',
+        severity: Severity.WARNING,
+        success: true,
+        errorMessage: null,
         createdAt: new Date('2025-01-01T10:00:00.000Z'),
       });
 
