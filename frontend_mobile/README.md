@@ -25,6 +25,64 @@ In the output, you'll find options to open the app in a
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
+## Environment Configuration
+
+### Fichiers d'environnement
+
+- `.env` - Valeurs par défaut (commité dans git)
+- `.env.local` - **Environnement local** (ignoré par git) - utilisez ce fichier pour votre configuration personnelle
+- `.env.development` - Configuration development (commité dans git)
+- `.env.staging` - Configuration staging (commité dans git)
+- `.env.production` - Configuration production (commité dans git)
+
+### Ordre de priorité
+
+Expo charge les variables dans cet ordre (la dernière écrase les précédentes):
+1. `.env`
+2. `.env.development` (en mode development automatiquement)
+3. `.env.local` (toujours chargé en dernier, écrase tout le reste)
+
+### Utilisation
+
+#### Développement local (par défaut)
+```bash
+npm start          # Lance Expo
+npm run android    # Lance sur Android
+npm run ios        # Lance sur iOS
+```
+Utilise `.env.local` avec votre IP locale (ex: 192.168.1.38:3000)
+
+#### Tester avec Staging
+```bash
+npm run start:staging
+npm run android:staging
+npm run ios:staging
+```
+
+#### Tester avec Production
+```bash
+npm run start:prod
+npm run android:prod
+npm run ios:prod
+```
+
+### Configuration locale
+
+Pour votre développement local:
+1. Modifiez `.env.local` avec votre IP locale
+2. Trouvez votre IP locale:
+   - Windows: `ipconfig` (cherchez "Adresse IPv4")
+   - Mac/Linux: `ifconfig` ou `ip addr`
+3. Mettez à jour `EXPO_PUBLIC_BACKEND_API_URL` dans `.env.local`
+
+### Variables disponibles
+
+- `EXPO_PUBLIC_BACKEND_API_URL` - URL de l'API backend
+- `EXPO_PUBLIC_BACKEND_API_TIMEOUT` - Timeout des requêtes API (ms)
+- `EXPO_PUBLIC_ENV` - Nom de l'environnement (local/staging/production)
+
+**Note:** `.env.local` n'est jamais commité dans git. Chaque développeur peut avoir sa propre configuration.
+
 ## Get a fresh project
 
 When you're ready, run:

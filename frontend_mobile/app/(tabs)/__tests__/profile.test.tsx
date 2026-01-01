@@ -24,7 +24,7 @@ jest.spyOn(Alert, 'alert');
 
 // Mock AuthContext
 const mockLogout = jest.fn();
-jest.mock('@/contexts/AuthContext', () => ({
+jest.mock('@/context/AuthContext', () => ({
   useAuth: jest.fn(() => ({
     user: {
       id: 'test-user-id',

@@ -46,6 +46,7 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup('swagger/v1', app, document);
 
   await app.listen(3000);
+  console.log(`Listening on URL ${await app.getUrl()}`);
 }
 
 bootstrap().catch(err => {
