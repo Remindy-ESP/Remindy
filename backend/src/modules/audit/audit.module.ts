@@ -25,8 +25,30 @@ import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AdminAuditLogEntity])],
-  providers: [],
+  providers: [
+    // Mappers
+    AuditLogMapper,
+
+    // Repository
+    {
+      provide: IAuditLogRepository,
+      useClass: AuditLogTypeOrmRepository,
+    },
+
+    // Services
+    {
+      provide: IAuditExportService,
+      useClass: AuditExportService,
+    },
+
+    // Use Cases
+    CreateAuditLogUseCase,
+    FindAllAuditLogsUseCase,
+    FindAuditLogByIdUseCase,
+    GetAuditStatsUseCase,
+    ExportAuditLogsUseCase,
+  ],
   controllers: [AuditController],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase],
 })
 export class AuditModule {}
