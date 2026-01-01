@@ -96,7 +96,7 @@ describe('AuditLogFilterRequestDto', () => {
     }
   });
 
-  it('should transform success string to boolean', async () => {
+  it('should transform success string to boolean', () => {
     const dto = plainToClass(AuditLogFilterRequestDto, {
       success: 'true',
     });
