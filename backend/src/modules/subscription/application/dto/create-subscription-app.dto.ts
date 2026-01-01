@@ -3,6 +3,7 @@ import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/sub
 export interface CreateSubscriptionAppDto {
   userId: string;
   contractId?: number;
+  categoryId?: string;
   name: string;
   amount: number;
   currency: string;

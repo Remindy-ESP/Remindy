@@ -14,7 +14,7 @@ import {
 import { RoleEntity } from './role.entity';
 import { UserSessionEntity } from './user-session.entity';
 import { UserPreferenceEntity } from './user-preference.entity';
-import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
+import { Role } from '../../../modules/auth/domain/value-objects/role.enum';
 
 export enum UserStatus {
   ACTIVE = 'active',

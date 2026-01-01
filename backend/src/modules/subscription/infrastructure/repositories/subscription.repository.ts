@@ -23,6 +23,7 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async findById(id: string): Promise<Subscription | null> {
     const entity = await this.repository.findOne({
       where: { id },
+      relations: ['category'],
     });
 
     if (!entity) {
@@ -33,7 +34,9 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   }
 
   async findAll(filters?: SubscriptionFilterAppDto): Promise<Subscription[]> {
-    const queryBuilder = this.repository.createQueryBuilder('subscription');
+    const queryBuilder = this.repository
+      .createQueryBuilder('subscription')
+      .leftJoinAndSelect('subscription.category', 'category');
 
     if (filters) {
       if (filters.userId) {

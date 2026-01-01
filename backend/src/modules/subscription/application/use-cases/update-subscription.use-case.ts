@@ -23,6 +23,10 @@ export class UpdateSubscriptionUseCase {
       existingSubscription.updateContractId(dto.contractId);
     }
 
+    if (dto.categoryId !== undefined) {
+      existingSubscription.updateCategoryId(dto.categoryId);
+    }
+
     if (dto.name !== undefined) {
       existingSubscription.updateName(dto.name);
     }
