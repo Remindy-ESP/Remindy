@@ -1,15 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FindAllAuditLogsUseCase } from './find-all-audit-logs.use-case';
 import { IAuditLogRepository } from '../../domain/repositories/audit-log.repository';
+import { AuditLog } from '../../domain/entities/audit-log.entity';
 import { Severity } from '../../domain/enums/severity.enum';
 import { AuditLogFilterDto } from '../dto/audit-log-filter.dto';
-import { createMockAuditLog } from '../../test/audit-log.factory';
 
 describe('FindAllAuditLogsUseCase', () => {
   let useCase: FindAllAuditLogsUseCase;
   let repository: jest.Mocked<IAuditLogRepository>;
 
-  const mockAuditLog = createMockAuditLog();
+  const mockAuditLog = AuditLog.fromProps({
+    id: 'audit-123',
+    actorUserId: 'user-123',
+    action: 'user.ban',
+    resourceType: 'user',
+    resourceId: 'target-456',
+    before: { status: 'active' },
+    after: { status: 'banned' },
+    ipAddress: '192.168.1.1',
+    userAgent: 'Mozilla/5.0',
+    severity: Severity.WARNING,
+    success: true,
+    errorMessage: null,
+    createdAt: new Date('2025-01-01'),
+  });
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<IAuditLogRepository>> = {
