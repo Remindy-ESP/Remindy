@@ -2,8 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { FindAuditLogByIdUseCase } from './find-audit-log-by-id.use-case';
 import { IAuditLogRepository } from '../../domain/repositories/audit-log.repository';
-import { Severity } from '../../domain/enums/severity.enum';
-import { createMockAuditLog } from '../../test/audit-log.factory';
+import { createMockAuditLog, createMockAuditLogResponse } from '../../test/audit-log.factory';
 
 describe('FindAuditLogByIdUseCase', () => {
   let useCase: FindAuditLogByIdUseCase;
@@ -60,18 +59,7 @@ describe('FindAuditLogByIdUseCase', () => {
     const result = await useCase.execute('audit-123');
 
     expect(result).toEqual({
-      id: 'audit-123',
-      actorUserId: 'user-123',
-      action: 'user.ban',
-      resourceType: 'user',
-      resourceId: 'target-456',
-      before: { status: 'active' },
-      after: { status: 'banned' },
-      ipAddress: '127.0.0.1',
-      userAgent: 'Mozilla/5.0',
-      severity: Severity.WARNING,
-      success: true,
-      errorMessage: null,
+      ...createMockAuditLogResponse(),
       createdAt: expect.any(Date),
     });
   });

@@ -1,4 +1,4 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { Request } from 'express';
@@ -15,6 +15,8 @@ interface RequestWithUser extends Request {
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(AuditInterceptor.name);
+
   constructor(
     private readonly reflector: Reflector,
     private readonly createAuditLogUseCase: CreateAuditLogUseCase,
@@ -182,7 +184,7 @@ export class AuditInterceptor implements NestInterceptor {
     // Fire and forget - don't await, don't block the response
     this.createAuditLogUseCase.execute(params).catch(err => {
       // Log error but don't fail the request
-      console.error('Failed to create audit log:', err);
+      this.logger.error('Failed to create audit log:', err);
     });
   }
 }
