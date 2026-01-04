@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminAuditLogEntity } from 'src/infrastructure/database/entities/admin-audit-log.entity';
 import { EUser } from 'src/infrastructure/database/entities/user.entity';
@@ -24,8 +24,13 @@ import { AuditExportService } from './infrastructure/services/audit-export.servi
 import { AuditInterceptor } from './presentation/interceptors/audit.interceptor';
 import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
 
+import { AuthModule } from '../auth/auth.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminAuditLogEntity, EUser])],
+  imports: [
+    TypeOrmModule.forFeature([AdminAuditLogEntity, EUser]),
+    forwardRef(() => AuthModule),
+  ],
   providers: [
     // Mappers
     AuditLogMapper,

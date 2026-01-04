@@ -43,12 +43,12 @@ export class SubscriptionFilterDto {
 
   @ApiProperty({
     description: 'Filtrer par fréquence',
-    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    enum: ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'],
     example: 'monthly',
     required: false,
   })
   @IsOptional()
-  @IsEnum(['weekly', 'monthly', 'quarterly', 'yearly'])
+  @IsEnum(['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'])
   frequency?: SubscriptionFrequency;
 
   @ApiProperty({
@@ -60,4 +60,13 @@ export class SubscriptionFilterDto {
   @IsOptional()
   @IsEnum(['active', 'paused', 'cancelled', 'trial'])
   status?: SubscriptionStatus;
+
+  @ApiProperty({
+    description: 'Filtrer par ID de catégorie',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }

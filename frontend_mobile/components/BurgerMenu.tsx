@@ -3,25 +3,17 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'rea
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import {AppRoute} from "@/navigation/MenuConfig";
 
 interface BurgerMenuProps {
     isVisible: boolean;
     onClose: () => void;
+    items: AppRoute[];
 }
 
 const { width } = Dimensions.get('window');
 
-const MENU_ITEMS = [
-    { label: 'Accueil', route: '/(tabs)/dashboard' },
-    { label: 'Dashboard', route: '/(tabs)/dashboard' },
-    { label: 'Abonnements', route: '/(tabs)/subscription' },
-    { label: 'Notifications', route: null },
-    { label: 'Cloud', route: null },
-    { label: 'Promos', route: null },
-    { label: 'Légal', route: null },
-];
-
-export default function BurgerMenu({ isVisible, onClose }: BurgerMenuProps) {
+export default function BurgerMenu({ isVisible, onClose, items }: BurgerMenuProps) {
     const insets = useSafeAreaInsets();
     const router = useRouter();
 
@@ -36,7 +28,7 @@ export default function BurgerMenu({ isVisible, onClose }: BurgerMenuProps) {
         <Modal
             visible={isVisible}
             animationType="fade"
-            transparent={true}
+            transparent
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
@@ -47,9 +39,9 @@ export default function BurgerMenu({ isVisible, onClose }: BurgerMenuProps) {
                 </View>
 
                 <View style={styles.menuCard}>
-                    {MENU_ITEMS.map((item, index) => (
+                    {items.map(item => (
                         <TouchableOpacity
-                            key={index}
+                            key={item.key}
                             style={styles.menuItem}
                             onPress={() => handleNavigation(item.route)}
                         >
@@ -65,19 +57,18 @@ export default function BurgerMenu({ isVisible, onClose }: BurgerMenuProps) {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(6, 7, 29, 0.95)', // Dark background with high opacity
-        justifyContent: 'flex-start', // Align to top
+        backgroundColor: 'rgba(6, 7, 29, 0.95)',
+        justifyContent: 'flex-start',
         alignItems: 'center',
     },
     headerContainer: {
         position: 'absolute',
         left: 20,
-        zIndex: 10, // Ensure it's above everything
-        // Top will be set dynamically via style prop with insets
+        zIndex: 10,
     },
     closeButton: {
         padding: 4,
-        marginTop: 10, // Approximate alignment with header vertical center
+        marginTop: 10,
     },
     menuCard: {
         width: width * 0.85,
@@ -85,8 +76,8 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         paddingVertical: 20,
         paddingHorizontal: 20,
-        alignItems: 'flex-start', // Align items to the start (left)
-        marginTop: width * 0.4, // Push down from the top (approx 15-20% of screen height visually)
+        alignItems: 'flex-start',
+        marginTop: width * 0.4,
     },
     menuItem: {
         width: '100%',
@@ -94,8 +85,8 @@ const styles = StyleSheet.create({
     },
     menuItemText: {
         fontSize: 18,
-        fontWeight: '700', // Bold text
+        fontWeight: '700',
         color: '#000',
-        fontFamily: 'System', // Or specific font if available
+        fontFamily: 'System',
     },
 });

@@ -98,10 +98,12 @@ export class SubscriptionPresentationMapper {
 
   private static calculateNextDueDate(
     startDate: Date,
-    frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly',
+    frequency: 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly',
   ): Date {
     const date = new Date(startDate);
     switch (frequency) {
+      case 'one-time':
+        return date;
       case 'weekly':
         date.setDate(date.getDate() + 7);
         break;

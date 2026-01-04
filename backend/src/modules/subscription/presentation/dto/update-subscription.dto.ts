@@ -62,12 +62,12 @@ export class UpdateSubscriptionDto {
 
   @ApiProperty({
     description: 'Fréquence de facturation',
-    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
+    enum: ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'],
     example: 'monthly',
     required: false,
   })
   @IsOptional()
-  @IsEnum(['weekly', 'monthly', 'quarterly', 'yearly'])
+  @IsEnum(['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'])
   frequency?: SubscriptionFrequency;
 
   @ApiProperty({

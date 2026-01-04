@@ -118,4 +118,18 @@ export class EventRepository implements IEventRepository {
     const result = await this.repository.softDelete(id);
     return (result.affected ?? 0) > 0;
   }
+
+  async updateFutureEventsStatus(subscriptionId: string, newStatus: string): Promise<number> {
+    const now = new Date();
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(EventEntity)
+      .set({ status: newStatus as any })
+      .where('subscriptionId = :subscriptionId', { subscriptionId })
+      .andWhere('startsAt > :now', { now })
+      .andWhere('status = :scheduledStatus', { scheduledStatus: 'scheduled' })
+      .execute();
+
+    return result.affected ?? 0;
+  }
 }

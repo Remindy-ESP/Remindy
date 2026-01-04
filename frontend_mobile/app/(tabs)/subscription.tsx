@@ -21,7 +21,7 @@ interface SubscriptionFormData {
   name: string;
   description: string;
   price: number;
-  billingCycle: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
+  billingCycle: 'ONE_TIME' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
   startDate: string;
   endDate?: string;
   categoryId: string;
@@ -37,6 +37,10 @@ export default function SubscriptionScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+
+  // Filters
+  const [filterFrequency, setFilterFrequency] = useState<string>('');
+  const [filterCategoryId, setFilterCategoryId] = useState<string>('');
 
   const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
@@ -55,12 +59,29 @@ export default function SubscriptionScreen() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    // Re-fetch when filters change
+    if (!loading) {
+      fetchData();
+    }
+  }, [filterFrequency, filterCategoryId]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Build filters object
+      const filters: { frequency?: string; categoryId?: string } = {};
+      if (filterFrequency) {
+        filters.frequency = filterFrequency;
+      }
+      if (filterCategoryId) {
+        filters.categoryId = filterCategoryId;
+      }
+
       const [subscriptionsData, categoriesData] = await Promise.all([
-        subscriptionService.getAll(),
+        subscriptionService.getAll(Object.keys(filters).length > 0 ? filters : undefined),
         categoryService.getAll(),
       ]);
       setSubscriptions(subscriptionsData);
@@ -141,7 +162,8 @@ export default function SubscriptionScreen() {
     setEditingSubscription(subscription);
     setPriceInput(subscription.amount?.toString() || '0');
 
-    const frequencyToBillingCycle: Record<string, 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
+    const frequencyToBillingCycle: Record<string, 'ONE_TIME' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
+      'one-time': 'ONE_TIME',
       'weekly': 'WEEKLY',
       'monthly': 'MONTHLY',
       'quarterly': 'QUARTERLY',
@@ -165,8 +187,9 @@ export default function SubscriptionScreen() {
   /**
    * Map frontend billingCycle to backend frequency format
    */
-  const mapBillingCycleToFrequency = (cycle: string): 'weekly' | 'monthly' | 'quarterly' | 'yearly' => {
-    const mapping: Record<string, 'weekly' | 'monthly' | 'quarterly' | 'yearly'> = {
+  const mapBillingCycleToFrequency = (cycle: string): 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' => {
+    const mapping: Record<string, 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'> = {
+      'ONE_TIME': 'one-time',
       'WEEKLY': 'weekly',
       'MONTHLY': 'monthly',
       'QUARTERLY': 'quarterly',
@@ -218,23 +241,23 @@ export default function SubscriptionScreen() {
 
       if (editingSubscription) {
         await subscriptionService.update(editingSubscription.id, requestData);
-        Alert.alert('Succès', 'Abonnement modifié avec succès');
+        Alert.alert('Succès', 'Opération modifié avec succès');
       } else {
         await subscriptionService.create(requestData);
-        Alert.alert('Succès', 'Abonnement créé avec succès');
+        Alert.alert('Succès', 'Opération créé avec succès');
       }
       setModalVisible(false);
       await fetchData();
     } catch (err: any) {
-      const errorMessage = getErrorMessage(err, 'Échec de l\'enregistrement de l\'abonnement');
+      const errorMessage = getErrorMessage(err, 'Échec de l\'enregistrement de l\'opération');
       Alert.alert('Erreur', errorMessage);
     }
   };
 
   const handleDelete = (subscription: Subscription) => {
     Alert.alert(
-      'Supprimer l\'abonnement',
-      `Êtes-vous sûr de vouloir supprimer votre abonnement "${subscription.name}"?`,
+      'Supprimer l\'opération',
+      `Êtes-vous sûr de vouloir supprimer votre opération "${subscription.name}"?`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -243,10 +266,10 @@ export default function SubscriptionScreen() {
           onPress: async () => {
             try {
               await subscriptionService.delete(subscription.id);
-              Alert.alert('Succès', 'Abonnement supprimé avec succès');
+              Alert.alert('Succès', 'Opération supprimé avec succès');
               await fetchData();
             } catch (err: any) {
-              Alert.alert('Erreur', getErrorMessage(err, 'Échec de la suppression de l\'abonnement'));
+              Alert.alert('Erreur', getErrorMessage(err, 'Échec de la suppression de l\'opération'));
             }
           },
         },
@@ -261,10 +284,10 @@ export default function SubscriptionScreen() {
       } else {
         await subscriptionService.resume(subscription.id);
       }
-      Alert.alert('Succès', `Abonnement ${subscription.status === 'active' ? 'mis en pause' : 'repris'} avec succès`);
+      Alert.alert('Succès', `Opération ${subscription.status === 'active' ? 'mis en pause' : 'repris'} avec succès`);
       await fetchData();
     } catch (err: any) {
-      Alert.alert('Erreur', getErrorMessage(err, 'Échec de la mise à jour de l\'abonnement'));
+      Alert.alert('Erreur', getErrorMessage(err, 'Échec de la mise à jour de l\'opération'));
     }
   };
 
@@ -282,6 +305,7 @@ export default function SubscriptionScreen() {
   const getBillingCycleLabel = (cycle: string) => {
     const lowerCycle = cycle?.toLowerCase();
     switch (lowerCycle) {
+      case 'one-time': return 'Achat unique';
       case 'monthly': return 'Mensuel';
       case 'yearly': return 'Annuel';
       case 'weekly': return 'Hebdomadaire';
@@ -376,11 +400,11 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Abonnements</Text>
+          <Text style={styles.headerTitle}>Opérations</Text>
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Chargement des abonnements...</Text>
+          <Text style={styles.loadingText}>Chargement des opérations...</Text>
         </View>
       </View>
     );
@@ -390,7 +414,7 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Abonnements</Text>
+          <Text style={styles.headerTitle}>Opérations</Text>
         </View>
         <View style={styles.centerContent}>
           <Text style={styles.errorText}>{error}</Text>
@@ -406,9 +430,9 @@ export default function SubscriptionScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Abonnements</Text>
+          <Text style={styles.headerTitle}>Opérations</Text>
           <Text style={styles.headerSubtitle}>
-            {subscriptions.length} abonnement{subscriptions.length !== 1 ? 's' : ''}
+            {subscriptions.length} opération{subscriptions.length !== 1 ? 's' : ''}
           </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
@@ -416,10 +440,49 @@ export default function SubscriptionScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Filtres */}
+      <View style={styles.filtersContainer}>
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Type de paiement</Text>
+          <View style={styles.filterPickerContainer}>
+            <Picker
+              selectedValue={filterFrequency}
+              onValueChange={(value) => setFilterFrequency(value)}
+              style={styles.filterPicker}
+              dropdownIconColor="#fff"
+            >
+              <Picker.Item label="Tous" value="" />
+              <Picker.Item label="Achat unique" value="one-time" />
+              <Picker.Item label="Hebdomadaire" value="weekly" />
+              <Picker.Item label="Mensuel" value="monthly" />
+              <Picker.Item label="Trimestriel" value="quarterly" />
+              <Picker.Item label="Annuel" value="yearly" />
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterLabel}>Catégorie</Text>
+          <View style={styles.filterPickerContainer}>
+            <Picker
+              selectedValue={filterCategoryId}
+              onValueChange={(value) => setFilterCategoryId(value)}
+              style={styles.filterPicker}
+              dropdownIconColor="#fff"
+            >
+              <Picker.Item label="Toutes" value="" />
+              {categories.map((cat) => (
+                <Picker.Item key={cat.id} label={`${cat.icon} ${cat.name}`} value={cat.id} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+      </View>
+
       {subscriptions.length === 0 ? (
         <View style={styles.centerContent}>
-          <Text style={styles.emptyText}>Pas d'abonnements.</Text>
-          <Text style={styles.emptySubtext}>Appuyez sur le bouton + pour créer votre premier abonnement.</Text>
+          <Text style={styles.emptyText}>Pas d'opérations.</Text>
+          <Text style={styles.emptySubtext}>Appuyez sur le bouton + pour créer votre premier opération.</Text>
         </View>
       ) : (
         <FlatList
@@ -444,7 +507,7 @@ export default function SubscriptionScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>
-                  {editingSubscription ? 'Modifier l\'abonnement' : 'Ajouter un abonnement'}
+                  {editingSubscription ? 'Modifier l\'opération' : 'Ajouter un opération'}
                 </Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                   <Text style={styles.closeButton}>✕</Text>
@@ -499,6 +562,7 @@ export default function SubscriptionScreen() {
                       style={styles.picker}
                       dropdownIconColor="#fff"
                     >
+                      <Picker.Item label="Achat unique" value="ONE_TIME" />
                       <Picker.Item label="Semaine" value="WEEKLY" />
                       <Picker.Item label="Mois" value="MONTHLY" />
                       <Picker.Item label="Trimestre" value="QUARTERLY" />
@@ -618,6 +682,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    gap: 12,
+    backgroundColor: '#1a1a3e',
+  },
+  filterGroup: {
+    flex: 1,
+  },
+  filterLabel: {
+    color: '#e0e0e0',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  filterPickerContainer: {
+    backgroundColor: '#2d2d5f',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3d3d6f',
+    overflow: 'hidden',
+  },
+  filterPicker: {
+    color: '#fff',
+    backgroundColor: '#2d2d5f',
   },
   centerContent: {
     flex: 1,

@@ -1,30 +1,36 @@
 import React, { useState } from 'react';
 import {
     View,
-    Text,
     StyleSheet,
     Dimensions,
     TouchableOpacity,
     Image,
     Modal,
     TouchableWithoutFeedback,
+    Text,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import BurgerMenu from './BurgerMenu';
+import { APP_ROUTES } from '@/navigation/MenuConfig';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function GlobalHeader() {
     const insets = useSafeAreaInsets();
     const headerHeight = SCREEN_HEIGHT * 0.07 + insets.top;
+
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isProfileMenuVisible, setIsProfileMenuVisible] = useState(false);
+
     const router = useRouter();
 
+    const burgerItems = APP_ROUTES.filter(route => route.showInBurger);
+
     const toggleProfileMenu = () => {
-        setIsProfileMenuVisible(!isProfileMenuVisible);
+        setIsProfileMenuVisible(prev => !prev);
     };
 
     const closeProfileMenu = () => {
@@ -45,13 +51,13 @@ export default function GlobalHeader() {
                 ]}
             >
                 <View style={styles.content}>
-                    {/* Left: Burger Menu */}
                     <TouchableOpacity
                         onPress={() => setIsMenuVisible(true)}
                         style={styles.iconButton}
                     >
                         <Ionicons name="menu-outline" size={32} color="#fff" />
                     </TouchableOpacity>
+
                     <View style={{ position: 'relative', zIndex: 10 }}>
                         <TouchableOpacity
                             style={styles.profileButton}
@@ -71,11 +77,12 @@ export default function GlobalHeader() {
             <BurgerMenu
                 isVisible={isMenuVisible}
                 onClose={() => setIsMenuVisible(false)}
+                items={burgerItems}
             />
 
             <Modal
                 visible={isProfileMenuVisible}
-                transparent={true}
+                transparent
                 animationType="fade"
                 onRequestClose={closeProfileMenu}
             >
@@ -93,18 +100,16 @@ export default function GlobalHeader() {
                             >
                                 <Text style={styles.menuItemText}>Profil</Text>
                             </TouchableOpacity>
+
                             <View style={styles.separator} />
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={closeProfileMenu}
-                            >
+
+                            <TouchableOpacity style={styles.menuItem}>
                                 <Text style={styles.menuItemText}>Catégories</Text>
                             </TouchableOpacity>
+
                             <View style={styles.separator} />
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={closeProfileMenu}
-                            >
+
+                            <TouchableOpacity style={styles.menuItem}>
                                 <Text style={styles.menuItemText}>Réglages</Text>
                             </TouchableOpacity>
                         </View>
