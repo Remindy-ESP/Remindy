@@ -27,7 +27,7 @@ import { SeedModule } from './modules/seed/seed.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.develop`,
+      envFilePath: `.env`,
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ThrottlerModule.forRoot([
@@ -65,4 +65,4 @@ import { SeedModule } from './modules/seed/seed.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

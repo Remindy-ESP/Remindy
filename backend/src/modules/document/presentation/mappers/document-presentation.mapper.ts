@@ -4,6 +4,8 @@ import { DocumentFilterDto } from '../dto/document-filter.dto';
 import { DocumentFilterAppDto } from '../../application/dto/document-filter-app.dto';
 import { ReprocessOcrDto } from '../dto/reprocess-ocr.dto';
 import { ReprocessOcrAppDto } from '../../application/dto/reprocess-ocr-app.dto';
+import { UpdateDocumentDto } from '../dto/update-document.dto';
+import { UpdateDocumentAppDto } from '../../application/dto/update-document-app.dto';
 
 export class DocumentPresentationMapper {
   static toResponseDto(document: Document): DocumentResponseDto {
@@ -54,6 +56,13 @@ export class DocumentPresentationMapper {
   static toReprocessOcrAppDto(dto: ReprocessOcrDto): ReprocessOcrAppDto {
     return {
       force: dto.force ?? false,
+    };
+  }
+
+  static toUpdateAppDto(dto: UpdateDocumentDto): UpdateDocumentAppDto {
+    return {
+      filename: dto.filename,
+      folderId: dto.folder_id,
     };
   }
 }
