@@ -9,6 +9,7 @@ import { UploadDocumentUseCase } from './application/use-cases/upload-document.u
 import { FindAllDocumentsUseCase } from './application/use-cases/find-all-documents.use-case';
 import { DeleteDocumentUseCase } from './application/use-cases/delete-document.use-case';
 import { ReprocessOcrUseCase } from './application/use-cases/reprocess-ocr.use-case';
+import { UpdateDocumentUseCase } from './application/use-cases/update-document.use-case';
 import { CloudflareR2Service } from './infrastructure/services/cloudflare-r2.service';
 import { OcrService } from './infrastructure/services/ocr.service';
 import { GeminiParserService } from './infrastructure/services/gemini-parser.service';
@@ -32,9 +33,10 @@ import { OcrEventListener } from './application/events/ocr-event.listener';
     FindAllDocumentsUseCase,
     DeleteDocumentUseCase,
     ReprocessOcrUseCase,
+    UpdateDocumentUseCase,
     InMemoryQueueService,
     OcrEventListener,
   ],
   exports: [DOCUMENT_REPOSITORY, InMemoryQueueService],
 })
-export class DocumentModule {}
+export class DocumentModule { }

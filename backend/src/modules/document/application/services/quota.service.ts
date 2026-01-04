@@ -36,7 +36,7 @@ export class QuotaService {
   constructor(
     @Inject(DOCUMENT_REPOSITORY)
     private readonly documentRepository: IDocumentRepository,
-  ) {}
+  ) { }
 
   /**
    * Récupère la taille maximale de fichier autorisée pour un rôle
@@ -92,7 +92,14 @@ export class QuotaService {
     userRole: UserRole,
     fileSize: number,
   ): Promise<void> {
-    const limits = this.QUOTA_LIMITS[userRole];
+    // ⚠️ TEMPORARY: Default to 'freemium' if role is undefined or not recognized
+    let role: UserRole = 'freemium';
+    if (userRole && this.QUOTA_LIMITS[userRole]) {
+      role = userRole;
+    } else {
+      this.logger.debug(`Unknown role '${userRole}', defaulting to 'freemium'`);
+    }
+    const limits = this.QUOTA_LIMITS[role];
 
     // 1. Vérifier la taille du fichier
     if (fileSize > limits.maxFileSize) {

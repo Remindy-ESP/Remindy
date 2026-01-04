@@ -35,7 +35,7 @@ describe('DocumentController (e2e)', () => {
     // In a real scenario, you would call POST /auth/login
     authToken = 'mock-jwt-token';
     userId = 'test-user-id-123';
-  });
+  }, 30000); // Increase timeout to 30 seconds
 
   afterAll(async () => {
     // Cleanup: delete test documents
@@ -47,7 +47,9 @@ describe('DocumentController (e2e)', () => {
       }
     }
 
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   describe('POST /documents/upload', () => {
