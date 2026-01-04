@@ -10,7 +10,7 @@ export default function RootLayout() {
       <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
-            headerShown: false, // Hide default headers since we have a global one
+            headerShown: false,
             contentStyle: { backgroundColor: '#fff' },
           }}
         >

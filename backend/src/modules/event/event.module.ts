@@ -11,6 +11,7 @@ import { GetEventByIdUseCase } from './application/use-cases/get-event-by-id.use
 import { DeleteEventUseCase } from './application/use-cases/delete-event.use-case';
 import { UpdateEventStatusUseCase } from './application/use-cases/update-event-status.use-case';
 import { UpdateEventPaymentStatusUseCase } from './application/use-cases/update-event-payment-status.use-case';
+import { UpdateFutureEventsStatusUseCase } from './application/use-cases/update-future-events-status.use-case';
 import { EventGenerationService } from './application/services/event-generation.service';
 import { EventController } from './presentation/controllers/event.controller';
 import { SubscriptionModule } from '../subscription/subscription.module';
@@ -38,8 +39,9 @@ import { AuthModule } from '../auth/auth.module';
     DeleteEventUseCase,
     UpdateEventStatusUseCase,
     UpdateEventPaymentStatusUseCase,
+    UpdateFutureEventsStatusUseCase,
     EventGenerationService,
   ],
-  exports: [EVENT_REPOSITORY, CreateEventUseCase, GenerateEventsForSubscriptionUseCase],
+  exports: [EVENT_REPOSITORY, CreateEventUseCase, GenerateEventsForSubscriptionUseCase, UpdateFutureEventsStatusUseCase],
 })
 export class EventModule {}

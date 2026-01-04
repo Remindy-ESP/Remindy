@@ -7,4 +7,5 @@ export interface SubscriptionFilterAppDto {
   currency?: string;
   frequency?: SubscriptionFrequency;
   status?: SubscriptionStatus;
+  categoryId?: string;
 }

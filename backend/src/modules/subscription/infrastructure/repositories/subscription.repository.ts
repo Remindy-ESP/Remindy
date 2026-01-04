@@ -68,6 +68,12 @@ export class SubscriptionRepository implements ISubscriptionRepository {
           status: filters.status,
         });
       }
+
+      if (filters.categoryId) {
+        queryBuilder.andWhere('subscription.categoryId = :categoryId', {
+          categoryId: filters.categoryId,
+        });
+      }
     }
 
     queryBuilder.orderBy('subscription.createdAt', 'DESC');

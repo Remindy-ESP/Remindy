@@ -1,11 +1,35 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { Calendar } from 'react-native-calendars';
+import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { useFocusEffect } from '@react-navigation/native';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
+import { translateEventStatus, getEventStatusColor } from '@/utils/translations';
+
+LocaleConfig.locales['fr'] = {
+  monthNames: [
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre'
+  ],
+  monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
+  dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+  dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
+  today: "Aujourd'hui"
+};
+LocaleConfig.defaultLocale = 'fr';
 
 export default function DashboardScreen() {
   const {
@@ -25,18 +49,23 @@ export default function DashboardScreen() {
     error,
     getEventsForDate,
     getEventsByCategory,
+    fetchDashboardData,
   } = useDashboard();
 
     const { token } = useAuth();
-    console.log('Current Token:', token);
+    console.log("Current token : ", token);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchDashboardData();
+    }, [])
+  );
 
   const selectedDateEvents = selected ? getEventsForDate(selected) : [];
   const filteredEvents = selectedCategory
     ? getEventsByCategory(selectedCategory)
     : events;
 
-  // Create marked dates for calendar (events as dots)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const markedDates = React.useMemo(() => {
     const marks: any = {};
 
@@ -48,7 +77,7 @@ export default function DashboardScreen() {
         const dateKey = eventDateObj.toISOString().split('T')[0];
         marks[dateKey] = {
           marked: true,
-          dotColor: '#4f46e5',
+          dotColor: '#32c80e',
         };
       } catch (error) {
         console.error('Error parsing event date:', error);
@@ -71,7 +100,7 @@ export default function DashboardScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#4f46e5" />
-        <Text style={{ color: '#fff', marginTop: 16 }}>Loading dashboard...</Text>
+        <Text style={{ color: '#fff', marginTop: 16 }}>Chargement de la page d'accueil...</Text>
       </View>
     );
   }
@@ -117,7 +146,7 @@ export default function DashboardScreen() {
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.categoryText}>All Categories</Text>
+                  <Text style={styles.categoryText}>Toutes les catégories</Text>
                 </TouchableOpacity>
                 {categories.map((category: Category) => (
                   <TouchableOpacity
@@ -145,12 +174,7 @@ export default function DashboardScreen() {
             onDayPress={(day) => {
               setSelected(day.dateString);
             }}
-            markedDates={{
-              [selected]: {
-                selected: true,
-                selectedColor: '#4f46e5',
-              },
-            }}
+            markedDates={markedDates}
             theme={{
               backgroundColor: '#2a2a5e',
               calendarBackground: '#373848',
@@ -179,11 +203,11 @@ export default function DashboardScreen() {
         {selected && (
           <View style={{ padding: 16, backgroundColor: '#2a2a5e', marginTop: 16, borderRadius: 8 }}>
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
-              Events on {selected}
+              Événements du {selected}
             </Text>
             {selectedDateEvents.length === 0 ? (
               <Text style={{ color: '#999', fontStyle: 'italic' }}>
-                No events for this date
+                Aucun événement pour cette date
               </Text>
             ) : (
               selectedDateEvents.map((event) => (
@@ -195,7 +219,7 @@ export default function DashboardScreen() {
                     borderRadius: 6,
                     marginBottom: 8,
                     borderLeftWidth: 4,
-                    borderLeftColor: event.status === 'COMPLETED' ? '#4ade80' : '#4f46e5',
+                    borderLeftColor: getEventStatusColor(event.status),
                   }}
                 >
                   <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
@@ -208,18 +232,18 @@ export default function DashboardScreen() {
                   )}
                   {event.subscription && (
                     <Text style={{ color: '#4f46e5', fontSize: 12, marginTop: 4 }}>
-                      {event.subscription.name} - ${event.subscription.amount}
+                      {event.subscription.name} - {event.subscription.amount}€
                     </Text>
                   )}
                   <Text
                     style={{
-                      color: event.status === 'COMPLETED' ? '#4ade80' : '#fbbf24',
+                      color: getEventStatusColor(event.status),
                       fontSize: 11,
                       marginTop: 4,
                       fontWeight: '500',
                     }}
                   >
-                    {event.status}
+                    {translateEventStatus(event.status)}
                   </Text>
                 </View>
               ))
@@ -258,7 +282,6 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Contenu en fonction de la période sélectionnée */}
         <View style={styles.contentSection}>
           <Text style={styles.contentText} testID="period-content">
             {getContentForPeriod(activePeriod)}

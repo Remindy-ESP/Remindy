@@ -7,17 +7,22 @@ import { RescheduleEventAppDto } from '../../application/dto/reschedule-event-ap
 
 export class EventPresentationMapper {
   static toResponseDto(event: Event): EventResponseDto {
+    const startsAtISO = event.startsAt.toISOString();
     return {
       id: event.id!,
       subscriptionId: event.subscriptionId,
       eventSeriesId: event.eventSeriesId,
       title: event.title,
+      description: event.notes, // Map notes to description for frontend compatibility
       amount: event.amount,
-      startsAt: event.startsAt.toISOString(),
+      startsAt: startsAtISO,
+      dueDate: startsAtISO, // Alias pour compatibilité frontend
       endsAt: event.endsAt?.toISOString(),
       status: event.status,
       paymentStatus: event.paymentStatus,
       notes: event.notes,
+      userId: '', // Will be set by controller
+      subscription: undefined, // Will be set by controller
       createdAt: event.createdAt!.toISOString(),
       updatedAt: event.updatedAt!.toISOString(),
     };

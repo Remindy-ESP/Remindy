@@ -92,7 +92,7 @@ describe('FindSubscriptionsByPeriodUseCase', () => {
 
     await expect(useCase.execute(invalidFrequency)).rejects.toThrow(BadRequestException);
     await expect(useCase.execute(invalidFrequency)).rejects.toThrow(
-      'Invalid frequency. Must be one of: weekly, monthly, quarterly, yearly',
+      'Invalid frequency. Must be one of: one-time, weekly, monthly, quarterly, yearly',
     );
     expect(repository.findByFrequency).not.toHaveBeenCalled();
   });

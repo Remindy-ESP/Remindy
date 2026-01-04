@@ -2,6 +2,17 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import DashboardScreen from '../dashboard';
 
+// Mock @react-navigation/native
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: jest.fn((callback) => {
+    // Optionally call the callback if needed for testing
+  }),
+  useNavigation: jest.fn(() => ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+  })),
+}));
+
 // Mock useAuth hook
 jest.mock('../../../context/AuthContext', () => ({
   useAuth: jest.fn(() => ({
@@ -23,25 +34,26 @@ jest.mock('../../../hooks/useDashboard', () => ({
   useDashboard: jest.fn(() => ({
     selected: '',
     setSelected: jest.fn(),
-    activePeriod: 'Tout',
+    activePeriod: 'day',
     setActivePeriod: jest.fn(),
     categoriesOpen: false,
     setCategoriesOpen: jest.fn(),
     selectedCategory: null,
     setSelectedCategory: jest.fn(),
     timePeriods: [
-      { key: 'Tout', label: 'Tout' },
-      { key: 'Aujourd\'hui', label: 'Aujourd\'hui' },
-      { key: 'Semaine', label: 'Semaine' },
-      { key: 'Mois', label: 'Mois' },
+      { key: 'day', label: 'Ce jour', value: '1' },
+      { key: 'week', label: 'Semaine', value: '2' },
+      { key: 'month', label: 'Mensuel', value: '3' },
+      { key: 'year', label: 'Année', value: '4' },
     ],
-    getContentForPeriod: jest.fn(() => 'No content'),
+    getContentForPeriod: jest.fn(() => '1'),
     categories: [],
     events: [],
     loading: false,
     error: null,
     getEventsForDate: jest.fn(() => []),
     getEventsByCategory: jest.fn(() => []),
+    fetchDashboardData: jest.fn(),
   })),
 }));
 
@@ -57,6 +69,10 @@ jest.mock('react-native-calendars', () => ({
         }
       />
     );
+  },
+  LocaleConfig: {
+    locales: {},
+    defaultLocale: 'en',
   },
 }));
 
@@ -89,25 +105,26 @@ describe('DashboardScreen', () => {
     useDashboardMock.mockReturnValue({
       selected: '',
       setSelected: jest.fn(),
-      activePeriod: 'Tout',
+      activePeriod: 'day',
       setActivePeriod: jest.fn(),
       categoriesOpen: false,
       setCategoriesOpen: mockSetCategoriesOpen,
       selectedCategory: null,
       setSelectedCategory: jest.fn(),
       timePeriods: [
-        { key: 'Tout', label: 'Tout' },
-        { key: 'Aujourd\'hui', label: 'Aujourd\'hui' },
-        { key: 'Semaine', label: 'Semaine' },
-        { key: 'Mois', label: 'Mois' },
+        { key: 'day', label: 'Ce jour', value: '1' },
+        { key: 'week', label: 'Semaine', value: '2' },
+        { key: 'month', label: 'Mensuel', value: '3' },
+        { key: 'year', label: 'Année', value: '4' },
       ],
-      getContentForPeriod: jest.fn(),
+      getContentForPeriod: jest.fn(() => '1'),
       categories: [],
       events: [],
       loading: false,
       error: null,
       getEventsForDate: jest.fn(() => []),
       getEventsByCategory: jest.fn(() => []),
+      fetchDashboardData: jest.fn(),
     });
 
     const { getByText } = render(<DashboardScreen />);

@@ -7,13 +7,13 @@ export default function StatsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Statistique</Text>
+        <Text style={styles.headerTitle}>Statistiques</Text>
         <Text style={styles.headerSubtitle}>
           Consultez vos statistiques
         </Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.placeholder}>Contenu Statistique</Text>
+        <Text style={styles.placeholder}>Pas de statistiques pour le moment</Text>
       </View>
     </View>
   );

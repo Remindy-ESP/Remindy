@@ -3,12 +3,14 @@ import type { ISubscriptionRepository } from '../ports/subscription-repository.i
 import { SUBSCRIPTION_REPOSITORY } from '../ports/subscription-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { UpdateSubscriptionAppDto } from '../dto/update-subscription-app.dto';
+import { UpdateFutureEventsStatusUseCase } from 'src/modules/event/application/use-cases/update-future-events-status.use-case';
 
 @Injectable()
 export class UpdateSubscriptionUseCase {
   constructor(
     @Inject(SUBSCRIPTION_REPOSITORY)
     private readonly subscriptionRepository: ISubscriptionRepository,
+    private readonly updateFutureEventsStatusUseCase: UpdateFutureEventsStatusUseCase,
   ) {}
 
   async execute(id: string, dto: UpdateSubscriptionAppDto): Promise<Subscription> {
@@ -56,7 +58,13 @@ export class UpdateSubscriptionUseCase {
     }
 
     if (dto.status !== undefined) {
+      const oldStatus = existingSubscription.status;
       existingSubscription.updateStatus(dto.status);
+
+      // Mettre à jour les événements futurs en fonction du changement de statut
+      if (oldStatus !== dto.status) {
+        await this.updateFutureEventsBasedOnSubscriptionStatus(id, dto.status);
+      }
     }
 
     if (dto.color !== undefined) {
@@ -74,5 +82,31 @@ export class UpdateSubscriptionUseCase {
     }
 
     return updated;
+  }
+
+  /**
+   * Met à jour le statut des événements futurs en fonction du statut de la subscription
+   */
+  private async updateFutureEventsBasedOnSubscriptionStatus(
+    subscriptionId: string,
+    subscriptionStatus: 'active' | 'paused' | 'cancelled' | 'trial',
+  ): Promise<void> {
+    let eventStatus: 'scheduled' | 'canceled';
+
+    switch (subscriptionStatus) {
+      case 'paused':
+      case 'cancelled':
+        eventStatus = 'canceled';
+        break;
+      case 'active':
+      case 'trial':
+        // Note: On ne réactive pas automatiquement les événements annulés
+        // car ils ont pu être annulés individuellement
+        return;
+      default:
+        return;
+    }
+
+    await this.updateFutureEventsStatusUseCase.execute(subscriptionId, eventStatus);
   }
 }

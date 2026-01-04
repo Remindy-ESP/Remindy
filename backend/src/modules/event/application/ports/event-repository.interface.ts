@@ -1,4 +1,4 @@
-import { Event } from '../../domain/event.entity';
+import { Event, EventStatus } from '../../domain/event.entity';
 import { EventFilterAppDto } from '../dto/event-filter-app.dto';
 
 export interface IEventRepository {
@@ -8,6 +8,7 @@ export interface IEventRepository {
   findAll(filters?: EventFilterAppDto): Promise<Event[]>;
   findBySubscriptionId(subscriptionId: string): Promise<Event[]>;
   update(id: string, event: Event): Promise<Event | null>;
+  updateFutureEventsStatus(subscriptionId: string, newStatus: EventStatus): Promise<number>;
   delete(id: string): Promise<boolean>;
   softDelete(id: string): Promise<boolean>;
 }

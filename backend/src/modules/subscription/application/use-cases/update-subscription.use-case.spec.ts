@@ -7,15 +7,21 @@ import {
 } from '../ports/subscription-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
 import { UpdateSubscriptionAppDto } from '../dto/update-subscription-app.dto';
+import { UpdateFutureEventsStatusUseCase } from 'src/modules/event/application/use-cases/update-future-events-status.use-case';
 
 describe('UpdateSubscriptionUseCase', () => {
   let useCase: UpdateSubscriptionUseCase;
   let repository: jest.Mocked<ISubscriptionRepository>;
+  let updateFutureEventsStatusUseCase: jest.Mocked<UpdateFutureEventsStatusUseCase>;
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<ISubscriptionRepository>> = {
       findById: jest.fn(),
       update: jest.fn(),
+    };
+
+    const mockUpdateFutureEventsStatusUseCase = {
+      execute: jest.fn().mockResolvedValue(0),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -25,11 +31,16 @@ describe('UpdateSubscriptionUseCase', () => {
           provide: SUBSCRIPTION_REPOSITORY,
           useValue: mockRepository,
         },
+        {
+          provide: UpdateFutureEventsStatusUseCase,
+          useValue: mockUpdateFutureEventsStatusUseCase,
+        },
       ],
     }).compile();
 
     useCase = module.get<UpdateSubscriptionUseCase>(UpdateSubscriptionUseCase);
     repository = module.get(SUBSCRIPTION_REPOSITORY);
+    updateFutureEventsStatusUseCase = module.get(UpdateFutureEventsStatusUseCase);
   });
 
   it('should be defined', () => {

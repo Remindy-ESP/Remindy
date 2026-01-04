@@ -16,8 +16,17 @@ class SubscriptionService {
   /**
    * Get all user subscriptions
    */
-  async getAll(): Promise<Subscription[]> {
-    const response = await apiClient.get<Subscription[]>(this.BASE_PATH);
+  async getAll(filters?: { frequency?: string; categoryId?: string }): Promise<Subscription[]> {
+    const params = new URLSearchParams();
+    if (filters?.frequency) {
+      params.append('frequency', filters.frequency);
+    }
+    if (filters?.categoryId) {
+      params.append('categoryId', filters.categoryId);
+    }
+    const queryString = params.toString();
+    const url = queryString ? `${this.BASE_PATH}?${queryString}` : this.BASE_PATH;
+    const response = await apiClient.get<Subscription[]>(url);
     return response.data;
   }
 

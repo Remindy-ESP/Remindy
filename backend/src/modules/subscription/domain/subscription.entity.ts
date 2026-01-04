@@ -1,4 +1,4 @@
-export type SubscriptionFrequency = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+export type SubscriptionFrequency = 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'trial';
 
 export interface SubscriptionProps {
@@ -167,9 +167,9 @@ export class Subscription {
       throw new Error('Currency must be a valid ISO 4217 code (3 characters)');
     }
 
-    const validFrequencies: SubscriptionFrequency[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
+    const validFrequencies: SubscriptionFrequency[] = ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'];
     if (!validFrequencies.includes(this._frequency)) {
-      throw new Error('Invalid frequency. Must be: weekly, monthly, quarterly, or yearly');
+      throw new Error('Invalid frequency. Must be: one-time, weekly, monthly, quarterly, or yearly');
     }
 
     const validStatuses: SubscriptionStatus[] = ['active', 'paused', 'cancelled', 'trial'];
@@ -214,9 +214,9 @@ export class Subscription {
   }
 
   public updateFrequency(newFrequency: SubscriptionFrequency): void {
-    const validFrequencies: SubscriptionFrequency[] = ['weekly', 'monthly', 'quarterly', 'yearly'];
+    const validFrequencies: SubscriptionFrequency[] = ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'];
     if (!validFrequencies.includes(newFrequency)) {
-      throw new Error('Invalid frequency. Must be: weekly, monthly, quarterly, or yearly');
+      throw new Error('Invalid frequency. Must be: one-time, weekly, monthly, quarterly, or yearly');
     }
     this._frequency = newFrequency;
     this.recalculateNextDueDate();
@@ -296,21 +296,27 @@ export class Subscription {
     const date = new Date(this._startDate);
 
     switch (this._frequency) {
+      case 'one-time':
+        // For one-time purchases, next due date is same as start date
+        this._nextDueDate = date;
+        break;
       case 'weekly':
         date.setDate(date.getDate() + 7);
+        this._nextDueDate = date;
         break;
       case 'monthly':
         date.setMonth(date.getMonth() + 1);
+        this._nextDueDate = date;
         break;
       case 'quarterly':
         date.setMonth(date.getMonth() + 3);
+        this._nextDueDate = date;
         break;
       case 'yearly':
         date.setFullYear(date.getFullYear() + 1);
+        this._nextDueDate = date;
         break;
     }
-
-    this._nextDueDate = date;
   }
 
   public toJSON(): SubscriptionProps {

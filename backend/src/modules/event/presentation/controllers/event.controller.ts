@@ -115,12 +115,23 @@ export class EventController {
       userId: user.userId,
     });
     const userSubscriptionIds = new Set(userSubscriptions.map(sub => sub.id!));
+    const subscriptionMap = new Map(userSubscriptions.map(sub => [sub.id!, sub]));
 
     const appFilters = EventPresentationMapper.toFilterAppDto(filters);
     const events = await this.findAllEventsUseCase.execute(appFilters);
 
     const userEvents = events.filter(event => userSubscriptionIds.has(event.subscriptionId));
-    return EventPresentationMapper.toResponseDtoArray(userEvents);
+
+    // Enrichir les événements avec les informations de subscription
+    return userEvents.map(event => {
+      const dto = EventPresentationMapper.toResponseDto(event);
+      const subscription = subscriptionMap.get(event.subscriptionId);
+      return {
+        ...dto,
+        subscription: subscription || undefined,
+        userId: user.userId,
+      };
+    });
   }
 
   @Get('event/:id')
