@@ -43,7 +43,7 @@ export default function DashboardScreen() {
     selectedCategory,
     setSelectedCategory,
     timePeriods,
-    getContentForPeriod,
+    getEventsForPeriod,
     categories,
     events,
     loading,
@@ -209,7 +209,7 @@ export default function DashboardScreen() {
         />
 
         {/* Events for selected date */}
-        {selected && (
+        {/* {selected && (
           <View style={{ padding: 16, backgroundColor: '#2a2a5e', marginTop: 16, borderRadius: 8 }}>
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
               Événements du {selected}
@@ -258,7 +258,7 @@ export default function DashboardScreen() {
               ))
             )}
           </View>
-        )}
+        )} */}
 
         <View style={styles.timePeriodSection}>
           <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
@@ -292,9 +292,36 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.contentSection}>
-          <Text style={styles.contentText} testID="period-content">
-            {getContentForPeriod(activePeriod)}
-          </Text>
+          {getEventsForPeriod(activePeriod, selected).length === 0 ? (
+            <Text style={{ color: '#999', textAlign: 'center', marginVertical: 20 }}>
+              Aucune dépense pour cette période
+            </Text>
+          ) : (
+            <ScrollView
+              style={{ maxHeight: 325 }}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+            >
+              {getEventsForPeriod(activePeriod, selected).map((event) => (
+                <View key={event.id} style={styles.expenseItem}>
+                  <View style={styles.expenseLeft}>
+                    <View style={styles.expenseIconPlaceholder} />
+                    <View>
+                      <Text style={styles.expenseTitle}>
+                        {event.subscription?.name || event.title}
+                      </Text>
+                      <Text style={styles.expenseCategory}>
+                        {event.subscription?.category?.name || 'Général'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.expenseAmount}>
+                    {event.subscription?.amount ? `${event.subscription.amount}€` : '-'}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
 
@@ -449,5 +476,39 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1F1F39',
     textAlign: 'center',
+  },
+  expenseItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  expenseLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  expenseIconPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#000',
+    marginRight: 12,
+  },
+  expenseTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  expenseCategory: {
+    color: '#999',
+    fontSize: 13,
+  },
+  expenseAmount: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '400',
   },
 });
