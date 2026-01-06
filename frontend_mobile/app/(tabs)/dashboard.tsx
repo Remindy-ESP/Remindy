@@ -30,6 +30,7 @@ LocaleConfig.locales['fr'] = {
   today: "Aujourd'hui"
 };
 LocaleConfig.defaultLocale = 'fr';
+import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 
 export default function DashboardScreen() {
   const {
@@ -52,8 +53,8 @@ export default function DashboardScreen() {
     fetchDashboardData,
   } = useDashboard();
 
-    const { token } = useAuth();
-    console.log("Current token : ", token);
+  const { token } = useAuth();
+  console.log("Current token : ", token);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -66,6 +67,8 @@ export default function DashboardScreen() {
     ? getEventsByCategory(selectedCategory)
     : events;
 
+  // Create marked dates for calendar (events as dots)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const markedDates = React.useMemo(() => {
     const marks: any = {};
 
@@ -198,6 +201,12 @@ export default function DashboardScreen() {
             }}
           />
         </View>
+
+        {/* Daily Expenses Summary */}
+        <DailyExpensesSummary
+          date={selected}
+          events={selectedDateEvents}
+        />
 
         {/* Events for selected date */}
         {selected && (
