@@ -126,7 +126,7 @@ export default function DashboardScreen() {
 
   const handleManualEntry = () => {
     setAddOperationModalOpen(false);
-    router.push('/manual-entry');
+    router.push({ pathname: '/(tabs)/subscription', params: { openAdd: Date.now().toString() } });
   };
 
   const handlePdfInsert = () => {

@@ -45,3 +45,15 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
     multiRemove: jest.fn(() => Promise.resolve()),
   },
 }));
+
+// Mock expo-router
+jest.mock('expo-router', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+    setParams: jest.fn(),
+  }),
+  useLocalSearchParams: () => ({}),
+  Link: 'Link',
+}));
