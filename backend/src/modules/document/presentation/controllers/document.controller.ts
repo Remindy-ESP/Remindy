@@ -323,7 +323,6 @@ export class DocumentController {
     @Body() reprocessDto: ReprocessOcrDto,
     @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto> {
-    // Extract userId from JWT token
     const { user } = req as Request & { user: { userId: string; role: string } };
     const userId = user.userId;
 
