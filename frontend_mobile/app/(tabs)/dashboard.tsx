@@ -2,12 +2,14 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
 import { translateEventStatus, getEventStatusColor } from '@/utils/translations';
+import AddOperationModal from '@/components/AddOperationModal';
 
 LocaleConfig.locales['fr'] = {
   monthNames: [
@@ -32,6 +34,7 @@ LocaleConfig.locales['fr'] = {
 LocaleConfig.defaultLocale = 'fr';
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const {
     selected,
     setSelected,
@@ -41,6 +44,8 @@ export default function DashboardScreen() {
     setCategoriesOpen,
     selectedCategory,
     setSelectedCategory,
+    addOperationModalOpen,
+    setAddOperationModalOpen,
     timePeriods,
     getContentForPeriod,
     categories,
@@ -118,6 +123,16 @@ export default function DashboardScreen() {
       </View>
     );
   }
+
+  const handleManualEntry = () => {
+    setAddOperationModalOpen(false);
+    router.push('/manual-entry');
+  };
+
+  const handlePdfInsert = () => {
+    setAddOperationModalOpen(false);
+    console.log('PDF insert selected');
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -290,7 +305,14 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <AddOperationButton
-        onPress={() => { console.log('Add operation pressed') }}
+        onPress={() => setAddOperationModalOpen(true)}
+      />
+
+      <AddOperationModal
+        visible={addOperationModalOpen}
+        onClose={() => setAddOperationModalOpen(false)}
+        onManualEntry={handleManualEntry}
+        onPdfInsert={handlePdfInsert}
       />
     </View>
   );
