@@ -55,10 +55,9 @@ import { QuotaService } from '../../application/services/quota.service';
 import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 
 @ApiTags('Documents')
-// @ApiBearerAuth() // ⚠️ TEMPORARILY DISABLED FOR TESTING - RE-ENABLE BEFORE PRODUCTION
+@ApiBearerAuth()
 @Controller('documents')
-// @UseGuards(JwtAuthGuard, ThrottlerGuard) // ⚠️ JWT AUTH DISABLED FOR TESTING
-@UseGuards(ThrottlerGuard)
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 export class DocumentController {
   constructor(
     private readonly uploadDocumentUseCase: UploadDocumentUseCase,
@@ -73,10 +72,6 @@ export class DocumentController {
     private readonly queueService: InMemoryQueueService,
   ) { }
 
-  // ⚠️ TEMPORARY HELPER FOR TESTING WITHOUT AUTH - REMOVE BEFORE PRODUCTION
-  private getTestUserId(): string {
-    return '00000000-0000-0000-0000-000000000001';
-  }
 
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
@@ -124,10 +119,10 @@ export class DocumentController {
       }),
     )
     file: Express.Multer.File,
-    // @CurrentUser('id') userId: string, // Disabled for testing
+    @CurrentUser('id') userId: string,
     @Body('subscription_id') subscriptionId?: string,
     @Body('contract_id') contractId?: string,
-    // @CurrentUser('role') userRole?: string, // Disabled for testing
+    @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const userId = user.userId;
@@ -135,10 +130,6 @@ export class DocumentController {
     if (!file) {
       throw new BadRequestException('File is required');
     }
-
-    // ⚠️ TEMPORARY: Hardcoded userId for testing without auth (must be valid UUID)
-    const userId = '00000000-0000-0000-0000-000000000001';
-    const userRole = 'freemium';
 
     const appDto: UploadDocumentAppDto = {
       userId,
@@ -177,6 +168,7 @@ export class DocumentController {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
+    // Vérifier que le document appartient à l'utilisateur
     if (document.userId !== userId) {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
