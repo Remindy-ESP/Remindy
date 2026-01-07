@@ -84,4 +84,98 @@ describe('ReprocessOcrUseCase', () => {
       NotFoundException,
     );
   });
+
+  it('should throw NotFoundException when document does not belong to user', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+    const otherUserId = 'user-456';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId: otherUserId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'failed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+
+    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it('should throw BadRequestException when OCR already completed without force', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+
+    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
+      'OCR already completed. Use force=true to reprocess.',
+    );
+  });
+
+  it('should throw BadRequestException when OCR already processing', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'processing',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+
+    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
+      'OCR is already processing for this document',
+    );
+  });
+
+  it('should throw NotFoundException when update fails', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'failed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.update.mockResolvedValue(null);
+
+    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
+      NotFoundException,
+    );
+  });
 });
