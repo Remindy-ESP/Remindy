@@ -11,7 +11,7 @@ require('dotenv').config();
 
 // Parse command line arguments
 const role = process.argv[2] || 'premium';
-const userId = parseInt(process.argv[3]) || 1;
+const userId = process.argv[3] || '00000000-0000-0000-0000-000000000001';
 
 // Validate role
 const validRoles = ['free', 'premium', 'admin'];
