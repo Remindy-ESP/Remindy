@@ -23,7 +23,6 @@ import { AuditExportService } from './infrastructure/services/audit-export.servi
 // Presentation
 import { AuditInterceptor } from './presentation/interceptors/audit.interceptor';
 import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
-
 import { AuthModule } from '../auth/auth.module';
 
 @Module({

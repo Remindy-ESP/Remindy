@@ -71,7 +71,7 @@ export class QuotaService {
    */
   async getUserStorageUsed(userId: string): Promise<number> {
     const documents = await this.documentRepository.findByUserId(userId);
-    const totalSize = documents.reduce((sum, doc) => sum + doc.fileSize, 0);
+    const totalSize = documents.reduce((sum, doc) => sum + Number(doc.fileSize), 0);
     return totalSize;
   }
 
