@@ -22,8 +22,8 @@ if (!validRoles.includes(role)) {
 }
 
 // JWT secret from environment or default
-const jwtSecret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
-const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
+const jwtSecret = process.env.JWT_ACCESS_TOKEN_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+const expiresIn = process.env.JWT_ACCESS_TOKEN_EXPIRATION || '24h';
 
 // Create payload
 const payload = {
