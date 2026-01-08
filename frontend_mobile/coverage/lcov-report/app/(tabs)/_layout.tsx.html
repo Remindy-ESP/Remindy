@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">70.58% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/17</span>
+                <span class='fraction'>12/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>8/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">28.57% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>2/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">78.57% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/14</span>
+                <span class='fraction'>11/14</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -153,29 +153,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -231,30 +231,30 @@ import GlobalHeader from '@/components/GlobalHeader';
 import { useAuth } from '@/context/AuthContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
 &nbsp;
-export default function <span class="fstat-no" title="function not covered" >TabLayout(</span>) {
-    const router = <span class="cstat-no" title="statement not covered" >useRouter();</span>
-    const { isAuthenticated, isLoading } = <span class="cstat-no" title="statement not covered" >useAuth();</span>
+export default function TabLayout() {
+    const router = useRouter();
+    const { isAuthenticated, isLoading } = useAuth();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    useEffect(<span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        if (!isLoading &amp;&amp; !isAuthenticated) {</span>
-<span class="cstat-no" title="statement not covered" >            router.replace('/');</span>
+    useEffect(() =&gt; {
+        if (!isLoading &amp;&amp; !isAuthenticated) {
+            router.replace('/');
         }
     }, [isAuthenticated, isLoading]);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (isLoading) {</span>
-<span class="cstat-no" title="statement not covered" >        return (</span>
+    if (isLoading) {
+        return (
             &lt;View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#06071D' }}&gt;
                 &lt;ActivityIndicator size="large" color="#6366f1" /&gt;
             &lt;/View&gt;
         );
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (!isAuthenticated) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+    if (!isAuthenticated) return null;
 &nbsp;
-    const footerRoutes = <span class="cstat-no" title="statement not covered" >APP_ROUTES.filter(<span class="fstat-no" title="function not covered" >r </span>=&gt; <span class="cstat-no" title="statement not covered" >r.showInFooter)</span>;</span>
-    const hiddenRoutes = <span class="cstat-no" title="statement not covered" >APP_ROUTES.filter(<span class="fstat-no" title="function not covered" >r </span>=&gt; <span class="cstat-no" title="statement not covered" >!r.showInFooter)</span>;</span>
+    const footerRoutes = APP_ROUTES.filter(<span class="fstat-no" title="function not covered" >r </span>=&gt; <span class="cstat-no" title="statement not covered" >r.showInFooter)</span>;
+    const hiddenRoutes = APP_ROUTES.filter(<span class="fstat-no" title="function not covered" >r </span>=&gt; <span class="cstat-no" title="statement not covered" >!r.showInFooter)</span>;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return (</span>
+    return (
         &lt;SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}&gt;
             &lt;GlobalHeader /&gt;
 &nbsp;
@@ -307,7 +307,7 @@ export default function <span class="fstat-no" title="function not covered" >Tab
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-05T15:15:46.584Z
+                at 2026-01-08T09:29:26.364Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
