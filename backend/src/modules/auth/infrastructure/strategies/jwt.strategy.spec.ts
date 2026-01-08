@@ -56,6 +56,7 @@ describe('JwtStrategy', () => {
       const result = strategy.validate(payload);
 
       expect(result).toEqual({
+        id: 'user-123',
         userId: 'user-123',
         role: 'USER_FREEMIUM',
       });
@@ -85,6 +86,7 @@ describe('JwtStrategy', () => {
       const result = strategy.validate(payload);
 
       expect(result).toEqual({
+        id: 'user-789',
         userId: 'user-789',
         role: 'USER_PREMIUM',
       });
@@ -130,6 +132,7 @@ describe('JwtStrategy', () => {
       const result = strategy.validate(payload);
 
       expect(result).toEqual({
+        id: undefined,
         userId: undefined,
         role: undefined,
       });
@@ -147,7 +150,7 @@ describe('JwtStrategy', () => {
 
       expect(result).not.toHaveProperty('email');
       expect(result).not.toHaveProperty('name');
-      expect(Object.keys(result)).toEqual(['userId', 'role']);
+      expect(Object.keys(result)).toEqual(['id', 'userId', 'role']);
     });
   });
 });
