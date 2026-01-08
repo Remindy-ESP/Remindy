@@ -49,7 +49,7 @@ describe('SubscriptionService', () => {
       subscriptionId: '1',
       amount: 15.99,
       dueDate: '2024-02-01T00:00:00.000Z',
-      status: 'pending',
+      status: 'PENDING',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
     },
