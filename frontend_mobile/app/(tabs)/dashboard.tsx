@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
@@ -10,6 +11,7 @@ import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
+import { documentService } from '@/services/api';
 LocaleConfig.locales['fr'] = {
   monthNames: [
     'Janvier',
@@ -57,6 +59,7 @@ export default function DashboardScreen() {
   } = useDashboard();
 
   const { token } = useAuth();
+  const [uploadingDocument, setUploadingDocument] = React.useState(false);
   console.log("Current token : ", token);
 
   useFocusEffect(
@@ -128,9 +131,123 @@ export default function DashboardScreen() {
     router.push({ pathname: '/(tabs)/subscription', params: { openAdd: Date.now().toString() } });
   };
 
-  const handlePdfInsert = () => {
+  const handlePdfInsert = async () => {
     setAddOperationModalOpen(false);
-    console.log('PDF insert selected');
+
+    try {
+      // Open document picker for PDF files only
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      if (result.canceled) {
+        console.log('Document selection cancelled');
+        return;
+      }
+
+      const selectedFile = result.assets[0];
+      console.log('File selected:', {
+        name: selectedFile.name,
+        size: selectedFile.size,
+        type: selectedFile.mimeType,
+        uri: selectedFile.uri,
+      });
+
+      // Check file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (selectedFile.size && selectedFile.size > maxSize) {
+        Alert.alert(
+          'Fichier trop volumineux',
+          'Le fichier ne peut pas dépasser 10 MB. Veuillez choisir un fichier plus petit.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Set loading state
+      setUploadingDocument(true);
+
+      // Upload document to backend
+      const uploadedDocument = await documentService.uploadDocument({
+        file: {
+          uri: selectedFile.uri,
+          name: selectedFile.name,
+          type: selectedFile.mimeType || 'application/pdf',
+          size: selectedFile.size,
+        },
+      });
+
+      console.log('Document uploaded successfully:', uploadedDocument);
+
+      // Wait for OCR and parsing to complete (poll every 2 seconds, max 30 seconds)
+      let documentWithParsedData = uploadedDocument;
+      const maxAttempts = 15; // 15 attempts * 2 seconds = 30 seconds max
+      let attempts = 0;
+
+      while (
+        attempts < maxAttempts &&
+        documentWithParsedData.ocr_status !== 'completed' &&
+        documentWithParsedData.ocr_status !== 'failed'
+      ) {
+        console.log(`Polling document status... attempt ${attempts + 1}/${maxAttempts}`);
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+
+        try {
+          documentWithParsedData = await documentService.getDocument(uploadedDocument.id);
+          console.log('Document status:', documentWithParsedData.ocr_status);
+        } catch (error) {
+          console.error('Error polling document:', error);
+          break;
+        }
+
+        attempts++;
+      }
+
+      if (documentWithParsedData.ocr_status === 'failed') {
+        Alert.alert(
+          'Analyse échouée',
+          'L\'analyse automatique du document a échoué. Vous pouvez saisir les informations manuellement.',
+          [{ text: 'OK' }]
+        );
+      }
+
+      // Navigate to subscription page with parsed data
+      router.push({
+        pathname: '/(tabs)/subscription',
+        params: {
+          openAdd: Date.now().toString(),
+          documentId: documentWithParsedData.id,
+          // Pre-fill with parsed data
+          parsedProvider: documentWithParsedData.parsed_provider || '',
+          parsedAmount: documentWithParsedData.parsed_amount?.toString() || '',
+          parsedCurrency: documentWithParsedData.parsed_currency || 'EUR',
+          parsedDate: documentWithParsedData.parsed_date || '',
+          parsedFrequency: documentWithParsedData.parsed_frequency || '',
+          parsedCategory: documentWithParsedData.parsed_category || '',
+        },
+      });
+
+    } catch (error: any) {
+      console.error('Error uploading document:', error);
+
+      let errorMessage = 'Une erreur est survenue lors de l\'upload du document.';
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      Alert.alert(
+        'Erreur',
+        errorMessage,
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setUploadingDocument(false);
+    }
   };
 
   return (
@@ -294,6 +411,17 @@ export default function DashboardScreen() {
         onManualEntry={handleManualEntry}
         onPdfInsert={handlePdfInsert}
       />
+
+      {uploadingDocument && (
+        <View style={styles.uploadOverlay}>
+          <View style={styles.uploadContainer}>
+            <ActivityIndicator size="large" color="#4f46e5" />
+            <Text style={styles.uploadText}>Analyse en cours...</Text>
+            <Text style={styles.uploadSubtext}>Extraction des données par IA</Text>
+            <Text style={styles.uploadSubtext2}>Cela peut prendre jusqu'à 30 secondes</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -476,5 +604,40 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: '400',
+  },
+  uploadOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  uploadContainer: {
+    backgroundColor: '#2a2a5e',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  uploadText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  uploadSubtext: {
+    color: '#999',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  uploadSubtext2: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
 });

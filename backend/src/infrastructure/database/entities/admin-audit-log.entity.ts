@@ -8,7 +8,7 @@ import {
   Index,
 } from 'typeorm';
 import { EUser } from './user.entity';
-import { Severity } from 'src/modules/audit/domain/enums/severity.enum';
+import { Severity } from '../../../modules/audit/domain/enums/severity.enum';
 
 @Entity('admin_audit_log')
 @Index('idx_admin_audit_log_actor_user_id', ['actorUserId'])

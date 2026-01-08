@@ -31,7 +31,16 @@ interface SubscriptionFormData {
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const { openAdd } = useLocalSearchParams();
+  const {
+    openAdd,
+    documentId,
+    parsedProvider,
+    parsedAmount,
+    parsedCurrency,
+    parsedDate,
+    parsedFrequency,
+    parsedCategory
+  } = useLocalSearchParams();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,10 +73,63 @@ export default function SubscriptionScreen() {
 
   useEffect(() => {
     if (openAdd) {
-      openAddModal();
-      router.setParams({ openAdd: undefined });
+      // Map parsed frequency to billingCycle
+      const mapFrequencyToBillingCycle = (frequency: string | string[] | undefined): 'ONE_TIME' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY' => {
+        const freqStr = Array.isArray(frequency) ? frequency[0] : frequency;
+        const frequencyMap: Record<string, 'ONE_TIME' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'> = {
+          'ponctuel': 'ONE_TIME',
+          'mensuel': 'MONTHLY',
+          'trimestriel': 'QUARTERLY',
+          'semestriel': 'QUARTERLY', // Map semestriel to quarterly as fallback
+          'annuel': 'YEARLY',
+        };
+        return frequencyMap[freqStr?.toLowerCase() || ''] || 'MONTHLY';
+      };
+
+      // Find category by name if parsedCategory is provided
+      let categoryId = categories.length > 0 ? categories[0].id : '';
+      if (parsedCategory) {
+        const categoryName = Array.isArray(parsedCategory) ? parsedCategory[0] : parsedCategory;
+        const matchedCategory = categories.find(
+          (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
+        );
+        if (matchedCategory) {
+          categoryId = matchedCategory.id;
+        }
+      }
+
+      // Pre-fill form with parsed data if available
+      const providerName = Array.isArray(parsedProvider) ? parsedProvider[0] : parsedProvider;
+      const amountStr = Array.isArray(parsedAmount) ? parsedAmount[0] : parsedAmount;
+      const dateStr = Array.isArray(parsedDate) ? parsedDate[0] : parsedDate;
+
+      setEditingSubscription(null);
+      setPriceInput(amountStr || '');
+      setFormData({
+        name: providerName || '',
+        description: documentId ? `Importé depuis le document ${documentId}` : '',
+        price: amountStr ? parseFloat(amountStr) : 0,
+        billingCycle: mapFrequencyToBillingCycle(parsedFrequency),
+        startDate: dateStr || new Date().toISOString().split('T')[0],
+        categoryId: categoryId,
+        reminderDays: 3,
+      });
+      setFormErrors({});
+      setModalVisible(true);
+
+      // Clear params to avoid re-triggering
+      router.setParams({
+        openAdd: undefined,
+        documentId: undefined,
+        parsedProvider: undefined,
+        parsedAmount: undefined,
+        parsedCurrency: undefined,
+        parsedDate: undefined,
+        parsedFrequency: undefined,
+        parsedCategory: undefined,
+      });
     }
-  }, [openAdd]);
+  }, [openAdd, categories]);
 
   useEffect(() => {
     // Re-fetch when filters change
