@@ -4,6 +4,8 @@ import { DocumentFilterDto } from '../dto/document-filter.dto';
 import { DocumentFilterAppDto } from '../../application/dto/document-filter-app.dto';
 import { ReprocessOcrDto } from '../dto/reprocess-ocr.dto';
 import { ReprocessOcrAppDto } from '../../application/dto/reprocess-ocr-app.dto';
+import { UpdateDocumentDto } from '../dto/update-document.dto';
+import { UpdateDocumentAppDto } from '../../application/dto/update-document-app.dto';
 
 export class DocumentPresentationMapper {
   static toResponseDto(document: Document): DocumentResponseDto {
@@ -21,9 +23,17 @@ export class DocumentPresentationMapper {
       ocr_text: document.ocrText,
       ocr_status: document.ocrStatus,
       ocr_error: document.ocrError,
-      uploaded_at: document.uploadedAt!.toISOString(),
-      updated_at: document.updatedAt!.toISOString(),
-      deleted_at: document.deletedAt?.toISOString(),
+      uploaded_at: document.uploadedAt ? new Date(document.uploadedAt).toISOString() : undefined!,
+      updated_at: document.updatedAt ? new Date(document.updatedAt).toISOString() : undefined!,
+      deleted_at: document.deletedAt ? new Date(document.deletedAt).toISOString() : undefined,
+      // Champs parsed par Gemini
+      parsed_provider: document.parsedProvider,
+      parsed_amount: document.parsedAmount,
+      parsed_currency: document.parsedCurrency,
+      parsed_date: document.parsedDate ? new Date(document.parsedDate).toISOString().split('T')[0] : undefined,
+      parsed_frequency: document.parsedFrequency,
+      parsed_category: document.parsedCategory,
+      parsing_confidence: document.parsingConfidence,
     };
   }
 
@@ -46,6 +56,13 @@ export class DocumentPresentationMapper {
   static toReprocessOcrAppDto(dto: ReprocessOcrDto): ReprocessOcrAppDto {
     return {
       force: dto.force ?? false,
+    };
+  }
+
+  static toUpdateAppDto(dto: UpdateDocumentDto): UpdateDocumentAppDto {
+    return {
+      filename: dto.filename,
+      folderId: dto.folder_id,
     };
   }
 }

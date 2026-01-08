@@ -43,7 +43,7 @@ async function bootstrap(): Promise<void> {
 
   const document: OpenAPIObject = SwaggerModule.createDocument(app, config as OpenAPIObject);
 
-  SwaggerModule.setup('swagger/v1', app, document);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
   console.log(`Listening on URL ${await app.getUrl()}`);

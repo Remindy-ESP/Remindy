@@ -8,6 +8,7 @@ export class DocumentMapper {
       userId: entity.userId,
       subscriptionId: entity.subscriptionId,
       contractId: entity.contractId,
+      folderId: entity.folderId,
       filename: entity.filename,
       r2Key: entity.r2Key,
       r2Bucket: entity.r2Bucket,
@@ -20,6 +21,14 @@ export class DocumentMapper {
       uploadedAt: entity.uploadedAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
+      // Champs parsed par Gemini
+      parsedProvider: entity.parsedProvider,
+      parsedAmount: entity.parsedAmount,
+      parsedCurrency: entity.parsedCurrency,
+      parsedDate: entity.parsedDate,
+      parsedFrequency: entity.parsedFrequency,
+      parsedCategory: entity.parsedCategory,
+      parsingConfidence: entity.parsingConfidence,
     });
 
     return document;
@@ -34,6 +43,7 @@ export class DocumentMapper {
     entity.userId = document.userId;
     entity.subscriptionId = document.subscriptionId;
     entity.contractId = document.contractId;
+    entity.folderId = document.folderId;
     entity.filename = document.filename;
     entity.r2Key = document.r2Key;
     entity.r2Bucket = document.r2Bucket;
@@ -52,6 +62,14 @@ export class DocumentMapper {
     if (document.deletedAt) {
       entity.deletedAt = document.deletedAt;
     }
+    // Champs parsed par Gemini
+    entity.parsedProvider = document.parsedProvider;
+    entity.parsedAmount = document.parsedAmount;
+    entity.parsedCurrency = document.parsedCurrency;
+    entity.parsedDate = document.parsedDate;
+    entity.parsedFrequency = document.parsedFrequency;
+    entity.parsedCategory = document.parsedCategory;
+    entity.parsingConfidence = document.parsingConfidence;
 
     return entity;
   }

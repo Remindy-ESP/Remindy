@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IDocumentRepository } from '../../application/ports/document-repository.interface';
+import type { IDocumentRepository } from '../../application/ports/document-repository.interface';
 import { Document } from '../../domain/document.entity';
 import { DocumentEntity } from '../persistence/document.entity';
 import { DocumentMapper } from '../mappers/document.mapper';
@@ -30,6 +30,26 @@ export class DocumentRepository implements IDocumentRepository {
     }
 
     return DocumentMapper.toDomain(entity);
+  }
+
+  async findByUserId(userId: string): Promise<Document[]> {
+    const entities = await this.repository.find({
+      where: {
+        userId,
+        deletedAt: null as any,
+      },
+      order: {
+        uploadedAt: 'DESC',
+      },
+    });
+
+    return DocumentMapper.toDomainArray(entities);
+  }
+
+  async save(document: Document): Promise<Document> {
+    const entity = DocumentMapper.toPersistence(document);
+    const saved = await this.repository.save(entity);
+    return DocumentMapper.toDomain(saved);
   }
 
   async findAll(filters: DocumentFilterAppDto): Promise<Document[]> {
@@ -100,5 +120,45 @@ export class DocumentRepository implements IDocumentRepository {
   async softDelete(id: string): Promise<boolean> {
     const result = await this.repository.softDelete(id);
     return (result.affected ?? 0) > 0;
+  }
+
+  async updateOcrStatus(
+    id: string,
+    status: 'pending' | 'processing' | 'completed' | 'failed',
+    ocrText?: string,
+    ocrError?: string,
+  ): Promise<void> {
+    await this.repository.update(id, {
+      ocrStatus: status,
+      ocrText: ocrText ?? undefined,
+      ocrError: ocrError ?? undefined,
+    });
+  }
+
+  async updateOcrAndParsedData(
+    id: string,
+    data: {
+      ocrText: string;
+      ocrStatus: 'completed' | 'failed';
+      parsedProvider?: string;
+      parsedAmount?: number;
+      parsedCurrency?: string;
+      parsedDate?: Date;
+      parsedFrequency?: string;
+      parsedCategory?: string;
+      parsingConfidence?: number;
+    },
+  ): Promise<void> {
+    await this.repository.update(id, {
+      ocrText: data.ocrText,
+      ocrStatus: data.ocrStatus,
+      parsedProvider: data.parsedProvider,
+      parsedAmount: data.parsedAmount,
+      parsedCurrency: data.parsedCurrency,
+      parsedDate: data.parsedDate,
+      parsedFrequency: data.parsedFrequency,
+      parsedCategory: data.parsedCategory,
+      parsingConfidence: data.parsingConfidence,
+    });
   }
 }

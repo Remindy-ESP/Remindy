@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminAuditLogEntity } from 'src/infrastructure/database/entities/admin-audit-log.entity';
 import { EUser } from 'src/infrastructure/database/entities/user.entity';
 import { AuditController } from './presentation/controllers/audit.controller';
-import { AuthModule } from '../auth/auth.module';
+
 // Domain
 import { IAuditLogRepository } from './domain/repositories/audit-log.repository';
 
@@ -23,6 +23,7 @@ import { AuditExportService } from './infrastructure/services/audit-export.servi
 // Presentation
 import { AuditInterceptor } from './presentation/interceptors/audit.interceptor';
 import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -59,4 +60,4 @@ import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
   controllers: [AuditController],
   exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase, AuditInterceptor],
 })
-export class AuditModule { }
+export class AuditModule {}
