@@ -108,24 +108,46 @@ export class DocumentController {
   @ApiResponse({ status: 400, description: 'Fichier invalide ou trop volumineux' })
   async upload(
     @Req() req: Request,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({
-            fileType: /(pdf|jpeg|jpg|png|gif|bmp|tiff|webp)$/,
-          }),
-        ],
-      }),
-    )
+    @UploadedFile()
     file: Express.Multer.File,
     @CurrentUser('id') userId: string,
     @Body('subscription_id') subscriptionId?: string,
     @Body('contract_id') contractId?: string,
     @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
+    console.log('[DocumentController] Upload request received');
+    console.log('[DocumentController] File:', file ? {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    } : 'NO FILE');
+    console.log('[DocumentController] Body:', { subscriptionId, contractId });
+
     if (!file) {
+      console.error('[DocumentController] No file uploaded!');
       throw new BadRequestException('File is required');
+    }
+
+    // Manual validation
+    const allowedMimeTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/tiff',
+      'image/webp',
+    ];
+
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Invalid file type: ${file.mimetype}. Allowed types: PDF, JPEG, PNG, GIF, BMP, TIFF, WEBP`,
+      );
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      throw new BadRequestException('File size exceeds 10MB limit');
     }
 
     const appDto: UploadDocumentAppDto = {

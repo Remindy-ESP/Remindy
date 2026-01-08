@@ -13,6 +13,7 @@ export { default as categoryService } from './category.service';
 export { default as subscriptionService } from './subscription.service';
 export { default as userService } from './user.service';
 export { default as eventService } from './event.service';
+export { default as documentService } from './document.service';
 
 // Export types
 export * from './types';

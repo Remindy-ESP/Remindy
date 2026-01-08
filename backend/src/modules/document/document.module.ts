@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { MulterModule } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { DocumentEntity } from './infrastructure/persistence/document.entity';
 import { DocumentController } from './presentation/controllers/document.controller';
 import { DocumentRepository } from './infrastructure/repositories/document.repository';
@@ -18,7 +20,17 @@ import { InMemoryQueueService } from './infrastructure/queue/in-memory-queue.ser
 import { OcrEventListener } from './application/events/ocr-event.listener';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DocumentEntity]), EventEmitterModule.forRoot()],
+  imports: [
+    TypeOrmModule.forFeature([DocumentEntity]),
+    EventEmitterModule.forRoot(),
+    MulterModule.register({
+      storage: memoryStorage(), // Store files in memory (will be uploaded to R2)
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB max file size
+        files: 1, // Only 1 file at a time
+      },
+    }),
+  ],
   controllers: [DocumentController],
   providers: [
     {
