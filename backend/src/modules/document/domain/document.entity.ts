@@ -5,6 +5,7 @@ export interface DocumentProps {
   userId: string;
   subscriptionId?: string;
   contractId?: number;
+  folderId?: string;
   filename: string;
   r2Key: string;
   r2Bucket: string;
@@ -17,6 +18,14 @@ export interface DocumentProps {
   uploadedAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
+  // Champs parsed par Gemini
+  parsedProvider?: string;
+  parsedAmount?: number;
+  parsedCurrency?: string;
+  parsedDate?: Date;
+  parsedFrequency?: string;
+  parsedCategory?: string;
+  parsingConfidence?: number;
 }
 
 export class Document {
@@ -24,6 +33,7 @@ export class Document {
   private _userId: string;
   private _subscriptionId?: string;
   private _contractId?: number;
+  private _folderId?: string;
   private _filename: string;
   private _r2Key: string;
   private _r2Bucket: string;
@@ -36,12 +46,21 @@ export class Document {
   private _uploadedAt?: Date;
   private _updatedAt?: Date;
   private _deletedAt?: Date;
+  // Champs parsed par Gemini
+  private _parsedProvider?: string;
+  private _parsedAmount?: number;
+  private _parsedCurrency?: string;
+  private _parsedDate?: Date;
+  private _parsedFrequency?: string;
+  private _parsedCategory?: string;
+  private _parsingConfidence?: number;
 
   constructor(props: DocumentProps) {
     this._id = props.id;
     this._userId = props.userId;
     this._subscriptionId = props.subscriptionId;
     this._contractId = props.contractId;
+    this._folderId = props.folderId;
     this._filename = props.filename.trim();
     this._r2Key = props.r2Key.trim();
     this._r2Bucket = props.r2Bucket.trim();
@@ -54,6 +73,14 @@ export class Document {
     this._uploadedAt = props.uploadedAt;
     this._updatedAt = props.updatedAt;
     this._deletedAt = props.deletedAt;
+    // Champs parsed
+    this._parsedProvider = props.parsedProvider?.trim();
+    this._parsedAmount = props.parsedAmount;
+    this._parsedCurrency = props.parsedCurrency?.trim();
+    this._parsedDate = props.parsedDate;
+    this._parsedFrequency = props.parsedFrequency?.trim();
+    this._parsedCategory = props.parsedCategory?.trim();
+    this._parsingConfidence = props.parsingConfidence;
 
     this.validate();
   }
@@ -73,6 +100,10 @@ export class Document {
 
   get contractId(): number | undefined {
     return this._contractId;
+  }
+
+  get folderId(): string | undefined {
+    return this._folderId;
   }
 
   get filename(): string {
@@ -121,6 +152,34 @@ export class Document {
 
   get deletedAt(): Date | undefined {
     return this._deletedAt;
+  }
+
+  get parsedProvider(): string | undefined {
+    return this._parsedProvider;
+  }
+
+  get parsedAmount(): number | undefined {
+    return this._parsedAmount;
+  }
+
+  get parsedCurrency(): string | undefined {
+    return this._parsedCurrency;
+  }
+
+  get parsedDate(): Date | undefined {
+    return this._parsedDate;
+  }
+
+  get parsedFrequency(): string | undefined {
+    return this._parsedFrequency;
+  }
+
+  get parsedCategory(): string | undefined {
+    return this._parsedCategory;
+  }
+
+  get parsingConfidence(): number | undefined {
+    return this._parsingConfidence;
   }
 
   // Validation
@@ -184,6 +243,11 @@ export class Document {
 
   public linkToContract(contractId: number): void {
     this._contractId = contractId;
+  }
+
+  public moveToFolder(folderId?: string): void {
+    this._folderId = folderId;
+    this._updatedAt = new Date();
   }
 
   public isPdf(): boolean {

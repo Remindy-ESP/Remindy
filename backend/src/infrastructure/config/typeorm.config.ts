@@ -2,8 +2,8 @@ import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 
 const env = process.env.NODE_ENV || 'development';
-const envFile: string | undefined =
-  env === 'production' ? '.env.production' : env === 'staging' ? '.env.staging' : '.env.develop';
+const envFile: string =
+  env === 'production' ? '.env.production' : env === 'staging' ? '.env.staging' : '.env';
 config({ path: envFile });
 const databaseUrl =
   process.env.DATABASE_URL ||

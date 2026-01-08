@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { typeOrmAsyncConfig } from './infrastructure/config/database.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { UsersModule } from './modules/user/user.module';
@@ -14,6 +15,8 @@ import { AuditModule } from './modules/audit/audit.module';
 import { EventModule } from './modules/event/event.module';
 import { EventSeriesModule } from './modules/event-series/event-series.module';
 import { DocumentModule } from './modules/document/document.module';
+import { FolderModule } from './modules/folder/folder.module';
+import { StorageModule } from './modules/storage/storage.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { ReminderModule } from './modules/reminder/reminder.module';
 import { CategoryModule } from './modules/category/category.module';
@@ -24,7 +27,7 @@ import { SeedModule } from './modules/seed/seed.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.develop`,
+      envFilePath: `.env`,
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ThrottlerModule.forRoot([
@@ -33,6 +36,15 @@ import { SeedModule } from './modules/seed/seed.module';
         limit: 100,
       },
     ]),
+    EventEmitterModule.forRoot({
+      wildcard: false,
+      delimiter: '.',
+      newListener: false,
+      removeListener: false,
+      maxListeners: 10,
+      verboseMemoryLeak: false,
+      ignoreErrors: false,
+    }),
     InfrastructureModule,
     AuthModule,
     UsersModule,
@@ -42,6 +54,8 @@ import { SeedModule } from './modules/seed/seed.module';
     EventModule,
     EventSeriesModule,
     DocumentModule,
+    FolderModule,
+    StorageModule,
     NotificationModule,
     ReminderModule,
     AuditModule,
@@ -51,4 +65,4 @@ import { SeedModule } from './modules/seed/seed.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

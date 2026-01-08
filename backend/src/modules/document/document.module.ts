@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DocumentEntity } from './infrastructure/persistence/document.entity';
 import { DocumentController } from './presentation/controllers/document.controller';
 import { DocumentRepository } from './infrastructure/repositories/document.repository';
@@ -8,20 +9,34 @@ import { UploadDocumentUseCase } from './application/use-cases/upload-document.u
 import { FindAllDocumentsUseCase } from './application/use-cases/find-all-documents.use-case';
 import { DeleteDocumentUseCase } from './application/use-cases/delete-document.use-case';
 import { ReprocessOcrUseCase } from './application/use-cases/reprocess-ocr.use-case';
+import { UpdateDocumentUseCase } from './application/use-cases/update-document.use-case';
+import { CloudflareR2Service } from './infrastructure/services/cloudflare-r2.service';
+import { OcrService } from './infrastructure/services/ocr.service';
+import { GeminiParserService } from './infrastructure/services/gemini-parser.service';
+import { QuotaService } from './application/services/quota.service';
+import { InMemoryQueueService } from './infrastructure/queue/in-memory-queue.service';
+import { OcrEventListener } from './application/events/ocr-event.listener';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DocumentEntity])],
+  imports: [TypeOrmModule.forFeature([DocumentEntity]), EventEmitterModule.forRoot()],
   controllers: [DocumentController],
   providers: [
     {
       provide: DOCUMENT_REPOSITORY,
       useClass: DocumentRepository,
     },
+    CloudflareR2Service,
+    OcrService,
+    GeminiParserService,
+    QuotaService,
     UploadDocumentUseCase,
     FindAllDocumentsUseCase,
     DeleteDocumentUseCase,
     ReprocessOcrUseCase,
+    UpdateDocumentUseCase,
+    InMemoryQueueService,
+    OcrEventListener,
   ],
-  exports: [DOCUMENT_REPOSITORY],
+  exports: [DOCUMENT_REPOSITORY, InMemoryQueueService],
 })
-export class DocumentModule {}
+export class DocumentModule { }
