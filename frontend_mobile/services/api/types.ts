@@ -71,7 +71,7 @@ export interface Subscription {
   name: string;
   amount: number;
   currency: string;
-  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'one-time';
+  frequency: 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
   nextDueDate: string;
   trialStartDate?: string;
@@ -89,7 +89,7 @@ export interface CreateSubscriptionRequest {
   name: string;
   amount: number;
   currency?: string;
-  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'one-time';
+  frequency: 'one-time'| 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
   nextDueDate?: string;
   trialStartDate?: string;
@@ -105,7 +105,7 @@ export interface UpdateSubscriptionRequest {
   name?: string;
   amount?: number;
   currency?: string;
-  frequency?: 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'one-time';
+  frequency?: 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate?: string;
   nextDueDate?: string;
   trialStartDate?: string;
