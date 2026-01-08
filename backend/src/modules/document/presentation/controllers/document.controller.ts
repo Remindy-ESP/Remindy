@@ -70,7 +70,7 @@ export class DocumentController {
     private readonly documentRepository: IDocumentRepository,
     private readonly quotaService: QuotaService,
     private readonly queueService: InMemoryQueueService,
-  ) { }
+  ) {}
 
 
   @Post('upload')
@@ -124,9 +124,6 @@ export class DocumentController {
     @Body('contract_id') contractId?: string,
     @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
-
     if (!file) {
       throw new BadRequestException('File is required');
     }
@@ -160,8 +157,6 @@ export class DocumentController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
     const document = await this.documentRepository.findById(id);
 
     if (!document) {
@@ -234,57 +229,9 @@ export class DocumentController {
     @Query() filters: DocumentFilterDto,
     @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto[]> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
     const appFilters = DocumentPresentationMapper.toFilterAppDto(userId, filters);
     const documents = await this.findAllDocumentsUseCase.execute(appFilters);
     return DocumentPresentationMapper.toResponseDtoArray(documents);
-  }
-
-  @Put(':id')
-  @ApiOperation({ summary: 'Mettre à jour un document (renommer)' })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({
-    status: 200,
-    description: 'Document mis à jour avec succès',
-    type: DocumentResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  @ApiResponse({ status: 400, description: 'Données invalides' })
-  async update(
-    @Param('id') id: string,
-    @Req() req: Request,
-    @Body() updateDto: { filename?: string; folder_id?: string },
-  ): Promise<DocumentResponseDto> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
-    const document = await this.documentRepository.findById(id);
-
-    if (!document) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
-    }
-
-    if (document.userId !== userId) {
-      throw new NotFoundException(`Document with ID ${id} not found`);
-    }
-
-    if (updateDto.filename) {
-      if (updateDto.filename.trim().length === 0) {
-        throw new BadRequestException('Filename cannot be empty');
-      }
-      if (updateDto.filename.length > 255) {
-        throw new BadRequestException('Filename is too long (max 255 characters)');
-      }
-      // Note: Dans une vraie implémentation, il faudrait ajouter une méthode rename() à l'entité Document
-      // Pour l'instant on utilise directement le repository
-    }
-
-    if (updateDto.folder_id !== undefined) {
-      document.moveToFolder(updateDto.folder_id || undefined);
-    }
-
-    const updatedDocument = await this.documentRepository.save(document);
-    return DocumentPresentationMapper.toResponseDto(updatedDocument);
   }
 
   @Delete(':id')
@@ -293,10 +240,11 @@ export class DocumentController {
   @ApiParam({ name: 'id', description: 'ID du document' })
   @ApiResponse({ status: 204, description: 'Document supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  async delete(@Req() req: Request, @CurrentUser('id') userId: string): Promise<void> {
-      const { user } = req as Request & { user: { userId: string; role: string } };
-      const userId = user.userId;
-      await this.deleteDocumentUseCase.execute(id, userId);
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
+    await this.deleteDocumentUseCase.execute(id, userId);
   }
 
   @Post(':id/reprocess-ocr')
@@ -311,13 +259,10 @@ export class DocumentController {
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   @ApiResponse({ status: 400, description: 'OCR déjà complété (utilisez force=true pour forcer)' })
   async reprocessOcr(
-    @Req() req: Request,
+    @Param('id') id: string,
     @Body() reprocessDto: ReprocessOcrDto,
     @CurrentUser('id') userId: string,
   ): Promise<DocumentResponseDto> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
-
     const appDto = DocumentPresentationMapper.toReprocessOcrAppDto(reprocessDto);
     const document = await this.reprocessOcrUseCase.execute(id, userId, appDto);
     return DocumentPresentationMapper.toResponseDto(document);
@@ -333,8 +278,6 @@ export class DocumentController {
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
   ): Promise<StreamableFile> {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-    const userId = user.userId;
     const document = await this.documentRepository.findById(id);
 
     if (!document) {
@@ -428,7 +371,7 @@ export class DocumentController {
   async getJobStatus(@Param('jobId') jobId: string): Promise<any> {
     try {
       return await this.queueService.getJobStatus(jobId);
-    } catch (error) {
+    } catch {
       throw new NotFoundException(`Job ${jobId} not found`);
     }
   }
