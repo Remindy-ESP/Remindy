@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
-import { translateEventStatus, getEventStatusColor } from '@/utils/translations';
 
 LocaleConfig.locales['fr'] = {
   monthNames: [
@@ -202,63 +201,11 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* Daily Expenses Summary */}
         <DailyExpensesSummary
           date={selected}
           events={selectedDateEvents}
         />
 
-        {/* Events for selected date */}
-        {/* {selected && (
-          <View style={{ padding: 16, backgroundColor: '#2a2a5e', marginTop: 16, borderRadius: 8 }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
-              Événements du {selected}
-            </Text>
-            {selectedDateEvents.length === 0 ? (
-              <Text style={{ color: '#999', fontStyle: 'italic' }}>
-                Aucun événement pour cette date
-              </Text>
-            ) : (
-              selectedDateEvents.map((event) => (
-                <View
-                  key={event.id}
-                  style={{
-                    backgroundColor: '#373848',
-                    padding: 12,
-                    borderRadius: 6,
-                    marginBottom: 8,
-                    borderLeftWidth: 4,
-                    borderLeftColor: getEventStatusColor(event.status),
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
-                    {event.title}
-                  </Text>
-                  {event.description && (
-                    <Text style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
-                      {event.description}
-                    </Text>
-                  )}
-                  {event.subscription && (
-                    <Text style={{ color: '#4f46e5', fontSize: 12, marginTop: 4 }}>
-                      {event.subscription.name} - {event.subscription.amount}€
-                    </Text>
-                  )}
-                  <Text
-                    style={{
-                      color: getEventStatusColor(event.status),
-                      fontSize: 11,
-                      marginTop: 4,
-                      fontWeight: '500',
-                    }}
-                  >
-                    {translateEventStatus(event.status)}
-                  </Text>
-                </View>
-              ))
-            )}
-          </View>
-        )} */}
 
         <View style={styles.timePeriodSection}>
           <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
