@@ -14,7 +14,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtTokenService,
     private readonly reflector: Reflector,
-  ) {}
+  ) { }
 
   canActivate(context: ExecutionContext): boolean {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -41,7 +41,8 @@ export class JwtAuthGuard implements CanActivate {
     try {
       const payload = this.jwtService.verifyAccessToken(token) as JwtAccessPayload;
 
-      (req as Request & { user: { userId: string; role: string } }).user = {
+      (req as Request & { user: { id: string; userId: string; role: string } }).user = {
+        id: payload.sub,
         userId: payload.sub,
         role: payload.role,
       };

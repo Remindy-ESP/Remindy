@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
-import { translateEventStatus, getEventStatusColor } from '@/utils/translations';
-
+import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
+import AddOperationModal from '@/components/AddOperationModal';
 LocaleConfig.locales['fr'] = {
   monthNames: [
     'Janvier',
@@ -32,6 +33,7 @@ LocaleConfig.locales['fr'] = {
 LocaleConfig.defaultLocale = 'fr';
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const {
     selected,
     setSelected,
@@ -41,8 +43,10 @@ export default function DashboardScreen() {
     setCategoriesOpen,
     selectedCategory,
     setSelectedCategory,
+    addOperationModalOpen,
+    setAddOperationModalOpen,
     timePeriods,
-    getContentForPeriod,
+    getEventsForPeriod,
     categories,
     events,
     loading,
@@ -52,8 +56,8 @@ export default function DashboardScreen() {
     fetchDashboardData,
   } = useDashboard();
 
-    const { token } = useAuth();
-    console.log("Current token : ", token);
+  const { token } = useAuth();
+  console.log("Current token : ", token);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -118,6 +122,16 @@ export default function DashboardScreen() {
       </View>
     );
   }
+
+  const handleManualEntry = () => {
+    setAddOperationModalOpen(false);
+    router.push({ pathname: '/(tabs)/subscription', params: { openAdd: Date.now().toString() } });
+  };
+
+  const handlePdfInsert = () => {
+    setAddOperationModalOpen(false);
+    console.log('PDF insert selected');
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -199,57 +213,11 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* Events for selected date */}
-        {selected && (
-          <View style={{ padding: 16, backgroundColor: '#2a2a5e', marginTop: 16, borderRadius: 8 }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
-              Événements du {selected}
-            </Text>
-            {selectedDateEvents.length === 0 ? (
-              <Text style={{ color: '#999', fontStyle: 'italic' }}>
-                Aucun événement pour cette date
-              </Text>
-            ) : (
-              selectedDateEvents.map((event) => (
-                <View
-                  key={event.id}
-                  style={{
-                    backgroundColor: '#373848',
-                    padding: 12,
-                    borderRadius: 6,
-                    marginBottom: 8,
-                    borderLeftWidth: 4,
-                    borderLeftColor: getEventStatusColor(event.status),
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
-                    {event.title}
-                  </Text>
-                  {event.description && (
-                    <Text style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
-                      {event.description}
-                    </Text>
-                  )}
-                  {event.subscription && (
-                    <Text style={{ color: '#4f46e5', fontSize: 12, marginTop: 4 }}>
-                      {event.subscription.name} - {event.subscription.amount}€
-                    </Text>
-                  )}
-                  <Text
-                    style={{
-                      color: getEventStatusColor(event.status),
-                      fontSize: 11,
-                      marginTop: 4,
-                      fontWeight: '500',
-                    }}
-                  >
-                    {translateEventStatus(event.status)}
-                  </Text>
-                </View>
-              ))
-            )}
-          </View>
-        )}
+        <DailyExpensesSummary
+          date={selected}
+          events={selectedDateEvents}
+        />
+
 
         <View style={styles.timePeriodSection}>
           <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
@@ -283,14 +251,48 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.contentSection}>
-          <Text style={styles.contentText} testID="period-content">
-            {getContentForPeriod(activePeriod)}
-          </Text>
+          {getEventsForPeriod(activePeriod, selected).length === 0 ? (
+            <Text style={{ color: '#999', textAlign: 'center', marginVertical: 20 }}>
+              Aucune dépense pour cette période
+            </Text>
+          ) : (
+            <ScrollView
+              style={{ maxHeight: 325 }}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+            >
+              {getEventsForPeriod(activePeriod, selected).map((event) => (
+                <View key={event.id} style={styles.expenseItem}>
+                  <View style={styles.expenseLeft}>
+                    <View style={styles.expenseIconPlaceholder} />
+                    <View>
+                      <Text style={styles.expenseTitle}>
+                        {event.subscription?.name || event.title}
+                      </Text>
+                      <Text style={styles.expenseCategory}>
+                        {event.subscription?.category?.name || 'Général'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.expenseAmount}>
+                    {event.subscription?.amount ? `${event.subscription.amount}€` : '-'}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
 
       <AddOperationButton
-        onPress={() => { console.log('Add operation pressed') }}
+        onPress={() => setAddOperationModalOpen(true)}
+      />
+
+      <AddOperationModal
+        visible={addOperationModalOpen}
+        onClose={() => setAddOperationModalOpen(false)}
+        onManualEntry={handleManualEntry}
+        onPdfInsert={handlePdfInsert}
       />
     </View>
   );
@@ -440,5 +442,39 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1F1F39',
     textAlign: 'center',
+  },
+  expenseItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  expenseLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  expenseIconPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#000',
+    marginRight: 12,
+  },
+  expenseTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  expenseCategory: {
+    color: '#999',
+    fontSize: 13,
+  },
+  expenseAmount: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '400',
   },
 });
