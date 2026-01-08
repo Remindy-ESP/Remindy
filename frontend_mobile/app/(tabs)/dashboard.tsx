@@ -7,7 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
-import { translateEventStatus, getEventStatusColor } from '@/utils/translations';
 
 LocaleConfig.locales['fr'] = {
   monthNames: [
@@ -30,6 +29,7 @@ LocaleConfig.locales['fr'] = {
   today: "Aujourd'hui"
 };
 LocaleConfig.defaultLocale = 'fr';
+import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 
 export default function DashboardScreen() {
   const {
@@ -42,7 +42,7 @@ export default function DashboardScreen() {
     selectedCategory,
     setSelectedCategory,
     timePeriods,
-    getContentForPeriod,
+    getEventsForPeriod,
     categories,
     events,
     loading,
@@ -52,8 +52,8 @@ export default function DashboardScreen() {
     fetchDashboardData,
   } = useDashboard();
 
-    const { token } = useAuth();
-    console.log("Current token : ", token);
+  const { token } = useAuth();
+  console.log("Current token : ", token);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -66,6 +66,8 @@ export default function DashboardScreen() {
     ? getEventsByCategory(selectedCategory)
     : events;
 
+  // Create marked dates for calendar (events as dots)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const markedDates = React.useMemo(() => {
     const marks: any = {};
 
@@ -199,57 +201,11 @@ export default function DashboardScreen() {
           />
         </View>
 
-        {/* Events for selected date */}
-        {selected && (
-          <View style={{ padding: 16, backgroundColor: '#2a2a5e', marginTop: 16, borderRadius: 8 }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
-              Événements du {selected}
-            </Text>
-            {selectedDateEvents.length === 0 ? (
-              <Text style={{ color: '#999', fontStyle: 'italic' }}>
-                Aucun événement pour cette date
-              </Text>
-            ) : (
-              selectedDateEvents.map((event) => (
-                <View
-                  key={event.id}
-                  style={{
-                    backgroundColor: '#373848',
-                    padding: 12,
-                    borderRadius: 6,
-                    marginBottom: 8,
-                    borderLeftWidth: 4,
-                    borderLeftColor: getEventStatusColor(event.status),
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
-                    {event.title}
-                  </Text>
-                  {event.description && (
-                    <Text style={{ color: '#999', fontSize: 12, marginTop: 4 }}>
-                      {event.description}
-                    </Text>
-                  )}
-                  {event.subscription && (
-                    <Text style={{ color: '#4f46e5', fontSize: 12, marginTop: 4 }}>
-                      {event.subscription.name} - {event.subscription.amount}€
-                    </Text>
-                  )}
-                  <Text
-                    style={{
-                      color: getEventStatusColor(event.status),
-                      fontSize: 11,
-                      marginTop: 4,
-                      fontWeight: '500',
-                    }}
-                  >
-                    {translateEventStatus(event.status)}
-                  </Text>
-                </View>
-              ))
-            )}
-          </View>
-        )}
+        <DailyExpensesSummary
+          date={selected}
+          events={selectedDateEvents}
+        />
+
 
         <View style={styles.timePeriodSection}>
           <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
@@ -283,9 +239,36 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.contentSection}>
-          <Text style={styles.contentText} testID="period-content">
-            {getContentForPeriod(activePeriod)}
-          </Text>
+          {getEventsForPeriod(activePeriod, selected).length === 0 ? (
+            <Text style={{ color: '#999', textAlign: 'center', marginVertical: 20 }}>
+              Aucune dépense pour cette période
+            </Text>
+          ) : (
+            <ScrollView
+              style={{ maxHeight: 325 }}
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+            >
+              {getEventsForPeriod(activePeriod, selected).map((event) => (
+                <View key={event.id} style={styles.expenseItem}>
+                  <View style={styles.expenseLeft}>
+                    <View style={styles.expenseIconPlaceholder} />
+                    <View>
+                      <Text style={styles.expenseTitle}>
+                        {event.subscription?.name || event.title}
+                      </Text>
+                      <Text style={styles.expenseCategory}>
+                        {event.subscription?.category?.name || 'Général'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={styles.expenseAmount}>
+                    {event.subscription?.amount ? `${event.subscription.amount}€` : '-'}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </ScrollView>
 
@@ -440,5 +423,39 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1F1F39',
     textAlign: 'center',
+  },
+  expenseItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  expenseLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  expenseIconPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#000',
+    marginRight: 12,
+  },
+  expenseTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  expenseCategory: {
+    color: '#999',
+    fontSize: 13,
+  },
+  expenseAmount: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '400',
   },
 });
