@@ -94,6 +94,7 @@ describe('JwtAuthGuard', () => {
       expect(result).toBe(true);
       expect(jwtService.verifyAccessToken).toHaveBeenCalledWith('valid_token');
       expect(mockRequest).toHaveProperty('user', {
+        id: 'user-123',
         userId: 'user-123',
         role: 'USER_FREEMIUM',
       });
@@ -220,6 +221,7 @@ describe('JwtAuthGuard', () => {
 
       expect(result).toBe(true);
       expect(mockRequest).toHaveProperty('user', {
+        id: 'admin-456',
         userId: 'admin-456',
         role: 'ADMIN',
       });
@@ -245,6 +247,7 @@ describe('JwtAuthGuard', () => {
       guard.canActivate(mockContext);
 
       expect(mockRequest.user).toEqual({
+        id: 'user-789',
         userId: 'user-789',
         role: 'USER_PREMIUM',
       });
