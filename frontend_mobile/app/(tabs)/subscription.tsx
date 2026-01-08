@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -29,6 +30,8 @@ interface SubscriptionFormData {
 }
 
 export default function SubscriptionScreen() {
+  const router = useRouter();
+  const { openAdd } = useLocalSearchParams();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +61,13 @@ export default function SubscriptionScreen() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (openAdd) {
+      openAddModal();
+      router.setParams({ openAdd: undefined });
+    }
+  }, [openAdd]);
 
   useEffect(() => {
     // Re-fetch when filters change

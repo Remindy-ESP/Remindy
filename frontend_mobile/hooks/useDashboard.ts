@@ -8,6 +8,7 @@ export function useDashboard() {
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [addOperationModalOpen, setAddOperationModalOpen] = useState(false);
 
   // API data states
   const [categories, setCategories] = useState<Category[]>([]);
@@ -141,6 +142,8 @@ export function useDashboard() {
     setCategoriesOpen,
     selectedCategory,
     setSelectedCategory,
+    addOperationModalOpen,
+    setAddOperationModalOpen,
     timePeriods,
     getEventsForPeriod,
     // API data

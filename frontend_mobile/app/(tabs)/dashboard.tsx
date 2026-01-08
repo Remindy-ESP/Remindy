@@ -2,12 +2,14 @@ import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
-
+import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
+import AddOperationModal from '@/components/AddOperationModal';
 LocaleConfig.locales['fr'] = {
   monthNames: [
     'Janvier',
@@ -29,9 +31,9 @@ LocaleConfig.locales['fr'] = {
   today: "Aujourd'hui"
 };
 LocaleConfig.defaultLocale = 'fr';
-import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const {
     selected,
     setSelected,
@@ -41,6 +43,8 @@ export default function DashboardScreen() {
     setCategoriesOpen,
     selectedCategory,
     setSelectedCategory,
+    addOperationModalOpen,
+    setAddOperationModalOpen,
     timePeriods,
     getEventsForPeriod,
     categories,
@@ -66,8 +70,6 @@ export default function DashboardScreen() {
     ? getEventsByCategory(selectedCategory)
     : events;
 
-  // Create marked dates for calendar (events as dots)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const markedDates = React.useMemo(() => {
     const marks: any = {};
 
@@ -120,6 +122,16 @@ export default function DashboardScreen() {
       </View>
     );
   }
+
+  const handleManualEntry = () => {
+    setAddOperationModalOpen(false);
+    router.push({ pathname: '/(tabs)/subscription', params: { openAdd: Date.now().toString() } });
+  };
+
+  const handlePdfInsert = () => {
+    setAddOperationModalOpen(false);
+    console.log('PDF insert selected');
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -273,7 +285,14 @@ export default function DashboardScreen() {
       </ScrollView>
 
       <AddOperationButton
-        onPress={() => { console.log('Add operation pressed') }}
+        onPress={() => setAddOperationModalOpen(true)}
+      />
+
+      <AddOperationModal
+        visible={addOperationModalOpen}
+        onClose={() => setAddOperationModalOpen(false)}
+        onManualEntry={handleManualEntry}
+        onPdfInsert={handlePdfInsert}
       />
     </View>
   );
