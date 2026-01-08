@@ -159,5 +159,85 @@ describe('JwtRefreshStrategy', () => {
       // The actual extraction is tested via integration tests
       expect(strategy).toBeDefined();
     });
+
+    it('should extract string token from cookies', () => {
+      // Access the extractor function through the strategy's options
+      const extractorFn = (strategy as any)._jwtFromRequest;
+
+      const mockReq = {
+        cookies: {
+          refreshToken: 'valid-jwt-token-string',
+        },
+      } as any;
+
+      const result = extractorFn(mockReq);
+
+      expect(result).toBe('valid-jwt-token-string');
+    });
+
+    it('should return null when token is not a string', () => {
+      const extractorFn = (strategy as any)._jwtFromRequest;
+
+      const mockReq = {
+        cookies: {
+          refreshToken: 12345, // Not a string
+        },
+      } as any;
+
+      const result = extractorFn(mockReq);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when cookies object is undefined', () => {
+      const extractorFn = (strategy as any)._jwtFromRequest;
+
+      const mockReq = {} as any;
+
+      const result = extractorFn(mockReq);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when refreshToken is undefined', () => {
+      const extractorFn = (strategy as any)._jwtFromRequest;
+
+      const mockReq = {
+        cookies: {},
+      } as any;
+
+      const result = extractorFn(mockReq);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when refreshToken is null', () => {
+      const extractorFn = (strategy as any)._jwtFromRequest;
+
+      const mockReq = {
+        cookies: {
+          refreshToken: null,
+        },
+      } as any;
+
+      const result = extractorFn(mockReq);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle empty string token', () => {
+      const extractorFn = (strategy as any)._jwtFromRequest;
+
+      const mockReq = {
+        cookies: {
+          refreshToken: '',
+        },
+      } as any;
+
+      const result = extractorFn(mockReq);
+
+      // Empty string is still a string, so it should be returned
+      expect(result).toBe('');
+    });
   });
 });

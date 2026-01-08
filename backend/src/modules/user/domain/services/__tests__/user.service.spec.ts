@@ -191,5 +191,71 @@ describe('UserService', () => {
         firstName: 'UpdatedName',
       });
     });
+
+    it('should throw NotFoundException when user not found after update', async () => {
+      const updateDto = {
+        firstName: 'Test',
+      };
+
+      // First findById succeeds (before update)
+      userRepository.findById.mockResolvedValueOnce(mockUser as any);
+      // Second findById fails (after update - edge case)
+      userRepository.findById.mockResolvedValueOnce(null);
+
+      await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
+        new NotFoundException('User not found after update'),
+      );
+
+      expect(userRepository.updateProfile).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteAccount', () => {
+    let userPreferencesRepository: any;
+
+    beforeEach(() => {
+      userPreferencesRepository = (service as any).userPreferencesRepository;
+    });
+
+    it('should delete user account and preferences successfully', async () => {
+      userRepository.findById.mockResolvedValue(mockUser as any);
+      userPreferencesRepository.softDelete.mockResolvedValue(true);
+      userRepository.softDelete.mockResolvedValue(true);
+
+      await service.deleteAccount('user-123');
+
+      expect(userRepository.findById).toHaveBeenCalledWith('user-123');
+      expect(userPreferencesRepository.softDelete).toHaveBeenCalledWith('user-123');
+      expect(userRepository.softDelete).toHaveBeenCalledWith('user-123');
+    });
+
+    it('should soft delete preferences before user account', async () => {
+      const callOrder: string[] = [];
+
+      userRepository.findById.mockResolvedValue(mockUser as any);
+      userPreferencesRepository.softDelete.mockImplementation(() => {
+        callOrder.push('preferences');
+        return Promise.resolve(true);
+      });
+      userRepository.softDelete.mockImplementation(() => {
+        callOrder.push('user');
+        return Promise.resolve(true);
+      });
+
+      await service.deleteAccount('user-123');
+
+      expect(callOrder).toEqual(['preferences', 'user']);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.deleteAccount('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.deleteAccount('nonexistent-id')).rejects.toThrow('User not found');
+
+      // Should not attempt to delete if user not found
+      expect(userPreferencesRepository.softDelete).not.toHaveBeenCalled();
+      expect(userRepository.softDelete).not.toHaveBeenCalled();
+    });
   });
 });
