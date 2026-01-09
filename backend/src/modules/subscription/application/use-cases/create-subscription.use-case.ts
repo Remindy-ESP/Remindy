@@ -28,6 +28,7 @@ export class CreateSubscriptionUseCase {
       currency: dto.currency.toUpperCase(),
       frequency: dto.frequency,
       startDate: dto.startDate,
+      endDate: dto.endDate,
       nextDueDate: dto.nextDueDate,
       trialStartDate: dto.trialStartDate,
       trialEndDate: dto.trialEndDate,
@@ -42,7 +43,9 @@ export class CreateSubscriptionUseCase {
     // Générer les événements si demandé (par défaut: true)
     let eventsGenerated = 0;
     if (dto.generateEvents !== false) {
-      const count = dto.eventsToGenerate ?? 12;
+      // Par défaut, générer 24 mois pour les abonnements récurrents
+      // Le scheduler régénérera automatiquement pour maintenir l'avance
+      const count = dto.eventsToGenerate ?? 24;
       const events = await this.eventGeneratorService.generateEventsForSubscription({
         subscription: createdSubscription,
         count,

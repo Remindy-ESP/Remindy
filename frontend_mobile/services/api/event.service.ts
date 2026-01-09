@@ -12,7 +12,9 @@ class EventService {
    * Get all events for the current user
    */
   async getAll(): Promise<Event[]> {
-    const response = await apiClient.get<Event[]>(this.BASE_PATH);
+    const response = await apiClient.get<Event[]>(this.BASE_PATH, {
+      params: { limit: 1000 },
+    });
     return response.data;
   }
 

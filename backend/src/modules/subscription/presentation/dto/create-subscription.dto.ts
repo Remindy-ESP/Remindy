@@ -86,6 +86,16 @@ export class CreateSubscriptionDto {
   startDate: string;
 
   @ApiProperty({
+    description: "Date de fin de l'abonnement (optionnelle, pour les paiements à durée limitée)",
+    example: '2025-05-01',
+    required: false,
+    type: String,
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @ApiProperty({
     description: "Prochaine date d'échéance (calculée automatiquement si non fournie)",
     example: '2025-02-01',
     required: false,
@@ -156,17 +166,17 @@ export class CreateSubscriptionDto {
   generateEvents?: boolean;
 
   @ApiProperty({
-    description: "Nombre d'événements à générer (en mois)",
-    example: 12,
-    default: 12,
+    description: "Nombre d'événements à générer (pour les abonnements sans fin, génère jusqu'en 2099)",
+    example: 24,
+    default: 24,
     minimum: 1,
-    maximum: 24,
+    maximum: 1000,
     required: false,
   })
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(24)
+  @Max(1000)
   eventsToGenerate?: number;
 
   @ApiProperty({

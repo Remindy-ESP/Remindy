@@ -16,6 +16,7 @@ lerna-debug.log*
 .env.production
 .env.staging
 .env
+.env.develop
 .env.docker
 !.env.docker.example
 

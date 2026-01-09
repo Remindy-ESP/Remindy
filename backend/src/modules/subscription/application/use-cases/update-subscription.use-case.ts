@@ -45,10 +45,11 @@ export class UpdateSubscriptionUseCase {
       existingSubscription.updateFrequency(dto.frequency);
     }
 
-    if (dto.startDate !== undefined || dto.nextDueDate !== undefined) {
+    if (dto.startDate !== undefined || dto.nextDueDate !== undefined || dto.endDate !== undefined) {
       const newStartDate = dto.startDate ?? existingSubscription.startDate;
       const newNextDueDate = dto.nextDueDate ?? existingSubscription.nextDueDate;
-      existingSubscription.updateDates(newStartDate, newNextDueDate);
+      const newEndDate = dto.endDate !== undefined ? dto.endDate : existingSubscription.endDate;
+      existingSubscription.updateDates(newStartDate, newNextDueDate, newEndDate);
     }
 
     if (dto.trialStartDate !== undefined || dto.trialEndDate !== undefined) {

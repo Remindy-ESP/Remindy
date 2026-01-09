@@ -36,8 +36,8 @@ export class RegenerateEventsTask {
         try {
           const events = await this.eventGeneratorService.regenerateEventsIfNeeded(
             subscription,
-            12, // Maintenir 12 mois d'avance
-            3, // Régénérer si moins de 3 mois d'avance
+            24, // Maintenir 24 mois d'avance (jusqu'en 2099 pour les abonnements sans fin)
+            6, // Régénérer si moins de 6 mois d'avance
           );
 
           if (events.length > 0) {
@@ -77,8 +77,8 @@ export class RegenerateEventsTask {
       try {
         const events = await this.eventGeneratorService.regenerateEventsIfNeeded(
           subscription,
-          12,
-          3,
+          24,
+          6,
         );
         totalEventsGenerated += events.length;
       } catch (error) {

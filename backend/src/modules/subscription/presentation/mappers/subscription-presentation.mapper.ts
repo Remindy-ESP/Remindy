@@ -28,6 +28,7 @@ export class SubscriptionPresentationMapper {
       currency: dto.currency ?? 'EUR',
       frequency: dto.frequency,
       startDate,
+      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       nextDueDate,
       trialStartDate: dto.trialStartDate ? new Date(dto.trialStartDate) : undefined,
       trialEndDate: dto.trialEndDate ? new Date(dto.trialEndDate) : undefined,
@@ -49,6 +50,7 @@ export class SubscriptionPresentationMapper {
       currency: dto.currency,
       frequency: dto.frequency,
       startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       nextDueDate: dto.nextDueDate ? new Date(dto.nextDueDate) : undefined,
       trialStartDate: dto.trialStartDate ? new Date(dto.trialStartDate) : undefined,
       trialEndDate: dto.trialEndDate ? new Date(dto.trialEndDate) : undefined,
@@ -80,6 +82,7 @@ export class SubscriptionPresentationMapper {
     response.currency = subscription.currency;
     response.frequency = subscription.frequency;
     response.startDate = subscription.startDate;
+    response.endDate = subscription.endDate;
     response.nextDueDate = subscription.nextDueDate;
     response.trialStartDate = subscription.trialStartDate;
     response.trialEndDate = subscription.trialEndDate;

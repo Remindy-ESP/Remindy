@@ -63,6 +63,17 @@ export class SubscriptionEntity {
   startDate: Date;
 
   @Column({
+    name: 'end_date',
+    type: 'date',
+    nullable: true,
+    transformer: {
+      to: (value: Date | string) => value,
+      from: (value: Date) => value?.toISOString?.() || value,
+    },
+  })
+  endDate?: Date;
+
+  @Column({
     name: 'next_due_date',
     type: 'date',
     transformer: {
