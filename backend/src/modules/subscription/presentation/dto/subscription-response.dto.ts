@@ -70,6 +70,14 @@ export class SubscriptionResponseDto {
   startDate: Date;
 
   @ApiProperty({
+    description: "Date de fin de l'abonnement (optionnelle, pour les paiements à durée limitée)",
+    example: '2025-05-01',
+    required: false,
+    type: String,
+  })
+  endDate?: Date;
+
+  @ApiProperty({
     description: "Prochaine date d'échéance",
     example: '2025-02-01',
     type: String,

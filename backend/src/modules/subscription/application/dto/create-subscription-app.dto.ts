@@ -9,6 +9,7 @@ export interface CreateSubscriptionAppDto {
   currency: string;
   frequency: SubscriptionFrequency;
   startDate: Date;
+  endDate?: Date;
   nextDueDate: Date;
   trialStartDate?: Date;
   trialEndDate?: Date;

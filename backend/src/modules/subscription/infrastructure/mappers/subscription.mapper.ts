@@ -13,6 +13,7 @@ export class SubscriptionMapper {
       currency: entity.currency,
       frequency: entity.frequency,
       startDate: entity.startDate,
+      endDate: entity.endDate,
       nextDueDate: entity.nextDueDate,
       trialStartDate: entity.trialStartDate,
       trialEndDate: entity.trialEndDate,
@@ -41,6 +42,7 @@ export class SubscriptionMapper {
     entity.currency = domain.currency;
     entity.frequency = domain.frequency;
     entity.startDate = domain.startDate;
+    entity.endDate = domain.endDate;
     entity.nextDueDate = domain.nextDueDate;
     entity.trialStartDate = domain.trialStartDate;
     entity.trialEndDate = domain.trialEndDate;

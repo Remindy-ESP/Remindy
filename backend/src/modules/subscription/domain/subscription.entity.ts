@@ -11,6 +11,7 @@ export interface SubscriptionProps {
   currency: string;
   frequency: SubscriptionFrequency;
   startDate: Date;
+  endDate?: Date;
   nextDueDate: Date;
   trialStartDate?: Date;
   trialEndDate?: Date;
@@ -33,6 +34,7 @@ export class Subscription {
   private _currency: string;
   private _frequency: SubscriptionFrequency;
   private _startDate: Date;
+  private _endDate?: Date;
   private _nextDueDate: Date;
   private _trialStartDate?: Date;
   private _trialEndDate?: Date;
@@ -54,6 +56,7 @@ export class Subscription {
     this._currency = props.currency;
     this._frequency = props.frequency;
     this._startDate = props.startDate;
+    this._endDate = props.endDate;
     this._nextDueDate = props.nextDueDate;
     this._trialStartDate = props.trialStartDate;
     this._trialEndDate = props.trialEndDate;
@@ -103,6 +106,10 @@ export class Subscription {
 
   get startDate(): Date {
     return this._startDate;
+  }
+
+  get endDate(): Date | undefined {
+    return this._endDate;
   }
 
   get nextDueDate(): Date {
@@ -181,6 +188,10 @@ export class Subscription {
       throw new Error('Trial end date must be after trial start date');
     }
 
+    if (this._endDate && this._endDate <= this._startDate) {
+      throw new Error('End date must be after start date');
+    }
+
     if (this._color && !/^#[0-9A-Fa-f]{6}$/.test(this._color)) {
       throw new Error('Color must be a valid HEX color code (e.g., #FF5733)');
     }
@@ -222,12 +233,16 @@ export class Subscription {
     this.recalculateNextDueDate();
   }
 
-  public updateDates(startDate: Date, nextDueDate: Date): void {
+  public updateDates(startDate: Date, nextDueDate: Date, endDate?: Date): void {
     if (nextDueDate <= startDate) {
       throw new Error('Next due date must be after start date');
     }
+    if (endDate && endDate <= startDate) {
+      throw new Error('End date must be after start date');
+    }
     this._startDate = startDate;
     this._nextDueDate = nextDueDate;
+    this._endDate = endDate;
   }
 
   public updateTrialDates(trialStartDate?: Date, trialEndDate?: Date): void {
@@ -330,6 +345,7 @@ export class Subscription {
       currency: this._currency,
       frequency: this._frequency,
       startDate: this._startDate,
+      endDate: this._endDate,
       nextDueDate: this._nextDueDate,
       trialStartDate: this._trialStartDate,
       trialEndDate: this._trialEndDate,

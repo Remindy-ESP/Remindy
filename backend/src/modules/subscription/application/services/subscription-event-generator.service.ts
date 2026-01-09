@@ -43,13 +43,49 @@ export class SubscriptionEventGeneratorService {
   }
 
   /**
-   * Calcule les dates d'occurrence à partir de la fréquence
+   * Calcule le nombre d'occurrences jusqu'à une date cible en fonction de la fréquence
    */
-  calculateOccurrences(startDate: Date, frequency: SubscriptionFrequency, count: number): Date[] {
+  calculateOccurrencesCount(startDate: Date, frequency: SubscriptionFrequency, endDate: Date): number {
+    if (frequency === 'one-time') {
+      return 1;
+    }
+
+    let count = 0;
+    let currentDate = new Date(startDate);
+
+    // Limite de sécurité pour éviter les boucles infinies
+    const maxIterations = 10000;
+
+    while (currentDate <= endDate && count < maxIterations) {
+      count++;
+      currentDate = this.addFrequencyInterval(currentDate, frequency);
+    }
+
+    return count;
+  }
+
+  /**
+   * Calcule le nombre d'occurrences jusqu'en 2099 pour un abonnement sans date de fin
+   */
+  calculateOccurrencesUntil2099(startDate: Date, frequency: SubscriptionFrequency): number {
+    const targetDate = new Date('2099-12-31');
+    return this.calculateOccurrencesCount(startDate, frequency, targetDate);
+  }
+
+  /**
+   * Calcule les dates d'occurrence à partir de la fréquence
+   * Si endDate est fourni, s'arrête à cette date
+   */
+  calculateOccurrences(startDate: Date, frequency: SubscriptionFrequency, count: number, endDate?: Date): Date[] {
     const occurrences: Date[] = [];
     let currentDate = new Date(startDate);
 
     for (let i = 0; i < count; i++) {
+      // Si une date de fin est définie, ne pas générer d'événement après cette date
+      if (endDate && currentDate > endDate) {
+        break;
+      }
+
       occurrences.push(new Date(currentDate));
       currentDate = this.addFrequencyInterval(currentDate, frequency);
     }
@@ -85,11 +121,12 @@ export class SubscriptionEventGeneratorService {
     const existingEvents = await this.eventRepository.findBySubscriptionId(subscription.id!);
     const existingDates = new Set(existingEvents.map(e => toUTCDateString(e.startsAt)));
 
-    // Calculer les occurrences
+    // Calculer les occurrences en respectant la date de fin si elle existe
     const occurrences = this.calculateOccurrences(
       subscription.startDate,
       subscription.frequency,
       count,
+      subscription.endDate,
     );
 
     // Filtrer les occurrences qui existent déjà
@@ -120,6 +157,8 @@ export class SubscriptionEventGeneratorService {
 
   /**
    * Régénère les événements manquants pour maintenir X mois d'avance
+   * Pour les abonnements sans date de fin, continue jusqu'en 2099
+   * Pour les abonnements avec date de fin, s'arrête à cette date
    */
   async regenerateEventsIfNeeded(
     subscription: Subscription,
@@ -142,6 +181,11 @@ export class SubscriptionEventGeneratorService {
       return new Date(Math.max(event.startsAt.getTime(), latest.getTime()));
     }, new Date(0));
 
+    // Si l'abonnement a une date de fin et qu'on a déjà atteint ou dépassé cette date, ne rien faire
+    if (subscription.endDate && lastEventDate >= subscription.endDate) {
+      return [];
+    }
+
     // Calculer la date seuil (maintenant + threshold mois)
     const now = new Date();
     const thresholdDate = new Date(now);
@@ -153,19 +197,40 @@ export class SubscriptionEventGeneratorService {
       const targetDate = new Date(now);
       targetDate.setMonth(targetDate.getMonth() + monthsAhead);
 
+      // Pour les abonnements récurrents, vérifier qu'on ne dépasse pas 2099
+      const maxDate = new Date('2099-12-31');
+      let effectiveTargetDate = targetDate > maxDate ? maxDate : targetDate;
+
+      // Si l'abonnement a une date de fin, ne pas générer au-delà
+      if (subscription.endDate && effectiveTargetDate > subscription.endDate) {
+        effectiveTargetDate = subscription.endDate;
+      }
+
       // Générer à partir de la dernière date
       const startFromDate = this.addFrequencyInterval(lastEventDate, subscription.frequency);
+
+      // Ne pas générer si on a dépassé la date limite
+      if (startFromDate > maxDate || (subscription.endDate && startFromDate > subscription.endDate)) {
+        return [];
+      }
+
       const tempSubscription = new Subscription({
         ...this.subscriptionToProps(subscription),
         startDate: startFromDate,
       });
 
-      // Calculer le nombre d'occurrences nécessaires
+      // Calculer le nombre d'occurrences nécessaires jusqu'à la target date
+      // Pas de limite artificielle de 24, on génère jusqu'à la target
       let count = 0;
       let checkDate = new Date(startFromDate);
-      while (checkDate <= targetDate && count < 24) {
+      while (checkDate <= effectiveTargetDate) {
         count++;
         checkDate = this.addFrequencyInterval(checkDate, subscription.frequency);
+
+        // Limite de sécurité pour éviter les boucles infinies (ex: 500 événements max par batch)
+        if (count >= 500) {
+          break;
+        }
       }
 
       if (count > 0) {
@@ -192,6 +257,7 @@ export class SubscriptionEventGeneratorService {
       currency: subscription.currency,
       frequency: subscription.frequency,
       startDate: subscription.startDate,
+      endDate: subscription.endDate,
       nextDueDate: subscription.nextDueDate,
       trialStartDate: subscription.trialStartDate,
       trialEndDate: subscription.trialEndDate,

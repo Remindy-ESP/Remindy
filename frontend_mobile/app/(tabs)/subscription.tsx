@@ -12,8 +12,10 @@ import {
   TextInput,
   ScrollView,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
@@ -36,7 +38,7 @@ export default function SubscriptionScreen() {
     documentId,
     parsedProvider,
     parsedAmount,
-    parsedCurrency,
+    // parsedCurrency, // Not used but kept in case needed in the future
     parsedDate,
     parsedFrequency,
     parsedCategory
@@ -54,6 +56,14 @@ export default function SubscriptionScreen() {
   const [filterFrequency, setFilterFrequency] = useState<string>('');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('');
 
+  // Success overlay state
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
+
+  // Date picker state
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
   const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
     description: '',
@@ -66,6 +76,45 @@ export default function SubscriptionScreen() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   const [priceInput, setPriceInput] = useState<string>('');
+
+  // Helper to show success message
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setShowSuccessOverlay(true);
+    setTimeout(() => {
+      setShowSuccessOverlay(false);
+    }, 2000);
+  };
+
+  // Helper to format date from YYYY-MM-DD to DD/MM/YYYY
+  const formatDateForDisplay = (dateString: string): string => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  // Handle date change from picker
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      setFormData({ ...formData, startDate: dateString });
+    }
+  };
+
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      setFormData({ ...formData, endDate: dateString });
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -313,10 +362,10 @@ export default function SubscriptionScreen() {
 
       if (editingSubscription) {
         await subscriptionService.update(editingSubscription.id, requestData);
-        Alert.alert('Succès', 'Opération modifié avec succès');
+        showSuccess('Opération modifiée avec succès');
       } else {
         await subscriptionService.create(requestData);
-        Alert.alert('Succès', 'Opération créé avec succès');
+        showSuccess('Opération créée avec succès');
       }
       setModalVisible(false);
       await fetchData();
@@ -338,7 +387,7 @@ export default function SubscriptionScreen() {
           onPress: async () => {
             try {
               await subscriptionService.delete(subscription.id);
-              Alert.alert('Succès', 'Opération supprimé avec succès');
+              showSuccess('Opération supprimée avec succès');
               await fetchData();
             } catch (err: any) {
               Alert.alert('Erreur', getErrorMessage(err, 'Échec de la suppression de l\'opération'));
@@ -353,10 +402,11 @@ export default function SubscriptionScreen() {
     try {
       if (subscription.status === 'active') {
         await subscriptionService.pause(subscription.id);
+        showSuccess('Opération mise en pause avec succès');
       } else {
         await subscriptionService.resume(subscription.id);
+        showSuccess('Opération reprise avec succès');
       }
-      Alert.alert('Succès', `Opération ${subscription.status === 'active' ? 'mis en pause' : 'repris'} avec succès`);
       await fetchData();
     } catch (err: any) {
       Alert.alert('Erreur', getErrorMessage(err, 'Échec de la mise à jour de l\'opération'));
@@ -403,6 +453,21 @@ export default function SubscriptionScreen() {
       return 'Invalid Date';
     }
   };
+
+  // Filtrer les opérations basé sur les filtres sélectionnés
+  const filteredSubscriptions = subscriptions.filter((sub) => {
+    // Filtrer par fréquence
+    if (filterFrequency && sub.frequency.toLowerCase() !== filterFrequency.toLowerCase()) {
+      return false;
+    }
+
+    // Filtrer par catégorie
+    if (filterCategoryId && sub.category?.id !== filterCategoryId) {
+      return false;
+    }
+
+    return true;
+  });
 
   const renderSubscriptionItem = ({ item }: { item: Subscription }) => (
     <View style={styles.subscriptionCard}>
@@ -504,7 +569,8 @@ export default function SubscriptionScreen() {
         <View>
           <Text style={styles.headerTitle}>Opérations</Text>
           <Text style={styles.headerSubtitle}>
-            {subscriptions.length} opération{subscriptions.length !== 1 ? 's' : ''}
+            {filteredSubscriptions.length} opération{filteredSubscriptions.length !== 1 ? 's' : ''}
+            {(filterFrequency || filterCategoryId) && ` (${subscriptions.length} au total)`}
           </Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
@@ -551,14 +617,23 @@ export default function SubscriptionScreen() {
         </View>
       </View>
 
-      {subscriptions.length === 0 ? (
+      {filteredSubscriptions.length === 0 ? (
         <View style={styles.centerContent}>
-          <Text style={styles.emptyText}>Pas d'opérations.</Text>
-          <Text style={styles.emptySubtext}>Appuyez sur le bouton + pour créer votre premier opération.</Text>
+          {subscriptions.length === 0 ? (
+            <>
+              <Text style={styles.emptyText}>Pas d'opérations.</Text>
+              <Text style={styles.emptySubtext}>Appuyez sur le bouton + pour créer votre premier opération.</Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.emptyText}>Aucune opération ne correspond aux filtres.</Text>
+              <Text style={styles.emptySubtext}>Essayez de modifier les filtres ci-dessus.</Text>
+            </>
+          )}
         </View>
       ) : (
         <FlatList
-          data={subscriptions}
+          data={filteredSubscriptions}
           renderItem={renderSubscriptionItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -664,27 +739,59 @@ export default function SubscriptionScreen() {
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
                   <Text style={styles.label}>Date de début *</Text>
-                  <TextInput
-                    style={[styles.input, formErrors.startDate && styles.inputError]}
-                    value={formData.startDate}
-                    onChangeText={(text) => setFormData({ ...formData, startDate: text })}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#9ca3af"
-                  />
+                  <TouchableOpacity
+                    style={[styles.dateButton, formErrors.startDate && styles.inputError]}
+                    onPress={() => setShowStartDatePicker(true)}
+                  >
+                    <Text style={styles.dateButtonText}>
+                      {formData.startDate ? formatDateForDisplay(formData.startDate) : 'DD/MM/YYYY'}
+                    </Text>
+                    <Text style={styles.dateIcon}>📅</Text>
+                  </TouchableOpacity>
                   {formErrors.startDate && <Text style={styles.errorLabel}>{formErrors.startDate}</Text>}
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Date de fin</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.endDate || ''}
-                    onChangeText={(text) => setFormData({ ...formData, endDate: text || undefined })}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#9ca3af"
-                  />
+                  <Text style={styles.label}>Date de fin (optionnel)</Text>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      style={[styles.dateButton, { flex: 1 }]}
+                      onPress={() => setShowEndDatePicker(true)}
+                    >
+                      <Text style={styles.dateButtonText}>
+                        {formData.endDate ? formatDateForDisplay(formData.endDate) : 'DD/MM/YYYY'}
+                      </Text>
+                      <Text style={styles.dateIcon}>📅</Text>
+                    </TouchableOpacity>
+                    {formData.endDate && (
+                      <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={() => setFormData({ ...formData, endDate: undefined })}
+                      >
+                        <Text style={styles.clearButtonText}>✕</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               </View>
+
+              {/* Date Pickers */}
+              {showStartDatePicker && (
+                <DateTimePicker
+                  value={formData.startDate ? new Date(formData.startDate) : new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleStartDateChange}
+                />
+              )}
+              {showEndDatePicker && (
+                <DateTimePicker
+                  value={formData.endDate ? new Date(formData.endDate) : (formData.startDate ? new Date(formData.startDate) : new Date())}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleEndDateChange}
+                />
+              )}
 
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Rappel de notifications</Text>
@@ -718,6 +825,16 @@ export default function SubscriptionScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Success Overlay */}
+      {showSuccessOverlay && (
+        <View style={styles.successOverlay}>
+          <View style={styles.successContainer}>
+            <Text style={styles.successIcon}>✓</Text>
+            <Text style={styles.successText}>{successMessage}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -1036,5 +1153,67 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  successContainer: {
+    backgroundColor: '#2a2a5e',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  successIcon: {
+    fontSize: 48,
+    color: '#4ade80',
+    marginBottom: 12,
+    fontWeight: 'bold',
+  },
+  successText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  dateButton: {
+    backgroundColor: '#3d3d6f',
+    borderRadius: 8,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  dateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  dateIcon: {
+    fontSize: 20,
+  },
+  clearButton: {
+    backgroundColor: '#ef4444',
+    borderRadius: 8,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });
