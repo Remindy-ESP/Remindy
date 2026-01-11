@@ -3,9 +3,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { typeOrmAsyncConfig } from './infrastructure/config/database.config';
+import { redisConfig } from './infrastructure/config/redis.config';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { UsersModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -29,6 +31,7 @@ import { SeedModule } from './modules/seed/seed.module';
       isGlobal: true,
       envFilePath: `.env`,
     }),
+    CacheModule.registerAsync(redisConfig),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ThrottlerModule.forRoot([
       {

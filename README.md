@@ -227,6 +227,44 @@ npm start
 
 **Important :** Tous ces tests doivent passer sans erreur avant de créer votre PR.
 
+## Déploiement
+
+### Backend (API NestJS)
+
+Guides complets pour déployer votre API backend en production :
+
+- **[Quickstart - Déploiement en 10 min](BACKEND_DEPLOYMENT_QUICKSTART.md)** - Déployer sur Railway rapidement
+- **[Guide complet](BACKEND_DEPLOYMENT_GUIDE.md)** - 5 options de déploiement (Railway, Render, Fly.io, DigitalOcean, AWS)
+- **[Résumé](BACKEND_DEPLOYMENT_SUMMARY.md)** - Vue d'ensemble rapide avec tableaux comparatifs
+- **[Guide Backend](backend/DEPLOYMENT.md)** - Documentation dans le dossier backend
+
+**Vérification avant déploiement :**
+```bash
+cd backend
+npm run check:deployment  # Vérifier la configuration
+npm run generate:secrets  # Générer des secrets JWT
+```
+
+### Frontend Mobile (APK Android)
+
+Guides pour déployer votre application mobile :
+
+- **[Quickstart - Build APK en 5 min](MOBILE_DEPLOYMENT_QUICKSTART.md)** - Build rapide avec EAS
+- **[Guide complet](MOBILE_DEPLOYMENT_GUIDE.md)** - Configuration complète et distribution
+- **[Résumé](MOBILE_DEPLOYMENT_SUMMARY.md)** - Vue d'ensemble et checklist
+
+**Build rapide :**
+```bash
+cd frontend_mobile
+eas build --platform android --profile production
+```
+
+### Frontend Admin (Interface d'administration)
+
+- **[Quickstart - Déploiement Netlify](ADMIN_DEPLOYMENT_QUICKSTART.md)** - Déployer sur Netlify en 5 min
+- **[Guide complet](ADMIN_DEPLOYMENT_GUIDE.md)** - Netlify, Vercel, et autres options
+- **[Résumé](ADMIN_DEPLOYMENT_SUMMARY.md)** - Vue d'ensemble rapide
+
 ## Documentation
 
 - [Backend API Documentation](http://localhost:3000/swagger/v1) (après avoir démarré le backend)

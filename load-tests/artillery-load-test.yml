@@ -1,0 +1,160 @@
+config:
+  target: 'http://localhost:8080'
+  phases:
+    # Phase 1: Warmup - Réchauffement du cache
+    - duration: 60
+      arrivalRate: 10
+      name: 'Warmup - Réchauffement du cache'
+
+    # Phase 2: Ramp up - Montée en charge progressive
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 100
+      name: 'Ramp up - Montée à 100 req/s'
+
+    # Phase 3: Sustained load - Charge soutenue (6000 req/min)
+    - duration: 300
+      arrivalRate: 100
+      name: 'Charge soutenue - 6000 req/min'
+
+    # Phase 4: Peak load - Pic de charge (10k req/min)
+    - duration: 60
+      arrivalRate: 167
+      name: 'Pic de charge - 10000 req/min'
+
+    # Phase 5: Cool down - Retour au calme
+    - duration: 60
+      arrivalRate: 10
+      name: 'Cool down - Retour au calme'
+
+  # Métriques de performance attendues
+  ensure:
+    maxErrorRate: 1          # Maximum 1% d'erreurs
+    p95: 500                 # 95% des requêtes < 500ms
+    p99: 1000                # 99% des requêtes < 1s
+
+  # Variables globales
+  variables:
+    testUserEmail: 'loadtest@example.com'
+    testUserPassword: 'Test123!LoadTest'
+
+scenarios:
+  # Scénario 1: Flux utilisateur authentifié complet (70% du trafic)
+  - name: 'Flux Utilisateur Authentifié'
+    weight: 70
+    flow:
+      # 1. Login et récupération du token
+      - post:
+          url: '/auth/login'
+          json:
+            email: '{{ testUserEmail }}'
+            password: '{{ testUserPassword }}'
+          capture:
+            - json: '$.accessToken'
+              as: 'accessToken'
+            - json: '$.refreshToken'
+              as: 'refreshToken'
+          expect:
+            - statusCode: 200
+
+      # 2. Récupération des subscriptions (cache hit attendu)
+      - get:
+          url: '/subscriptions'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 200
+
+      # 3. Récupération des événements (cache hit attendu)
+      - get:
+          url: '/events'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 200
+
+      # 4. Récupération des catégories (cache hit attendu)
+      - get:
+          url: '/categories'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 200
+
+      # 5. Récupération du profil utilisateur
+      - get:
+          url: '/users/me'
+          headers:
+            Authorization: 'Bearer {{ accessToken }}'
+          expect:
+            - statusCode: 200
+
+  # Scénario 2: Refresh token (20% du trafic)
+  - name: 'Refresh Token Flow'
+    weight: 20
+    flow:
+      # 1. Login initial
+      - post:
+          url: '/auth/login'
+          json:
+            email: '{{ testUserEmail }}'
+            password: '{{ testUserPassword }}'
+          capture:
+            - json: '$.refreshToken'
+              as: 'refreshToken'
+
+      # 2. Attendre un peu
+      - think: 2
+
+      # 3. Refresh du token (test du cache de session)
+      - post:
+          url: '/auth/refresh'
+          json:
+            refreshToken: '{{ refreshToken }}'
+          capture:
+            - json: '$.accessToken'
+              as: 'newAccessToken'
+          expect:
+            - statusCode: 200
+
+      # 4. Utiliser le nouveau token
+      - get:
+          url: '/subscriptions'
+          headers:
+            Authorization: 'Bearer {{ newAccessToken }}'
+          expect:
+            - statusCode: 200
+
+  # Scénario 3: Opérations en lecture seule (10% du trafic)
+  - name: 'Read-Only Operations (Cache Hit Test)'
+    weight: 10
+    flow:
+      # Login une seule fois
+      - post:
+          url: '/auth/login'
+          json:
+            email: '{{ testUserEmail }}'
+            password: '{{ testUserPassword }}'
+          capture:
+            - json: '$.accessToken'
+              as: 'token'
+
+      # Boucle de lectures multiples pour tester le cache
+      - loop:
+          - get:
+              url: '/categories'
+              headers:
+                Authorization: 'Bearer {{ token }}'
+          - get:
+              url: '/subscriptions'
+              headers:
+                Authorization: 'Bearer {{ token }}'
+          - get:
+              url: '/events'
+              headers:
+                Authorization: 'Bearer {{ token }}'
+        count: 5
+
+# Plugin pour générer un rapport HTML
+plugins:
+  expect: {}

@@ -26,10 +26,7 @@ import { MfaRequiredGuard } from './presentation/guards/mfa-required.guard';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([AdminAuditLogEntity, EUser]),
-    forwardRef(() => AuthModule),
-  ],
+  imports: [TypeOrmModule.forFeature([AdminAuditLogEntity, EUser]), forwardRef(() => AuthModule)],
   providers: [
     // Mappers
     AuditLogMapper,

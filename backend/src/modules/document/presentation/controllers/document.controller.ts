@@ -72,7 +72,6 @@ export class DocumentController {
     private readonly queueService: InMemoryQueueService,
   ) {}
 
-
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
@@ -116,11 +115,16 @@ export class DocumentController {
     @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
     console.log('[DocumentController] Upload request received');
-    console.log('[DocumentController] File:', file ? {
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-    } : 'NO FILE');
+    console.log(
+      '[DocumentController] File:',
+      file
+        ? {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+          }
+        : 'NO FILE',
+    );
     console.log('[DocumentController] Body:', { subscriptionId, contractId });
 
     if (!file) {
@@ -262,10 +266,7 @@ export class DocumentController {
   @ApiParam({ name: 'id', description: 'ID du document' })
   @ApiResponse({ status: 204, description: 'Document supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
+  async delete(@Param('id') id: string, @CurrentUser('id') userId: string): Promise<void> {
     await this.deleteDocumentUseCase.execute(id, userId);
   }
 

@@ -11,9 +11,16 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
 
-  // Enable CORS for mobile app development
+  // Enable CORS for mobile app
+  const isProduction = process.env.NODE_ENV === 'production';
   app.enableCors({
-    origin: true, // Allow all origins in development
+    origin: isProduction
+      ? [
+          process.env.FRONTEND_URL || 'https://yourdomain.com',
+          'exp://*', // For Expo Go in development
+          /^http:\/\/localhost:\d+$/, // Local development
+        ]
+      : true, // Allow all origins in development
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -55,8 +62,9 @@ async function bootstrap(): Promise<void> {
 
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
-  console.log(`Listening on URL ${await app.getUrl()}`);
+  const port = process.env.PORT || process.env.BACKEND_PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: ${await app.getUrl()}`);
 }
 
 bootstrap().catch(err => {

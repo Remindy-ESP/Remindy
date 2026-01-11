@@ -70,31 +70,22 @@ describe('RegenerateEventsTask', () => {
         mockSubscription,
         { ...mockSubscription, id: 'sub-456', name: 'Spotify' },
       ]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
-        mockEvent,
-        mockEvent,
-      ]);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent]);
 
       await task.handleCron();
 
       expect(subscriptionRepository.findAll).toHaveBeenCalledWith({
         status: 'active',
       });
-      expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(
-        2,
-      );
+      expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(2);
       expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledWith(
         mockSubscription,
         12,
         3,
       );
-      expect(loggerSpy).toHaveBeenCalledWith(
-        'Starting event regeneration task...',
-      );
+      expect(loggerSpy).toHaveBeenCalledWith('Starting event regeneration task...');
       expect(loggerSpy).toHaveBeenCalledWith('Found 2 active subscriptions');
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Total events generated: 4'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Total events generated: 4'));
     });
 
     it('should handle empty subscription list', async () => {
@@ -108,9 +99,7 @@ describe('RegenerateEventsTask', () => {
       });
       expect(eventGeneratorService.regenerateEventsIfNeeded).not.toHaveBeenCalled();
       expect(loggerSpy).toHaveBeenCalledWith('Found 0 active subscriptions');
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Total events generated: 0'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Total events generated: 0'));
     });
 
     it('should continue processing when one subscription fails', async () => {
@@ -124,21 +113,15 @@ describe('RegenerateEventsTask', () => {
 
       await task.handleCron();
 
-      expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(
-        2,
-      );
+      expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(2);
       expect(Logger.prototype.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to regenerate events for subscription'),
       );
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Total events generated: 1'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Total events generated: 1'));
     });
 
     it('should handle repository errors gracefully', async () => {
-      subscriptionRepository.findAll.mockRejectedValue(
-        new Error('Database error'),
-      );
+      subscriptionRepository.findAll.mockRejectedValue(new Error('Database error'));
 
       await task.handleCron();
 
@@ -154,31 +137,20 @@ describe('RegenerateEventsTask', () => {
 
       await task.handleCron();
 
-      expect(loggerSpy).toHaveBeenCalledWith(
-        'Starting event regeneration task...',
-      );
+      expect(loggerSpy).toHaveBeenCalledWith('Starting event regeneration task...');
       expect(loggerSpy).toHaveBeenCalledWith('Found 1 active subscriptions');
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Total events generated: 0'),
-      );
-      expect(loggerSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('Generated 0 events'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Total events generated: 0'));
+      expect(loggerSpy).not.toHaveBeenCalledWith(expect.stringContaining('Generated 0 events'));
     });
 
     it('should log when events are generated for subscription', async () => {
       subscriptionRepository.findAll.mockResolvedValue([mockSubscription]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
-        mockEvent,
-        mockEvent,
-      ]);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent]);
 
       await task.handleCron();
 
       expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Generated 2 events for subscription ${mockSubscription.id}`,
-        ),
+        expect.stringContaining(`Generated 2 events for subscription ${mockSubscription.id}`),
       );
     });
   });
@@ -189,10 +161,7 @@ describe('RegenerateEventsTask', () => {
         mockSubscription,
         { ...mockSubscription, id: 'sub-456', name: 'Spotify' },
       ]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
-        mockEvent,
-        mockEvent,
-      ]);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent]);
 
       const result = await task.triggerManually();
 
@@ -203,12 +172,8 @@ describe('RegenerateEventsTask', () => {
       expect(subscriptionRepository.findAll).toHaveBeenCalledWith({
         status: 'active',
       });
-      expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(
-        2,
-      );
-      expect(loggerSpy).toHaveBeenCalledWith(
-        'Manually triggering event regeneration...',
-      );
+      expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(2);
+      expect(loggerSpy).toHaveBeenCalledWith('Manually triggering event regeneration...');
     });
 
     it('should return zero stats when no subscriptions exist', async () => {

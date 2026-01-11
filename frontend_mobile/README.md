@@ -1,33 +1,37 @@
-# Welcome to your Expo app 👋
+# 📱 Remindy Mobile - React Native Expo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile iOS et Android pour Remindy - Gestion d'abonnements et rappels.
 
-## Get started
+---
 
-1. Install dependencies
+## 🚀 Démarrage Rapide
 
-   ```bash
-   npm install
-   ```
+### Installation
 
-2. Start the app
+```bash
+# Installer les dépendances
+npm install
 
-   ```bash
-   npx expo start
-   ```
+# Démarrer le serveur Expo
+npm start
 
-In the output, you'll find options to open the app in a
+# Ou directement sur un émulateur
+npm run android  # Android
+npm run ios      # iOS (macOS uniquement)
+```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Vérifier la Configuration Build
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+```bash
+# Vérifier que tout est prêt pour le build EAS
+npm run check-build
+```
 
-## Environment Configuration
+---
 
-### Fichiers d'environnement
+## 🌍 Configuration des Environnements
+
+### Fichiers d'Environnement
 
 - `.env` - Valeurs par défaut (commité dans git)
 - `.env.local` - **Environnement local** (ignoré par git) - utilisez ce fichier pour votre configuration personnelle
@@ -35,7 +39,7 @@ You can start developing by editing the files inside the **app** directory. This
 - `.env.staging` - Configuration staging (commité dans git)
 - `.env.production` - Configuration production (commité dans git)
 
-### Ordre de priorité
+### Ordre de Priorité
 
 Expo charge les variables dans cet ordre (la dernière écrase les précédentes):
 1. `.env`
@@ -44,7 +48,7 @@ Expo charge les variables dans cet ordre (la dernière écrase les précédentes
 
 ### Utilisation
 
-#### Développement local (par défaut)
+#### Développement Local (par défaut)
 ```bash
 npm start          # Lance Expo
 npm run android    # Lance sur Android
@@ -66,7 +70,7 @@ npm run android:prod
 npm run ios:prod
 ```
 
-### Configuration locale
+### Configuration Locale
 
 Pour votre développement local:
 1. Modifiez `.env.local` avec votre IP locale
@@ -75,7 +79,7 @@ Pour votre développement local:
    - Mac/Linux: `ifconfig` ou `ip addr`
 3. Mettez à jour `EXPO_PUBLIC_BACKEND_API_URL` dans `.env.local`
 
-### Variables disponibles
+### Variables Disponibles
 
 - `EXPO_PUBLIC_BACKEND_API_URL` - URL de l'API backend
 - `EXPO_PUBLIC_BACKEND_API_TIMEOUT` - Timeout des requêtes API (ms)
@@ -83,26 +87,253 @@ Pour votre développement local:
 
 **Note:** `.env.local` n'est jamais commité dans git. Chaque développeur peut avoir sa propre configuration.
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 📦 Build et Déploiement avec EAS
+
+### Installation EAS CLI
 
 ```bash
-npm run reset-project
+# Installer globalement
+npm install -g eas-cli
+
+# Se connecter
+eas login
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Builds de Développement
 
-## Learn more
+```bash
+# Android Development (APK)
+npm run build:android:dev
 
-To learn more about developing your project with Expo, look at the following resources:
+# iOS Development (Simulator)
+npm run build:ios:dev
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Builds de Preview (Tests)
 
-## Join the community
+```bash
+# Android Preview
+npm run build:android:preview
 
-Join our community of developers creating universal apps.
+# iOS Preview
+npm run build:ios:preview
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Les deux
+npm run build:all:preview
+```
+
+### Builds de Production
+
+```bash
+# Android Production (AAB pour Play Store)
+npm run build:android:prod
+
+# iOS Production (IPA pour App Store)
+npm run build:ios:prod
+
+# Les deux
+npm run build:all:prod
+```
+
+---
+
+## 🏪 Soumission aux Stores
+
+### Google Play Store
+
+```bash
+# Soumettre le dernier build Android
+npm run submit:android
+```
+
+### Apple App Store
+
+```bash
+# Soumettre le dernier build iOS
+npm run submit:ios
+```
+
+### Les Deux Stores
+
+```bash
+# Soumettre aux deux stores
+npm run submit:all
+```
+
+---
+
+## 🔄 Over-The-Air Updates
+
+### Publier une Update
+
+```bash
+# Update de production (JS/assets seulement)
+npm run update:prod
+
+# Update de preview
+npm run update:preview
+
+# Ou avec message personnalisé
+eas update --branch production --message "Fix critical bug"
+```
+
+**Limitations OTA** :
+- ✅ Code JavaScript/TypeScript
+- ✅ Assets (images, fonts)
+- ❌ Code natif (plugins, native modules)
+- ❌ Configuration app.json
+
+---
+
+## 📁 Structure du Projet
+
+```
+frontend_mobile/
+├── app/                      # Expo Router (pages)
+│   ├── (tabs)/              # Navigation tabs
+│   ├── +html.tsx            # HTML wrapper
+│   ├── +not-found.tsx       # 404
+│   └── _layout.tsx          # Root layout
+├── assets/                   # Images, fonts, etc.
+│   └── images/
+│       ├── icon.png         # 1024x1024
+│       ├── splash-icon.png  # Splash screen
+│       └── adaptive-icon.png # Android
+├── components/              # Composants réutilisables
+├── constants/               # Constantes (colors, etc.)
+├── hooks/                   # Custom hooks
+├── scripts/                 # Scripts utilitaires
+│   ├── check-build-readiness.js
+│   └── load-env.js
+├── .easignore              # Fichiers exclus du build
+├── .env.example            # Template variables
+├── app.json                # Configuration Expo
+├── eas.json                # Configuration EAS
+├── package.json            # Dépendances
+└── tsconfig.json           # TypeScript config
+```
+
+---
+
+## 📱 Scripts Disponibles
+
+### Développement
+
+| Script | Description |
+|--------|-------------|
+| `npm start` | Démarrer Expo |
+| `npm run android` | Ouvrir sur Android |
+| `npm run ios` | Ouvrir sur iOS |
+| `npm run web` | Ouvrir dans navigateur |
+
+### Build EAS
+
+| Script | Description |
+|--------|-------------|
+| `npm run build:android:preview` | Build Android preview |
+| `npm run build:ios:preview` | Build iOS preview |
+| `npm run build:all:prod` | Build production (tous) |
+
+### Submit
+
+| Script | Description |
+|--------|-------------|
+| `npm run submit:android` | Soumettre Android |
+| `npm run submit:ios` | Soumettre iOS |
+| `npm run submit:all` | Soumettre aux deux stores |
+
+### Updates
+
+| Script | Description |
+|--------|-------------|
+| `npm run update:prod` | OTA update production |
+| `npm run update:preview` | OTA update preview |
+
+### Utilitaires
+
+| Script | Description |
+|--------|-------------|
+| `npm run check-build` | Vérifier config build |
+| `npm run lint` | Linter le code |
+| `npm run test` | Lancer les tests |
+
+---
+
+## 🧪 Tests
+
+```bash
+# Lancer tous les tests
+npm test
+
+# Watch mode
+npm run test:watch
+
+# Coverage
+npm run test:coverage
+```
+
+---
+
+## 📚 Documentation Complète
+
+Pour plus d'informations sur le déploiement :
+
+- **Quick Start** : `/MOBILE_DEPLOYMENT_QUICKSTART.md` - Déployer en 30 minutes
+- **Guide Complet** : `/MOBILE_DEPLOYMENT_GUIDE.md` - Guide détaillé (2000 lignes)
+- **Résumé** : `/MOBILE_DEPLOYMENT_SUMMARY.md` - Vue d'ensemble
+
+---
+
+## 🔗 Liens Utiles
+
+- **Dashboard EAS** : https://expo.dev/accounts/remindy/projects/remindy
+- **Expo Docs** : https://docs.expo.dev
+- **EAS Build** : https://docs.expo.dev/build/introduction/
+- **EAS Submit** : https://docs.expo.dev/submit/introduction/
+- **Expo Router** : https://docs.expo.dev/router/introduction/
+
+---
+
+## 🐛 Troubleshooting
+
+### Build échoue
+
+```bash
+# Vider le cache et re-builder
+eas build --clear-cache
+```
+
+### Metro bundler error
+
+```bash
+# Reset cache
+npm start -- --reset-cache
+
+# Réinstaller
+rm -rf node_modules
+npm install
+```
+
+### Credentials error
+
+```bash
+# Voir/gérer credentials
+eas credentials -p android
+eas credentials -p ios
+```
+
+---
+
+## 📞 Support
+
+- **Documentation** : Voir guides dans `/docs`
+- **Expo Forums** : https://forums.expo.dev
+- **GitHub Issues** : Pour les bugs
+
+---
+
+## 📝 License
+
+Copyright © 2026 Remindy. Tous droits réservés.

@@ -2,3 +2,9 @@
 .vscode
 node_modules/
 .claude
+
+# Secrets de déploiement (NE JAMAIS COMMITTER)
+DEPLOYMENT_SECRETS.txt
+*_SECRETS.txt
+*.env.local
+.env.*.local

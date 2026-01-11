@@ -28,6 +28,7 @@ import { JwtRefreshGuard } from './presentation/guards/jwt-refresh.guard';
 import { JwtRefreshStrategy } from './infrastructure/strategies/jwt-refresh.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { RolesGuard } from './presentation/guards/roles.guard';
+import { SessionCacheService } from './infrastructure/services/session-cache.service';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
@@ -47,6 +48,7 @@ import { RolesGuard } from './presentation/guards/roles.guard';
     JwtStrategy,
     JwtRefreshGuard,
     UserOrmMapper,
+    SessionCacheService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

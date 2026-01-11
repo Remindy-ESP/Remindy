@@ -1,4 +1,4 @@
 export interface UpdateDocumentAppDto {
-    filename?: string;
-    folderId?: string;
+  filename?: string;
+  folderId?: string;
 }

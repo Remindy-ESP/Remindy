@@ -16,7 +16,7 @@ export class EventResponseDto {
   @ApiProperty({ description: "Titre de l'événement", example: 'Paiement Netflix Premium' })
   title: string;
 
-  @ApiProperty({ description: 'Description de l\'événement', required: false })
+  @ApiProperty({ description: "Description de l'événement", required: false })
   description?: string;
 
   @ApiProperty({ description: 'Montant', example: 15.99 })
@@ -25,7 +25,10 @@ export class EventResponseDto {
   @ApiProperty({ description: 'Date de début', example: '2025-02-01T00:00:00.000Z' })
   startsAt: string;
 
-  @ApiProperty({ description: 'Date d\'échéance (alias de startsAt pour compatibilité frontend)', example: '2025-02-01T00:00:00.000Z' })
+  @ApiProperty({
+    description: "Date d'échéance (alias de startsAt pour compatibilité frontend)",
+    example: '2025-02-01T00:00:00.000Z',
+  })
   dueDate: string;
 
   @ApiProperty({ description: 'Date de fin', required: false, example: '2025-02-01T01:00:00.000Z' })

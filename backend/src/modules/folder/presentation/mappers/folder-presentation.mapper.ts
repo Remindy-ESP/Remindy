@@ -1,6 +1,11 @@
 import { Folder } from '../../domain/folder.entity';
 import { FolderResponseDto, FolderFilterDto } from '../dto/folder.dto';
-import { CreateFolderAppDto, UpdateFolderAppDto, FolderFilterAppDto, MoveDocumentToFolderAppDto } from '../../application/dto/folder-app.dto';
+import {
+  CreateFolderAppDto,
+  UpdateFolderAppDto,
+  FolderFilterAppDto,
+  MoveDocumentToFolderAppDto,
+} from '../../application/dto/folder-app.dto';
 
 /**
  * Mapper pour la couche présentation des dossiers
@@ -29,8 +34,11 @@ export class FolderPresentationMapper {
   /**
    * Convertir un tableau d'entités domaine en tableau de DTOs de réponse
    */
-  static toResponseDtoArray(folders: Folder[], documentCounts?: Map<string, number>): FolderResponseDto[] {
-    return folders.map((folder) => {
+  static toResponseDtoArray(
+    folders: Folder[],
+    documentCounts?: Map<string, number>,
+  ): FolderResponseDto[] {
+    return folders.map(folder => {
       const documentCount = documentCounts ? documentCounts.get(folder.id!) : undefined;
       return this.toResponseDto(folder, documentCount);
     });
@@ -76,7 +84,11 @@ export class FolderPresentationMapper {
   /**
    * Convertir un DTO de déplacement de document en DTO d'application
    */
-  static toMoveDocumentAppDto(userId: string, folderId: string, documentId: string): MoveDocumentToFolderAppDto {
+  static toMoveDocumentAppDto(
+    userId: string,
+    folderId: string,
+    documentId: string,
+  ): MoveDocumentToFolderAppDto {
     return {
       userId,
       folderId,

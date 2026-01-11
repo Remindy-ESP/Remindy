@@ -57,7 +57,7 @@ export class FolderEntity {
   /**
    * Relation parent-enfant (auto-référence)
    */
-  @ManyToOne(() => FolderEntity, (folder) => folder.children, {
+  @ManyToOne(() => FolderEntity, folder => folder.children, {
     nullable: true,
     onDelete: 'SET NULL',
   })
@@ -67,12 +67,12 @@ export class FolderEntity {
   /**
    * Sous-dossiers
    */
-  @OneToMany(() => FolderEntity, (folder) => folder.parent)
+  @OneToMany(() => FolderEntity, folder => folder.parent)
   children?: FolderEntity[];
 
   /**
    * Documents contenus dans ce dossier
    */
-  @OneToMany(() => DocumentEntity, (document) => document.folder)
+  @OneToMany(() => DocumentEntity, document => document.folder)
   documents?: DocumentEntity[];
 }
