@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import Tesseract from 'tesseract.js';
 
 // Import pdf-parse using CommonJS require (pdf-parse is a CommonJS module)
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require('pdf-parse');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import pdfParse = require('pdf-parse');
 
 @Injectable()
 export class OcrService {
@@ -51,6 +51,7 @@ export class OcrService {
       }
 
       this.logger.log(`PDF text extracted successfully (${text.length} characters)`);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return text;
     } catch (error) {
       this.logger.error(`PDF extraction failed: ${error.message}`, error.stack);

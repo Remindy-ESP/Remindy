@@ -22,7 +22,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
     return {
       type: 'postgres',
       url: databaseUrl,
-      ssl: !isTest,
+      ssl: !isTest ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,
       synchronize: false,
       logging: isDevelopment,

@@ -39,7 +39,7 @@ export class UploadDocumentUseCase {
 
       // ÉTAPE 1 : Upload vers Cloudflare R2
       this.logger.log(`Uploading file to R2: ${r2Key}`);
-      const fileUrl = await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
+      await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
       this.logger.log(`File uploaded successfully to R2`);
 
       // Convertir les chaînes vides en undefined pour éviter les erreurs de validation UUID
@@ -69,7 +69,7 @@ export class UploadDocumentUseCase {
         this.logger.log(`Adding document ${savedDocument.id} to OCR queue`);
 
         try {
-          const jobId = await this.queueService.addDocumentToQueue(
+          const jobId = this.queueService.addDocumentToQueue(
             savedDocument.id,
             dto.userId,
             r2Key,

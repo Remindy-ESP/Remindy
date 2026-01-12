@@ -11,7 +11,7 @@ export const redisConfig: CacheModuleAsyncOptions = {
   isGlobal: true,
   imports: [ConfigModule],
   inject: [ConfigService],
-  useFactory: async (configService: ConfigService) => {
+  useFactory: (configService: ConfigService) => {
     const redisUrl = configService.get<string>('REDIS_URL');
     const redisHost = configService.get<string>('REDIS_HOST', 'localhost');
     const redisPort = configService.get<number>('REDIS_PORT', 6379);
@@ -30,7 +30,14 @@ export const redisConfig: CacheModuleAsyncOptions = {
 
     // Configuration du store Keyv avec Redis
     // KeyvRedis accepte soit une URL string, soit un objet d'options limité
-    const keyvRedis = new KeyvRedis(connectionUrl);
+    const redisOptions = redisTls
+      ? {
+          url: connectionUrl,
+          tls: { rejectUnauthorized: false },
+        }
+      : connectionUrl;
+
+    const keyvRedis = new KeyvRedis(redisOptions);
 
     const keyv = new Keyv({
       store: keyvRedis,
@@ -41,7 +48,7 @@ export const redisConfig: CacheModuleAsyncOptions = {
     });
 
     // Gestion des erreurs de connexion
-    keyv.on('error', (err) => {
+    keyv.on('error', err => {
       console.error('Redis connection error:', err);
     });
 

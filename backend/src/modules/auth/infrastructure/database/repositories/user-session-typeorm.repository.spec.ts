@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserSessionTypeOrmRepository } from './user-session-typeorm.repository';
 import { UserSessionEntity } from '../../../../../infrastructure/database/entities/user-session.entity';
+import { SessionCacheService } from '../../services/session-cache.service';
 
 describe('UserSessionTypeOrmRepository', () => {
   let repository: UserSessionTypeOrmRepository;
@@ -16,12 +17,26 @@ describe('UserSessionTypeOrmRepository', () => {
       update: jest.fn(),
     };
 
+    const mockSessionCacheService = {
+      cacheSession: jest.fn(),
+      getSession: jest.fn(),
+      invalidateSession: jest.fn(),
+      invalidateUserSessions: jest.fn(),
+      updateSession: jest.fn(),
+      hasSession: jest.fn(),
+      cacheSessions: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserSessionTypeOrmRepository,
         {
           provide: getRepositoryToken(UserSessionEntity),
           useValue: mockTypeOrmRepository,
+        },
+        {
+          provide: SessionCacheService,
+          useValue: mockSessionCacheService,
         },
       ],
     }).compile();

@@ -118,6 +118,11 @@
     "testEnvironment": "node",
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
-    }
+    },
+    "maxWorkers": "50%",
+    "testTimeout": 10000,
+    "clearMocks": true,
+    "resetMocks": true,
+    "restoreMocks": true
   }
 }

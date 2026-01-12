@@ -8,7 +8,6 @@ describe('DocumentController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let authToken: string;
-  let userId: string;
   let documentId: string;
 
   beforeAll(async () => {
@@ -42,7 +41,7 @@ describe('DocumentController (e2e)', () => {
     if (dataSource && documentId) {
       try {
         await dataSource.query('DELETE FROM documents WHERE id = $1', [documentId]);
-      } catch (error) {
+      } catch {
         // Ignore cleanup errors
       }
     }

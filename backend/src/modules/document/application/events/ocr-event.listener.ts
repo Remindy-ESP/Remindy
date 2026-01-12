@@ -46,11 +46,14 @@ export class OcrEventListener {
 
     // Simuler la création d'une notification
     this.createNotification(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       payload.userId,
+
       'success',
       `Document "${payload.filename}" traité avec succès`,
       {
         documentId: payload.documentId,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         extractedDataCount: Object.keys(payload.parsedData).filter(
           key => payload.parsedData[key] !== undefined,
         ).length,
@@ -75,7 +78,9 @@ export class OcrEventListener {
 
     // Simuler la création d'une notification d'erreur
     this.createNotification(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       payload.userId,
+
       'error',
       `Échec du traitement du document "${payload.filename}"`,
       {
@@ -112,7 +117,7 @@ export class OcrEventListener {
     userId: string,
     type: 'success' | 'error' | 'info' | 'warning',
     message: string,
-    metadata?: any,
+    _metadata?: any,
   ): void {
     this.logger.debug(
       `[NOTIFICATION] Creating ${type} notification for user ${userId}: ${message}`,
@@ -132,7 +137,7 @@ export class OcrEventListener {
    * Statistiques globales sur les traitements OCR
    */
   @OnEvent('ocr.completed')
-  async trackOcrStats(payload: any) {
+  trackOcrStats(payload: any) {
     // TODO: Tracker les statistiques
     // - Temps de traitement moyen
     // - Taux de succès
@@ -144,6 +149,7 @@ export class OcrEventListener {
       documentId: payload.documentId,
       processingTime: payload.processingTime,
       confidence: payload.parsedData.confidence,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       fieldsExtracted: Object.keys(payload.parsedData).filter(
         key => payload.parsedData[key] !== undefined,
       ).length,

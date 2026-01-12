@@ -47,17 +47,12 @@ export class SessionCacheService {
 
     // Calculer le TTL basé sur l'expiration de la session
     const ttlSeconds = session.expiresAt
-      ? Math.max(
-          Math.floor((session.expiresAt.getTime() - Date.now()) / 1000),
-          0,
-        )
+      ? Math.max(Math.floor((session.expiresAt.getTime() - Date.now()) / 1000), 0)
       : this.DEFAULT_SESSION_TTL;
 
     // Ne pas cacher les sessions déjà expirées
     if (ttlSeconds <= 0) {
-      this.logger.debug(
-        `Session ${session.id} already expired, not caching`,
-      );
+      this.logger.debug(`Session ${session.id} already expired, not caching`);
       return;
     }
 
@@ -118,22 +113,17 @@ export class SessionCacheService {
    * @param userId ID de l'utilisateur
    * @param tokenHashes Liste des hashs de tokens à invalider
    */
-  async invalidateUserSessions(
-    userId: number,
-    tokenHashes: string[],
-  ): Promise<void> {
+  async invalidateUserSessions(userId: number, tokenHashes: string[]): Promise<void> {
     if (!userId || !tokenHashes || tokenHashes.length === 0) {
       return;
     }
 
-    const keys = tokenHashes.map((hash) => this.getSessionKey(hash));
+    const keys = tokenHashes.map(hash => this.getSessionKey(hash));
     const userSessionsKey = this.getUserSessionsKey(userId);
     keys.push(userSessionsKey);
 
     await this.cacheService.mdel(keys);
-    this.logger.debug(
-      `Invalidated ${tokenHashes.length} sessions for user ${userId}`,
-    );
+    this.logger.debug(`Invalidated ${tokenHashes.length} sessions for user ${userId}`);
   }
 
   /**
@@ -168,7 +158,7 @@ export class SessionCacheService {
       return;
     }
 
-    await Promise.all(sessions.map((session) => this.cacheSession(session)));
+    await Promise.all(sessions.map(session => this.cacheSession(session)));
     this.logger.debug(`Cached ${sessions.length} sessions`);
   }
 }

@@ -18,7 +18,6 @@ import {
   UpdateFolderDto,
   FolderResponseDto,
   FolderFilterDto,
-  MoveDocumentDto,
 } from '../dto/folder.dto';
 import { CreateFolderUseCase } from '../../application/use-cases/create-folder.use-case';
 import { FindAllFoldersUseCase } from '../../application/use-cases/find-all-folders.use-case';

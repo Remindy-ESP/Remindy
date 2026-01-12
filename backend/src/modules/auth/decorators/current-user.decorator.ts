@@ -15,7 +15,7 @@ export interface AuthenticatedUser {
  * @Get('profile')
  * @UseGuards(JwtAuthGuard)
  * async getProfile(@CurrentUser() user: AuthenticatedUser) {
- *   return user;
+ *   return user as AuthenticatedUser;
  * }
  * ```
  *
@@ -29,7 +29,7 @@ export interface AuthenticatedUser {
  * ```
  */
 export const CurrentUser = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext): AuthenticatedUser | any => {
+  (data: string | undefined, ctx: ExecutionContext): AuthenticatedUser | string | number | null => {
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
 
@@ -39,10 +39,10 @@ export const CurrentUser = createParamDecorator(
 
     // Si un champ spécifique est demandé (ex: @CurrentUser('id'))
     if (data) {
-      return user[data];
+      return user[data] as string | number;
     }
 
     // Sinon retourner l'objet user complet
-    return user;
+    return user as AuthenticatedUser;
   },
 );

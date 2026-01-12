@@ -42,9 +42,7 @@ export class CacheService {
     try {
       const ttlMs = ttlSeconds ? ttlSeconds * 1000 : undefined;
       await this.cacheManager.set(key, value, ttlMs);
-      this.logger.debug(
-        `Cache SET: ${key} (TTL: ${ttlSeconds ? ttlSeconds + 's' : 'default'})`,
-      );
+      this.logger.debug(`Cache SET: ${key} (TTL: ${ttlSeconds ? ttlSeconds + 's' : 'default'})`);
     } catch (error) {
       this.logger.error(`Error setting cache key ${key}:`, error);
     }
@@ -68,10 +66,8 @@ export class CacheService {
    * Note: La méthode reset() n'est pas disponible dans cache-manager v7+
    * Pour vider le cache, utilisez Redis CLI: FLUSHDB
    */
-  async reset(): Promise<void> {
-    this.logger.warn(
-      'Cache RESET: Not implemented in cache-manager v7. Use Redis CLI: FLUSHDB',
-    );
+  reset(): void {
+    this.logger.warn('Cache RESET: Not implemented in cache-manager v7. Use Redis CLI: FLUSHDB');
     // La méthode reset() n'existe plus dans cache-manager v7
     // Alternative: utiliser Redis CLI directement ou supprimer les clés par pattern
   }
@@ -85,11 +81,7 @@ export class CacheService {
    * @param ttlSeconds TTL en secondes
    * @returns Valeur (du cache ou générée)
    */
-  async getOrSet<T>(
-    key: string,
-    factory: () => Promise<T>,
-    ttlSeconds = 3600,
-  ): Promise<T> {
+  async getOrSet<T>(key: string, factory: () => Promise<T>, ttlSeconds = 3600): Promise<T> {
     // 1. Essayer de récupérer du cache
     const cached = await this.get<T>(key);
     if (cached !== null) {
@@ -122,7 +114,7 @@ export class CacheService {
 
     try {
       await Promise.all(
-        keys.map(async (key) => {
+        keys.map(async key => {
           const value = await this.get<T>(key);
           if (value !== null) {
             results.set(key, value);
@@ -142,15 +134,10 @@ export class CacheService {
    * @param entries Map de clé-valeur
    * @param ttlSeconds TTL en secondes
    */
-  async mset<T>(
-    entries: Map<string, T>,
-    ttlSeconds?: number,
-  ): Promise<void> {
+  async mset<T>(entries: Map<string, T>, ttlSeconds?: number): Promise<void> {
     try {
       await Promise.all(
-        Array.from(entries.entries()).map(([key, value]) =>
-          this.set(key, value, ttlSeconds),
-        ),
+        Array.from(entries.entries()).map(([key, value]) => this.set(key, value, ttlSeconds)),
       );
     } catch (error) {
       this.logger.error('Error in mset:', error);
@@ -164,7 +151,7 @@ export class CacheService {
    */
   async mdel(keys: string[]): Promise<void> {
     try {
-      await Promise.all(keys.map((key) => this.del(key)));
+      await Promise.all(keys.map(key => this.del(key)));
     } catch (error) {
       this.logger.error('Error in mdel:', error);
     }

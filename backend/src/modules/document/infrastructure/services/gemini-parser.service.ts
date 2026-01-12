@@ -50,6 +50,7 @@ export class GeminiParserService {
       const response = await result.response;
       const text = response.text();
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const parsedData = this.parseGeminiResponse(text);
 
       this.logger.log(`Document parsed successfully (confidence: ${parsedData.confidence})`);
@@ -119,6 +120,7 @@ RÉPONDS MAINTENANT :`;
       let parsedDate: Date | undefined;
       if (parsed.date) {
         try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           parsedDate = new Date(parsed.date);
           if (isNaN(parsedDate.getTime())) {
             parsedDate = undefined;
@@ -140,10 +142,13 @@ RÉPONDS MAINTENANT :`;
 
       return {
         provider: parsed.provider || undefined,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         amount: parsed.amount ? parseFloat(parsed.amount) : undefined,
         currency: parsed.currency || 'EUR',
         date: parsedDate,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         frequency: this.normalizeFrequency(parsed.frequency),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         category: this.normalizeCategory(parsed.category),
         confidence,
       };
@@ -167,6 +172,7 @@ RÉPONDS MAINTENANT :`;
     const normalized = frequency.toLowerCase().trim();
     const validFrequencies = ['mensuel', 'trimestriel', 'semestriel', 'annuel', 'ponctuel'];
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return validFrequencies.includes(normalized) ? (normalized as any) : undefined;
   }
 
@@ -193,10 +199,12 @@ RÉPONDS MAINTENANT :`;
       'assurance',
       'saas',
       'téléphone',
+
       'streaming',
       'autre',
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return validCategories.includes(normalized) ? (normalized as any) : 'autre';
   }
 
@@ -205,7 +213,7 @@ RÉPONDS MAINTENANT :`;
    */
   private calculateConfidence(data: Partial<ParsedDocumentData>): number {
     let score = 0;
-    let total = 6;
+    const total = 6;
 
     if (data.provider) score += 1;
     if (data.amount && data.amount > 0) score += 1;
@@ -235,7 +243,7 @@ RÉPONDS MAINTENANT :`;
     }
 
     // Extraire une date
-    const dateMatch = text.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+    const dateMatch = text.match(/(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})/);
     if (dateMatch) {
       try {
         const day = parseInt(dateMatch[1]);

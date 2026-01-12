@@ -11,9 +11,6 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   BadRequestException,
   UseGuards,
   StreamableFile,
@@ -369,8 +366,8 @@ export class DocumentController {
       },
     },
   })
-  async getQueueStats(): Promise<any> {
-    return await this.queueService.getQueueStats();
+  getQueueStats(): any {
+    return this.queueService.getQueueStats();
   }
 
   @Get('job/:jobId/status')
@@ -391,9 +388,9 @@ export class DocumentController {
     },
   })
   @ApiResponse({ status: 404, description: 'Job non trouvé' })
-  async getJobStatus(@Param('jobId') jobId: string): Promise<any> {
+  getJobStatus(@Param('jobId') jobId: string): any {
     try {
-      return await this.queueService.getJobStatus(jobId);
+      return this.queueService.getJobStatus(jobId);
     } catch {
       throw new NotFoundException(`Job ${jobId} not found`);
     }

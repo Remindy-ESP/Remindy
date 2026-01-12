@@ -84,7 +84,7 @@ describe('CloudflareR2Service', () => {
     it('should download file successfully', async () => {
       const key = 'test-key';
       const mockBody = {
-        async *[Symbol.asyncIterator]() {
+        *[Symbol.asyncIterator]() {
           yield Buffer.from('test content');
         },
       };

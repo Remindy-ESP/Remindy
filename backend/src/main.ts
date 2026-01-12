@@ -4,12 +4,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     bodyParser: true,
     rawBody: true,
   });
+  const configService = app.get(ConfigService);
 
   // Enable CORS for mobile app
   const isProduction = process.env.NODE_ENV === 'production';
@@ -62,9 +64,8 @@ async function bootstrap(): Promise<void> {
 
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || process.env.BACKEND_PORT || 3000;
-  await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  const port: number = configService.get<number>('PORT', 3000);
+  await app.listen(port, '0.0.0.0');
 }
 
 bootstrap().catch(err => {

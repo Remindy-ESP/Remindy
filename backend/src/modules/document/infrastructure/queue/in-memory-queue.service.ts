@@ -71,13 +71,13 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Ajoute un document à la queue pour traitement OCR asynchrone
    */
-  async addDocumentToQueue(
+  addDocumentToQueue(
     documentId: string,
     userId: string,
     r2Key: string,
     mimeType: string,
     filename: string,
-  ): Promise<string> {
+  ): string {
     const jobId = `ocr-job-${++this.jobIdCounter}-${Date.now()}`;
 
     const job: QueueJob = {
@@ -93,7 +93,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
     this.logger.log(`Document ${documentId} added to queue with job ID ${jobId}`);
 
     // Déclencher le traitement immédiatement
-    this.processQueue();
+    void this.processQueue();
 
     return jobId;
   }
@@ -106,7 +106,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
     // Vérifier la queue toutes les 2 secondes
     this.workerInterval = setInterval(() => {
-      this.processQueue();
+      void this.processQueue();
     }, 2000);
 
     this.logger.log('Queue worker started');
@@ -254,7 +254,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
         // Attendre avant de réessayer
         setTimeout(() => {
-          this.processQueue();
+          void this.processQueue();
         }, delay);
       } else {
         // Toutes les tentatives épuisées, marquer comme failed
@@ -306,14 +306,14 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Récupère le statut d'un job
    */
-  async getJobStatus(jobId: string): Promise<{
+  getJobStatus(jobId: string): {
     id: string;
     status: string;
     progress: number;
     attempts: number;
     failedReason?: string;
     result?: any;
-  }> {
+  } {
     // Chercher dans toutes les listes
     const job =
       this.queue.find(j => j.id === jobId) ||
@@ -337,13 +337,13 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Obtient des statistiques sur la queue
    */
-  async getQueueStats(): Promise<{
+  getQueueStats(): {
     waiting: number;
     active: number;
     completed: number;
     failed: number;
     delayed: number;
-  }> {
+  } {
     return {
       waiting: this.queue.filter(j => j.status === 'waiting').length,
       active: this.queue.filter(j => j.status === 'active').length,

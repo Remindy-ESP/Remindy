@@ -39,6 +39,7 @@ describe('OcrService', () => {
       const pdfBuffer = Buffer.from('fake pdf content');
       const mimeType = 'application/pdf';
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pdfParse = require('pdf-parse');
       pdfParse.mockResolvedValueOnce({
         text: 'Extracted PDF text\nLine 2\nLine 3',
@@ -82,6 +83,7 @@ describe('OcrService', () => {
       const pdfBuffer = Buffer.from('fake pdf content');
       const mimeType = 'application/pdf';
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pdfParse = require('pdf-parse');
       pdfParse.mockResolvedValueOnce({ text: '' });
 
@@ -93,6 +95,7 @@ describe('OcrService', () => {
       const pdfBuffer = Buffer.from('fake pdf content');
       const mimeType = 'application/pdf';
 
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const pdfParse = require('pdf-parse');
       pdfParse.mockRejectedValueOnce(new Error('PDF error'));
 

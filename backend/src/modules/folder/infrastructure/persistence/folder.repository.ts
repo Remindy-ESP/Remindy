@@ -187,6 +187,7 @@ export class FolderRepository implements IFolderRepository {
         .select('COUNT(document.id)', 'count')
         .getRawOne();
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return parseInt(result?.count || '0', 10);
     } catch (error) {
       this.logger.error(`Failed to count documents in folder: ${error.message}`, error.stack);

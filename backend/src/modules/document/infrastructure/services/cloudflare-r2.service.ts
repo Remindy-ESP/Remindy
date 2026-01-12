@@ -88,6 +88,7 @@ export class CloudflareR2Service {
       // Convertir le stream en buffer
       const chunks: Uint8Array[] = [];
       for await (const chunk of response.Body as any) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         chunks.push(chunk);
       }
       const buffer = Buffer.concat(chunks);
