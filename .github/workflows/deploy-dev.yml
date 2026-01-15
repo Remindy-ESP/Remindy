@@ -6,9 +6,9 @@ on:
       - develop
 
 env:
-  DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_USERNAME }}/remindy-backend
   TERRAFORM_DIR: infrastructure/terraform/dev
   DOCKER_CONTEXT: ./backend
+  SECRETS_FILE: infrastructure/secrets/secrets.yaml
 
 jobs:
   build-and-deploy:
@@ -22,11 +22,34 @@ jobs:
         id: sha
         run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
+      - name: Install SOPS and age
+        run: |
+          curl -LO https://github.com/getsops/sops/releases/download/v3.8.1/sops-v3.8.1.linux.amd64
+          chmod +x sops-v3.8.1.linux.amd64
+          sudo mv sops-v3.8.1.linux.amd64 /usr/local/bin/sops
+          curl -LO https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
+          tar -xzf age-v1.1.1-linux-amd64.tar.gz
+          sudo mv age/age /usr/local/bin/
+          sudo mv age/age-keygen /usr/local/bin/
+
+      - name: Setup SOPS age key
+        run: |
+          mkdir -p ~/.config/sops/age
+          echo "${{ secrets.SOPS_AGE_KEY }}" > ~/.config/sops/age/keys.txt
+
+      - name: Extract Docker credentials for build
+        run: |
+          echo "DOCKERHUB_USERNAME=$(sops -d --extract '["dockerhub_username"]' ${{ env.SECRETS_FILE }})" >> $GITHUB_ENV
+          echo "DOCKERHUB_TOKEN=$(sops -d --extract '["dockerhub_token"]' ${{ env.SECRETS_FILE }})" >> $GITHUB_ENV
+          echo "AZURE_CREDENTIALS<<EOF" >> $GITHUB_ENV
+          sops -d --extract '["azure_credentials"]' ${{ env.SECRETS_FILE }} >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -34,8 +57,8 @@ jobs:
           context: ${{ env.DOCKER_CONTEXT }}
           push: true
           tags: |
-            ${{ env.DOCKERHUB_REPO }}:${{ steps.sha.outputs.SHORT_SHA }}
-            ${{ env.DOCKERHUB_REPO }}:dev-latest
+            ${{ env.DOCKERHUB_USERNAME }}/remindy-backend:${{ steps.sha.outputs.SHORT_SHA }}
+            ${{ env.DOCKERHUB_USERNAME }}/remindy-backend:dev-latest
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -45,7 +68,14 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ env.AZURE_CREDENTIALS }}
+
+      - name: Set Azure credentials for Terraform
+        run: |
+          echo "ARM_CLIENT_ID=$(echo '${{ env.AZURE_CREDENTIALS }}' | jq -r '.clientId')" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=$(echo '${{ env.AZURE_CREDENTIALS }}' | jq -r '.clientSecret')" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=$(echo '${{ env.AZURE_CREDENTIALS }}' | jq -r '.subscriptionId')" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=$(echo '${{ env.AZURE_CREDENTIALS }}' | jq -r '.tenantId')" >> $GITHUB_ENV
 
       - name: Terraform Init
         working-directory: ${{ env.TERRAFORM_DIR }}
@@ -53,27 +83,11 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ env.TERRAFORM_DIR }}
-        run: |
-          terraform plan \
-            -var="image_tag=${{ steps.sha.outputs.SHORT_SHA }}" \
-            -var="dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }}" \
-            -var="dockerhub_token=${{ secrets.DOCKERHUB_TOKEN }}" \
-            -var="dockerhub_repo=${{ env.DOCKERHUB_REPO }}" \
-            -var="neon_database_url_dev=${{ secrets.NEON_DATABASE_URL_DEV }}" \
-            -var="neon_database_url_staging=${{ secrets.NEON_DATABASE_URL_STAGING }}" \
-            -var="neon_database_url_prod=${{ secrets.NEON_DATABASE_URL_PROD }}"
+        run: terraform plan -var="image_tag=${{ steps.sha.outputs.SHORT_SHA }}"
 
       - name: Terraform Apply
         working-directory: ${{ env.TERRAFORM_DIR }}
-        run: |
-          terraform apply -auto-approve \
-            -var="image_tag=${{ steps.sha.outputs.SHORT_SHA }}" \
-            -var="dockerhub_username=${{ secrets.DOCKERHUB_USERNAME }}" \
-            -var="dockerhub_token=${{ secrets.DOCKERHUB_TOKEN }}" \
-            -var="dockerhub_repo=${{ env.DOCKERHUB_REPO }}" \
-            -var="neon_database_url_dev=${{ secrets.NEON_DATABASE_URL_DEV }}" \
-            -var="neon_database_url_staging=${{ secrets.NEON_DATABASE_URL_STAGING }}" \
-            -var="neon_database_url_prod=${{ secrets.NEON_DATABASE_URL_PROD }}"
+        run: terraform apply -auto-approve -var="image_tag=${{ steps.sha.outputs.SHORT_SHA }}"
 
       - name: Get deployment outputs
         id: terraform_output
@@ -87,5 +101,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** Development" >> $GITHUB_STEP_SUMMARY
           echo "**Commit SHA:** ${{ steps.sha.outputs.SHORT_SHA }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Docker Image:** ${{ env.DOCKERHUB_REPO }}:${{ steps.sha.outputs.SHORT_SHA }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Docker Image:** ${{ env.DOCKERHUB_USERNAME }}/remindy-backend:${{ steps.sha.outputs.SHORT_SHA }}" >> $GITHUB_STEP_SUMMARY
           echo "**Application URL:** ${{ steps.terraform_output.outputs.app_url }}" >> $GITHUB_STEP_SUMMARY

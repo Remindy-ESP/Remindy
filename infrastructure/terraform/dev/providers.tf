@@ -6,17 +6,20 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
+    sops = {
+      source  = "carlpett/sops"
+      version = "~> 1.0"
+    }
   }
-
-  # Uncomment and configure backend for remote state storage
-  # backend "azurerm" {
-  #   resource_group_name  = "tfstate-rg"
-  #   storage_account_name = "remindytfstate"
-  #   container_name       = "tfstate"
-  #   key                  = "remindy-dev.tfstate"
-  # }
 }
 
 provider "azurerm" {
   features {}
+}
+
+provider "sops" {}
+
+# Read secrets from SOPS encrypted file
+data "sops_file" "secrets" {
+  source_file = "${path.module}/../../secrets/secrets.yaml"
 }

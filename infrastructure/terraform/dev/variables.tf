@@ -15,22 +15,6 @@ variable "image_tag" {
   type        = string
 }
 
-variable "dockerhub_username" {
-  description = "Docker Hub username"
-  type        = string
-}
-
-variable "dockerhub_token" {
-  description = "Docker Hub access token"
-  type        = string
-  sensitive   = true
-}
-
-variable "dockerhub_repo" {
-  description = "Docker Hub repository (username/repo-name)"
-  type        = string
-}
-
 variable "container_port" {
   description = "Container port"
   type        = number
@@ -65,22 +49,4 @@ variable "node_env" {
   description = "Node environment"
   type        = string
   default     = "development"
-}
-
-variable "neon_database_url_dev" {
-  description = "Neon database URL for dev environment"
-  type        = string
-  sensitive   = true
-}
-
-variable "neon_database_url_staging" {
-  description = "Neon database URL for staging environment"
-  type        = string
-  sensitive   = true
-}
-
-variable "neon_database_url_prod" {
-  description = "Neon database URL for prod environment"
-  type        = string
-  sensitive   = true
 }
