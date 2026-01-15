@@ -17,7 +17,9 @@ import RenameDocumentModal from '@/components/cloud/modals/RenameDocumentModal';
 import DeleteConfirmationModal from '@/components/cloud/modals/DeleteConfirmationModal';
 import MoveToFolderModal from '@/components/cloud/modals/MoveToFolderModal';
 import DocumentDetailsModal from '@/components/cloud/modals/DocumentDetailsModal';
-import type { Folder } from '@/services/api';
+import LinkToSubscriptionModal from '@/components/cloud/modals/LinkToSubscriptionModal';
+import { subscriptionService } from '@/services/api';
+import type { Folder, Subscription } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
 
 export default function CloudScreen() {
@@ -29,6 +31,7 @@ export default function CloudScreen() {
   const [folderPath, setFolderPath] = useState<Folder[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
   const [selectedDocument, setSelectedDocument] = useState<DocumentResponse | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
@@ -40,6 +43,7 @@ export default function CloudScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showMoveDoc, setShowMoveDoc] = useState(false);
   const [showDocDetails, setShowDocDetails] = useState(false);
+  const [showLinkToSub, setShowLinkToSub] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'document' | 'folder'; item: any } | null>(null);
 
@@ -55,7 +59,17 @@ export default function CloudScreen() {
       fetchDocuments(),
       fetchFolders(),
       fetchQuota(),
+      fetchSubscriptions(),
     ]);
+  };
+
+  const fetchSubscriptions = async () => {
+    try {
+      const data = await subscriptionService.getAll();
+      setSubscriptions(data);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+    }
   };
 
   const initializeDefaultFolders = async () => {
@@ -196,6 +210,20 @@ export default function CloudScreen() {
     }
   };
 
+  const handleLinkToSubscription = async (subscriptionId: string | null) => {
+    if (selectedDocument) {
+      if (subscriptionId) {
+        const linkedDocs = documents.filter((d) => d.subscription_id === subscriptionId);
+        if (linkedDocs.length >= 5) {
+          Alert.alert('Limite atteinte', 'Maximum 5 documents par transaction.');
+          return;
+        }
+      }
+      await updateDocument(selectedDocument.id, { subscription_id: subscriptionId });
+      await fetchDocuments();
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     if (deleteTarget.type === 'document') {
@@ -259,6 +287,7 @@ export default function CloudScreen() {
         onClose={() => setShowDocActions(false)}
         onRename={() => setShowRenameDoc(true)}
         onMove={() => setShowMoveDoc(true)}
+        onLink={() => setShowLinkToSub(true)}
         onDelete={() => {
           if (selectedDocument) {
             setDeleteTarget({ type: 'document', item: selectedDocument });
@@ -312,6 +341,14 @@ export default function CloudScreen() {
         visible={showDocDetails}
         document={selectedDocument}
         onClose={() => setShowDocDetails(false)}
+      />
+
+      <LinkToSubscriptionModal
+        visible={showLinkToSub}
+        subscriptions={subscriptions}
+        currentSubscriptionId={selectedDocument?.subscription_id}
+        onClose={() => setShowLinkToSub(false)}
+        onSubmit={handleLinkToSubscription}
       />
 
       {uploading && (
