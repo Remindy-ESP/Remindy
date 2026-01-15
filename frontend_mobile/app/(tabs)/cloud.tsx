@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useDocuments } from '@/hooks/useDocuments';
@@ -8,7 +9,6 @@ import { useStorageQuota } from '@/hooks/useStorageQuota';
 import StorageQuotaWidget from '@/components/cloud/StorageQuotaWidget';
 import FolderNavigationBar from '@/components/cloud/FolderNavigationBar';
 import DocumentList from '@/components/cloud/DocumentList';
-import UploadDocumentButton from '@/components/cloud/UploadDocumentButton';
 import DocumentActionsMenu from '@/components/cloud/DocumentActionsMenu';
 import CreateFolderModal from '@/components/cloud/modals/CreateFolderModal';
 import RenameFolderModal from '@/components/cloud/modals/RenameFolderModal';
@@ -64,6 +64,11 @@ export default function CloudScreen() {
 
   const handleUpload = async () => {
     try {
+      if (quota && quota.availableBytes <= 0) {
+        Alert.alert('Quota dépassé', 'Vous avez atteint la limite de stockage. Supprimez des documents pour en ajouter de nouveaux.');
+        return;
+      }
+
       const result = await DocumentPicker.getDocumentAsync({
         type: 'application/pdf',
         copyToCacheDirectory: true,
@@ -80,6 +85,11 @@ export default function CloudScreen() {
         return;
       }
 
+      if (quota && file.size && file.size > quota.availableBytes) {
+        Alert.alert('Espace insuffisant', 'Il n\'y a pas assez d\'espace de stockage pour ce fichier.');
+        return;
+      }
+
       setUploading(true);
       await uploadDocument({
         file: {
@@ -91,9 +101,10 @@ export default function CloudScreen() {
       });
       await fetchQuota();
       Alert.alert('Succès', 'Document ajouté avec succès');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
-      Alert.alert('Erreur', "Impossible d'ajouter le document");
+      const errorMessage = error?.response?.data?.message || error?.message || "Impossible d'ajouter le document";
+      Alert.alert('Erreur', errorMessage);
     } finally {
       setUploading(false);
     }
@@ -209,7 +220,16 @@ export default function CloudScreen() {
           onRefresh={handleRefresh}
         />
       )}
-      <UploadDocumentButton onPress={handleUpload} />
+      <View style={styles.actionButtons}>
+        <TouchableOpacity style={styles.createFolderButton} onPress={() => setShowCreateFolder(true)} activeOpacity={0.8}>
+          <Ionicons name="folder-outline" size={20} color="#6366f1" />
+          <Text style={styles.createFolderText}>Nouveau dossier</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.uploadButton} onPress={handleUpload} activeOpacity={0.8}>
+          <Ionicons name="add-circle" size={20} color="#fff" />
+          <Text style={styles.uploadText}>Ajouter un document</Text>
+        </TouchableOpacity>
+      </View>
 
       <DocumentActionsMenu
         visible={showDocActions}
@@ -275,6 +295,7 @@ export default function CloudScreen() {
         <View style={styles.uploadOverlay}>
           <View style={styles.uploadContainer}>
             <ActivityIndicator size="large" color="#6366f1" />
+            <Text style={styles.uploadingText}>Ajout du document...</Text>
           </View>
         </View>
       )}
@@ -309,5 +330,46 @@ const styles = StyleSheet.create({
     backgroundColor: '#1F1F39',
     borderRadius: 12,
     padding: 32,
+    alignItems: 'center',
+  },
+  uploadingText: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 16,
+  },
+  actionButtons: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  createFolderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1F1F39',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#6366f1',
+  },
+  createFolderText: {
+    color: '#6366f1',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6366f1',
+    borderRadius: 12,
+    padding: 16,
+  },
+  uploadText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
