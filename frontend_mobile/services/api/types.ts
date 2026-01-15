@@ -143,3 +143,48 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
 }
+
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  parentId?: string;
+  color?: string;
+  icon?: string;
+  isDefault: boolean;
+  documentCount?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface CreateFolderRequest {
+  name: string;
+  parentId?: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface UpdateFolderRequest {
+  name?: string;
+  color?: string;
+  icon?: string;
+  parentId?: string;
+}
+
+export interface FolderFilters {
+  parentId?: string;
+  isDefault?: boolean;
+  includeDeleted?: boolean;
+}
+
+export interface StorageQuota {
+  totalBytes: number;
+  usedBytes: number;
+  availableBytes: number;
+  usagePercentage: number;
+  documentCount: number;
+  totalFormatted: string;
+  usedFormatted: string;
+  availableFormatted: string;
+}
