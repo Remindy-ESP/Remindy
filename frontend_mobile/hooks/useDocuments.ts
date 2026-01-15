@@ -48,6 +48,26 @@ export function useDocuments() {
     }
   };
 
+  const updateDocument = async (id: string, params: {
+    filename?: string;
+    folder_id?: string;
+    subscription_id?: string | null;
+  }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const updated = await documentService.updateDocument(id, params);
+      setDocuments((prev) => prev.map((doc) => (doc.id === id ? updated : doc)));
+      return updated;
+    } catch (err) {
+      console.error('Error updating document:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update document');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteDocument = async (id: string) => {
     try {
       setLoading(true);
@@ -85,6 +105,7 @@ export function useDocuments() {
     error,
     fetchDocuments,
     uploadDocument,
+    updateDocument,
     deleteDocument,
     reprocessOcr,
   };

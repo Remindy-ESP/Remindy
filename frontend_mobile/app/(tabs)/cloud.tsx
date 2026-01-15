@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useFolders } from '@/hooks/useFolders';
 import { useStorageQuota } from '@/hooks/useStorageQuota';
@@ -20,7 +21,7 @@ import type { Folder } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
 
 export default function CloudScreen() {
-  const { documents, loading: docsLoading, fetchDocuments, uploadDocument, deleteDocument } = useDocuments();
+  const { documents, loading: docsLoading, fetchDocuments, uploadDocument, updateDocument, deleteDocument } = useDocuments();
   const { folders, loading: foldersLoading, fetchFolders, createFolder, updateFolder, deleteFolder, moveDocumentToFolder } = useFolders();
   const { quota, fetchQuota } = useStorageQuota();
 
@@ -45,6 +46,7 @@ export default function CloudScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadData();
+      initializeDefaultFolders();
     }, [currentFolderId])
   );
 
@@ -54,6 +56,21 @@ export default function CloudScreen() {
       fetchFolders(),
       fetchQuota(),
     ]);
+  };
+
+  const initializeDefaultFolders = async () => {
+    try {
+      const hasInitialized = await AsyncStorage.getItem('folders_initialized');
+      if (!hasInitialized) {
+        const rootFolder = await createFolder({ name: 'Exemple-dossier', color: '#6366f1' });
+        if (rootFolder) {
+          await createFolder({ name: 'Exemple-sous-dossier', color: '#F39C12', parentId: rootFolder.id });
+        }
+        await AsyncStorage.setItem('folders_initialized', 'true');
+      }
+    } catch (error) {
+      console.error('Error initializing default folders:', error);
+    }
   };
 
   const handleRefresh = async () => {
@@ -165,6 +182,7 @@ export default function CloudScreen() {
 
   const handleRenameDocument = async (name: string) => {
     if (selectedDocument) {
+      await updateDocument(selectedDocument.id, { filename: name });
       await fetchDocuments();
     }
   };
@@ -190,7 +208,12 @@ export default function CloudScreen() {
   };
 
   const currentFolders = folders.filter((f) => f.parentId === currentFolderId);
-  const currentDocuments = documents;
+  const currentDocuments = documents.filter((doc) => {
+    if (currentFolderId === null) {
+      return !doc.folder_id;
+    }
+    return doc.folder_id === currentFolderId;
+  });
 
   const loading = docsLoading || foldersLoading;
 

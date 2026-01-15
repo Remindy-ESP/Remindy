@@ -5,6 +5,7 @@ export interface DocumentResponse {
   user_id: string;
   subscription_id?: string;
   contract_id?: number;
+  folder_id?: string;
   filename: string;
   r2_key: string;
   r2_bucket: string;
@@ -119,6 +120,22 @@ class DocumentService {
       const response = await apiClient.get<DocumentResponse[]>('/documents', {
         params: filters,
       });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update a document (filename, folder, subscription link)
+   */
+  async updateDocument(id: string, params: {
+    filename?: string;
+    folder_id?: string;
+    subscription_id?: string | null;
+  }): Promise<DocumentResponse> {
+    try {
+      const response = await apiClient.put<DocumentResponse>(`/documents/${id}`, params);
       return response.data;
     } catch (error) {
       throw error;
