@@ -138,6 +138,16 @@ export class DocumentController {
       throw new BadRequestException('File is required');
     }
 
+    // Validate file size is not zero
+    if (file.size === 0) {
+      throw new BadRequestException('File is empty (0 bytes)');
+    }
+
+    // Validate filename is not empty or whitespace only
+    if (!file.originalname || file.originalname.trim().length === 0) {
+      throw new BadRequestException('File must have a valid name');
+    }
+
     // Manual validation
     const allowedMimeTypes = [
       'application/pdf',

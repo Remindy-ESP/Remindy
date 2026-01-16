@@ -50,6 +50,7 @@ export class DocumentRepository implements IDocumentRepository {
     const entities = await this.repository.find({
       where: {
         subscriptionId,
+        deletedAt: null as any,
       },
       order: {
         uploadedAt: 'DESC',

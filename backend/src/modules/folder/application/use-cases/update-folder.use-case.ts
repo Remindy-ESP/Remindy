@@ -64,8 +64,8 @@ export class UpdateFolderUseCase {
           throw new ForbiddenException('A folder cannot be its own parent');
         }
 
-        // TODO: Vérifier les boucles plus profondes (parent du parent, etc.)
-        // Pour une implémentation complète, il faudrait vérifier toute la chaîne
+        // Vérifier les boucles circulaires en remontant toute la chaîne des parents
+        await this.checkCircularHierarchy(folderId, dto.parentId);
       }
 
       folder.moveTo(dto.parentId);
@@ -73,5 +73,47 @@ export class UpdateFolderUseCase {
 
     // 5. Sauvegarder
     return await this.folderRepository.save(folder);
+  }
+
+  /**
+   * Vérifie qu'il n'y a pas de boucle circulaire dans la hiérarchie des dossiers
+   * En remontant la chaîne des parents depuis le nouveau parent proposé
+   */
+  private async checkCircularHierarchy(folderId: string, newParentId: string): Promise<void> {
+    let currentParentId: string | null = newParentId;
+    const visitedIds = new Set<string>();
+    const maxDepth = 100; // Protection contre les boucles infinies
+    let depth = 0;
+
+    while (currentParentId && depth < maxDepth) {
+      // Si on retombe sur le dossier qu'on essaie de déplacer, c'est une boucle
+      if (currentParentId === folderId) {
+        throw new ForbiddenException(
+          'Cannot move folder: this would create a circular hierarchy'
+        );
+      }
+
+      // Protection contre les boucles infinies
+      if (visitedIds.has(currentParentId)) {
+        throw new ForbiddenException(
+          'Circular hierarchy detected in existing folder structure'
+        );
+      }
+
+      visitedIds.add(currentParentId);
+
+      // Remonter au parent suivant
+      const parentFolder = await this.folderRepository.findById(currentParentId);
+      if (!parentFolder) {
+        break; // Parent n'existe pas, on arrête
+      }
+
+      currentParentId = parentFolder.parentId || null;
+      depth++;
+    }
+
+    if (depth >= maxDepth) {
+      throw new ForbiddenException('Folder hierarchy is too deep (max 100 levels)');
+    }
   }
 }

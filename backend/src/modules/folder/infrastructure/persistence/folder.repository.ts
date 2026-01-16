@@ -108,13 +108,13 @@ export class FolderRepository implements IFolderRepository {
 
   async findByNameAndUserId(name: string, userId: string): Promise<Folder | null> {
     try {
-      const folderEntity = await this.folderEntityRepository.findOne({
-        where: {
-          name,
-          userId,
-          deletedAt: IsNull(),
-        },
-      });
+      // Case-insensitive search using LOWER()
+      const folderEntity = await this.folderEntityRepository
+        .createQueryBuilder('folder')
+        .where('LOWER(folder.name) = LOWER(:name)', { name })
+        .andWhere('folder.user_id = :userId', { userId })
+        .andWhere('folder.deleted_at IS NULL')
+        .getOne();
 
       if (!folderEntity) {
         return null;
