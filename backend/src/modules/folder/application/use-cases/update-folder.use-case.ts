@@ -88,16 +88,12 @@ export class UpdateFolderUseCase {
     while (currentParentId && depth < maxDepth) {
       // Si on retombe sur le dossier qu'on essaie de déplacer, c'est une boucle
       if (currentParentId === folderId) {
-        throw new ForbiddenException(
-          'Cannot move folder: this would create a circular hierarchy'
-        );
+        throw new ForbiddenException('Cannot move folder: this would create a circular hierarchy');
       }
 
       // Protection contre les boucles infinies
       if (visitedIds.has(currentParentId)) {
-        throw new ForbiddenException(
-          'Circular hierarchy detected in existing folder structure'
-        );
+        throw new ForbiddenException('Circular hierarchy detected in existing folder structure');
       }
 
       visitedIds.add(currentParentId);

@@ -61,7 +61,9 @@ export class ReprocessOcrUseCase {
         updated.filename,
       );
 
-      this.logger.log(`Document ${updated.id} added to OCR queue for reprocessing with job ID ${jobId}`);
+      this.logger.log(
+        `Document ${updated.id} added to OCR queue for reprocessing with job ID ${jobId}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to add document to queue for reprocessing: ${error.message}`);
       // Mark as failed since we couldn't queue it

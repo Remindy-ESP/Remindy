@@ -176,7 +176,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
       const fileBuffer = await this.withTimeout(
         this.r2Service.downloadFile(r2Key),
         30000, // 30 seconds for download
-        'File download timed out after 30 seconds'
+        'File download timed out after 30 seconds',
       );
 
       // 3. Extraire le texte via OCR (with timeout)
@@ -184,15 +184,16 @@ export class InMemoryQueueService implements OnModuleDestroy {
       const rawText = await this.withTimeout(
         this.ocrService.extractText(fileBuffer, mimeType),
         120000, // 2 minutes for OCR extraction
-        'OCR extraction timed out after 2 minutes'
+        'OCR extraction timed out after 2 minutes',
       );
       const ocrText = this.ocrService.cleanExtractedText(rawText);
 
       if (!ocrText || ocrText.trim().length === 0) {
         // Différencier entre extraction vide (document sans texte) et échec
-        const errorMsg = rawText === ''
-          ? 'Document appears to be blank or contains no readable text (possible scanned image with no content)'
-          : 'Text extraction completed but produced no readable content after cleaning';
+        const errorMsg =
+          rawText === ''
+            ? 'Document appears to be blank or contains no readable text (possible scanned image with no content)'
+            : 'Text extraction completed but produced no readable content after cleaning';
         throw new Error(errorMsg);
       }
 
@@ -203,7 +204,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
       const parsedData = await this.withTimeout(
         this.geminiParser.parseDocument(ocrText),
         60000, // 1 minute for Gemini parsing
-        'Gemini parsing timed out after 1 minute'
+        'Gemini parsing timed out after 1 minute',
       );
 
       // 5. Mettre à jour le document avec les résultats
@@ -375,13 +376,11 @@ export class InMemoryQueueService implements OnModuleDestroy {
   private async withTimeout<T>(
     promise: Promise<T>,
     timeoutMs: number,
-    errorMessage: string
+    errorMessage: string,
   ): Promise<T> {
     return Promise.race([
       promise,
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-      )
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error(errorMessage)), timeoutMs)),
     ]);
   }
 }
