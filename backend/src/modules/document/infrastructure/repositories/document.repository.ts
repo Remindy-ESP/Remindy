@@ -46,6 +46,19 @@ export class DocumentRepository implements IDocumentRepository {
     return DocumentMapper.toDomainArray(entities);
   }
 
+  async findBySubscriptionId(subscriptionId: string): Promise<Document[]> {
+    const entities = await this.repository.find({
+      where: {
+        subscriptionId,
+      },
+      order: {
+        uploadedAt: 'DESC',
+      },
+    });
+
+    return DocumentMapper.toDomainArray(entities);
+  }
+
   async save(document: Document): Promise<Document> {
     const entity = DocumentMapper.toPersistence(document);
     const saved = await this.repository.save(entity);
