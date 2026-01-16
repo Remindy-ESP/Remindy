@@ -403,8 +403,14 @@ export default function CloudScreen() {
         visible={showDeleteConfirm}
         title={deleteTarget?.type === 'document' ? 'Supprimer le document' : 'Supprimer le dossier'}
         message={deleteTarget?.type === 'document'
-          ? 'Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.'
-          : 'Êtes-vous sûr de vouloir supprimer ce dossier ? Cette action est irréversible.'}
+          ? (deleteTarget.item.subscription_id
+              ? (() => {
+                  const linkedSub = subscriptions.find(s => s.id === deleteTarget.item.subscription_id);
+                  const subName = linkedSub ? `"${linkedSub.name}"` : 'un abonnement';
+                  return `Ce document est lié à ${subName}. Êtes-vous sûr de vouloir le supprimer ? Le document restera accessible depuis l'abonnement.`;
+                })()
+              : 'Êtes-vous sûr de vouloir supprimer ce document ?')
+          : 'Êtes-vous sûr de vouloir supprimer ce dossier ? Son contenu sera déplacé vers le dossier parent.'}
         onClose={() => {
           setShowDeleteConfirm(false);
           setDeleteTarget(null);
