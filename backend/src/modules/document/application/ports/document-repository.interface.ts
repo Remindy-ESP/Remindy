@@ -5,6 +5,7 @@ export interface IDocumentRepository {
   create(document: Document): Promise<Document>;
   findById(id: string): Promise<Document | null>;
   findByUserId(userId: string): Promise<Document[]>;
+  findBySubscriptionId(subscriptionId: string): Promise<Document[]>;
   findAll(filters: DocumentFilterAppDto): Promise<Document[]>;
   update(id: string, document: Document): Promise<Document | null>;
   delete(id: string): Promise<boolean>;
