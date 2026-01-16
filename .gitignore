@@ -6,8 +6,6 @@ node_modules/
 DEPLOYMENT.md
 TODO.md
 
-# Secrets - NEVER commit unencrypted secrets
-infrastructure/secrets/secrets.yaml
 *.tfvars
 !*.tfvars.example
 
