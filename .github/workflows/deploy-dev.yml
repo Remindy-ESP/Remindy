@@ -43,11 +43,16 @@ jobs:
           TOKEN=$(sops -d --extract '["dockerhub_username"]' ${{ env.SECRETS_FILE }})
           PASS=$(sops -d --extract '["dockerhub_token"]' ${{ env.SECRETS_FILE }})
           AZURE=$(sops -d --extract '["azure_credentials"]' ${{ env.SECRETS_FILE }})
+
           echo "::add-mask::$PASS"
           echo "::add-mask::$(echo "$AZURE" | jq -r '.clientSecret')"
+
           echo "DOCKERHUB_USERNAME=$TOKEN" >> $GITHUB_ENV
           echo "DOCKERHUB_TOKEN=$PASS" >> $GITHUB_ENV
-          echo "AZURE_CREDENTIALS=$AZURE" >> $GITHUB_ENV
+
+          echo "AZURE_CREDENTIALS<<EOF" >> $GITHUB_ENV
+          echo "$AZURE" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
