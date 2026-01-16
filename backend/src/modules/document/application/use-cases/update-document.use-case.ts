@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
 import type { IDocumentRepository } from '../ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../ports/document-repository.interface';
 import { Document } from '../../domain/document.entity';
@@ -28,16 +28,24 @@ export class UpdateDocumentUseCase {
             throw new NotFoundException(`Document with ID ${documentId} not found`);
         }
 
+        // Si on essaie de lier à un abonnement, vérifier la limite de 5 documents
+        if (dto.subscriptionId !== undefined && dto.subscriptionId !== null) {
+            const linkedDocuments = await this.documentRepository.findBySubscriptionId(dto.subscriptionId);
+            const activeLinkedDocs = linkedDocuments.filter(doc => doc.id !== documentId && !doc.deletedAt);
+            if (activeLinkedDocs.length >= 5) {
+                throw new BadRequestException('Maximum 5 documents par abonnement');
+            }
+        }
+
         // Appliquer les modifications au document domain
-        if (dto.filename) {
-            // Le setter du domain entity validera le filename
+        if (dto.filename || dto.subscriptionId !== undefined) {
             const updatedProps = {
                 id: document.id,
                 userId: document.userId,
-                subscriptionId: document.subscriptionId,
+                subscriptionId: dto.subscriptionId !== undefined ? (dto.subscriptionId || undefined) : document.subscriptionId,
                 contractId: document.contractId,
                 folderId: dto.folderId !== undefined ? dto.folderId : document.folderId,
-                filename: dto.filename,
+                filename: dto.filename || document.filename,
                 r2Key: document.r2Key,
                 r2Bucket: document.r2Bucket,
                 fileHash: document.fileHash,
