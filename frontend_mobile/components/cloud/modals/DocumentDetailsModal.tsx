@@ -93,13 +93,13 @@ export default function DocumentDetailsModal({ visible, document, onClose, onRet
                 <Text style={styles.ocrText}>{document.ocr_text}</Text>
               </View>
             )}
-            {document.parsed_provider && (
+            {Boolean(document.parsed_provider) && (
               <View style={styles.section}>
                 <Text style={styles.label}>Données analysées</Text>
-                {document.parsed_provider && <Text style={styles.parsedItem}>Fournisseur: {document.parsed_provider}</Text>}
-                {document.parsed_amount && <Text style={styles.parsedItem}>Montant: {document.parsed_amount} {document.parsed_currency}</Text>}
-                {document.parsed_date && <Text style={styles.parsedItem}>Date: {document.parsed_date}</Text>}
-                {document.parsed_frequency && <Text style={styles.parsedItem}>Fréquence: {document.parsed_frequency}</Text>}
+                {Boolean(document.parsed_provider) && <Text style={styles.parsedItem}>Fournisseur: {document.parsed_provider}</Text>}
+                {Boolean(document.parsed_amount) && <Text style={styles.parsedItem}>Montant: {document.parsed_amount} {document.parsed_currency}</Text>}
+                {Boolean(document.parsed_date) && <Text style={styles.parsedItem}>Date: {document.parsed_date}</Text>}
+                {Boolean(document.parsed_frequency) && <Text style={styles.parsedItem}>Fréquence: {document.parsed_frequency}</Text>}
               </View>
             )}
           </ScrollView>
