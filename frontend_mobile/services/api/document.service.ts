@@ -1,4 +1,5 @@
-import apiClient from './client';
+import client from './client';
+import { apiClient } from './client';
 
 export interface DocumentResponse {
   id: string;
@@ -79,7 +80,7 @@ class DocumentService {
       console.log('[DocumentService] FormData prepared:', formData);
       console.log('[DocumentService] Sending POST to /documents/upload');
 
-      const response = await apiClient.post<DocumentResponse>('/documents/upload', formData, {
+      const response = await client.post<DocumentResponse>('/documents/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -103,7 +104,7 @@ class DocumentService {
    */
   async getDocument(id: string): Promise<DocumentResponse> {
     try {
-      const response = await apiClient.get<DocumentResponse>(`/documents/${id}`);
+      const response = await client.get<DocumentResponse>(`/documents/${id}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -122,7 +123,7 @@ class DocumentService {
     sort?: string;
   }): Promise<DocumentResponse[]> {
     try {
-      const response = await apiClient.get<DocumentResponse[]>('/documents', {
+      const response = await client.get<DocumentResponse[]>('/documents', {
         params: filters,
       });
       return response.data;
@@ -140,7 +141,7 @@ class DocumentService {
     subscription_id?: string | null;
   }): Promise<DocumentResponse> {
     try {
-      const response = await apiClient.put<DocumentResponse>(`/documents/${id}`, params);
+      const response = await client.put<DocumentResponse>(`/documents/${id}`, params);
       return response.data;
     } catch (error) {
       throw error;
@@ -152,7 +153,7 @@ class DocumentService {
    */
   async deleteDocument(id: string): Promise<void> {
     try {
-      await apiClient.delete(`/documents/${id}`);
+      await client.delete(`/documents/${id}`);
     } catch (error) {
       throw error;
     }
@@ -163,7 +164,7 @@ class DocumentService {
    */
   async reprocessOcr(id: string, force?: boolean): Promise<DocumentResponse> {
     try {
-      const response = await apiClient.post<DocumentResponse>(
+      const response = await client.post<DocumentResponse>(
         `/documents/${id}/reprocess-ocr`,
         { force: force || false }
       );
@@ -177,7 +178,11 @@ class DocumentService {
    * Get download URL for a document
    */
   getDownloadUrl(id: string): string {
-    return `${apiClient.defaults.baseURL}/documents/${id}/download`;
+    const baseURL = apiClient.getBaseURL();
+    console.log('[DocumentService] Building download URL with baseURL:', baseURL);
+    const url = `${baseURL}/documents/${id}/download`;
+    console.log('[DocumentService] Download URL:', url);
+    return url;
   }
 
   /**
@@ -194,7 +199,7 @@ class DocumentService {
     maxStorageFormatted: string;
   }> {
     try {
-      const response = await apiClient.get('/documents/quota');
+      const response = await client.get('/documents/quota');
       return response.data;
     } catch (error) {
       throw error;

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,6 +51,7 @@ export default function CloudScreen() {
   const [showLinkToSub, setShowLinkToSub] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [pdfViewerUri, setPdfViewerUri] = useState<string>('');
+  const [pdfViewerToken, setPdfViewerToken] = useState<string>('');
 
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'document' | 'folder'; item: any } | null>(null);
 
@@ -221,7 +222,7 @@ export default function CloudScreen() {
 
   const handleDocumentPress = (document: DocumentResponse) => {
     setSelectedDocument(document);
-    setShowDocDetails(true);
+    setShowDocActions(true);
   };
 
   const handleDocumentMenuPress = (document: DocumentResponse) => {
@@ -271,7 +272,6 @@ export default function CloudScreen() {
 
   const handleViewDocument = async (document: DocumentResponse) => {
     try {
-      setDownloading(true);
       const token = await apiClient.getAccessToken();
       if (!token) {
         Alert.alert('Erreur', 'Non authentifié');
@@ -279,27 +279,102 @@ export default function CloudScreen() {
       }
 
       const downloadUrl = documentService.getDownloadUrl(document.id);
-      const fileUri = `${FileSystem.cacheDirectory}${document.filename}`;
+      console.log('[CloudScreen] Opening PDF viewer with URL:', downloadUrl);
+      console.log('[CloudScreen] Document ID:', document.id);
 
-      const downloadResult = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+      // Pass the authenticated download URL and token to the PDF viewer
+      setPdfViewerUri(downloadUrl);
+      setPdfViewerToken(token);
+      setShowPdfViewer(true);
+      setShowDocActions(false);
+    } catch (error: any) {
+      console.error('View document error:', error);
+      const errorMessage = error?.message || 'Impossible de visualiser le document';
+      Alert.alert('Erreur', errorMessage);
+    }
+  };
+
+  const handleDownloadDocument = async (document: DocumentResponse) => {
+    try {
+      console.log('[CloudScreen] Starting download for:', document.filename);
+      setDownloading(true);
+      const token = await apiClient.getAccessToken();
+      if (!token) {
+        Alert.alert('Erreur', 'Non authentifié');
+        setDownloading(false);
+        return;
+      }
+
+      const downloadUrl = documentService.getDownloadUrl(document.id);
+      // Use a unique filename to avoid conflicts
+      const timestamp = Date.now();
+      const fileUri = `${FileSystem.cacheDirectory}download_${timestamp}_${document.filename}`;
+
+      console.log('[CloudScreen] Downloading from:', downloadUrl);
+      console.log('[CloudScreen] Saving to:', fileUri);
+
+      // Add timeout to prevent hanging
+      const downloadPromise = FileSystem.downloadAsync(downloadUrl, fileUri, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Download timeout après 60 secondes')), 60000);
+      });
+
+      const downloadResult = await Promise.race([downloadPromise, timeoutPromise]) as FileSystem.FileSystemDownloadResult;
+
+      console.log('[CloudScreen] Download result status:', downloadResult.status);
+
       if (downloadResult.status === 200) {
-        // Open in-app PDF viewer
-        setPdfViewerUri(downloadResult.uri);
-        setShowPdfViewer(true);
-        setShowDocActions(false);
+        console.log('[CloudScreen] Download successful, checking if sharing is available');
+        // Share the file so user can save it to their device
+        const canShare = await Sharing.isAvailableAsync();
+        console.log('[CloudScreen] Sharing available:', canShare);
+
+        if (canShare) {
+          console.log('[CloudScreen] Opening share dialog');
+          // Stop the spinner before opening share dialog
+          setDownloading(false);
+          setShowDocActions(false);
+
+          // Small delay to ensure UI updates before showing dialog
+          setTimeout(async () => {
+            try {
+              console.log('[CloudScreen] Calling Sharing.shareAsync with URI:', downloadResult.uri);
+              const result = await Sharing.shareAsync(downloadResult.uri, {
+                mimeType: document.mime_type,
+                dialogTitle: 'Enregistrer le document',
+                UTI: document.mime_type === 'application/pdf' ? 'com.adobe.pdf' : undefined,
+              });
+              console.log('[CloudScreen] Share result:', JSON.stringify(result));
+
+              // Show success message after sharing
+              Alert.alert(
+                'Téléchargement réussi',
+                `${document.filename} a été téléchargé.`
+              );
+            } catch (shareError: any) {
+              console.error('[CloudScreen] Share error:', shareError);
+              Alert.alert(
+                'Document téléchargé',
+                `${document.filename} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur "Visualiser".`
+              );
+            }
+          }, 100);
+        } else {
+          Alert.alert('Erreur', 'Le téléchargement n\'est pas disponible sur cet appareil');
+        }
       } else {
+        console.error('[CloudScreen] Download failed with status:', downloadResult.status);
         Alert.alert('Erreur', 'Impossible de télécharger le document');
       }
     } catch (error: any) {
-      console.error('View document error:', error);
-      const errorMessage = error?.message || 'Impossible de visualiser le document';
+      console.error('[CloudScreen] Download document error:', error);
+      const errorMessage = error?.message || 'Impossible de télécharger le document';
       Alert.alert('Erreur', errorMessage);
-    } finally {
       setDownloading(false);
     }
   };
@@ -350,9 +425,15 @@ export default function CloudScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.pageHeader}>
+        <Text style={styles.pageTitle}>Mes Documents</Text>
+        <Text style={styles.pageSubtitle}>Gérez votre stockage cloud</Text>
+      </View>
+
+      <View style={styles.quotaContainer}>
         <StorageQuotaWidget quota={quota} />
       </View>
+
       <FolderNavigationBar
         currentFolder={currentFolderId ? folders.find((f) => f.id === currentFolderId) || null : null}
         folderPath={folderPath}
@@ -393,6 +474,12 @@ export default function CloudScreen() {
             handleViewDocument(selectedDocument);
           }
         }}
+        onDownload={() => {
+          if (selectedDocument) {
+            handleDownloadDocument(selectedDocument);
+          }
+        }}
+        onInfo={() => setShowDocDetails(true)}
         onRename={() => setShowRenameDoc(true)}
         onMove={() => setShowMoveDoc(true)}
         onLink={() => setShowLinkToSub(true)}
@@ -469,9 +556,11 @@ export default function CloudScreen() {
         visible={showPdfViewer}
         pdfUri={pdfViewerUri}
         fileName={selectedDocument?.filename || 'Document'}
+        authToken={pdfViewerToken}
         onClose={() => {
           setShowPdfViewer(false);
           setPdfViewerUri('');
+          setPdfViewerToken('');
         }}
       />
 
@@ -499,6 +588,27 @@ export default function CloudScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#06071D',
+  },
+  pageHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    backgroundColor: '#06071D',
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+  },
+  quotaContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     backgroundColor: '#06071D',
   },
   header: {
