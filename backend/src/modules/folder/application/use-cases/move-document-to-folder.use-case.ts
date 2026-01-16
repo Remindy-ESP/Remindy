@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import type { IFolderRepository } from '../ports/folder-repository.interface';
 import { FOLDER_REPOSITORY } from '../ports/folder-repository.interface';
 import type { IDocumentRepository } from '../../../document/application/ports/document-repository.interface';
@@ -42,10 +42,20 @@ export class MoveDocumentToFolderUseCase {
       throw new ForbiddenException('You do not have permission to move documents to this folder');
     }
 
-    // 5. Déplacer le document dans le dossier
+    // 5. Vérifier que le dossier n'est pas supprimé
+    if (folder.deletedAt) {
+      throw new BadRequestException('Cannot move document to a deleted folder');
+    }
+
+    // 6. Vérifier que le document n'est pas déjà dans ce dossier (éviter les opérations redondantes)
+    if (document.folderId === dto.folderId) {
+      throw new BadRequestException('Document is already in this folder');
+    }
+
+    // 7. Déplacer le document dans le dossier
     document.moveToFolder(dto.folderId);
 
-    // 6. Sauvegarder
+    // 8. Sauvegarder
     await this.documentRepository.save(document);
   }
 }

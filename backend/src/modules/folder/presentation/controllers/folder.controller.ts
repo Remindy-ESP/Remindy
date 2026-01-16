@@ -11,8 +11,10 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
 import {
   CreateFolderDto,
   UpdateFolderDto,
@@ -28,8 +30,9 @@ import { MoveDocumentToFolderUseCase } from '../../application/use-cases/move-do
 import { FolderPresentationMapper } from '../mappers/folder-presentation.mapper';
 
 @ApiTags('Folders')
+@ApiBearerAuth()
 @Controller('folders')
-@UseGuards(ThrottlerGuard)
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 export class FolderController {
   constructor(
     private readonly createFolderUseCase: CreateFolderUseCase,
@@ -49,10 +52,10 @@ export class FolderController {
   })
   @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiResponse({ status: 409, description: 'Un dossier avec ce nom existe déjà' })
-  async create(@Body() createDto: CreateFolderDto): Promise<FolderResponseDto> {
-    // TODO: Get userId from authenticated user
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
+  async create(
+    @Body() createDto: CreateFolderDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<FolderResponseDto> {
     const appDto = FolderPresentationMapper.toCreateAppDto(userId, createDto);
     const folder = await this.createFolderUseCase.execute(appDto);
 
@@ -84,10 +87,10 @@ export class FolderController {
     description: 'Liste des dossiers',
     type: [FolderResponseDto],
   })
-  async findAll(@Query() filters: FolderFilterDto): Promise<FolderResponseDto[]> {
-    // TODO: Get userId from authenticated user
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
+  async findAll(
+    @Query() filters: FolderFilterDto,
+    @CurrentUser('id') userId: string,
+  ): Promise<FolderResponseDto[]> {
     const appFilters = FolderPresentationMapper.toFilterAppDto(userId, filters);
     const folders = await this.findAllFoldersUseCase.execute(appFilters);
 
@@ -107,10 +110,8 @@ export class FolderController {
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateFolderDto,
+    @CurrentUser('id') userId: string,
   ): Promise<FolderResponseDto> {
-    // TODO: Get userId from authenticated user
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
     const appDto = FolderPresentationMapper.toUpdateAppDto(updateDto);
     const folder = await this.updateFolderUseCase.execute(id, userId, appDto);
 
@@ -128,10 +129,10 @@ export class FolderController {
     status: 400,
     description: 'Le dossier contient des documents ou des sous-dossiers',
   })
-  async delete(@Param('id') id: string): Promise<void> {
-    // TODO: Get userId from authenticated user
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string,
+  ): Promise<void> {
     await this.deleteFolderUseCase.execute(id, userId);
   }
 
@@ -149,10 +150,8 @@ export class FolderController {
   async moveDocument(
     @Param('id') folderId: string,
     @Param('docId') documentId: string,
+    @CurrentUser('id') userId: string,
   ): Promise<{ message: string }> {
-    // TODO: Get userId from authenticated user
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
     const appDto = FolderPresentationMapper.toMoveDocumentAppDto(userId, folderId, documentId);
 
     await this.moveDocumentToFolderUseCase.execute(appDto);

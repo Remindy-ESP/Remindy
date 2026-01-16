@@ -173,22 +173,38 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
       // 2. Télécharger le fichier depuis R2
       this.logger.debug(`Downloading file from R2: ${r2Key}`);
-      const fileBuffer = await this.r2Service.downloadFile(r2Key);
+      const fileBuffer = await this.withTimeout(
+        this.r2Service.downloadFile(r2Key),
+        30000, // 30 seconds for download
+        'File download timed out after 30 seconds'
+      );
 
-      // 3. Extraire le texte via OCR
+      // 3. Extraire le texte via OCR (with timeout)
       this.logger.debug(`Extracting text from ${mimeType} file`);
-      const rawText = await this.ocrService.extractText(fileBuffer, mimeType);
+      const rawText = await this.withTimeout(
+        this.ocrService.extractText(fileBuffer, mimeType),
+        120000, // 2 minutes for OCR extraction
+        'OCR extraction timed out after 2 minutes'
+      );
       const ocrText = this.ocrService.cleanExtractedText(rawText);
 
       if (!ocrText || ocrText.trim().length === 0) {
-        throw new Error('No text could be extracted from the document');
+        // Différencier entre extraction vide (document sans texte) et échec
+        const errorMsg = rawText === ''
+          ? 'Document appears to be blank or contains no readable text (possible scanned image with no content)'
+          : 'Text extraction completed but produced no readable content after cleaning';
+        throw new Error(errorMsg);
       }
 
       this.logger.debug(`Extracted ${ocrText.length} characters of text`);
 
-      // 4. Parser les données via Gemini
+      // 4. Parser les données via Gemini (with timeout)
       this.logger.debug(`Parsing document data with Gemini AI`);
-      const parsedData = await this.geminiParser.parseDocument(ocrText);
+      const parsedData = await this.withTimeout(
+        this.geminiParser.parseDocument(ocrText),
+        60000, // 1 minute for Gemini parsing
+        'Gemini parsing timed out after 1 minute'
+      );
 
       // 5. Mettre à jour le document avec les résultats
       await this.documentRepository.updateOcrAndParsedData(documentId, {
@@ -351,5 +367,21 @@ export class InMemoryQueueService implements OnModuleDestroy {
       failed: this.failedJobs.length,
       delayed: 0, // Pas de notion de delayed dans cette implémentation simple
     };
+  }
+
+  /**
+   * Wrapper pour ajouter un timeout à une promesse
+   */
+  private async withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    errorMessage: string
+  ): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+      )
+    ]);
   }
 }
