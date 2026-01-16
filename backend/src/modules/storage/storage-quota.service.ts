@@ -1,6 +1,7 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { IDocumentRepository } from '../document/application/ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../document/application/ports/document-repository.interface';
+import { Role } from '../auth/domain/value-objects/role.enum';
 
 /**
  * Interface pour les quotas de stockage
@@ -54,8 +55,13 @@ export interface StorageQuota {
 export class StorageQuotaService {
   private readonly logger = new Logger(StorageQuotaService.name);
 
-  // Quota par défaut : 5 GB (comme Firebase gratuit)
-  private readonly DEFAULT_QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
+  // Quotas par rôle
+  private readonly ROLE_QUOTAS: Record<string, number> = {
+    [Role.USER_FREEMIUM]: 100 * 1024 * 1024, // 100 MB
+    [Role.USER_PREMIUM]: 10 * 1024 * 1024 * 1024, // 10 GB
+    [Role.USER_ADMIN]: 50 * 1024 * 1024 * 1024, // 50 GB
+    [Role.SUPER_ADMIN]: 50 * 1024 * 1024 * 1024, // 50 GB
+  };
 
   constructor(
     @Inject(DOCUMENT_REPOSITORY)
@@ -65,9 +71,9 @@ export class StorageQuotaService {
   /**
    * Récupérer les quotas de stockage pour un utilisateur
    */
-  async getQuota(userId: string): Promise<StorageQuota> {
+  async getQuota(userId: string, userRole?: string): Promise<StorageQuota> {
     try {
-      this.logger.log(`Calculating storage quota for user ${userId}`);
+      this.logger.log(`Calculating storage quota for user ${userId} with role ${userRole}`);
 
       // Récupérer tous les documents de l'utilisateur (non supprimés)
       const documents = await this.documentRepository.findByUserId(userId);
@@ -75,8 +81,8 @@ export class StorageQuotaService {
       // Calculer l'espace utilisé
       const usedBytes = documents.reduce((total, doc) => total + doc.fileSize, 0);
 
-      // Calculer l'espace disponible
-      const totalBytes = this.DEFAULT_QUOTA_BYTES;
+      // Obtenir le quota total selon le rôle
+      const totalBytes = this.getTotalQuotaByRole(userRole);
       const availableBytes = Math.max(0, totalBytes - usedBytes);
 
       // Calculer le pourcentage d'utilisation
@@ -102,11 +108,22 @@ export class StorageQuotaService {
   }
 
   /**
+   * Obtenir le quota total selon le rôle de l'utilisateur
+   */
+  private getTotalQuotaByRole(userRole?: string): number {
+    if (!userRole || !this.ROLE_QUOTAS[userRole]) {
+      this.logger.debug(`Unknown role '${userRole}', defaulting to freemium quota`);
+      return this.ROLE_QUOTAS[Role.USER_FREEMIUM];
+    }
+    return this.ROLE_QUOTAS[userRole];
+  }
+
+  /**
    * Vérifier si l'utilisateur a assez d'espace pour uploader un fichier
    */
-  async canUpload(userId: string, fileSize: number): Promise<boolean> {
+  async canUpload(userId: string, fileSize: number, userRole?: string): Promise<boolean> {
     try {
-      const quota = await this.getQuota(userId);
+      const quota = await this.getQuota(userId, userRole);
       return quota.availableBytes >= fileSize;
     } catch (error) {
       this.logger.error(
@@ -120,9 +137,9 @@ export class StorageQuotaService {
   /**
    * Obtenir l'espace restant pour un utilisateur
    */
-  async getAvailableSpace(userId: string): Promise<number> {
+  async getAvailableSpace(userId: string, userRole?: string): Promise<number> {
     try {
-      const quota = await this.getQuota(userId);
+      const quota = await this.getQuota(userId, userRole);
       return quota.availableBytes;
     } catch (error) {
       this.logger.error(
@@ -147,9 +164,9 @@ export class StorageQuotaService {
   }
 
   /**
-   * Obtenir le quota par défaut en octets
+   * Obtenir le quota pour un rôle spécifique
    */
-  getDefaultQuota(): number {
-    return this.DEFAULT_QUOTA_BYTES;
+  getQuotaForRole(role: string): number {
+    return this.getTotalQuotaByRole(role);
   }
 }

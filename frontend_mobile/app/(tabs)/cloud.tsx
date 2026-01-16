@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useFolders } from '@/hooks/useFolders';
@@ -79,9 +80,15 @@ export default function CloudScreen() {
     try {
       const hasInitialized = await AsyncStorage.getItem('folders_initialized');
       if (!hasInitialized) {
-        const rootFolder = await createFolder({ name: 'Exemple-dossier', color: '#6366f1' });
+        const locale = Localization.getLocales()[0];
+        const isFrench = locale?.languageCode === 'fr';
+
+        const rootFolderName = isFrench ? 'Abonnements' : 'Subscriptions';
+        const subFolderName = isFrench ? 'Documents' : 'Documents';
+
+        const rootFolder = await createFolder({ name: rootFolderName, color: '#6366f1' });
         if (rootFolder) {
-          await createFolder({ name: 'Exemple-sous-dossier', color: '#F39C12', parentId: rootFolder.id });
+          await createFolder({ name: subFolderName, color: '#F39C12', parentId: rootFolder.id });
         }
         await AsyncStorage.setItem('folders_initialized', 'true');
       }

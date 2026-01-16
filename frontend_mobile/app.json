@@ -35,7 +35,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-navigation-bar"
+      "expo-navigation-bar",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
