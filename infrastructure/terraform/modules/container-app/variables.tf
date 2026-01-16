@@ -13,6 +13,18 @@ variable "location" {
   default     = "francecentral"
 }
 
+variable "container_app_environment_id" {
+  description = "Existing Container App Environment ID (if empty, a new one will be created)"
+  type        = string
+  default     = ""
+}
+
+variable "resource_group_name" {
+  description = "Existing Resource Group name (if empty, a new one will be created)"
+  type        = string
+  default     = ""
+}
+
 variable "image_tag" {
   description = "Docker image tag (commit SHA)"
   type        = string

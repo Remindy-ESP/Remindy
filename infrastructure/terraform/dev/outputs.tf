@@ -22,3 +22,8 @@ output "container_app_environment_name" {
   description = "Name of the Container App Environment"
   value       = module.container_app.container_app_environment_name
 }
+
+output "container_app_environment_id" {
+  description = "ID of the Container App Environment (for prod to reuse)"
+  value       = module.container_app.container_app_environment_id
+}
