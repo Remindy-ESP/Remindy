@@ -5,27 +5,27 @@ import { Ionicons } from '@expo/vector-icons';
 interface DocumentActionsMenuProps {
   readonly visible: boolean;
   readonly onClose: () => void;
+  readonly onView: () => void;
   readonly onRename: () => void;
   readonly onMove: () => void;
   readonly onLink: () => void;
   readonly onDelete: () => void;
-  readonly onDownload?: () => void;
 }
 
 export default function DocumentActionsMenu({
   visible,
   onClose,
+  onView,
   onRename,
   onMove,
   onLink,
   onDelete,
-  onDownload,
 }: DocumentActionsMenuProps) {
   const actions = [
+    { icon: 'eye-outline', label: 'Visualiser', onPress: onView, color: '#6366f1' },
     { icon: 'create-outline', label: 'Renommer', onPress: onRename, color: '#6366f1' },
     { icon: 'folder-open-outline', label: 'Déplacer', onPress: onMove, color: '#6366f1' },
     { icon: 'link-outline', label: 'Lier à une transaction', onPress: onLink, color: '#6366f1' },
-    ...(onDownload ? [{ icon: 'download-outline', label: 'Télécharger', onPress: onDownload, color: '#6366f1' }] : []),
     { icon: 'trash-outline', label: 'Supprimer', onPress: onDelete, color: '#E74C3C' },
   ];
 
