@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - feature/Devops
 
 env:
   TERRAFORM_DIR: infrastructure/terraform/dev
