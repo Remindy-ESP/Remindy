@@ -152,6 +152,22 @@ export default function CloudScreen() {
   };
 
   const handleNavigateToFolder = (folderId: string | null) => {
+    // Verify folder still exists if navigating to a specific folder
+    if (folderId) {
+      const folderExists = folders.find((f) => f.id === folderId);
+      if (!folderExists) {
+        Alert.alert(
+          'Dossier introuvable',
+          'Ce dossier a été supprimé ou n\'existe plus.',
+          [{ text: 'OK', onPress: () => {
+            setCurrentFolderId(null);
+            setFolderPath([]);
+          }}]
+        );
+        return;
+      }
+    }
+
     setCurrentFolderId(folderId);
     if (folderId === null) {
       setFolderPath([]);
@@ -164,7 +180,10 @@ export default function CloudScreen() {
         if (folder) {
           const buildPath = (fId: string, accumulated: Folder[] = []): Folder[] => {
             const f = folders.find((fo) => fo.id === fId);
-            if (!f) return accumulated;
+            if (!f) {
+              console.warn(`Folder ${fId} not found in path, stopping path build`);
+              return accumulated;
+            }
             if (f.parentId) {
               return buildPath(f.parentId, [f, ...accumulated]);
             }
