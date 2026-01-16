@@ -31,7 +31,9 @@ export class DocumentPresentationMapper {
       parsed_provider: document.parsedProvider,
       parsed_amount: document.parsedAmount,
       parsed_currency: document.parsedCurrency,
-      parsed_date: document.parsedDate ? new Date(document.parsedDate).toISOString().split('T')[0] : undefined,
+      parsed_date: document.parsedDate
+        ? new Date(document.parsedDate).toISOString().split('T')[0]
+        : undefined,
       parsed_frequency: document.parsedFrequency,
       parsed_category: document.parsedCategory,
       parsing_confidence: document.parsingConfidence,

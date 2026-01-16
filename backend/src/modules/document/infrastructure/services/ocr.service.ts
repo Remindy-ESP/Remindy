@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import Tesseract from 'tesseract.js';
 
 // Import pdf-parse using CommonJS require (pdf-parse is a CommonJS module)
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const pdfParse = require('pdf-parse');
 
 @Injectable()

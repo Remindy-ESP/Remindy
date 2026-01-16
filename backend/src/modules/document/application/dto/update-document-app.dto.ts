@@ -1,5 +1,5 @@
 export interface UpdateDocumentAppDto {
-    filename?: string;
-    folderId?: string;
-    subscriptionId?: string | null;
+  filename?: string;
+  folderId?: string;
+  subscriptionId?: string | null;
 }

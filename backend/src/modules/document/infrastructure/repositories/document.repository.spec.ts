@@ -174,7 +174,7 @@ describe('DocumentRepository', () => {
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         'document.subscriptionId = :subscriptionId',
-        { subscriptionId: 'sub-123' }
+        { subscriptionId: 'sub-123' },
       );
     });
 

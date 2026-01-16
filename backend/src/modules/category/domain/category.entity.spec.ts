@@ -63,7 +63,9 @@ describe('Category Entity', () => {
         color: '#FF5733',
       });
 
-      expect(() => category.updateName('a'.repeat(101))).toThrow('Category name cannot exceed 100 characters');
+      expect(() => category.updateName('a'.repeat(101))).toThrow(
+        'Category name cannot exceed 100 characters',
+      );
     });
   });
 
@@ -99,7 +101,9 @@ describe('Category Entity', () => {
         color: '#FF5733',
       });
 
-      expect(() => category.updateIcon('a'.repeat(51))).toThrow('Category icon cannot exceed 50 characters');
+      expect(() => category.updateIcon('a'.repeat(51))).toThrow(
+        'Category icon cannot exceed 50 characters',
+      );
     });
   });
 

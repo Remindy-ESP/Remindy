@@ -270,6 +270,5 @@ describe('JwtAuthGuard', () => {
         mockContext.getClass(),
       ]);
     });
-
   });
 });
