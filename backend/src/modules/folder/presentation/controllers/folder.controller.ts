@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Inject,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -35,6 +36,8 @@ import { UpdateFolderUseCase } from '../../application/use-cases/update-folder.u
 import { DeleteFolderUseCase } from '../../application/use-cases/delete-folder.use-case';
 import { MoveDocumentToFolderUseCase } from '../../application/use-cases/move-document-to-folder.use-case';
 import { FolderPresentationMapper } from '../mappers/folder-presentation.mapper';
+import { FOLDER_REPOSITORY } from '../../application/ports/folder-repository.interface';
+import type { IFolderRepository } from '../../application/ports/folder-repository.interface';
 
 @ApiTags('Folders')
 @ApiBearerAuth()
@@ -47,6 +50,8 @@ export class FolderController {
     private readonly updateFolderUseCase: UpdateFolderUseCase,
     private readonly deleteFolderUseCase: DeleteFolderUseCase,
     private readonly moveDocumentToFolderUseCase: MoveDocumentToFolderUseCase,
+    @Inject(FOLDER_REPOSITORY)
+    private readonly folderRepository: IFolderRepository,
   ) {}
 
   @Post()
@@ -101,7 +106,18 @@ export class FolderController {
     const appFilters = FolderPresentationMapper.toFilterAppDto(userId, filters);
     const folders = await this.findAllFoldersUseCase.execute(appFilters);
 
-    return FolderPresentationMapper.toResponseDtoArray(folders);
+    // Calculate document counts for each folder
+    const documentCounts = new Map<string, number>();
+    await Promise.all(
+      folders.map(async (folder) => {
+        if (folder.id) {
+          const count = await this.folderRepository.countDocumentsInFolder(folder.id);
+          documentCounts.set(folder.id, count);
+        }
+      }),
+    );
+
+    return FolderPresentationMapper.toResponseDtoArray(folders, documentCounts);
   }
 
   @Put(':id')

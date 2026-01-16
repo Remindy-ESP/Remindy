@@ -32,11 +32,17 @@ export function useDocuments() {
     file: { uri: string; name: string; type: string; size?: number };
     subscription_id?: string;
     contract_id?: number;
+    folderId?: string;
   }) => {
     try {
       setLoading(true);
       setError(null);
-      const document = await documentService.uploadDocument(params);
+      const document = await documentService.uploadDocument({
+        file: params.file,
+        subscription_id: params.subscription_id,
+        contract_id: params.contract_id,
+        folder_id: params.folderId,
+      });
       setDocuments((prev) => [document, ...prev]);
       return document;
     } catch (err) {

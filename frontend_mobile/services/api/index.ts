@@ -4,8 +4,8 @@
  */
 
 // Export API client
-export { default as apiClient } from './client';
-export { apiClient as client } from './client';
+export { apiClient } from './client'; // Named export - has getAccessToken() method
+export { default as client } from './client'; // Default export - axios instance
 
 // Export services
 export { default as authService } from './auth.service';

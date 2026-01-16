@@ -21,6 +21,7 @@ import DeleteConfirmationModal from '@/components/cloud/modals/DeleteConfirmatio
 import MoveToFolderModal from '@/components/cloud/modals/MoveToFolderModal';
 import DocumentDetailsModal from '@/components/cloud/modals/DocumentDetailsModal';
 import LinkToSubscriptionModal from '@/components/cloud/modals/LinkToSubscriptionModal';
+import PDFViewerModal from '@/components/cloud/modals/PDFViewerModal';
 import { subscriptionService, documentService, apiClient } from '@/services/api';
 import type { Folder, Subscription } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
@@ -48,6 +49,8 @@ export default function CloudScreen() {
   const [showMoveDoc, setShowMoveDoc] = useState(false);
   const [showDocDetails, setShowDocDetails] = useState(false);
   const [showLinkToSub, setShowLinkToSub] = useState(false);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [pdfViewerUri, setPdfViewerUri] = useState<string>('');
 
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'document' | 'folder'; item: any } | null>(null);
 
@@ -139,8 +142,9 @@ export default function CloudScreen() {
           type: file.mimeType || 'application/pdf',
           size: file.size,
         },
+        folderId: currentFolderId || undefined,
       });
-      await fetchQuota();
+      await Promise.all([fetchDocuments(), fetchQuota()]);
       Alert.alert('Succès', 'Document ajouté avec succès');
     } catch (error: any) {
       console.error('Upload error:', error);
@@ -283,15 +287,13 @@ export default function CloudScreen() {
         },
       });
 
-      if (downloadResult.status !== 200) {
-        throw new Error('Download failed');
-      }
-
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(downloadResult.uri);
+      if (downloadResult.status === 200) {
+        // Open in-app PDF viewer
+        setPdfViewerUri(downloadResult.uri);
+        setShowPdfViewer(true);
+        setShowDocActions(false);
       } else {
-        Alert.alert('Erreur', 'Impossible de visualiser le document sur cet appareil.');
+        Alert.alert('Erreur', 'Impossible de télécharger le document');
       }
     } catch (error: any) {
       console.error('View document error:', error);
@@ -304,13 +306,36 @@ export default function CloudScreen() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+
     if (deleteTarget.type === 'document') {
       await deleteDocument(deleteTarget.item.id);
       await fetchQuota();
     } else {
-      await deleteFolder(deleteTarget.item.id);
+      const folderId = deleteTarget.item.id;
+
+      // If we're currently inside the folder being deleted, navigate to its parent
+      if (currentFolderId === folderId) {
+        const deletedFolder = folders.find(f => f.id === folderId);
+        setCurrentFolderId(deletedFolder?.parentId || null);
+
+        // Update folder path
+        if (deletedFolder?.parentId) {
+          const parentIndex = folderPath.findIndex(f => f.id === deletedFolder.parentId);
+          if (parentIndex >= 0) {
+            setFolderPath(folderPath.slice(0, parentIndex + 1));
+          } else {
+            setFolderPath([]);
+          }
+        } else {
+          setFolderPath([]);
+        }
+      }
+
+      await deleteFolder(folderId);
     }
+
     setDeleteTarget(null);
+    setShowDeleteConfirm(false);
   };
 
   const currentFolders = folders.filter((f) => f.parentId === currentFolderId);
@@ -438,6 +463,16 @@ export default function CloudScreen() {
         currentSubscriptionId={selectedDocument?.subscription_id}
         onClose={() => setShowLinkToSub(false)}
         onSubmit={handleLinkToSubscription}
+      />
+
+      <PDFViewerModal
+        visible={showPdfViewer}
+        pdfUri={pdfViewerUri}
+        fileName={selectedDocument?.filename || 'Document'}
+        onClose={() => {
+          setShowPdfViewer(false);
+          setPdfViewerUri('');
+        }}
       />
 
       {uploading && (
