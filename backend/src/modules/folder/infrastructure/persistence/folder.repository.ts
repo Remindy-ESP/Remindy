@@ -222,4 +222,17 @@ export class FolderRepository implements IFolderRepository {
       throw error;
     }
   }
+
+  async moveDocumentsToFolder(fromFolderId: string, toFolderId: string | null): Promise<void> {
+    try {
+      await this.folderEntityRepository.manager.query(
+        `UPDATE documents SET folder_id = $1 WHERE folder_id = $2 AND deleted_at IS NULL`,
+        [toFolderId, fromFolderId]
+      );
+      this.logger.log(`Moved documents from folder ${fromFolderId} to ${toFolderId || 'root'}`);
+    } catch (error) {
+      this.logger.error(`Failed to move documents: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
 }

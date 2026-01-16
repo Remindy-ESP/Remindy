@@ -37,34 +37,52 @@ export class UploadDocumentUseCase {
       const timestamp = Date.now();
       const r2Key = `users/${dto.userId}/documents/${timestamp}-${dto.filename}`;
 
+      // Re-check quota just before upload to prevent race conditions
+      await this.quotaService.checkUserQuota(dto.userId, userRole, dto.fileSize);
+
       // ÉTAPE 1 : Upload vers Cloudflare R2
       this.logger.log(`Uploading file to R2: ${r2Key}`);
-      const fileUrl = await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
-      this.logger.log(`File uploaded successfully to R2`);
+      let fileUrl: string;
+      let savedDocument: Document;
 
-      // Convertir les chaînes vides en undefined pour éviter les erreurs de validation UUID
-      const subscriptionId =
-        dto.subscriptionId && dto.subscriptionId.trim() !== '' ? dto.subscriptionId : undefined;
-      const contractId = dto.contractId && dto.contractId > 0 ? dto.contractId : undefined;
-      const folderId = dto.folderId && dto.folderId.trim() !== '' ? dto.folderId : undefined;
+      try {
+        fileUrl = await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
+        this.logger.log(`File uploaded successfully to R2`);
 
-      // Create domain entity avec statut "pending" (sera traité par la queue)
-      const document = new Document({
-        userId: dto.userId,
-        subscriptionId,
-        contractId,
-        folderId,
-        filename: dto.filename,
-        r2Key,
-        r2Bucket: 'remindy-documents',
-        fileHash,
-        fileSize: dto.fileSize,
-        mimeType: dto.mimeType,
-        ocrStatus: 'pending', // La queue changera à "processing"
-      });
+        // Convertir les chaînes vides en undefined pour éviter les erreurs de validation UUID
+        const subscriptionId =
+          dto.subscriptionId && dto.subscriptionId.trim() !== '' ? dto.subscriptionId : undefined;
+        const contractId = dto.contractId && dto.contractId > 0 ? dto.contractId : undefined;
+        const folderId = dto.folderId && dto.folderId.trim() !== '' ? dto.folderId : undefined;
 
-      // Save to database
-      const savedDocument = await this.documentRepository.create(document);
+        // Create domain entity avec statut "pending" (sera traité par la queue)
+        const document = new Document({
+          userId: dto.userId,
+          subscriptionId,
+          contractId,
+          folderId,
+          filename: dto.filename,
+          r2Key,
+          r2Bucket: 'remindy-documents',
+          fileHash,
+          fileSize: dto.fileSize,
+          mimeType: dto.mimeType,
+          ocrStatus: 'pending',
+        });
+
+        // Save to database
+        savedDocument = await this.documentRepository.create(document);
+      } catch (error) {
+        // If DB save failed after R2 upload, cleanup the orphaned file
+        this.logger.error(`Failed after R2 upload, cleaning up: ${error.message}`);
+        try {
+          await this.r2Service.deleteFile(r2Key);
+          this.logger.log(`Orphaned file cleaned up from R2: ${r2Key}`);
+        } catch (cleanupError) {
+          this.logger.error(`Failed to cleanup R2 file: ${cleanupError.message}`);
+        }
+        throw error;
+      }
 
       // ÉTAPE 2 : Ajouter le document à la queue pour traitement OCR asynchrone
       if (savedDocument.id) {

@@ -11,7 +11,14 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -129,10 +136,7 @@ export class FolderController {
     status: 400,
     description: 'Le dossier contient des documents ou des sous-dossiers',
   })
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
+  async delete(@Param('id') id: string, @CurrentUser('id') userId: string): Promise<void> {
     await this.deleteFolderUseCase.execute(id, userId);
   }
 
