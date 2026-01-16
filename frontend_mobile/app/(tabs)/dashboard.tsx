@@ -4,6 +4,7 @@ import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
+import * as Localization from 'expo-localization';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
@@ -11,7 +12,7 @@ import AddOperationButton from '@/components/AddOperationButton';
 import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
-import { documentService } from '@/services/api';
+import { documentService, folderService } from '@/services/api';
 LocaleConfig.locales['fr'] = {
   monthNames: [
     'Janvier',
@@ -131,6 +132,31 @@ export default function DashboardScreen() {
     router.push({ pathname: '/(tabs)/subscription', params: { openAdd: Date.now().toString() } });
   };
 
+  /**
+   * Get the default "Subscriptions" folder ID based on device language
+   * Creates the folder if it doesn't exist
+   */
+  const getDefaultSubscriptionFolderId = async (): Promise<string | undefined> => {
+    try {
+      const locale = Localization.getLocales()[0];
+      const isFrench = locale?.languageCode === 'fr';
+      const folderName = isFrench ? 'Abonnements' : 'Subscriptions';
+
+      // Get all folders
+      const folders = await folderService.getAllFolders();
+
+      // Find the default folder by name (no parent)
+      const defaultFolder = folders.find(
+        folder => folder.name === folderName && !folder.parent_id
+      );
+
+      return defaultFolder?.id;
+    } catch (error) {
+      console.error('Error getting default subscription folder:', error);
+      return undefined;
+    }
+  };
+
   const handlePdfInsert = async () => {
     setAddOperationModalOpen(false);
 
@@ -169,6 +195,9 @@ export default function DashboardScreen() {
       // Set loading state
       setUploadingDocument(true);
 
+      // Get the default subscription folder ID
+      const folderId = await getDefaultSubscriptionFolderId();
+
       // Upload document to backend
       const uploadedDocument = await documentService.uploadDocument({
         file: {
@@ -177,6 +206,7 @@ export default function DashboardScreen() {
           type: selectedFile.mimeType || 'application/pdf',
           size: selectedFile.size,
         },
+        folder_id: folderId,
       });
 
       console.log('Document uploaded successfully:', uploadedDocument);
