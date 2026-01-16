@@ -1,14 +1,9 @@
 name: Deploy to Production (Azure Container Apps)
 
 on:
-  # Triggered after dev deployment succeeds
-  workflow_run:
-    workflows: ["Deploy to Dev (Azure Container Apps)"]
-    types:
-      - completed
+  push:
     branches:
       - master
-      - feature/Devops
 
 env:
   TERRAFORM_DIR: infrastructure/terraform/prod
@@ -17,8 +12,6 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    # Only run if dev deployment succeeded
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout code
