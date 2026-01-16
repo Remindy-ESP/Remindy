@@ -21,4 +21,12 @@ export class UpdateDocumentDto {
     @IsOptional()
     @IsUUID('4', { message: 'Folder ID must be a valid UUID' })
     folder_id?: string;
+
+    @ApiPropertyOptional({
+        description: 'ID de l\'abonnement lié (null pour dissocier)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    @IsOptional()
+    @IsUUID('4', { message: 'Subscription ID must be a valid UUID' })
+    subscription_id?: string | null;
 }

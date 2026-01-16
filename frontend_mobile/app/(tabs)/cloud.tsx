@@ -149,10 +149,22 @@ export default function CloudScreen() {
     if (folderId === null) {
       setFolderPath([]);
     } else {
-      const folder = folders.find((f) => f.id === folderId);
-      if (folder) {
-        const newPath = [...folderPath, folder];
-        setFolderPath(newPath);
+      const folderIndex = folderPath.findIndex((f) => f.id === folderId);
+      if (folderIndex >= 0) {
+        setFolderPath(folderPath.slice(0, folderIndex + 1));
+      } else {
+        const folder = folders.find((f) => f.id === folderId);
+        if (folder) {
+          const buildPath = (fId: string, accumulated: Folder[] = []): Folder[] => {
+            const f = folders.find((fo) => fo.id === fId);
+            if (!f) return accumulated;
+            if (f.parentId) {
+              return buildPath(f.parentId, [f, ...accumulated]);
+            }
+            return [f, ...accumulated];
+          };
+          setFolderPath(buildPath(folderId));
+        }
       }
     }
   };

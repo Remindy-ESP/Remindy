@@ -14,6 +14,7 @@ export class DocumentPresentationMapper {
       user_id: document.userId,
       subscription_id: document.subscriptionId,
       contract_id: document.contractId,
+      folder_id: document.folderId,
       filename: document.filename,
       r2_key: document.r2Key,
       r2_bucket: document.r2Bucket,
@@ -63,6 +64,7 @@ export class DocumentPresentationMapper {
     return {
       filename: dto.filename,
       folderId: dto.folder_id,
+      subscriptionId: dto.subscription_id,
     };
   }
 }
