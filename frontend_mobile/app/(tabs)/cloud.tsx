@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } fr
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useFolders } from '@/hooks/useFolders';
@@ -18,7 +20,7 @@ import DeleteConfirmationModal from '@/components/cloud/modals/DeleteConfirmatio
 import MoveToFolderModal from '@/components/cloud/modals/MoveToFolderModal';
 import DocumentDetailsModal from '@/components/cloud/modals/DocumentDetailsModal';
 import LinkToSubscriptionModal from '@/components/cloud/modals/LinkToSubscriptionModal';
-import { subscriptionService } from '@/services/api';
+import { subscriptionService, documentService, apiClient } from '@/services/api';
 import type { Folder, Subscription } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
 
@@ -31,6 +33,7 @@ export default function CloudScreen() {
   const [folderPath, setFolderPath] = useState<Folder[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
   const [selectedDocument, setSelectedDocument] = useState<DocumentResponse | null>(null);
@@ -224,6 +227,43 @@ export default function CloudScreen() {
     }
   };
 
+  const handleViewDocument = async (document: DocumentResponse) => {
+    try {
+      setDownloading(true);
+      const token = await apiClient.getAccessToken();
+      if (!token) {
+        Alert.alert('Erreur', 'Non authentifié');
+        return;
+      }
+
+      const downloadUrl = documentService.getDownloadUrl(document.id);
+      const fileUri = `${FileSystem.cacheDirectory}${document.filename}`;
+
+      const downloadResult = await FileSystem.downloadAsync(downloadUrl, fileUri, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (downloadResult.status !== 200) {
+        throw new Error('Download failed');
+      }
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(downloadResult.uri);
+      } else {
+        Alert.alert('Erreur', 'Impossible de visualiser le document sur cet appareil.');
+      }
+    } catch (error: any) {
+      console.error('View document error:', error);
+      const errorMessage = error?.message || 'Impossible de visualiser le document';
+      Alert.alert('Erreur', errorMessage);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     if (deleteTarget.type === 'document') {
@@ -285,6 +325,11 @@ export default function CloudScreen() {
       <DocumentActionsMenu
         visible={showDocActions}
         onClose={() => setShowDocActions(false)}
+        onView={() => {
+          if (selectedDocument) {
+            handleViewDocument(selectedDocument);
+          }
+        }}
         onRename={() => setShowRenameDoc(true)}
         onMove={() => setShowMoveDoc(true)}
         onLink={() => setShowLinkToSub(true)}
@@ -356,6 +401,15 @@ export default function CloudScreen() {
           <View style={styles.uploadContainer}>
             <ActivityIndicator size="large" color="#6366f1" />
             <Text style={styles.uploadingText}>Ajout du document...</Text>
+          </View>
+        </View>
+      )}
+
+      {downloading && (
+        <View style={styles.uploadOverlay}>
+          <View style={styles.uploadContainer}>
+            <ActivityIndicator size="large" color="#6366f1" />
+            <Text style={styles.uploadingText}>Chargement...</Text>
           </View>
         </View>
       )}

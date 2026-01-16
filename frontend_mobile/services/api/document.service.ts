@@ -169,6 +169,13 @@ class DocumentService {
   }
 
   /**
+   * Get download URL for a document
+   */
+  getDownloadUrl(id: string): string {
+    return `${apiClient.defaults.baseURL}/documents/${id}/download`;
+  }
+
+  /**
    * Get user quota usage
    */
   async getQuota(): Promise<{
