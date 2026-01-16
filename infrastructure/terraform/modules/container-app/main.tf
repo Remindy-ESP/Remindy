@@ -1,39 +1,42 @@
 locals {
-  resource_group_name = "rg-remindy-backend-${var.environment}"
+  resource_group_name = "rg-remindy-backend"  # Shared resource group
   container_app_name  = "ca-remindy-backend-${var.environment}"
-  environment_name    = "cae-remindy-${var.environment}"
+  environment_name    = "cae-remindy"  # Shared environment
+
+  # Use external environment if provided, otherwise use the one we create
+  container_app_environment_id = var.container_app_environment_id != "" ? var.container_app_environment_id : azurerm_container_app_environment.main[0].id
 }
 
-# Resource Group
+# Resource Group (only create if not using external environment)
 resource "azurerm_resource_group" "main" {
+  count    = var.container_app_environment_id == "" ? 1 : 0
   name     = local.resource_group_name
   location = var.location
 
   tags = {
-    environment = var.environment
-    project     = "remindy"
-    managed_by  = "terraform"
+    project    = "remindy"
+    managed_by = "terraform"
   }
 }
 
-# Container Apps Environment
+# Container Apps Environment (only create if not using external environment)
 resource "azurerm_container_app_environment" "main" {
+  count               = var.container_app_environment_id == "" ? 1 : 0
   name                = local.environment_name
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main[0].location
+  resource_group_name = azurerm_resource_group.main[0].name
 
   tags = {
-    environment = var.environment
-    project     = "remindy"
-    managed_by  = "terraform"
+    project    = "remindy"
+    managed_by = "terraform"
   }
 }
 
 # Container App
 resource "azurerm_container_app" "main" {
   name                         = local.container_app_name
-  container_app_environment_id = azurerm_container_app_environment.main.id
-  resource_group_name          = azurerm_resource_group.main.name
+  container_app_environment_id = local.container_app_environment_id
+  resource_group_name          = var.resource_group_name != "" ? var.resource_group_name : azurerm_resource_group.main[0].name
   revision_mode                = "Single"
 
   template {

@@ -2,6 +2,12 @@ locals {
   secrets = data.sops_file.secrets.data
 }
 
+# Get the existing Container App Environment created by dev
+data "azurerm_container_app_environment" "shared" {
+  name                = "cae-remindy"
+  resource_group_name = "rg-remindy-backend"
+}
+
 module "container_app" {
   source = "../modules/container-app"
 
@@ -16,6 +22,10 @@ module "container_app" {
   max_replicas       = var.max_replicas
   cpu                = var.cpu
   memory             = var.memory
+
+  # Use the shared Environment from dev
+  container_app_environment_id = data.azurerm_container_app_environment.shared.id
+  resource_group_name          = "rg-remindy-backend"
 
   # Environment variables
   app_env_vars = {

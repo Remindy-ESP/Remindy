@@ -10,7 +10,7 @@ output "container_app_fqdn" {
 
 output "resource_group_name" {
   description = "The name of the resource group"
-  value       = azurerm_resource_group.main.name
+  value       = var.resource_group_name != "" ? var.resource_group_name : azurerm_resource_group.main[0].name
 }
 
 output "container_app_name" {
@@ -20,5 +20,10 @@ output "container_app_name" {
 
 output "container_app_environment_name" {
   description = "The name of the Container App Environment"
-  value       = azurerm_container_app_environment.main.name
+  value       = var.container_app_environment_id != "" ? "external" : azurerm_container_app_environment.main[0].name
+}
+
+output "container_app_environment_id" {
+  description = "The ID of the Container App Environment"
+  value       = local.container_app_environment_id
 }
