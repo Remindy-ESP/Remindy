@@ -40,11 +40,17 @@ jobs:
 
       - name: Extract Docker credentials for build
         run: |
-          echo "DOCKERHUB_USERNAME=$(sops -d --extract '["dockerhub_username"]' ${{ env.SECRETS_FILE }})" >> $GITHUB_ENV
-          echo "DOCKERHUB_TOKEN=$(sops -d --extract '["dockerhub_token"]' ${{ env.SECRETS_FILE }})" >> $GITHUB_ENV
-          echo "AZURE_CREDENTIALS<<EOF" >> $GITHUB_ENV
-          sops -d --extract '["azure_credentials"]' ${{ env.SECRETS_FILE }} >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          TOKEN=$(sops -d --extract '["dockerhub_username"]' ${{ env.SECRETS_FILE }})
+          PASS=$(sops -d --extract '["dockerhub_token"]' ${{ env.SECRETS_FILE }})
+          AZURE=$(sops -d --extract '["azure_credentials"]' ${{ env.SECRETS_FILE }})
+          echo "::add-mask::$PASS"
+          echo "::add-mask::$(echo "$AZURE" | jq -r '.clientSecret')"
+          echo "DOCKERHUB_USERNAME=$TOKEN" >> $GITHUB_ENV
+          echo "DOCKERHUB_TOKEN=$PASS" >> $GITHUB_ENV
+          echo "AZURE_CREDENTIALS=$AZURE" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -55,7 +61,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ env.DOCKER_CONTEXT }}
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: |
             ${{ env.DOCKERHUB_USERNAME }}/remindy-backend:${{ steps.sha.outputs.SHORT_SHA }}
