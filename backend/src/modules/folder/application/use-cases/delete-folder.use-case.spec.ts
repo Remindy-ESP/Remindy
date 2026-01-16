@@ -86,13 +86,6 @@ describe('DeleteFolderUseCase', () => {
   });
 
   it('should move subfolders to parent before deletion', async () => {
-    const parentFolder = new Folder({
-      id: 'parent-123',
-      userId: 'user-123',
-      name: 'Parent',
-      isDefault: false,
-    });
-
     const folder = new Folder({
       id: 'folder-123',
       userId: 'user-123',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -88,7 +88,7 @@ export default function CloudScreen() {
         const isFrench = locale?.languageCode === 'fr';
 
         const rootFolderName = isFrench ? 'Abonnements' : 'Subscriptions';
-        const subFolderName = isFrench ? 'Documents' : 'Documents';
+        const subFolderName = 'Documents';
 
         const rootFolder = await createFolder({ name: rootFolderName, color: '#6366f1' });
         if (rootFolder) {
@@ -413,6 +413,21 @@ export default function CloudScreen() {
     setShowDeleteConfirm(false);
   };
 
+  const getDeleteMessage = (): string => {
+    if (!deleteTarget) return '';
+
+    if (deleteTarget.type === 'document') {
+      if (deleteTarget.item.subscription_id) {
+        const linkedSub = subscriptions.find(s => s.id === deleteTarget.item.subscription_id);
+        const subName = linkedSub ? `"${linkedSub.name}"` : 'un abonnement';
+        return `Ce document est lié à ${subName}. Êtes-vous sûr de vouloir le supprimer ? Le document restera accessible depuis l'abonnement.`;
+      }
+      return 'Êtes-vous sûr de vouloir supprimer ce document ?';
+    }
+
+    return 'Êtes-vous sûr de vouloir supprimer ce dossier ? Son contenu sera déplacé vers le dossier parent.';
+  };
+
   const currentFolders = folders.filter((f) => f.parentId === currentFolderId);
   const currentDocuments = documents.filter((doc) => {
     if (currentFolderId === null) {
@@ -514,15 +529,7 @@ export default function CloudScreen() {
       <DeleteConfirmationModal
         visible={showDeleteConfirm}
         title={deleteTarget?.type === 'document' ? 'Supprimer le document' : 'Supprimer le dossier'}
-        message={deleteTarget?.type === 'document'
-          ? (deleteTarget.item.subscription_id
-              ? (() => {
-                  const linkedSub = subscriptions.find(s => s.id === deleteTarget.item.subscription_id);
-                  const subName = linkedSub ? `"${linkedSub.name}"` : 'un abonnement';
-                  return `Ce document est lié à ${subName}. Êtes-vous sûr de vouloir le supprimer ? Le document restera accessible depuis l'abonnement.`;
-                })()
-              : 'Êtes-vous sûr de vouloir supprimer ce document ?')
-          : 'Êtes-vous sûr de vouloir supprimer ce dossier ? Son contenu sera déplacé vers le dossier parent.'}
+        message={getDeleteMessage()}
         onClose={() => {
           setShowDeleteConfirm(false);
           setDeleteTarget(null);

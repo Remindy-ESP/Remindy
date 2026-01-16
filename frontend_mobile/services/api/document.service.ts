@@ -1,5 +1,4 @@
-import client from './client';
-import { apiClient } from './client';
+import client, { apiClient } from './client';
 
 export interface DocumentResponse {
   id: string;

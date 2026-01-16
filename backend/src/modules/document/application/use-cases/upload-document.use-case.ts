@@ -42,11 +42,10 @@ export class UploadDocumentUseCase {
 
       // ÉTAPE 1 : Upload vers Cloudflare R2
       this.logger.log(`Uploading file to R2: ${r2Key}`);
-      let fileUrl: string;
       let savedDocument: Document;
 
       try {
-        fileUrl = await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
+        await this.r2Service.uploadFile(dto.fileBuffer, r2Key, dto.mimeType);
         this.logger.log(`File uploaded successfully to R2`);
 
         // Convertir les chaînes vides en undefined pour éviter les erreurs de validation UUID

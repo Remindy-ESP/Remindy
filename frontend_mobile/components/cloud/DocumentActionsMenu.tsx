@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { Modal, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface DocumentActionsMenuProps {
@@ -41,7 +41,7 @@ export default function DocumentActionsMenu({
         <Pressable style={styles.menu} onPress={(e) => e.stopPropagation()}>
           {actions.map((action, index) => (
             <TouchableOpacity
-              key={index}
+              key={action.label}
               style={[styles.action, index === actions.length - 1 && styles.lastAction]}
               onPress={() => {
                 action.onPress();
