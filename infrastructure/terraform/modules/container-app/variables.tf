@@ -74,5 +74,4 @@ variable "app_secrets" {
   description = "Application secrets"
   type        = map(string)
   default     = {}
-  sensitive   = true
 }
