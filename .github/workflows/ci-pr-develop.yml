@@ -3,6 +3,9 @@ name: CI - Pull Request to Develop
 on:
   pull_request:
     branches: [develop]
+  push:
+    branches:
+      - feature/Devops
 
 env:
   NODE_VERSION: '22'
