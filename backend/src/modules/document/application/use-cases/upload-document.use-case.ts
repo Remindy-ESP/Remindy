@@ -46,12 +46,14 @@ export class UploadDocumentUseCase {
       const subscriptionId =
         dto.subscriptionId && dto.subscriptionId.trim() !== '' ? dto.subscriptionId : undefined;
       const contractId = dto.contractId && dto.contractId > 0 ? dto.contractId : undefined;
+      const folderId = dto.folderId && dto.folderId.trim() !== '' ? dto.folderId : undefined;
 
       // Create domain entity avec statut "pending" (sera traité par la queue)
       const document = new Document({
         userId: dto.userId,
         subscriptionId,
         contractId,
+        folderId,
         filename: dto.filename,
         r2Key,
         r2Bucket: 'remindy-documents',

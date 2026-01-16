@@ -6,5 +6,6 @@ export interface UploadDocumentAppDto {
   mimeType: string;
   subscriptionId?: string;
   contractId?: number;
+  folderId?: string;
   userRole?: string;
 }

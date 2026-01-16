@@ -37,6 +37,7 @@ export interface UploadDocumentParams {
   };
   subscription_id?: string;
   contract_id?: number;
+  folder_id?: string;
 }
 
 class DocumentService {
@@ -69,6 +70,10 @@ class DocumentService {
 
       if (params.contract_id) {
         formData.append('contract_id', params.contract_id.toString());
+      }
+
+      if (params.folder_id) {
+        formData.append('folder_id', params.folder_id);
       }
 
       console.log('[DocumentService] FormData prepared:', formData);

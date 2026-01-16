@@ -95,6 +95,11 @@ export class DocumentController {
           type: 'number',
           description: 'ID du contrat lié (optionnel)',
         },
+        folder_id: {
+          type: 'string',
+          format: 'uuid',
+          description: 'ID du dossier de destination (optionnel)',
+        },
       },
       required: ['file'],
     },
@@ -112,6 +117,7 @@ export class DocumentController {
     @CurrentUser('id') userId: string,
     @Body('subscription_id') subscriptionId?: string,
     @Body('contract_id') contractId?: string,
+    @Body('folder_id') folderId?: string,
     @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
     console.log('[DocumentController] Upload request received');
@@ -162,6 +168,7 @@ export class DocumentController {
       mimeType: file.mimetype,
       subscriptionId,
       contractId: contractId ? parseInt(contractId, 10) : undefined,
+      folderId,
     };
 
     const role = (userRole as 'freemium' | 'premium' | 'admin') || 'freemium';
