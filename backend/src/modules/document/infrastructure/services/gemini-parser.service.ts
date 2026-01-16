@@ -205,7 +205,7 @@ RÉPONDS MAINTENANT :`;
    */
   private calculateConfidence(data: Partial<ParsedDocumentData>): number {
     let score = 0;
-    let total = 6;
+    const total = 6;
 
     if (data.provider) score += 1;
     if (data.amount && data.amount > 0) score += 1;

@@ -253,9 +253,7 @@ describe('DocumentController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get('/documents')
-        .expect(401);
+      await request(app.getHttpServer()).get('/documents').expect(401);
     });
   });
 
@@ -303,9 +301,7 @@ describe('DocumentController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get(`/documents/${documentId}`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/documents/${documentId}`).expect(401);
     });
   });
 
@@ -468,9 +464,7 @@ describe('DocumentController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get(`/documents/${documentId}/download`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/documents/${documentId}/download`).expect(401);
     });
   });
 
@@ -516,20 +510,20 @@ describe('DocumentController (e2e)', () => {
     it('should require authentication', async () => {
       const someId = '22222222-2222-2222-2222-222222222222';
 
-      await request(app.getHttpServer())
-        .delete(`/documents/${someId}`)
-        .expect(401);
+      await request(app.getHttpServer()).delete(`/documents/${someId}`).expect(401);
     });
   });
 
   describe('Rate limiting', () => {
     it('should apply throttle guard', async () => {
       // Make multiple rapid requests to test throttling
-      const requests = Array(20).fill(null).map(() =>
-        request(app.getHttpServer())
-          .get('/documents')
-          .set('Authorization', `Bearer ${authToken}`)
-      );
+      const requests = Array(20)
+        .fill(null)
+        .map(() =>
+          request(app.getHttpServer())
+            .get('/documents')
+            .set('Authorization', `Bearer ${authToken}`),
+        );
 
       const responses = await Promise.all(requests);
 

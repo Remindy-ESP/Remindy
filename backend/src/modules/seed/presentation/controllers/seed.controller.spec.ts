@@ -63,11 +63,7 @@ describe('SeedController', () => {
 
       const result = await controller.seed();
 
-      expect(result.details.roles).toEqual([
-        'user_freemium',
-        'user_premium',
-        'user_admin',
-      ]);
+      expect(result.details.roles).toEqual(['user_freemium', 'user_premium', 'user_admin']);
     });
 
     it('should return contracts in details', async () => {

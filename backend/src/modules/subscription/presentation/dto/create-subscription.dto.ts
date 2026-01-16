@@ -166,7 +166,8 @@ export class CreateSubscriptionDto {
   generateEvents?: boolean;
 
   @ApiProperty({
-    description: "Nombre d'événements à générer (pour les abonnements sans fin, génère jusqu'en 2099)",
+    description:
+      "Nombre d'événements à générer (pour les abonnements sans fin, génère jusqu'en 2099)",
     example: 24,
     default: 24,
     minimum: 1,

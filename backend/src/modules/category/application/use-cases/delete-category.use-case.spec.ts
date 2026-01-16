@@ -61,7 +61,9 @@ describe('DeleteCategoryUseCase', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(useCase.execute(categoryId, userId)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(categoryId, userId)).rejects.toThrow(`Category with ID ${categoryId} not found`);
+      await expect(useCase.execute(categoryId, userId)).rejects.toThrow(
+        `Category with ID ${categoryId} not found`,
+      );
       expect(repository.softDelete).not.toHaveBeenCalled();
     });
 
@@ -80,7 +82,9 @@ describe('DeleteCategoryUseCase', () => {
       repository.findById.mockResolvedValue(systemCategory);
 
       await expect(useCase.execute(categoryId, userId)).rejects.toThrow(ForbiddenException);
-      await expect(useCase.execute(categoryId, userId)).rejects.toThrow('System categories cannot be deleted');
+      await expect(useCase.execute(categoryId, userId)).rejects.toThrow(
+        'System categories cannot be deleted',
+      );
       expect(repository.softDelete).not.toHaveBeenCalled();
     });
 
@@ -99,7 +103,9 @@ describe('DeleteCategoryUseCase', () => {
       repository.findById.mockResolvedValue(otherUsersCategory);
 
       await expect(useCase.execute(categoryId, userId)).rejects.toThrow(ForbiddenException);
-      await expect(useCase.execute(categoryId, userId)).rejects.toThrow('You can only delete your own categories');
+      await expect(useCase.execute(categoryId, userId)).rejects.toThrow(
+        'You can only delete your own categories',
+      );
       expect(repository.softDelete).not.toHaveBeenCalled();
     });
 
@@ -119,7 +125,9 @@ describe('DeleteCategoryUseCase', () => {
       repository.softDelete.mockResolvedValue(false);
 
       await expect(useCase.execute(categoryId, userId)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(categoryId, userId)).rejects.toThrow(`Category with ID ${categoryId} not found`);
+      await expect(useCase.execute(categoryId, userId)).rejects.toThrow(
+        `Category with ID ${categoryId} not found`,
+      );
     });
 
     it('should allow deletion without userId parameter', async () => {

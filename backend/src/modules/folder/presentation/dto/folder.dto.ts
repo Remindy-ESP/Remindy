@@ -35,7 +35,7 @@ export class CreateFolderDto {
   color?: string;
 
   @ApiPropertyOptional({
-    description: 'Icône du dossier (emoji ou nom d\'icône)',
+    description: "Icône du dossier (emoji ou nom d'icône)",
     example: '📁',
     maxLength: 50,
   })
@@ -99,7 +99,7 @@ export class FolderResponseDto {
   id: string;
 
   @ApiProperty({
-    description: 'ID de l\'utilisateur propriétaire',
+    description: "ID de l'utilisateur propriétaire",
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   userId: string;

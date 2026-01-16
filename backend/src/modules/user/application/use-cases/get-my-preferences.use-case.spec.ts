@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { GetMyPreferencesUseCase } from './get-my-preferences.use-case';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
-import { UserPreferenceEntity, Theme } from 'src/infrastructure/database/entities/user-preference.entity';
+import {
+  UserPreferenceEntity,
+  Theme,
+} from 'src/infrastructure/database/entities/user-preference.entity';
 
 describe('GetMyPreferencesUseCase', () => {
   let useCase: GetMyPreferencesUseCase;

@@ -11,13 +11,7 @@ import {
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import {
   CreateFolderDto,
@@ -66,7 +60,7 @@ export class FolderController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Récupérer tous les dossiers de l\'utilisateur' })
+  @ApiOperation({ summary: "Récupérer tous les dossiers de l'utilisateur" })
   @ApiQuery({
     name: 'parentId',
     required: false,
@@ -159,11 +153,7 @@ export class FolderController {
     // TODO: Get userId from authenticated user
     const userId = '123e4567-e89b-12d3-a456-426614174000';
 
-    const appDto = FolderPresentationMapper.toMoveDocumentAppDto(
-      userId,
-      folderId,
-      documentId,
-    );
+    const appDto = FolderPresentationMapper.toMoveDocumentAppDto(userId, folderId, documentId);
 
     await this.moveDocumentToFolderUseCase.execute(appDto);
 

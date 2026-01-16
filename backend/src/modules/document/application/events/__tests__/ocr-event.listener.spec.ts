@@ -77,12 +77,8 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrCompleted(payload);
 
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('completed successfully'),
-      );
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringContaining('3500ms'),
-      );
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('completed successfully'));
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('3500ms'));
     });
 
     it('should log detected provider', () => {
@@ -101,9 +97,7 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrCompleted(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Provider detected: Spotify'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('Provider detected: Spotify'));
     });
 
     it('should log detected amount and currency', () => {
@@ -123,9 +117,7 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrCompleted(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('29.99 EUR'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('29.99 EUR'));
     });
 
     it('should log parsing confidence', () => {
@@ -144,9 +136,7 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrCompleted(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('87.0%'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('87.0%'));
     });
   });
 
@@ -179,12 +169,8 @@ describe('OcrEventListener', () => {
       expect(errorSpy).toHaveBeenCalledWith(
         expect.stringContaining('OCR failed for document doc-456'),
       );
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('3 attempts'),
-      );
-      expect(errorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid PDF format'),
-      );
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('3 attempts'));
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid PDF format'));
     });
   });
 
@@ -219,9 +205,7 @@ describe('OcrEventListener', () => {
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('OCR retrying for document doc-789'),
       );
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('attempt 1/3'),
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('attempt 1/3'));
     });
 
     it('should warn on last retry attempt', () => {
@@ -238,9 +222,7 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrRetrying(payload);
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('last retry attempt'),
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('last retry attempt'));
     });
 
     it('should not warn on non-last attempts', () => {
@@ -257,9 +239,7 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrRetrying(payload);
 
-      const lastRetryCall = warnSpy.mock.calls.find(call =>
-        call[0].includes('last retry'),
-      );
+      const lastRetryCall = warnSpy.mock.calls.find(call => call[0].includes('last retry'));
       expect(lastRetryCall).toBeUndefined();
     });
   });
@@ -284,15 +264,9 @@ describe('OcrEventListener', () => {
 
       await listener.trackOcrStats(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('OCR Stats'),
-      );
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"processingTime":4500'),
-      );
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"confidence":0.95'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('OCR Stats'));
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('"processingTime":4500'));
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('"confidence":0.95'));
     });
 
     it('should count extracted fields correctly', async () => {
@@ -316,9 +290,7 @@ describe('OcrEventListener', () => {
 
       await listener.trackOcrStats(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"fieldsExtracted":3'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('"fieldsExtracted":3'));
     });
   });
 
@@ -337,12 +309,8 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrCompleted(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[NOTIFICATION]'),
-      );
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('success'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('[NOTIFICATION]'));
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('success'));
     });
 
     it('should create notification for error', () => {
@@ -358,12 +326,8 @@ describe('OcrEventListener', () => {
 
       listener.handleOcrFailed(payload);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[NOTIFICATION]'),
-      );
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('error'),
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('[NOTIFICATION]'));
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('error'));
     });
   });
 });

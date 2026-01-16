@@ -142,7 +142,7 @@ describe('AuthController', () => {
       const result = await controller.register(
         mockRequest as Request,
         registerDto,
-        mockResponse as Response
+        mockResponse as Response,
       );
 
       expect(registerUserUseCase.execute).toHaveBeenCalledWith(registerDto);
@@ -200,7 +200,7 @@ describe('AuthController', () => {
       expect(loginUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           ipAddress: 'unknown',
-        })
+        }),
       );
     });
 
@@ -239,13 +239,13 @@ describe('AuthController', () => {
       await controller.register(
         reqWithoutUserAgent as Request,
         registerDto,
-        mockResponse as Response
+        mockResponse as Response,
       );
 
       expect(loginUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           userAgent: 'unknown',
-        })
+        }),
       );
     });
   });
@@ -267,7 +267,7 @@ describe('AuthController', () => {
       const result = await controller.login(
         mockRequest as Request,
         loginDto,
-        mockResponse as Response
+        mockResponse as Response,
       );
 
       expect(loginUseCase.execute).toHaveBeenCalledWith({
@@ -306,7 +306,7 @@ describe('AuthController', () => {
       expect(loginUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           ipAddress: 'unknown',
-        })
+        }),
       );
     });
 
@@ -326,16 +326,12 @@ describe('AuthController', () => {
         headers: {},
       };
 
-      await controller.login(
-        reqWithoutUserAgent as Request,
-        loginDto,
-        mockResponse as Response
-      );
+      await controller.login(reqWithoutUserAgent as Request, loginDto, mockResponse as Response);
 
       expect(loginUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           userAgent: 'unknown',
-        })
+        }),
       );
     });
   });
@@ -356,7 +352,7 @@ describe('AuthController', () => {
 
       const result = await controller.refreshToken(
         reqWithCookie as Request,
-        mockResponse as Response
+        mockResponse as Response,
       );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
@@ -390,7 +386,7 @@ describe('AuthController', () => {
       const result = await controller.refreshToken(
         mockRequest as Request,
         mockResponse as Response,
-        body
+        body,
       );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
@@ -421,17 +417,17 @@ describe('AuthController', () => {
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           refreshToken: 'cookie_token',
-        })
+        }),
       );
     });
 
     it('should throw UnauthorizedException when refresh token is missing', async () => {
       await expect(
-        controller.refreshToken(mockRequest as Request, mockResponse as Response)
+        controller.refreshToken(mockRequest as Request, mockResponse as Response),
       ).rejects.toThrow(UnauthorizedException);
 
       await expect(
-        controller.refreshToken(mockRequest as Request, mockResponse as Response)
+        controller.refreshToken(mockRequest as Request, mockResponse as Response),
       ).rejects.toThrow('Refresh token missing');
 
       expect(refreshTokenUseCase.execute).not.toHaveBeenCalled();
@@ -441,7 +437,7 @@ describe('AuthController', () => {
       const body = { refreshToken: undefined };
 
       await expect(
-        controller.refreshToken(mockRequest as Request, mockResponse as Response, body)
+        controller.refreshToken(mockRequest as Request, mockResponse as Response, body),
       ).rejects.toThrow(UnauthorizedException);
     });
   });
@@ -457,7 +453,7 @@ describe('AuthController', () => {
 
       const result = await controller.logout(
         reqWithUser as Request & { user: { userId: string; role: string } },
-        mockResponse as Response
+        mockResponse as Response,
       );
 
       expect(logoutUseCase.execute).toHaveBeenCalledWith('user-123');
@@ -475,7 +471,7 @@ describe('AuthController', () => {
 
       await controller.logout(
         reqWithUser as Request & { user: { userId: string; role: string } },
-        mockResponse as Response
+        mockResponse as Response,
       );
 
       expect(logoutUseCase.execute).toHaveBeenCalledWith('user-456');
