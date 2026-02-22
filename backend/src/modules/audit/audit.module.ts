@@ -14,6 +14,7 @@ import { FindAllAuditLogsUseCase } from './application/use-cases/find-all-audit-
 import { FindAuditLogByIdUseCase } from './application/use-cases/find-audit-log-by-id.use-case';
 import { GetAuditStatsUseCase } from './application/use-cases/get-audit-stats.use-case';
 import { ExportAuditLogsUseCase } from './application/use-cases/export-audit-logs.use-case';
+import { PurgeAuditLogsUseCase } from './application/use-cases/purge-audit-logs.use-case';
 
 // Infrastructure
 import { AuditLogTypeOrmRepository } from './infrastructure/repositories/audit-log-typeorm.repository';
@@ -49,12 +50,19 @@ import { AuthModule } from '../auth/auth.module';
     FindAuditLogByIdUseCase,
     GetAuditStatsUseCase,
     ExportAuditLogsUseCase,
+    PurgeAuditLogsUseCase,
 
     // Interceptors & Guards
     AuditInterceptor,
     MfaRequiredGuard,
   ],
   controllers: [AuditController],
-  exports: [TypeOrmModule, IAuditLogRepository, CreateAuditLogUseCase, AuditInterceptor],
+  exports: [
+    TypeOrmModule,
+    IAuditLogRepository,
+    CreateAuditLogUseCase,
+    PurgeAuditLogsUseCase,
+    AuditInterceptor,
+  ],
 })
 export class AuditModule {}
