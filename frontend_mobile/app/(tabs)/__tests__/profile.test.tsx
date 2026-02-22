@@ -62,6 +62,7 @@ describe('ProfileScreen', () => {
     expect(getByText('Parametres')).toBeTruthy();
     expect(getByText('Notifications')).toBeTruthy();
     expect(getByText('Preferences')).toBeTruthy();
+    expect(getByText('Securite')).toBeTruthy();
     expect(getByText('Confidentialite')).toBeTruthy();
     expect(getByText('Support')).toBeTruthy();
     expect(getByText('Aide')).toBeTruthy();
@@ -93,6 +94,7 @@ describe('ProfileScreen', () => {
     const { getByTestId } = render(<ProfileScreen />);
     expect(getByTestId('notifications-item')).toBeTruthy();
     expect(getByTestId('preferences-item')).toBeTruthy();
+    expect(getByTestId('security-item')).toBeTruthy();
     expect(getByTestId('privacy-item')).toBeTruthy();
     expect(getByTestId('help-item')).toBeTruthy();
     expect(getByTestId('about-item')).toBeTruthy();
@@ -109,5 +111,11 @@ describe('ProfileScreen', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('edit-profile-item'));
     expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-edit');
+  });
+
+  it('navigates to profile security page when security item is pressed', () => {
+    const { getByTestId } = render(<ProfileScreen />);
+    fireEvent.press(getByTestId('security-item'));
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-security');
   });
 });

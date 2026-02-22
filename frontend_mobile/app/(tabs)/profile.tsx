@@ -162,6 +162,12 @@ export default function ProfileScreen() {
           onPress={() => router.push('/(tabs)/profile-preferences')}
         />
         <MenuItem
+          testID="security-item"
+          icon="shield-checkmark-outline"
+          label="Securite"
+          onPress={() => router.push('/(tabs)/profile-security')}
+        />
+        <MenuItem
           testID="privacy-item"
           icon="lock-closed-outline"
           label="Confidentialite"
