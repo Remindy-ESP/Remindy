@@ -84,6 +84,16 @@ export class UserSessionTypeOrmRepository implements IUserSessionRepository {
       },
     );
   }
+
+  async revokeAllForUser(userId: string): Promise<void> {
+    await this.repo.update(
+      { userId, isRevoked: false },
+      {
+        isRevoked: true,
+      },
+    );
+  }
+
   async findActiveByRefreshTokenHash(hash: string) {
     const session = await this.repo.findOne({
       where: {

@@ -220,6 +220,18 @@ export default function AuthScreen() {
             )}
           </TouchableOpacity>
 
+          {isLogin && (
+            <TouchableOpacity
+              onPress={() => router.push('/forgot-password')}
+              testID="forgot-password-link"
+              disabled={loading}
+            >
+              <Text style={[styles.forgotText, loading && styles.toggleTextDisabled]}>
+                Mot de passe oublie ?
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             onPress={() => {
               setIsLogin(!isLogin);
@@ -307,6 +319,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
+  },
+  forgotText: {
+    color: '#4f46e5',
+    textAlign: 'center',
+    marginTop: 14,
+    fontSize: 14,
+    fontWeight: '600',
   },
   toggleTextDisabled: {
     color: '#9ca3af',

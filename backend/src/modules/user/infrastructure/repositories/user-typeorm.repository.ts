@@ -47,7 +47,7 @@ export class UserTypeOrmRepository implements UserRepository {
       throw new Error('updateProfile called without userId');
     }
 
-    const partialUpdate: QueryDeepPartialEntity<EUser> = data;
+    const partialUpdate = data as QueryDeepPartialEntity<EUser>;
 
     await this.userRepository.update({ id: userId }, partialUpdate);
   }
