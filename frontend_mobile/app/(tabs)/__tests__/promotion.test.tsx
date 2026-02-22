@@ -9,7 +9,7 @@ describe('PromotionScreen', () => {
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
     jest.spyOn(Clipboard, 'setString').mockImplementation(jest.fn());
     jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
-    jest.spyOn(Linking, 'openURL').mockResolvedValue();
+    jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -64,4 +64,3 @@ describe('PromotionScreen', () => {
     });
   });
 });
-
