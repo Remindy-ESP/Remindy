@@ -147,7 +147,7 @@ export default function DashboardScreen() {
 
       // Find the default folder by name (no parent)
       const defaultFolder = folders.find(
-        folder => folder.name === folderName && !folder.parent_id
+        folder => folder.name === folderName && !folder.parentId
       );
 
       return defaultFolder?.id;

@@ -45,7 +45,7 @@ describe('GlobalHeader', () => {
 
   it('renders menu icon', () => {
     const { UNSAFE_getAllByType } = render(<GlobalHeader />);
-    const ionicons = UNSAFE_getAllByType('Ionicons');
+    const ionicons = UNSAFE_getAllByType('Ionicons' as unknown as React.ComponentType<unknown>);
     expect(ionicons.length).toBeGreaterThan(0);
   });
 

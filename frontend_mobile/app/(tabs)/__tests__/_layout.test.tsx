@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
+import { ActivityIndicator } from 'react-native';
 import TabLayout from '../_layout';
 
 // Mock expo-router
@@ -55,7 +56,7 @@ describe('TabLayout', () => {
     });
 
     const { UNSAFE_getByType } = render(<TabLayout />);
-    expect(UNSAFE_getByType('ActivityIndicator')).toBeTruthy();
+    expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
   });
 
   it('returns null when not authenticated', () => {
