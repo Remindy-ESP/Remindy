@@ -23,7 +23,6 @@ import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from '../dto/use
 import { RgpdExportResponseDto } from '../dto/rgpd-export.dto';
 import { GetMyProfileUseCase } from '../../application/use-cases/get-my-profile.use-case';
 import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case';
-import { DeleteMyAccountUseCase } from '../../application/use-cases/delete-my-account.use-case';
 import { GetMyPreferencesUseCase } from '../../application/use-cases/get-my-preferences.use-case';
 import { UserMeResponseDto } from '../dto/user-me.response.dto';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
@@ -35,6 +34,7 @@ import { RequestRgpdExportUseCase } from '../../application/use-cases/request-rg
 import { Roles } from 'src/modules/auth/presentation/decorators/roles.decorator';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { RgpdExportService } from '../../../user/application/services/rgpd-export.service';
+import { UserPresenter } from '../mappers/user.presenter';
 
 @ApiTags('Users')
 @Controller('users')
@@ -46,7 +46,6 @@ export class UserController {
     private readonly userPreferencesService: UserPreferencesService,
     private readonly getMyProfileUseCase: GetMyProfileUseCase,
     private readonly updateMyProfileUseCase: UpdateMyProfileUseCase,
-    private readonly deleteMyAccountUseCase: DeleteMyAccountUseCase,
     private readonly getMyPreferencesUseCase: GetMyPreferencesUseCase,
     private readonly updateUserPreferencesUseCase: UpdateUserPreferencesUseCase,
     private readonly requestRgpdExportUseCase: RequestRgpdExportUseCase,
@@ -74,12 +73,20 @@ export class UserController {
     return this.userService.getUserProfile(userId);
   }
   @Get('me')
-  async getMe(@Req() req: Request) {
+  @ApiOperation({ summary: 'Get current user profile (mobile contract)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Current user profile retrieved successfully',
+    type: UserMeResponseDto,
+  })
+  async getMe(@Req() req: Request): Promise<UserMeResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
 
     const userId = user.userId;
 
-    return this.getMyProfileUseCase.execute({ userId });
+    const profile = await this.getMyProfileUseCase.execute({ userId });
+
+    return UserPresenter.toMe(profile);
   }
 
   @Put('me')
@@ -104,28 +111,42 @@ export class UserController {
 
     await this.updateMyProfileUseCase.execute(userId, dto);
 
-    return { success: true };
+    const updatedProfile = await this.getMyProfileUseCase.execute({ userId });
+
+    return UserPresenter.toMe(updatedProfile);
   }
 
   @Delete('me')
-  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 request per day
+  @ApiOperation({ summary: 'Delete current user account (RGPD right to deletion)' })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'User account deleted successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'User not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
   async deleteMe(
-    @Req() req: Request & { user: { userId: string } },
+    @Req() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
-  ) {
+  ): Promise<void> {
     const userId = req.user.userId;
 
     if (!userId) {
       throw new UnauthorizedException('User ID not found');
     }
 
-    await this.deleteMyAccountUseCase.execute(userId);
+    await this.userService.deleteAccount(userId);
 
     res.clearCookie('refreshToken', {
       path: '/',
     });
-
-    return { success: true };
   }
 
   @Put('profile')
@@ -210,27 +231,6 @@ export class UserController {
       { format: dto.format },
       ipAddress,
     );
-  }
-
-  @Delete('me')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 request per day
-  @ApiOperation({ summary: 'Delete current user account (RGPD right to deletion)' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'User account deleted successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
-  async deleteAccount(@Req() req: Request): Promise<void> {
-    const userId = this.extractUserIdFromRequest(req);
-    await this.userService.deleteAccount(userId);
   }
 
   /**

@@ -31,12 +31,22 @@ export class UserTypeOrmRepository implements UserRepository {
     return this.findByIdWithPreferences(id);
   }
 
-  async updateProfile(userId: string, data: Partial<EUser>): Promise<void> {
+  async updateProfile(
+    userId: string,
+    data: Partial<{
+      firstName: string | null;
+      lastName: string | null;
+      phone: string | null;
+      timezone: string;
+      language: string;
+      photoR2Key: string | null;
+    }>,
+  ): Promise<void> {
     if (!userId) {
       throw new Error('updateProfile called without userId');
     }
 
-    await this.userRepository.update({ id: userId }, data);
+    await this.userRepository.update({ id: userId }, data as any);
   }
 
   async save(user: EUser): Promise<EUser> {
