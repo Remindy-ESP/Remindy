@@ -104,4 +104,10 @@ describe('ProfileScreen', () => {
     fireEvent.press(getByTestId('notifications-item'));
     expect(mockPush).toHaveBeenCalledWith('/(tabs)/notifications');
   });
+
+  it('navigates to profile edit page when edit button is pressed', () => {
+    const { getByTestId } = render(<ProfileScreen />);
+    fireEvent.press(getByTestId('edit-profile-item'));
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-edit');
+  });
 });

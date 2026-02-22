@@ -30,6 +30,13 @@ class UserService {
   }
 
   /**
+   * Delete current user account
+   */
+  async deleteMe(): Promise<void> {
+    await apiClient.delete(`${this.BASE_PATH}/me`);
+  }
+
+  /**
    * Get user preferences
    */
   async getPreferences(): Promise<any> {
