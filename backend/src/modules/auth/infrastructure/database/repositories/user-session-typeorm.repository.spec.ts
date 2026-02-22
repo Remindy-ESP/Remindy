@@ -208,6 +208,19 @@ describe('UserSessionTypeOrmRepository', () => {
     });
   });
 
+  describe('revokeAllForUser', () => {
+    it('should revoke all active sessions for a user', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 2, raw: {}, generatedMaps: [] });
+
+      await repository.revokeAllForUser('user-123');
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { userId: 'user-123', isRevoked: false },
+        { isRevoked: true },
+      );
+    });
+  });
+
   describe('findActiveByRefreshTokenHash', () => {
     it('should find active session by refresh token hash', async () => {
       const sessionEntity = {

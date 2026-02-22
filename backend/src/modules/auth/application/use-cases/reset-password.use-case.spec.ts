@@ -4,6 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import { ResetPasswordUseCase } from './reset-password.use-case';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IPasswordService } from '../../domain/services/password.service';
+import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
@@ -14,6 +15,7 @@ describe('ResetPasswordUseCase', () => {
   let useCase: ResetPasswordUseCase;
   let userRepo: jest.Mocked<IUserAuthRepository>;
   let passwordService: jest.Mocked<IPasswordService>;
+  let sessionRepo: jest.Mocked<IUserSessionRepository>;
 
   const mockUser = new AuthUser({
     id: 'user-123',
@@ -39,6 +41,9 @@ describe('ResetPasswordUseCase', () => {
     const mockPasswordService: Partial<jest.Mocked<IPasswordService>> = {
       hash: jest.fn(),
     };
+    const mockSessionRepo: Partial<jest.Mocked<IUserSessionRepository>> = {
+      revokeAllForUser: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -51,12 +56,17 @@ describe('ResetPasswordUseCase', () => {
           provide: IPasswordService,
           useValue: mockPasswordService,
         },
+        {
+          provide: IUserSessionRepository,
+          useValue: mockSessionRepo,
+        },
       ],
     }).compile();
 
     useCase = module.get<ResetPasswordUseCase>(ResetPasswordUseCase);
     userRepo = module.get(IUserAuthRepository);
     passwordService = module.get(IPasswordService);
+    sessionRepo = module.get(IUserSessionRepository);
 
     process.env.JWT_PASSWORD_RESET_SECRET = 'test-secret-key';
   });
@@ -83,6 +93,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.findById.mockResolvedValue(mockUser);
       passwordService.hash.mockResolvedValue(newPasswordHash);
       userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
 
       await useCase.execute(resetParams);
 
@@ -90,6 +101,7 @@ describe('ResetPasswordUseCase', () => {
       expect(userRepo.findById).toHaveBeenCalledWith('user-123');
       expect(passwordService.hash).toHaveBeenCalledWith(resetParams.newPassword);
       expect(userRepo.updatePassword).toHaveBeenCalledWith('user-123', newPasswordHash);
+      expect(sessionRepo.revokeAllForUser).toHaveBeenCalledWith('user-123');
     });
 
     it('should throw error when JWT_PASSWORD_RESET_SECRET is not configured', async () => {
@@ -151,6 +163,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.findById.mockResolvedValue(mockUser);
       passwordService.hash.mockResolvedValue(hashedPassword);
       userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
 
       await useCase.execute({ token: 'token', newPassword });
 
@@ -181,6 +194,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.findById.mockResolvedValue(userWithSpecificId);
       passwordService.hash.mockResolvedValue(hashedPassword);
       userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
 
       await useCase.execute(resetParams);
 
@@ -218,6 +232,7 @@ describe('ResetPasswordUseCase', () => {
       userRepo.findById.mockResolvedValue(mockUser);
       passwordService.hash.mockResolvedValue('hashedPassword');
       userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
 
       await useCase.execute(resetParams);
 
@@ -229,10 +244,23 @@ describe('ResetPasswordUseCase', () => {
       userRepo.findById.mockResolvedValue(mockUser);
       passwordService.hash.mockResolvedValue('hashedPassword');
       userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
 
       const result = await useCase.execute(resetParams);
 
       expect(result).toBeUndefined();
+    });
+
+    it('should revoke all sessions after password reset', async () => {
+      (jwt.verify as jest.Mock).mockReturnValue({ sub: 'user-123' });
+      userRepo.findById.mockResolvedValue(mockUser);
+      passwordService.hash.mockResolvedValue('hashedPassword');
+      userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
+
+      await useCase.execute(resetParams);
+
+      expect(sessionRepo.revokeAllForUser).toHaveBeenCalledWith('user-123');
     });
   });
 });

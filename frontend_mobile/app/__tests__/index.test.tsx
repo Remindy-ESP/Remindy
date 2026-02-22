@@ -3,9 +3,12 @@ import { render, fireEvent } from '@testing-library/react-native';
 import AuthScreen from '../index';
 
 // Mock expo-router
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({
-    replace: jest.fn(),
+    replace: mockReplace,
+    push: mockPush,
   }),
 }));
 
@@ -30,11 +33,14 @@ global.fetch = jest.fn(() =>
 describe('AuthScreen', () => {
   beforeEach(() => {
     (global.fetch as jest.Mock).mockClear();
+    mockReplace.mockClear();
+    mockPush.mockClear();
   });
   it('renders login mode by default', () => {
     const { getByText } = render(<AuthScreen />);
     expect(getByText('Bienvenue')).toBeTruthy();
     expect(getByText('Se connecter')).toBeTruthy();
+    expect(getByText('Mot de passe oublie ?')).toBeTruthy();
   });
 
   it('renders email and password inputs', () => {
@@ -88,6 +94,12 @@ describe('AuthScreen', () => {
     // Switch to register mode
     fireEvent.press(getByTestId('toggle-auth-mode'));
     expect(getByTestId('confirm-password-input')).toBeTruthy();
+  });
+
+  it('navigates to forgot password screen from login mode', () => {
+    const { getByTestId } = render(<AuthScreen />);
+    fireEvent.press(getByTestId('forgot-password-link'));
+    expect(mockPush).toHaveBeenCalledWith('/forgot-password');
   });
 
   it('handles form submission for registration', async () => {
