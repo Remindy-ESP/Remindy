@@ -130,7 +130,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             testID="edit-profile-item"
             style={styles.editButton}
-            onPress={() => Alert.alert('Bientot', 'Edition du profil a venir (Step 4).')}
+            onPress={() => router.push('/(tabs)/profile-edit')}
             activeOpacity={0.8}
           >
             <Ionicons name="create-outline" size={16} color="#E5E7FF" />
@@ -375,4 +375,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
-

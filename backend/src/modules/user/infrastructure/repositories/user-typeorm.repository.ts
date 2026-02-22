@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 import { UserRepository } from '../../domain/repositories/user-user.repository';
 
@@ -46,7 +47,9 @@ export class UserTypeOrmRepository implements UserRepository {
       throw new Error('updateProfile called without userId');
     }
 
-    await this.userRepository.update({ id: userId }, data as any);
+    const partialUpdate: QueryDeepPartialEntity<EUser> = data;
+
+    await this.userRepository.update({ id: userId }, partialUpdate);
   }
 
   async save(user: EUser): Promise<EUser> {
