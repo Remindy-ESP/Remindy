@@ -1,9 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import Tesseract from 'tesseract.js';
-
-// Import pdf-parse using CommonJS require (pdf-parse is a CommonJS module)
-
-const pdfParse = require('pdf-parse');
+import pdfParse from 'pdf-parse';
 
 @Injectable()
 export class OcrService {
@@ -25,8 +22,9 @@ export class OcrService {
         throw new Error(`Unsupported file type: ${mimeType}`);
       }
     } catch (error) {
-      this.logger.error(`OCR extraction failed: ${error.message}`, error.stack);
-      throw new Error(`Failed to extract text: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`OCR extraction failed: ${err.message}`, err.stack);
+      throw new Error(`Failed to extract text: ${err.message}`);
     }
   }
 
@@ -39,9 +37,7 @@ export class OcrService {
     try {
       this.logger.log('Extracting text from PDF...');
 
-      const data = await pdfParse(pdfBuffer, {
-        max: 0, // Parse toutes les pages
-      });
+      const data = (await pdfParse(pdfBuffer, { max: 0 })) as { text: string };
 
       const text = data.text.trim();
 
@@ -53,8 +49,9 @@ export class OcrService {
       this.logger.log(`PDF text extracted successfully (${text.length} characters)`);
       return text;
     } catch (error) {
-      this.logger.error(`PDF extraction failed: ${error.message}`, error.stack);
-      throw new Error(`Failed to extract text from PDF: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`PDF extraction failed: ${err.message}`, err.stack);
+      throw new Error(`Failed to extract text from PDF: ${err.message}`);
     }
   }
 

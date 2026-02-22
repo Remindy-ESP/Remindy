@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
 import type { IFolderRepository } from '../ports/folder-repository.interface';
 import { FOLDER_REPOSITORY } from '../ports/folder-repository.interface';
 

@@ -48,14 +48,15 @@ export class GeminiParserService {
       const prompt = this.buildPrompt(ocrText);
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      const text = response.text();
+      const text = response.text() as string;
 
       const parsedData = this.parseGeminiResponse(text);
 
       this.logger.log(`Document parsed successfully (confidence: ${parsedData.confidence})`);
       return parsedData;
     } catch (error) {
-      this.logger.error(`Gemini parsing failed: ${error.message}`, error.stack);
+      const err = error as Error;
+      this.logger.error(`Gemini parsing failed: ${err.message}`, err.stack);
       // Utiliser le fallback parsing en cas d'échec Gemini
       return this.fallbackParsing(ocrText);
     }
@@ -113,13 +114,13 @@ RÉPONDS MAINTENANT :`;
       cleanedText = cleanedText.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
 
       // Parser le JSON
-      const parsed = JSON.parse(cleanedText);
+      const parsed = JSON.parse(cleanedText) as Record<string, string | number | null>;
 
       // Convertir la date string en Date
       let parsedDate: Date | undefined;
-      if (parsed.date) {
+      if (parsed['date']) {
         try {
-          parsedDate = new Date(parsed.date);
+          parsedDate = new Date(String(parsed['date']));
           if (isNaN(parsedDate.getTime())) {
             parsedDate = undefined;
           }
@@ -130,25 +131,36 @@ RÉPONDS MAINTENANT :`;
 
       // Calculer un score de confiance basé sur les champs remplis
       const confidence = this.calculateConfidence({
-        provider: parsed.provider,
-        amount: parsed.amount,
-        currency: parsed.currency,
+        provider: parsed['provider'] != null ? String(parsed['provider']) : undefined,
+        amount: parsed['amount'] != null ? Number(parsed['amount']) : undefined,
+        currency: parsed['currency'] != null ? String(parsed['currency']) : undefined,
         date: parsedDate,
-        frequency: parsed.frequency,
-        category: parsed.category,
+        frequency:
+          parsed['frequency'] != null
+            ? (String(parsed['frequency']) as ParsedDocumentData['frequency'])
+            : undefined,
+        category:
+          parsed['category'] != null
+            ? (String(parsed['category']) as ParsedDocumentData['category'])
+            : undefined,
       });
 
       return {
-        provider: parsed.provider || undefined,
-        amount: parsed.amount ? parseFloat(parsed.amount) : undefined,
-        currency: parsed.currency || 'EUR',
+        provider: parsed['provider'] != null ? String(parsed['provider']) : undefined,
+        amount: parsed['amount'] != null ? parseFloat(String(parsed['amount'])) : undefined,
+        currency: parsed['currency'] != null ? String(parsed['currency']) : 'EUR',
         date: parsedDate,
-        frequency: this.normalizeFrequency(parsed.frequency),
-        category: this.normalizeCategory(parsed.category),
+        frequency: this.normalizeFrequency(
+          parsed['frequency'] != null ? String(parsed['frequency']) : '',
+        ),
+        category: this.normalizeCategory(
+          parsed['category'] != null ? String(parsed['category']) : '',
+        ),
         confidence,
       };
     } catch (error) {
-      this.logger.error(`Failed to parse Gemini response: ${error.message}`);
+      const parseErr = error as Error;
+      this.logger.error(`Failed to parse Gemini response: ${parseErr.message}`);
       this.logger.debug(`Raw response: ${responseText}`);
 
       // Fallback parsing sera appelé par le catch parent
@@ -165,9 +177,11 @@ RÉPONDS MAINTENANT :`;
     if (!frequency) return undefined;
 
     const normalized = frequency.toLowerCase().trim();
-    const validFrequencies = ['mensuel', 'trimestriel', 'semestriel', 'annuel', 'ponctuel'];
+    const validFrequencies: Array<
+      'mensuel' | 'trimestriel' | 'semestriel' | 'annuel' | 'ponctuel'
+    > = ['mensuel', 'trimestriel', 'semestriel', 'annuel', 'ponctuel'];
 
-    return validFrequencies.includes(normalized) ? (normalized as any) : undefined;
+    return validFrequencies.find(f => f === normalized);
   }
 
   /**
@@ -187,17 +201,11 @@ RÉPONDS MAINTENANT :`;
     if (!category) return undefined;
 
     const normalized = category.toLowerCase().trim();
-    const validCategories = [
-      'énergie',
-      'internet',
-      'assurance',
-      'saas',
-      'téléphone',
-      'streaming',
-      'autre',
-    ];
+    const validCategories: Array<
+      'énergie' | 'internet' | 'assurance' | 'SaaS' | 'téléphone' | 'streaming' | 'autre'
+    > = ['énergie', 'internet', 'assurance', 'SaaS', 'téléphone', 'streaming', 'autre'];
 
-    return validCategories.includes(normalized) ? (normalized as any) : 'autre';
+    return validCategories.find(c => c.toLowerCase() === normalized) ?? 'autre';
   }
 
   /**
@@ -235,7 +243,7 @@ RÉPONDS MAINTENANT :`;
     }
 
     // Extraire une date
-    const dateMatch = text.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+    const dateMatch = text.match(/(\d{1,2})[-/.]*(\d{1,2})[-/.]*(\d{4})/);
     if (dateMatch) {
       try {
         const day = parseInt(dateMatch[1]);

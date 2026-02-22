@@ -17,10 +17,7 @@ describe('UpdateFolderUseCase', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UpdateFolderUseCase,
-        { provide: FOLDER_REPOSITORY, useValue: mockRepository },
-      ],
+      providers: [UpdateFolderUseCase, { provide: FOLDER_REPOSITORY, useValue: mockRepository }],
     }).compile();
 
     useCase = module.get<UpdateFolderUseCase>(UpdateFolderUseCase);
@@ -54,7 +51,9 @@ describe('UpdateFolderUseCase', () => {
 
     const dto: UpdateFolderAppDto = { name: 'New Name' };
 
-    await expect(useCase.execute('nonexistent-id', 'user-123', dto)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute('nonexistent-id', 'user-123', dto)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('should throw ForbiddenException if user does not own folder', async () => {
@@ -69,7 +68,9 @@ describe('UpdateFolderUseCase', () => {
 
     const dto: UpdateFolderAppDto = { name: 'New Name' };
 
-    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(ForbiddenException);
+    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException when renaming default folder', async () => {
@@ -84,7 +85,9 @@ describe('UpdateFolderUseCase', () => {
 
     const dto: UpdateFolderAppDto = { name: 'New Name' };
 
-    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(ForbiddenException);
+    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should throw ForbiddenException if folder tries to be its own parent', async () => {
@@ -101,7 +104,9 @@ describe('UpdateFolderUseCase', () => {
       parentId: 'folder-123',
     };
 
-    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(ForbiddenException);
+    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('should prevent circular hierarchy A->B->A', async () => {
@@ -120,9 +125,7 @@ describe('UpdateFolderUseCase', () => {
       isDefault: false,
     });
 
-    repository.findById
-      .mockResolvedValueOnce(folderB)
-      .mockResolvedValueOnce(folderA);
+    repository.findById.mockResolvedValueOnce(folderB).mockResolvedValueOnce(folderA);
 
     const dto: UpdateFolderAppDto = {
       parentId: 'folder-a',
@@ -183,9 +186,7 @@ describe('UpdateFolderUseCase', () => {
       isDefault: false,
     });
 
-    repository.findById
-      .mockResolvedValueOnce(folderB)
-      .mockResolvedValueOnce(folderA);
+    repository.findById.mockResolvedValueOnce(folderB).mockResolvedValueOnce(folderA);
     repository.save.mockResolvedValue(folderB);
 
     const dto: UpdateFolderAppDto = {

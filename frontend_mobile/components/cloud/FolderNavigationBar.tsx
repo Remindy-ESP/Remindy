@@ -9,7 +9,7 @@ interface FolderNavigationBarProps {
   readonly onNavigate: (folderId: string | null) => void;
 }
 
-export default function FolderNavigationBar({ currentFolder, folderPath, onNavigate }: FolderNavigationBarProps) {
+export default function FolderNavigationBar({ currentFolder: _currentFolder, folderPath, onNavigate }: FolderNavigationBarProps) {
   return (
     <View style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

@@ -7,7 +7,9 @@ export class OcrEventListener {
 
   @OnEvent('ocr.started')
   handleOcrStarted(payload: any) {
-    this.logger.log(`OCR started for document ${payload.documentId} (user: ${payload.userId})`);
+    this.logger.log(
+      `OCR started for document ${String(payload.documentId)} (user: ${String(payload.userId)})`,
+    );
 
     // TODO: Ici, on pourrait :
     // - Créer une notification in-app
@@ -15,7 +17,7 @@ export class OcrEventListener {
     // - Envoyer une notification push
     // - Logger dans un système de monitoring
 
-    this.logger.debug(`Document: ${payload.filename}`);
+    this.logger.debug(`Document: ${String(payload.filename)}`);
   }
 
   @OnEvent('ocr.completed')
@@ -46,13 +48,13 @@ export class OcrEventListener {
 
     // Simuler la création d'une notification
     this.createNotification(
-      payload.userId,
+      String(payload.userId),
       'success',
-      `Document "${payload.filename}" traité avec succès`,
+      `Document "${String(payload.filename)}" traité avec succès`,
       {
         documentId: payload.documentId,
-        extractedDataCount: Object.keys(payload.parsedData).filter(
-          key => payload.parsedData[key] !== undefined,
+        extractedDataCount: Object.keys(payload.parsedData as object).filter(
+          key => (payload.parsedData as Record<string, unknown>)[key] !== undefined,
         ).length,
       },
     );
@@ -70,14 +72,14 @@ export class OcrEventListener {
     // - Logger dans un système de monitoring/alerting
     // - Créer un ticket de support si nécessaire
 
-    this.logger.error(`Document: ${payload.filename}`);
-    this.logger.error(`User: ${payload.userId}`);
+    this.logger.error(`Document: ${String(payload.filename)}`);
+    this.logger.error(`User: ${String(payload.userId)}`);
 
     // Simuler la création d'une notification d'erreur
     this.createNotification(
-      payload.userId,
+      String(payload.userId),
       'error',
-      `Échec du traitement du document "${payload.filename}"`,
+      `Échec du traitement du document "${String(payload.filename)}"`,
       {
         documentId: payload.documentId,
         error: payload.error,
@@ -112,7 +114,7 @@ export class OcrEventListener {
     userId: string,
     type: 'success' | 'error' | 'info' | 'warning',
     message: string,
-    metadata?: any,
+    _metadata?: Record<string, unknown>,
   ): void {
     this.logger.debug(
       `[NOTIFICATION] Creating ${type} notification for user ${userId}: ${message}`,
@@ -132,7 +134,7 @@ export class OcrEventListener {
    * Statistiques globales sur les traitements OCR
    */
   @OnEvent('ocr.completed')
-  async trackOcrStats(payload: any) {
+  trackOcrStats(payload: any) {
     // TODO: Tracker les statistiques
     // - Temps de traitement moyen
     // - Taux de succès
@@ -143,8 +145,8 @@ export class OcrEventListener {
     const stats = {
       documentId: payload.documentId,
       processingTime: payload.processingTime,
-      confidence: payload.parsedData.confidence,
-      fieldsExtracted: Object.keys(payload.parsedData).filter(
+      confidence: (payload.parsedData as Record<string, unknown>).confidence,
+      fieldsExtracted: Object.keys(payload.parsedData as object).filter(
         key => payload.parsedData[key] !== undefined,
       ).length,
     };

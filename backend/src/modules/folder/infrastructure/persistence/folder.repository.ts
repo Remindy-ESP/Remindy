@@ -187,9 +187,10 @@ export class FolderRepository implements IFolderRepository {
         .select('COUNT(document.id)', 'count')
         .getRawOne();
 
-      return parseInt(result?.count || '0', 10);
+      return parseInt(String(result?.count ?? '0'), 10);
     } catch (error) {
-      this.logger.error(`Failed to count documents in folder: ${error.message}`, error.stack);
+      const err = error as Error;
+      this.logger.error(`Failed to count documents in folder: ${err.message}`, err.stack);
       throw error;
     }
   }
@@ -227,7 +228,7 @@ export class FolderRepository implements IFolderRepository {
     try {
       await this.folderEntityRepository.manager.query(
         `UPDATE documents SET folder_id = $1 WHERE folder_id = $2 AND deleted_at IS NULL`,
-        [toFolderId, fromFolderId]
+        [toFolderId, fromFolderId],
       );
       this.logger.log(`Moved documents from folder ${fromFolderId} to ${toFolderId || 'root'}`);
     } catch (error) {
