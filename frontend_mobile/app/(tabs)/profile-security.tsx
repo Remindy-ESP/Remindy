@@ -13,6 +13,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
+import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
@@ -159,22 +161,24 @@ export default function ProfileSecurityScreen() {
             testID="confirm-password-input"
           />
 
-          <TouchableOpacity
-            style={[styles.primaryButton, loading && styles.buttonDisabled]}
-            onPress={handleChangePassword}
-            disabled={loading}
-            testID="change-password-button"
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons name="key-outline" size={18} color="#fff" />
-                <Text style={styles.primaryButtonText}>Mettre a jour</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <CoachMarkTarget targetKey={COACH_MARK_TARGETS.profileSecurityChangePassword}>
+            <TouchableOpacity
+              style={[styles.primaryButton, loading && styles.buttonDisabled]}
+              onPress={handleChangePassword}
+              disabled={loading}
+              testID="change-password-button"
+              activeOpacity={0.85}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="key-outline" size={18} color="#fff" />
+                  <Text style={styles.primaryButtonText}>Mettre a jour</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </CoachMarkTarget>
         </View>
 
         <View style={styles.secondaryCard}>
@@ -339,4 +343,3 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
 });
-

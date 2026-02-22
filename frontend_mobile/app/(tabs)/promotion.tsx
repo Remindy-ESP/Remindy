@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
 type PromoItem = {
   id: string;
@@ -93,6 +95,11 @@ export default function PromotionScreen() {
         <View style={styles.listCard}>
           {PROMOS.map((promo, index) => (
             <View key={promo.id} style={styles.rowWrapper}>
+              <CoachMarkTarget
+                targetKey={
+                  index === 0 ? COACH_MARK_TARGETS.promotionFirstRow : `promo-row-${promo.id}-noop`
+                }
+              >
               <Pressable
                 testID={`promo-row-${promo.id}`}
                 style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
@@ -146,6 +153,7 @@ export default function PromotionScreen() {
                     </Pressable>
                   </View>
               </Pressable>
+              </CoachMarkTarget>
 
               {index < PROMOS.length - 1 ? <View style={styles.separator} /> : null}
             </View>
