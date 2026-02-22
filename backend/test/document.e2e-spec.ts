@@ -8,7 +8,6 @@ describe('DocumentController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let authToken: string;
-  let userId: string;
   let documentId: string;
 
   beforeAll(async () => {
@@ -34,7 +33,6 @@ describe('DocumentController (e2e)', () => {
     // Mock authentication for tests
     // In a real scenario, you would call POST /auth/login
     authToken = 'mock-jwt-token';
-    userId = 'test-user-id-123';
   }, 30000); // Increase timeout to 30 seconds
 
   afterAll(async () => {
@@ -42,7 +40,7 @@ describe('DocumentController (e2e)', () => {
     if (dataSource && documentId) {
       try {
         await dataSource.query('DELETE FROM documents WHERE id = $1', [documentId]);
-      } catch (error) {
+      } catch {
         // Ignore cleanup errors
       }
     }

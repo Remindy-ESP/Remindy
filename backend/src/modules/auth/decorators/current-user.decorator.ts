@@ -29,7 +29,7 @@ export interface AuthenticatedUser {
  * ```
  */
 export const CurrentUser = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext): AuthenticatedUser | any => {
+  (data: string | undefined, ctx: ExecutionContext): unknown => {
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
 

@@ -15,7 +15,7 @@ interface LinkToSubscriptionModalProps {
 export default function LinkToSubscriptionModal({
   visible,
   subscriptions,
-  currentSubscriptionId,
+  currentSubscriptionId: _currentSubscriptionId,
   onClose,
   onSubmit,
 }: LinkToSubscriptionModalProps) {

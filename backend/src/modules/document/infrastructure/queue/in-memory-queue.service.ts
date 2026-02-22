@@ -71,7 +71,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Ajoute un document à la queue pour traitement OCR asynchrone
    */
-  async addDocumentToQueue(
+  addDocumentToQueue(
     documentId: string,
     userId: string,
     r2Key: string,
@@ -92,10 +92,10 @@ export class InMemoryQueueService implements OnModuleDestroy {
     this.queue.push(job);
     this.logger.log(`Document ${documentId} added to queue with job ID ${jobId}`);
 
-    // Déclencher le traitement immédiatement
-    this.processQueue();
+    // Trigger processing immediately
+    void this.processQueue();
 
-    return jobId;
+    return Promise.resolve(jobId);
   }
 
   /**
@@ -106,7 +106,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
     // Vérifier la queue toutes les 2 secondes
     this.workerInterval = setInterval(() => {
-      this.processQueue();
+      void this.processQueue();
     }, 2000);
 
     this.logger.log('Queue worker started');
@@ -271,7 +271,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
         // Attendre avant de réessayer
         setTimeout(() => {
-          this.processQueue();
+          void this.processQueue();
         }, delay);
       } else {
         // Toutes les tentatives épuisées, marquer comme failed
@@ -323,7 +323,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Récupère le statut d'un job
    */
-  async getJobStatus(jobId: string): Promise<{
+  getJobStatus(jobId: string): Promise<{
     id: string;
     status: string;
     progress: number;
@@ -341,33 +341,33 @@ export class InMemoryQueueService implements OnModuleDestroy {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    return {
+    return Promise.resolve({
       id: job.id,
       status: job.status,
       progress: job.status === 'completed' ? 100 : job.status === 'active' ? 50 : 0,
       attempts: job.attempts,
       failedReason: job.error,
       result: job.result,
-    };
+    });
   }
 
   /**
    * Obtient des statistiques sur la queue
    */
-  async getQueueStats(): Promise<{
+  getQueueStats(): Promise<{
     waiting: number;
     active: number;
     completed: number;
     failed: number;
     delayed: number;
   }> {
-    return {
+    return Promise.resolve({
       waiting: this.queue.filter(j => j.status === 'waiting').length,
       active: this.queue.filter(j => j.status === 'active').length,
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
       delayed: 0, // Pas de notion de delayed dans cette implémentation simple
-    };
+    });
   }
 
   /**

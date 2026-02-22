@@ -61,12 +61,14 @@ describe('DeleteMyAccountUseCase', () => {
       const userId = 'user-456';
       const callOrder: string[] = [];
 
-      sessionRepo.revokeAllForUser.mockImplementation(async () => {
+      sessionRepo.revokeAllForUser.mockImplementation(() => {
         callOrder.push('revokeAllForUser');
+        return Promise.resolve();
       });
 
-      userRepo.softDelete.mockImplementation(async () => {
+      userRepo.softDelete.mockImplementation(() => {
         callOrder.push('softDelete');
+        return Promise.resolve();
       });
 
       await useCase.execute(userId);

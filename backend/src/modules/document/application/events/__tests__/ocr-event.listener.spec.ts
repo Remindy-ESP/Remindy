@@ -245,7 +245,7 @@ describe('OcrEventListener', () => {
   });
 
   describe('trackOcrStats', () => {
-    it('should track OCR statistics', async () => {
+    it('should track OCR statistics', () => {
       const debugSpy = jest.spyOn(listener['logger'], 'debug');
 
       const payload = {
@@ -262,14 +262,14 @@ describe('OcrEventListener', () => {
         processingTime: 4500,
       };
 
-      await listener.trackOcrStats(payload);
+      listener.trackOcrStats(payload);
 
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('OCR Stats'));
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('"processingTime":4500'));
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('"confidence":0.95'));
     });
 
-    it('should count extracted fields correctly', async () => {
+    it('should count extracted fields correctly', () => {
       const debugSpy = jest.spyOn(listener['logger'], 'debug');
 
       const payload = {
@@ -288,7 +288,7 @@ describe('OcrEventListener', () => {
         processingTime: 3000,
       };
 
-      await listener.trackOcrStats(payload);
+      listener.trackOcrStats(payload);
 
       expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('"fieldsExtracted":3'));
     });

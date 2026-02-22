@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DeleteFolderUseCase } from './delete-folder.use-case';
 import type { IFolderRepository } from '../ports/folder-repository.interface';
 import { FOLDER_REPOSITORY } from '../ports/folder-repository.interface';
@@ -19,10 +19,7 @@ describe('DeleteFolderUseCase', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DeleteFolderUseCase,
-        { provide: FOLDER_REPOSITORY, useValue: mockRepository },
-      ],
+      providers: [DeleteFolderUseCase, { provide: FOLDER_REPOSITORY, useValue: mockRepository }],
     }).compile();
 
     useCase = module.get<DeleteFolderUseCase>(DeleteFolderUseCase);

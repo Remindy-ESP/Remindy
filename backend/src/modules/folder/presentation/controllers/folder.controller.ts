@@ -28,7 +28,6 @@ import {
   UpdateFolderDto,
   FolderResponseDto,
   FolderFilterDto,
-  MoveDocumentDto,
 } from '../dto/folder.dto';
 import { CreateFolderUseCase } from '../../application/use-cases/create-folder.use-case';
 import { FindAllFoldersUseCase } from '../../application/use-cases/find-all-folders.use-case';
@@ -109,7 +108,7 @@ export class FolderController {
     // Calculate document counts for each folder
     const documentCounts = new Map<string, number>();
     await Promise.all(
-      folders.map(async (folder) => {
+      folders.map(async folder => {
         if (folder.id) {
           const count = await this.folderRepository.countDocumentsInFolder(folder.id);
           documentCounts.set(folder.id, count);
