@@ -27,17 +27,43 @@ export interface RefreshTokenRequest {
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
   role: string;
+  status: string;
+  timezone: string;
+  language: string;
+  emailVerified: boolean;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
-  email?: string;
+  phone?: string;
+  language?: string;
+  timezone?: string;
+  photoR2Key?: string;
+}
+
+export interface RequestRgpdExport {
+  format?: 'json' | 'csv';
+}
+
+export interface RgpdExportResponse {
+  id: string;
+  userId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
+  format: 'json' | 'csv';
+  fileR2Key?: string;
+  fileSize?: number;
+  signedUrl?: string;
+  expiresAt?: string;
+  errorMessage?: string;
+  requestedBy: 'user' | 'admin' | 'automated';
+  createdAt: string;
+  completedAt?: string;
 }
 
 export interface Category {
