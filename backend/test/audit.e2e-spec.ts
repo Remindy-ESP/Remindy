@@ -5,7 +5,6 @@ import {
   INestApplication,
   Param,
   Post,
-  Req,
   UnauthorizedException,
   UseGuards,
   UseInterceptors,
@@ -56,7 +55,7 @@ class TestAuditAutoController {
       ...body,
       token: 'should-be-redacted',
       nested: {
-        ...(typeof body.nested === 'object' && body.nested ? (body.nested as object) : {}),
+        ...(typeof body.nested === 'object' && body.nested ? body.nested : {}),
         password: 'hidden',
       },
     };
@@ -145,16 +144,16 @@ describe('Audit Module (e2e)', () => {
       }
     });
 
-    userRepository.findOne.mockImplementation(async ({ where }: { where: { id: string } }) => {
+    userRepository.findOne.mockImplementation(({ where }: { where: { id: string } }) => {
       const user = users[where.id];
       if (!user) {
         return null;
       }
 
-      return {
+      return Promise.resolve({
         id: user.id,
         mfaEnabled: user.mfaEnabled,
-      };
+      });
     });
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
