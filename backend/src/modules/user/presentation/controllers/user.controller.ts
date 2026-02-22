@@ -217,7 +217,7 @@ export class UserController {
     return UserPreferencesResponseDto.fromEntity(updated);
   }
   @Post('export-data')
-  @Roles(Role.USER_PREMIUM)
+  @Roles(Role.USER_FREEMIUM, Role.USER_PREMIUM, Role.USER_ADMIN, Role.SUPER_ADMIN)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async exportData(

@@ -9,6 +9,8 @@ import { useDashboard } from '@/hooks/useDashboard';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
+import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
@@ -329,6 +331,7 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        <CoachMarkTarget targetKey={COACH_MARK_TARGETS.dashboardCalendar}>
         <View style={styles.calendarContainer}>
           <Calendar
             testID="calendar"
@@ -359,6 +362,7 @@ export default function DashboardScreen() {
             }}
           />
         </View>
+        </CoachMarkTarget>
 
         <DailyExpensesSummary
           date={selected}

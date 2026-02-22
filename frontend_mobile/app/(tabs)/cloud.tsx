@@ -25,6 +25,8 @@ import PDFViewerModal from '@/components/cloud/modals/PDFViewerModal';
 import { subscriptionService, documentService, apiClient } from '@/services/api';
 import type { Folder, Subscription } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
+import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
 export default function CloudScreen() {
   const { documents, loading: docsLoading, fetchDocuments, uploadDocument, updateDocument, deleteDocument } = useDocuments();
@@ -475,10 +477,12 @@ export default function CloudScreen() {
           <Ionicons name="folder-outline" size={20} color="#6366f1" />
           <Text style={styles.createFolderText}>Nouveau dossier</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.uploadButton} onPress={handleUpload} activeOpacity={0.8}>
-          <Ionicons name="add-circle" size={20} color="#fff" />
-          <Text style={styles.uploadText}>Ajouter un document</Text>
-        </TouchableOpacity>
+        <CoachMarkTarget targetKey={COACH_MARK_TARGETS.cloudUploadButton}>
+          <TouchableOpacity style={styles.uploadButton} onPress={handleUpload} activeOpacity={0.8}>
+            <Ionicons name="add-circle" size={20} color="#fff" />
+            <Text style={styles.uploadText}>Ajouter un document</Text>
+          </TouchableOpacity>
+        </CoachMarkTarget>
       </View>
 
       <DocumentActionsMenu
