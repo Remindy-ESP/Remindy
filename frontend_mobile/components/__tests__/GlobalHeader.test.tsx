@@ -37,6 +37,16 @@ jest.mock('@/navigation/MenuConfig', () => ({
   APP_ROUTES: [],
 }));
 
+jest.mock('@/context/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      firstName: 'Jane',
+      lastName: 'Doe',
+      photoUrl: 'https://cdn.example.com/jane.jpg',
+    },
+  }),
+}));
+
 describe('GlobalHeader', () => {
   it('renders without crashing', () => {
     const { toJSON } = render(<GlobalHeader />);
@@ -52,5 +62,12 @@ describe('GlobalHeader', () => {
   it('renders burger menu component', () => {
     const { getByTestId } = render(<GlobalHeader />);
     expect(getByTestId('burger-menu')).toBeTruthy();
+  });
+
+  it('renders the authenticated user photo in header avatar', () => {
+    const { getByTestId } = render(<GlobalHeader />);
+    expect(getByTestId('header-avatar-image').props.source).toEqual({
+      uri: 'https://cdn.example.com/jane.jpg',
+    });
   });
 });

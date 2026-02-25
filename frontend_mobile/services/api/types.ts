@@ -30,6 +30,8 @@ export interface User {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  photoR2Key?: string;
+  photoUrl?: string;
   role: string;
   status: string;
   timezone: string;
@@ -45,6 +47,12 @@ export interface UpdateUserRequest {
   language?: string;
   timezone?: string;
   photoR2Key?: string;
+}
+
+export interface UploadUserPhotoFile {
+  uri: string;
+  name: string;
+  type: string;
 }
 
 export interface RequestRgpdExport {

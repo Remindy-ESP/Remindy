@@ -30,6 +30,8 @@ jest.mock('@/context/AuthContext', () => ({
       email: 'utilisateur@remindy.com',
       firstName: 'Test',
       lastName: 'User',
+      photoR2Key: 'users/test-user/profile-photo/avatar.jpg',
+      photoUrl: 'https://cdn.example.com/avatar.jpg',
       role: 'user_freemium',
       status: 'active',
       timezone: 'Europe/Paris',
@@ -55,6 +57,13 @@ describe('ProfileScreen', () => {
     expect(getByText('Test User')).toBeTruthy();
     expect(getAllByText('utilisateur@remindy.com').length).toBeGreaterThan(0);
     expect(getByText('Profil')).toBeTruthy();
+  });
+
+  it('renders the profile photo when available', () => {
+    const { getByTestId } = render(<ProfileScreen />);
+    expect(getByTestId('profile-hero-avatar-image').props.source).toEqual({
+      uri: 'https://cdn.example.com/avatar.jpg',
+    });
   });
 
   it('renders settings and support sections', () => {
