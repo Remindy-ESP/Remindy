@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import UserAvatar from '@/components/profile/UserAvatar';
 
 type MenuItemProps = {
   testID: string;
@@ -91,15 +92,6 @@ export default function ProfileScreen() {
     return fullName || 'Utilisateur';
   }, [user]);
 
-  const initials = useMemo(() => {
-    if (!user) return '?';
-
-    const firstInitial = user.firstName?.[0]?.toUpperCase() || '';
-    const lastInitial = user.lastName?.[0]?.toUpperCase() || '';
-
-    return `${firstInitial}${lastInitial}` || '?';
-  }, [user]);
-
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -112,9 +104,13 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.heroCard}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
+        <UserAvatar
+          testID="profile-hero-avatar"
+          firstName={user?.firstName}
+          lastName={user?.lastName}
+          photoUrl={user?.photoUrl}
+          size={88}
+        />
 
         <Text style={styles.name}>{userName}</Text>
         <Text style={styles.email}>{user?.email || 'utilisateur@remindy.com'}</Text>
@@ -236,26 +232,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  avatarCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: '#6366f1',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '700',
-  },
   name: {
     fontSize: 22,
     fontWeight: '700',
     color: '#fff',
     marginBottom: 4,
     textAlign: 'center',
+    marginTop: 14,
   },
   email: {
     fontSize: 14,

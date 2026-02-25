@@ -3,6 +3,11 @@ import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ProfileEditScreen from '../profile-edit';
 
+jest.mock('expo-image-picker', () => ({
+  requestMediaLibraryPermissionsAsync: jest.fn().mockResolvedValue({ granted: true }),
+  launchImageLibraryAsync: jest.fn().mockResolvedValue({ canceled: true, assets: [] }),
+}));
+
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
@@ -27,6 +32,8 @@ jest.mock('@/context/AuthContext', () => ({
       firstName: 'John',
       lastName: 'Doe',
       phone: '+33612345678',
+      photoR2Key: undefined,
+      photoUrl: undefined,
       role: 'user_freemium',
       status: 'active',
       timezone: 'Europe/Paris',
@@ -39,9 +46,13 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 
 const mockUpdateMe = jest.fn();
+const mockUploadMyPhoto = jest.fn();
+const mockDeleteMyPhoto = jest.fn();
 jest.mock('@/services/api', () => ({
   userService: {
     updateMe: (...args: any[]) => mockUpdateMe(...args),
+    uploadMyPhoto: (...args: any[]) => mockUploadMyPhoto(...args),
+    deleteMyPhoto: (...args: any[]) => mockDeleteMyPhoto(...args),
   },
 }));
 
@@ -52,6 +63,8 @@ describe('ProfileEditScreen', () => {
     jest.clearAllMocks();
     mockBack.mockClear();
     mockRefreshUser.mockClear();
+    mockUploadMyPhoto.mockClear();
+    mockDeleteMyPhoto.mockClear();
   });
 
   it('renders current user profile fields', () => {
@@ -81,4 +94,3 @@ describe('ProfileEditScreen', () => {
     });
   });
 });
-

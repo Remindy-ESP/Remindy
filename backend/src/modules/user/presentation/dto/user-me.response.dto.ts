@@ -16,6 +16,12 @@ export class UserMeResponseDto {
   @ApiProperty({ required: false })
   phone?: string;
 
+  @ApiProperty({ required: false })
+  photoR2Key?: string;
+
+  @ApiProperty({ required: false })
+  photoUrl?: string;
+
   @ApiProperty()
   role: string;
 

@@ -4,6 +4,7 @@ import {
   UpdateUserRequest,
   RequestRgpdExport,
   RgpdExportResponse,
+  UploadUserPhotoFile,
 } from './types';
 
 /**
@@ -26,6 +27,28 @@ class UserService {
    */
   async updateMe(data: UpdateUserRequest): Promise<User> {
     const response = await apiClient.put<User>(`${this.BASE_PATH}/me`, data);
+    return response.data;
+  }
+
+  async uploadMyPhoto(file: UploadUserPhotoFile): Promise<User> {
+    const formData = new FormData();
+    formData.append('file', {
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
+    } as any);
+
+    const response = await apiClient.post<User>(`${this.BASE_PATH}/me/photo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  }
+
+  async deleteMyPhoto(): Promise<User> {
+    const response = await apiClient.delete<User>(`${this.BASE_PATH}/me/photo`);
     return response.data;
   }
 
