@@ -57,6 +57,7 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(3000);
   console.log(`Listening on URL ${await app.getUrl()}`);
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
 }
 
 bootstrap().catch(err => {

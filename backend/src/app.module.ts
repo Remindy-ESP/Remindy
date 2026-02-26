@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -22,6 +22,9 @@ import { ReminderModule } from './modules/reminder/reminder.module';
 import { CategoryModule } from './modules/category/category.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SeedModule } from './modules/seed/seed.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -46,6 +49,7 @@ import { SeedModule } from './modules/seed/seed.module';
       ignoreErrors: false,
     }),
     InfrastructureModule,
+    AdminModule,
     AuthModule,
     UsersModule,
     RolesModule,
@@ -63,6 +67,12 @@ import { SeedModule } from './modules/seed/seed.module';
     SeedModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
