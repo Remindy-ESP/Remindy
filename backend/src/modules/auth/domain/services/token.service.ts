@@ -3,6 +3,8 @@ import { Role } from '../value-objects/role.enum';
 export interface JwtAccessPayload {
   sub: string;
   role: Role;
+  mfaEnabled: boolean;
+  mfaVerified: boolean;
 }
 
 export interface JwtRefreshPayload {
