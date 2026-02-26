@@ -20,7 +20,7 @@ export class CreateFoldersAndRelations1700000000002 implements MigrationInterfac
               name: 'user_id',
               type: 'uuid',
               isNullable: false,
-              comment: 'ID de l\'utilisateur propriétaire',
+              comment: "ID de l'utilisateur propriétaire",
             },
             {
               name: 'name',
@@ -82,7 +82,12 @@ export class CreateFoldersAndRelations1700000000002 implements MigrationInterfac
 
     // 2. Ajouter les index sur folders
     const foldersTable = await queryRunner.getTable('folders');
-    const foldersIndexNames = ['idx_folders_user_id', 'idx_folders_parent_id', 'idx_folders_name', 'idx_folders_deleted_at'];
+    const foldersIndexNames = [
+      'idx_folders_user_id',
+      'idx_folders_parent_id',
+      'idx_folders_name',
+      'idx_folders_deleted_at',
+    ];
 
     for (const indexName of foldersIndexNames) {
       const indexExists = foldersTable?.indices.some(index => index.name === indexName);
@@ -104,7 +109,9 @@ export class CreateFoldersAndRelations1700000000002 implements MigrationInterfac
 
     // 3. Ajouter la foreign key pour parent_id (auto-référence)
     const foldersTableUpdated = await queryRunner.getTable('folders');
-    const parentFkExists = foldersTableUpdated?.foreignKeys.some(fk => fk.name === 'fk_folders_parent');
+    const parentFkExists = foldersTableUpdated?.foreignKeys.some(
+      fk => fk.name === 'fk_folders_parent',
+    );
 
     if (!parentFkExists) {
       await queryRunner.createForeignKey(
@@ -142,7 +149,9 @@ export class CreateFoldersAndRelations1700000000002 implements MigrationInterfac
 
     // 5. Créer l'index sur folder_id
     const documentsTable = await queryRunner.getTable('documents');
-    const folderIdIndexExists = documentsTable?.indices.some(index => index.name === 'idx_documents_folder_id');
+    const folderIdIndexExists = documentsTable?.indices.some(
+      index => index.name === 'idx_documents_folder_id',
+    );
 
     if (!folderIdIndexExists) {
       await queryRunner.query(`CREATE INDEX idx_documents_folder_id ON documents(folder_id)`);
@@ -153,7 +162,9 @@ export class CreateFoldersAndRelations1700000000002 implements MigrationInterfac
 
     // 6. Ajouter la foreign key entre documents et folders
     const documentsTableUpdated = await queryRunner.getTable('documents');
-    const documentsFolderFkExists = documentsTableUpdated?.foreignKeys.some(fk => fk.name === 'fk_documents_folder');
+    const documentsFolderFkExists = documentsTableUpdated?.foreignKeys.some(
+      fk => fk.name === 'fk_documents_folder',
+    );
 
     if (!documentsFolderFkExists) {
       await queryRunner.createForeignKey(

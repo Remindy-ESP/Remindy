@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OcrService } from '../ocr.service';
 import Tesseract from 'tesseract.js';
+import pdfParseMock from 'pdf-parse';
 
 // Mock Tesseract
 jest.mock('tesseract.js');
@@ -9,6 +10,8 @@ jest.mock('tesseract.js');
 jest.mock('pdf-parse', () => {
   return jest.fn();
 });
+
+const pdfParse = jest.mocked(pdfParseMock);
 
 describe('OcrService', () => {
   let service: OcrService;
@@ -39,7 +42,6 @@ describe('OcrService', () => {
       const pdfBuffer = Buffer.from('fake pdf content');
       const mimeType = 'application/pdf';
 
-      const pdfParse = require('pdf-parse');
       pdfParse.mockResolvedValueOnce({
         text: 'Extracted PDF text\nLine 2\nLine 3',
       });
@@ -82,7 +84,6 @@ describe('OcrService', () => {
       const pdfBuffer = Buffer.from('fake pdf content');
       const mimeType = 'application/pdf';
 
-      const pdfParse = require('pdf-parse');
       pdfParse.mockResolvedValueOnce({ text: '' });
 
       const result = await service.extractText(pdfBuffer, mimeType);
@@ -93,7 +94,6 @@ describe('OcrService', () => {
       const pdfBuffer = Buffer.from('fake pdf content');
       const mimeType = 'application/pdf';
 
-      const pdfParse = require('pdf-parse');
       pdfParse.mockRejectedValueOnce(new Error('PDF error'));
 
       await expect(service.extractText(pdfBuffer, mimeType)).rejects.toThrow(

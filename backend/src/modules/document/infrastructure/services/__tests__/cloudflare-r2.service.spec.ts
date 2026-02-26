@@ -34,7 +34,7 @@ describe('CloudflareR2Service', () => {
       send: jest.fn(),
     } as any;
 
-    (S3Client as jest.MockedClass<typeof S3Client>).mockImplementation(() => mockS3Client);
+    S3Client.mockImplementation(() => mockS3Client);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -84,7 +84,7 @@ describe('CloudflareR2Service', () => {
     it('should download file successfully', async () => {
       const key = 'test-key';
       const mockBody = {
-        async *[Symbol.asyncIterator]() {
+        *[Symbol.asyncIterator]() {
           yield Buffer.from('test content');
         },
       };

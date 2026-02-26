@@ -69,6 +69,11 @@ export interface IFolderRepository {
    * Vérifier si un dossier appartient à un utilisateur
    */
   belongsToUser(folderId: string, userId: string): Promise<boolean>;
+
+  /**
+   * Déplacer tous les documents d'un dossier vers un autre
+   */
+  moveDocumentsToFolder(fromFolderId: string, toFolderId: string | null): Promise<void>;
 }
 
 export const FOLDER_REPOSITORY = Symbol('FOLDER_REPOSITORY');

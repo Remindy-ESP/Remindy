@@ -17,5 +17,8 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('R2_ACCOUNT_ID:', process.env.R2_ACCOUNT_ID ? '✓ Set' : '✗ Missing');
 console.log('R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME ? '✓ Set' : '✗ Missing');
 console.log('GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? '✓ Set' : '✗ Missing');
-console.log('DATABASE_URL:', process.env.NEON_DATABASE_URL_TEST || process.env.NEON_DATABASE_URL_DEV ? '✓ Set' : '✗ Missing');
+console.log(
+  'DATABASE_URL:',
+  process.env.NEON_DATABASE_URL_TEST || process.env.NEON_DATABASE_URL_DEV ? '✓ Set' : '✗ Missing',
+);
 console.log('---');

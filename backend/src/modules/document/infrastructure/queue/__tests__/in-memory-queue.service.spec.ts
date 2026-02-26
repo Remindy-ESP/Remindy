@@ -52,8 +52,8 @@ describe('InMemoryQueueService', () => {
     service = module.get<InMemoryQueueService>(InMemoryQueueService);
   });
 
-  afterEach(async () => {
-    await service.onModuleDestroy();
+  afterEach(() => {
+    service.onModuleDestroy();
   });
 
   describe('addDocumentToQueue', () => {
@@ -159,7 +159,7 @@ describe('InMemoryQueueService', () => {
       mockOcrService.cleanExtractedText.mockReturnValue(cleanedText);
       mockGeminiParser.parseDocument.mockResolvedValue(parsedData);
 
-      const jobId = await service.addDocumentToQueue(
+      await service.addDocumentToQueue(
         'doc-123',
         'user-123',
         'r2-key-123',
@@ -240,7 +240,7 @@ describe('InMemoryQueueService', () => {
     it('should handle errors and mark job as failed after max attempts', async () => {
       mockR2Service.downloadFile.mockRejectedValue(new Error('Download failed'));
 
-      const jobId = await service.addDocumentToQueue(
+      await service.addDocumentToQueue(
         'doc-123',
         'user-123',
         'r2-key-123',

@@ -22,11 +22,27 @@ export class ForgotPasswordUseCase {
       sub: user.getId(),
     });
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetLink = this.buildResetLink(token);
 
     await this.emailService.sendPasswordResetEmail({
       to: user.getEmail(),
       resetLink,
     });
+  }
+
+  private buildResetLink(token: string): string {
+    const explicitResetUrl = process.env.FRONTEND_PASSWORD_RESET_URL?.trim();
+
+    if (explicitResetUrl) {
+      return this.appendToken(explicitResetUrl, token);
+    }
+
+    const frontendUrl = process.env.FRONTEND_URL?.trim() || 'http://localhost:3000';
+    return this.appendToken(`${frontendUrl}/reset-password`, token);
+  }
+
+  private appendToken(baseUrl: string, token: string): string {
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    return `${baseUrl}${separator}token=${token}`;
   }
 }

@@ -166,17 +166,27 @@ describe('DocumentController', () => {
     it('should upload a document successfully', async () => {
       uploadDocumentUseCase.execute.mockResolvedValue(mockDocument);
 
-      const result = await controller.upload(mockRequest, mockFile, 'user-123', 'sub-123', '1', 'freemium');
+      const result = await controller.upload(
+        mockRequest,
+        mockFile,
+        'user-123',
+        'sub-123',
+        '1',
+        'freemium',
+      );
 
-      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith({
-        userId: 'user-123',
-        filename: 'test-document.pdf',
-        fileBuffer: mockFile.buffer,
-        fileSize: 1024000,
-        mimeType: 'application/pdf',
-        subscriptionId: 'sub-123',
-        contractId: 1,
-      }, 'freemium');
+      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
+        {
+          userId: 'user-123',
+          filename: 'test-document.pdf',
+          fileBuffer: mockFile.buffer,
+          fileSize: 1024000,
+          mimeType: 'application/pdf',
+          subscriptionId: 'sub-123',
+          contractId: 1,
+        },
+        'freemium',
+      );
 
       expect(result).toEqual({
         id: 'doc-123',
@@ -217,15 +227,18 @@ describe('DocumentController', () => {
 
       const result = await controller.upload(mockRequest, mockFile, 'user-123');
 
-      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith({
-        userId: 'user-123',
-        filename: 'test-document.pdf',
-        fileBuffer: mockFile.buffer,
-        fileSize: 1024000,
-        mimeType: 'application/pdf',
-        subscriptionId: undefined,
-        contractId: undefined,
-      }, 'freemium');
+      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
+        {
+          userId: 'user-123',
+          filename: 'test-document.pdf',
+          fileBuffer: mockFile.buffer,
+          fileSize: 1024000,
+          mimeType: 'application/pdf',
+          subscriptionId: undefined,
+          contractId: undefined,
+        },
+        'freemium',
+      );
 
       expect(result.subscription_id).toBeUndefined();
       expect(result.contract_id).toBeUndefined();

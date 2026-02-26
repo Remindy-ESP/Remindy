@@ -180,7 +180,9 @@ describe('CreateCategoryUseCase', () => {
         userId: 'user-123',
       };
 
-      await expect(useCase.execute(invalidDto)).rejects.toThrow('Category name cannot exceed 100 characters');
+      await expect(useCase.execute(invalidDto)).rejects.toThrow(
+        'Category name cannot exceed 100 characters',
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -204,7 +206,9 @@ describe('CreateCategoryUseCase', () => {
         userId: 'user-123',
       };
 
-      await expect(useCase.execute(invalidDto)).rejects.toThrow('Category icon cannot exceed 50 characters');
+      await expect(useCase.execute(invalidDto)).rejects.toThrow(
+        'Category icon cannot exceed 50 characters',
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -216,7 +220,9 @@ describe('CreateCategoryUseCase', () => {
         userId: 'user-123',
       };
 
-      await expect(useCase.execute(invalidDto)).rejects.toThrow('Color must be a valid HEX color code');
+      await expect(useCase.execute(invalidDto)).rejects.toThrow(
+        'Color must be a valid HEX color code',
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
 
@@ -228,7 +234,9 @@ describe('CreateCategoryUseCase', () => {
         userId: 'user-123',
       };
 
-      await expect(useCase.execute(invalidDto)).rejects.toThrow('Color must be a valid HEX color code');
+      await expect(useCase.execute(invalidDto)).rejects.toThrow(
+        'Color must be a valid HEX color code',
+      );
       expect(repository.create).not.toHaveBeenCalled();
     });
 

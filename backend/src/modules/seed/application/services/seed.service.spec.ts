@@ -60,9 +60,7 @@ describe('SeedService', () => {
     roleRepository = module.get(getRepositoryToken(RoleEntity));
     contractRepository = module.get(getRepositoryToken(ContractEntity));
     userRepository = module.get(getRepositoryToken(EUser));
-    userPreferenceRepository = module.get(
-      getRepositoryToken(UserPreferenceEntity),
-    );
+    userPreferenceRepository = module.get(getRepositoryToken(UserPreferenceEntity));
 
     loggerSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation();
   });
@@ -160,9 +158,7 @@ describe('SeedService', () => {
 
       expect(result.details.roles).toHaveLength(0);
       expect(roleRepository.save).not.toHaveBeenCalled();
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Role already exists'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Role already exists'));
     });
 
     it('should skip existing contracts', async () => {
@@ -177,9 +173,7 @@ describe('SeedService', () => {
 
       expect(result.details.contracts).toHaveLength(0);
       expect(contractRepository.save).not.toHaveBeenCalled();
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Contract already exists'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Contract already exists'));
     });
 
     it('should skip existing users', async () => {
@@ -196,9 +190,7 @@ describe('SeedService', () => {
       expect(result.details.users).toHaveLength(0);
       expect(userRepository.save).not.toHaveBeenCalled();
       expect(userPreferenceRepository.save).not.toHaveBeenCalled();
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('User already exists'),
-      );
+      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('User already exists'));
     });
 
     it('should hash user passwords with bcrypt', async () => {

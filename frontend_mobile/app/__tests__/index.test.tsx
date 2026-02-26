@@ -1,11 +1,14 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import AuthScreen from '../index';
 
 // Mock expo-router
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({
-    replace: jest.fn(),
+    replace: mockReplace,
+    push: mockPush,
   }),
 }));
 
@@ -19,6 +22,15 @@ jest.mock('@/context/AuthContext', () => ({
   }),
 }));
 
+jest.mock('@/services/local/onboarding.service', () => ({
+  __esModule: true,
+  default: {
+    hasSeenOnboarding: jest.fn(() => Promise.resolve(true)),
+    setHasSeenOnboarding: jest.fn(() => Promise.resolve()),
+    resetOnboarding: jest.fn(() => Promise.resolve()),
+  },
+}));
+
 // Mock fetch
 global.fetch = jest.fn(() =>
   Promise.resolve({
@@ -30,25 +42,34 @@ global.fetch = jest.fn(() =>
 describe('AuthScreen', () => {
   beforeEach(() => {
     (global.fetch as jest.Mock).mockClear();
+    mockReplace.mockClear();
+    mockPush.mockClear();
   });
-  it('renders login mode by default', () => {
+  it('renders login mode by default', async () => {
     const { getByText } = render(<AuthScreen />);
-    expect(getByText('Bienvenue')).toBeTruthy();
-    expect(getByText('Se connecter')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText('Bienvenue')).toBeTruthy();
+      expect(getByText('Se connecter')).toBeTruthy();
+      expect(getByText('Mot de passe oublie ?')).toBeTruthy();
+    });
   });
 
-  it('renders email and password inputs', () => {
+  it('renders email and password inputs', async () => {
     const { getByTestId } = render(<AuthScreen />);
-    expect(getByTestId('email-input')).toBeTruthy();
-    expect(getByTestId('password-input')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByTestId('email-input')).toBeTruthy();
+      expect(getByTestId('password-input')).toBeTruthy();
+    });
   });
 
-  it('toggles between login and register modes', () => {
+  it('toggles between login and register modes', async () => {
     const { getByTestId, getByText, queryByTestId } = render(<AuthScreen />);
 
     // Initially in login mode
-    expect(getByText('Bienvenue')).toBeTruthy();
-    expect(queryByTestId('confirm-password-input')).toBeNull();
+    await waitFor(() => {
+      expect(getByText('Bienvenue')).toBeTruthy();
+      expect(queryByTestId('confirm-password-input')).toBeNull();
+    });
 
     // Toggle to register mode
     fireEvent.press(getByTestId('toggle-auth-mode'));
@@ -63,24 +84,27 @@ describe('AuthScreen', () => {
     expect(queryByTestId('confirm-password-input')).toBeNull();
   });
 
-  it('updates email input value', () => {
+  it('updates email input value', async () => {
     const { getByTestId } = render(<AuthScreen />);
+    await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
     const emailInput = getByTestId('email-input');
 
     fireEvent.changeText(emailInput, 'test@example.com');
     expect(emailInput.props.value).toBe('test@example.com');
   });
 
-  it('updates password input value', () => {
+  it('updates password input value', async () => {
     const { getByTestId } = render(<AuthScreen />);
+    await waitFor(() => expect(getByTestId('password-input')).toBeTruthy());
     const passwordInput = getByTestId('password-input');
 
     fireEvent.changeText(passwordInput, 'password123');
     expect(passwordInput.props.value).toBe('password123');
   });
 
-  it('shows confirm password input only in register mode', () => {
+  it('shows confirm password input only in register mode', async () => {
     const { getByTestId, queryByTestId } = render(<AuthScreen />);
+    await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
 
     // Login mode - no confirm password
     expect(queryByTestId('confirm-password-input')).toBeNull();
@@ -90,8 +114,16 @@ describe('AuthScreen', () => {
     expect(getByTestId('confirm-password-input')).toBeTruthy();
   });
 
+  it('navigates to forgot password screen from login mode', async () => {
+    const { getByTestId } = render(<AuthScreen />);
+    await waitFor(() => expect(getByTestId('forgot-password-link')).toBeTruthy());
+    fireEvent.press(getByTestId('forgot-password-link'));
+    expect(mockPush).toHaveBeenCalledWith('/forgot-password');
+  });
+
   it('handles form submission for registration', async () => {
     const { getByTestId } = render(<AuthScreen />);
+    await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
 
     // Switch to register mode
     fireEvent.press(getByTestId('toggle-auth-mode'));

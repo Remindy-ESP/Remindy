@@ -42,6 +42,11 @@ import { AuthModule } from '../auth/auth.module';
     UpdateFutureEventsStatusUseCase,
     EventGenerationService,
   ],
-  exports: [EVENT_REPOSITORY, CreateEventUseCase, GenerateEventsForSubscriptionUseCase, UpdateFutureEventsStatusUseCase],
+  exports: [
+    EVENT_REPOSITORY,
+    CreateEventUseCase,
+    GenerateEventsForSubscriptionUseCase,
+    UpdateFutureEventsStatusUseCase,
+  ],
 })
 export class EventModule {}

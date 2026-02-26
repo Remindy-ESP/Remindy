@@ -9,6 +9,7 @@ export class UserPresenter {
       firstName: user.firstName ?? undefined,
       lastName: user.lastName ?? undefined,
       phone: user.phone ?? undefined,
+      photoR2Key: user.photoR2Key ?? undefined,
       role: user.role_key,
       status: user.status,
       timezone: user.timezone,

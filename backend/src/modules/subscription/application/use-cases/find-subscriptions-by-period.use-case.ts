@@ -11,7 +11,13 @@ export class FindSubscriptionsByPeriodUseCase {
   ) {}
 
   async execute(frequency: string): Promise<Subscription[]> {
-    const validFrequencies: SubscriptionFrequency[] = ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'];
+    const validFrequencies: SubscriptionFrequency[] = [
+      'one-time',
+      'weekly',
+      'monthly',
+      'quarterly',
+      'yearly',
+    ];
 
     if (!validFrequencies.includes(frequency as SubscriptionFrequency)) {
       throw new BadRequestException(
