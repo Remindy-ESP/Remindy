@@ -189,8 +189,12 @@ describe('UpdateCategoryUseCase', () => {
     it('should throw NotFoundException when category does not exist', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(`Category with ID ${categoryId} not found`);
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        `Category with ID ${categoryId} not found`,
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -208,8 +212,12 @@ describe('UpdateCategoryUseCase', () => {
 
       repository.findById.mockResolvedValue(systemCategory);
 
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(ForbiddenException);
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow('System categories cannot be modified');
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        'System categories cannot be modified',
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -227,8 +235,12 @@ describe('UpdateCategoryUseCase', () => {
 
       repository.findById.mockResolvedValue(otherUsersCategory);
 
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(ForbiddenException);
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow('You can only modify your own categories');
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        'You can only modify your own categories',
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -247,8 +259,12 @@ describe('UpdateCategoryUseCase', () => {
       repository.findById.mockResolvedValue(existingCategory);
       repository.update.mockResolvedValue(null);
 
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(`Category with ID ${categoryId} not found`);
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(useCase.execute(categoryId, updateDto, userId)).rejects.toThrow(
+        `Category with ID ${categoryId} not found`,
+      );
     });
 
     it('should allow update without userId parameter', async () => {
@@ -300,7 +316,9 @@ describe('UpdateCategoryUseCase', () => {
 
       repository.findById.mockResolvedValue(existingCategory);
 
-      await expect(useCase.execute(categoryId, invalidDto, userId)).rejects.toThrow('Category name cannot be empty');
+      await expect(useCase.execute(categoryId, invalidDto, userId)).rejects.toThrow(
+        'Category name cannot be empty',
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -322,7 +340,9 @@ describe('UpdateCategoryUseCase', () => {
 
       repository.findById.mockResolvedValue(existingCategory);
 
-      await expect(useCase.execute(categoryId, invalidDto, userId)).rejects.toThrow('Category icon cannot be empty');
+      await expect(useCase.execute(categoryId, invalidDto, userId)).rejects.toThrow(
+        'Category icon cannot be empty',
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
 
@@ -344,7 +364,9 @@ describe('UpdateCategoryUseCase', () => {
 
       repository.findById.mockResolvedValue(existingCategory);
 
-      await expect(useCase.execute(categoryId, invalidDto, userId)).rejects.toThrow('Color must be a valid HEX color code');
+      await expect(useCase.execute(categoryId, invalidDto, userId)).rejects.toThrow(
+        'Color must be a valid HEX color code',
+      );
       expect(repository.update).not.toHaveBeenCalled();
     });
   });

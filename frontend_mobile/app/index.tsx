@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { getErrorMessage } from '@/services/api';
+import onboardingService from '@/services/local/onboarding.service';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,15 +24,47 @@ export default function AuthScreen() {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [onboardingCheckDone, setOnboardingCheckDone] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
   const router = useRouter();
   const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    let cancelled = false;
+
+    const checkOnboarding = async () => {
+      try {
+        const seen = await onboardingService.hasSeenOnboarding();
+        if (!cancelled) {
+          setHasSeenOnboarding(seen);
+        }
+
+        if (!cancelled && !seen) {
+          router.replace('/onboarding');
+          return;
+        }
+      } catch (err) {
+        console.error('Onboarding check failed:', err);
+      } finally {
+        if (!cancelled) {
+          setOnboardingCheckDone(true);
+        }
+      }
+    };
+
+    void checkOnboarding();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && !authLoading && onboardingCheckDone && hasSeenOnboarding !== false) {
       router.replace('/(tabs)/dashboard');
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, onboardingCheckDone, hasSeenOnboarding]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -116,7 +149,7 @@ export default function AuthScreen() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || !onboardingCheckDone) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#6366f1" />
@@ -220,6 +253,18 @@ export default function AuthScreen() {
             )}
           </TouchableOpacity>
 
+          {isLogin && (
+            <TouchableOpacity
+              onPress={() => router.push('/forgot-password')}
+              testID="forgot-password-link"
+              disabled={loading}
+            >
+              <Text style={[styles.forgotText, loading && styles.toggleTextDisabled]}>
+                Mot de passe oublie ?
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             onPress={() => {
               setIsLogin(!isLogin);
@@ -307,6 +352,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
+  },
+  forgotText: {
+    color: '#4f46e5',
+    textAlign: 'center',
+    marginTop: 14,
+    fontSize: 14,
+    fontWeight: '600',
   },
   toggleTextDisabled: {
     color: '#9ca3af',

@@ -74,6 +74,7 @@ describe('ForgotPasswordUseCase', () => {
 
     beforeEach(() => {
       process.env.FRONTEND_URL = 'http://localhost:3000';
+      delete process.env.FRONTEND_PASSWORD_RESET_URL;
     });
 
     it('should send password reset email when user exists', async () => {
@@ -216,6 +217,38 @@ describe('ForgotPasswordUseCase', () => {
       emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
 
       await expect(useCase.execute(email)).resolves.not.toThrow();
+    });
+
+    it('should use explicit FRONTEND_PASSWORD_RESET_URL when configured', async () => {
+      const resetToken = 'mobile-token';
+      process.env.FRONTEND_PASSWORD_RESET_URL = 'frontendmobile://reset-password';
+
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue(resetToken);
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: email,
+        resetLink: `frontendmobile://reset-password?token=${resetToken}`,
+      });
+    });
+
+    it('should append token with ampersand when explicit reset URL already has query params', async () => {
+      const resetToken = 'query-token';
+      process.env.FRONTEND_PASSWORD_RESET_URL = 'https://example.com/reset-password?source=email';
+
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue(resetToken);
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: email,
+        resetLink: `https://example.com/reset-password?source=email&token=${resetToken}`,
+      });
     });
   });
 });

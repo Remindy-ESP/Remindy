@@ -79,7 +79,9 @@ describe('FindCategoryByIdUseCase', () => {
       repository.findById.mockResolvedValue(null);
 
       await expect(useCase.execute(categoryId)).rejects.toThrow(NotFoundException);
-      await expect(useCase.execute(categoryId)).rejects.toThrow(`Category with ID ${categoryId} not found`);
+      await expect(useCase.execute(categoryId)).rejects.toThrow(
+        `Category with ID ${categoryId} not found`,
+      );
     });
 
     it('should return category with all fields', async () => {

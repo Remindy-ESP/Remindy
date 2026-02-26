@@ -87,7 +87,7 @@ export class CloudflareR2Service {
 
       // Convertir le stream en buffer
       const chunks: Uint8Array[] = [];
-      for await (const chunk of response.Body as any) {
+      for await (const chunk of response.Body as AsyncIterable<Uint8Array>) {
         chunks.push(chunk);
       }
       const buffer = Buffer.concat(chunks);
@@ -95,8 +95,9 @@ export class CloudflareR2Service {
       this.logger.log(`File downloaded successfully: ${key}`);
       return buffer;
     } catch (error) {
-      this.logger.error(`Failed to download file ${key}: ${error.message}`, error.stack);
-      throw new Error(`Failed to download file from R2: ${error.message}`);
+      const err = error as Error;
+      this.logger.error(`Failed to download file ${key}: ${err.message}`, err.stack);
+      throw new Error(`Failed to download file from R2: ${err.message}`);
     }
   }
 

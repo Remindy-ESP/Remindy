@@ -17,6 +17,9 @@ describe('CategoryService', () => {
     name: 'Entertainment',
     icon: '🎬',
     color: '#ff0000',
+    isSystem: false,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
   };
 
   const mockCategories: Category[] = [
@@ -26,12 +29,18 @@ describe('CategoryService', () => {
       name: 'Utilities',
       icon: '⚡',
       color: '#00ff00',
+      isSystem: false,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
     },
     {
       id: 'cat3',
       name: 'Food',
       icon: '🍔',
       color: '#0000ff',
+      isSystem: false,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
     },
   ];
 
@@ -117,6 +126,9 @@ describe('CategoryService', () => {
       const newCategory: Category = {
         id: 'cat4',
         ...createData,
+        isSystem: false,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
       };
 
       mockApiClient.post.mockResolvedValue({ data: newCategory });
@@ -138,6 +150,9 @@ describe('CategoryService', () => {
       const newCategory: Category = {
         id: 'cat5',
         ...createData,
+        isSystem: false,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
       };
 
       mockApiClient.post.mockResolvedValue({ data: newCategory });
@@ -357,6 +372,9 @@ describe('CategoryService', () => {
       const newCategory: Category = {
         id: 'cat4',
         ...createData,
+        isSystem: false,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
       };
 
       mockApiClient.post.mockResolvedValue({ data: newCategory });
@@ -376,6 +394,9 @@ describe('CategoryService', () => {
       const newCategory: Category = {
         id: 'cat4',
         ...createData,
+        isSystem: false,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
       };
 
       mockApiClient.post.mockResolvedValue({ data: newCategory });

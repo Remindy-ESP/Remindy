@@ -12,7 +12,6 @@ import { UpdateFutureEventsStatusUseCase } from 'src/modules/event/application/u
 describe('UpdateSubscriptionUseCase', () => {
   let useCase: UpdateSubscriptionUseCase;
   let repository: jest.Mocked<ISubscriptionRepository>;
-  let updateFutureEventsStatusUseCase: jest.Mocked<UpdateFutureEventsStatusUseCase>;
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<ISubscriptionRepository>> = {
@@ -40,7 +39,6 @@ describe('UpdateSubscriptionUseCase', () => {
 
     useCase = module.get<UpdateSubscriptionUseCase>(UpdateSubscriptionUseCase);
     repository = module.get(SUBSCRIPTION_REPOSITORY);
-    updateFutureEventsStatusUseCase = module.get(UpdateFutureEventsStatusUseCase);
   });
 
   it('should be defined', () => {

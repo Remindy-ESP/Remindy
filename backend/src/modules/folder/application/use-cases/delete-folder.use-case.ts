@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
 import type { IFolderRepository } from '../ports/folder-repository.interface';
 import { FOLDER_REPOSITORY } from '../ports/folder-repository.interface';
 
@@ -36,25 +30,25 @@ export class DeleteFolderUseCase {
       throw new ForbiddenException('Cannot delete default folders');
     }
 
-    // 4. Vérifier si le dossier contient des documents
-    const documentCount = await this.folderRepository.countDocumentsInFolder(folderId);
+    // 4. Move contents to parent before deletion
+    const parentId = folder.parentId || null;
 
-    if (documentCount > 0) {
-      throw new BadRequestException(
-        `Cannot delete folder "${folder.name}" because it contains ${documentCount} document(s). Please move or delete the documents first.`,
-      );
-    }
-
-    // 5. Vérifier si le dossier contient des sous-dossiers
+    // Move all subfolders to this folder's parent
     const subfolders = await this.folderRepository.findSubfolders(folderId);
-
     if (subfolders.length > 0) {
-      throw new BadRequestException(
-        `Cannot delete folder "${folder.name}" because it contains ${subfolders.length} subfolder(s). Please delete or move the subfolders first.`,
-      );
+      for (const subfolder of subfolders) {
+        subfolder.moveTo(parentId || undefined);
+        await this.folderRepository.save(subfolder);
+      }
     }
 
-    // 6. Soft delete du dossier
+    // Move all documents to this folder's parent
+    const documentCount = await this.folderRepository.countDocumentsInFolder(folderId);
+    if (documentCount > 0) {
+      await this.folderRepository.moveDocumentsToFolder(folderId, parentId);
+    }
+
+    // 5. Soft delete du dossier
     folder.softDelete();
     await this.folderRepository.save(folder);
   }

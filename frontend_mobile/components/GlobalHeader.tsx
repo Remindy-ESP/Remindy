@@ -4,7 +4,6 @@ import {
     StyleSheet,
     Dimensions,
     TouchableOpacity,
-    Image,
     Modal,
     TouchableWithoutFeedback,
     Text,
@@ -15,12 +14,15 @@ import { useRouter } from 'expo-router';
 
 import BurgerMenu from './BurgerMenu';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
+import { useAuth } from '@/context/AuthContext';
+import UserAvatar from './profile/UserAvatar';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function GlobalHeader() {
     const insets = useSafeAreaInsets();
     const headerHeight = SCREEN_HEIGHT * 0.07 + insets.top;
+    const { user } = useAuth();
 
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isProfileMenuVisible, setIsProfileMenuVisible] = useState(false);
@@ -62,11 +64,15 @@ export default function GlobalHeader() {
                         <TouchableOpacity
                             style={styles.profileButton}
                             onPress={toggleProfileMenu}
+                            testID="header-profile-button"
                         >
                             <View style={styles.avatarPlaceholder}>
-                                <Image
-                                    source={{ uri: 'https://i.pravatar.cc/100' }}
-                                    style={styles.avatar}
+                                <UserAvatar
+                                    testID="header-avatar"
+                                    firstName={user?.firstName}
+                                    lastName={user?.lastName}
+                                    photoUrl={user?.photoUrl}
+                                    size={36}
                                 />
                             </View>
                         </TouchableOpacity>
@@ -143,14 +149,10 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eee',
-        overflow: 'hidden',
         borderWidth: 2,
         borderColor: '#fff',
-    },
-    avatar: {
-        width: '100%',
-        height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     modalOverlay: {
         flex: 1,

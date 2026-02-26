@@ -13,9 +13,9 @@ export abstract class UserRepository {
   abstract updateProfile(
     userId: string,
     data: Partial<{
-      firstName: string;
-      lastName: string;
-      phone: string;
+      firstName: string | null;
+      lastName: string | null;
+      phone: string | null;
       timezone: string;
       language: string;
       photoR2Key: string | null;

@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { UserPreferencesRepository } from './user-preferences.repository';
-import { UserPreferenceEntity, Theme } from '../../../../infrastructure/database/entities/user-preference.entity';
+import {
+  UserPreferenceEntity,
+  Theme,
+} from '../../../../infrastructure/database/entities/user-preference.entity';
 
 describe('UserPreferencesRepository', () => {
   let repository: UserPreferencesRepository;
@@ -79,7 +82,7 @@ describe('UserPreferencesRepository', () => {
       expect(typeOrmRepository.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ deletedAt: IsNull() }),
-        })
+        }),
       );
     });
   });
@@ -130,7 +133,7 @@ describe('UserPreferencesRepository', () => {
       await repository.createDefaultPreferences(userId);
 
       expect(typeOrmRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({ theme: Theme.LIGHT })
+        expect.objectContaining({ theme: Theme.LIGHT }),
       );
     });
 
@@ -148,7 +151,7 @@ describe('UserPreferencesRepository', () => {
           notificationEmail: true,
           notificationPush: true,
           notificationSms: false,
-        })
+        }),
       );
     });
   });
@@ -187,7 +190,7 @@ describe('UserPreferencesRepository', () => {
         expect.objectContaining({
           theme: Theme.DARK,
           notificationEmail: false,
-        })
+        }),
       );
     });
 
@@ -255,7 +258,7 @@ describe('UserPreferencesRepository', () => {
           theme: Theme.DARK,
           notificationEmail: true, // unchanged
           notificationPush: true, // unchanged
-        })
+        }),
       );
     });
 

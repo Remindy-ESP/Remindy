@@ -36,7 +36,7 @@ export class QuotaService {
   constructor(
     @Inject(DOCUMENT_REPOSITORY)
     private readonly documentRepository: IDocumentRepository,
-  ) { }
+  ) {}
 
   /**
    * Récupère la taille maximale de fichier autorisée pour un rôle
@@ -87,11 +87,7 @@ export class QuotaService {
    * Vérifie si un utilisateur peut uploader un fichier
    * @throws ForbiddenException si les quotas sont dépassés
    */
-  async checkUserQuota(
-    userId: string,
-    userRole: UserRole,
-    fileSize: number,
-  ): Promise<void> {
+  async checkUserQuota(userId: string, userRole: UserRole, fileSize: number): Promise<void> {
     // ⚠️ TEMPORARY: Default to 'freemium' if role is undefined or not recognized
     let role: UserRole = 'freemium';
     if (userRole && this.QUOTA_LIMITS[userRole]) {
@@ -169,9 +165,7 @@ export class QuotaService {
       limits.maxTotalStorage > 0 ? (storageUsed / limits.maxTotalStorage) * 100 : 0;
 
     const documentsUsedPercent =
-      limits.maxDocumentsCount > 0
-        ? (documentsCount / limits.maxDocumentsCount) * 100
-        : 0;
+      limits.maxDocumentsCount > 0 ? (documentsCount / limits.maxDocumentsCount) * 100 : 0;
 
     return {
       documentsCount,

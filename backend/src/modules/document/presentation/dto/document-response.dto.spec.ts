@@ -65,7 +65,7 @@ describe('DocumentResponseDto', () => {
   it('should handle OCR status values', () => {
     const statuses = ['pending', 'processing', 'completed', 'failed'];
 
-    statuses.forEach((status) => {
+    statuses.forEach(status => {
       const dto: DocumentResponseDto = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         user_id: '123e4567-e89b-12d3-a456-426614174001',
@@ -105,15 +105,9 @@ describe('DocumentResponseDto', () => {
   });
 
   it('should handle different MIME types', () => {
-    const mimeTypes = [
-      'application/pdf',
-      'image/png',
-      'image/jpeg',
-      'image/gif',
-      'image/webp',
-    ];
+    const mimeTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 
-    mimeTypes.forEach((mimeType) => {
+    mimeTypes.forEach(mimeType => {
       const dto: DocumentResponseDto = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         user_id: '123e4567-e89b-12d3-a456-426614174001',
@@ -159,7 +153,7 @@ describe('DocumentResponseDto', () => {
       52428800, // 50 MB
     ];
 
-    fileSizes.forEach((fileSize) => {
+    fileSizes.forEach(fileSize => {
       const dto: DocumentResponseDto = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         user_id: '123e4567-e89b-12d3-a456-426614174001',

@@ -33,7 +33,7 @@ export class SendgridEmailService implements IEmailService {
             </a>
           </p>
 
-          <p>Ce lien expire dans 30 minutes.</p>
+          <p>Ce lien expire dans 15 minutes.</p>
 
           <p>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
         `,

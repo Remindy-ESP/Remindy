@@ -59,13 +59,13 @@ export class FolderPersistenceMapper {
    * Convertir un tableau d'entités de persistence en entités domaine
    */
   static toDomainArray(entities: FolderEntity[]): Folder[] {
-    return entities.map((entity) => this.toDomain(entity));
+    return entities.map(entity => this.toDomain(entity));
   }
 
   /**
    * Convertir un tableau d'entités domaine en entités de persistence
    */
   static toPersistenceArray(folders: Folder[]): FolderEntity[] {
-    return folders.map((folder) => this.toPersistence(folder));
+    return folders.map(folder => this.toPersistence(folder));
   }
 }

@@ -61,12 +61,14 @@ describe('DeleteMyAccountUseCase', () => {
       const userId = 'user-456';
       const callOrder: string[] = [];
 
-      sessionRepo.revokeAllForUser.mockImplementation(async () => {
+      sessionRepo.revokeAllForUser.mockImplementation(() => {
         callOrder.push('revokeAllForUser');
+        return Promise.resolve();
       });
 
-      userRepo.softDelete.mockImplementation(async () => {
+      userRepo.softDelete.mockImplementation(() => {
         callOrder.push('softDelete');
+        return Promise.resolve();
       });
 
       await useCase.execute(userId);
@@ -76,7 +78,7 @@ describe('DeleteMyAccountUseCase', () => {
 
     it('should throw error when userId is empty string', async () => {
       await expect(useCase.execute('')).rejects.toThrow(
-        'DeleteMyAccountUseCase called without userId'
+        'DeleteMyAccountUseCase called without userId',
       );
 
       expect(sessionRepo.revokeAllForUser).not.toHaveBeenCalled();
@@ -85,7 +87,7 @@ describe('DeleteMyAccountUseCase', () => {
 
     it('should throw error when userId is null', async () => {
       await expect(useCase.execute(null as any)).rejects.toThrow(
-        'DeleteMyAccountUseCase called without userId'
+        'DeleteMyAccountUseCase called without userId',
       );
 
       expect(sessionRepo.revokeAllForUser).not.toHaveBeenCalled();
@@ -94,7 +96,7 @@ describe('DeleteMyAccountUseCase', () => {
 
     it('should throw error when userId is undefined', async () => {
       await expect(useCase.execute(undefined as any)).rejects.toThrow(
-        'DeleteMyAccountUseCase called without userId'
+        'DeleteMyAccountUseCase called without userId',
       );
 
       expect(sessionRepo.revokeAllForUser).not.toHaveBeenCalled();

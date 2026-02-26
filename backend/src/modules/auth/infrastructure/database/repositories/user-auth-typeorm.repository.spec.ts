@@ -213,7 +213,7 @@ describe('UserAuthTypeOrmRepository', () => {
           passwordHash: newPasswordHash,
           passwordChangedAt: expect.any(Date),
           failedLoginCount: 0,
-        }
+        },
       );
     });
 

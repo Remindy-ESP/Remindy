@@ -1,14 +1,8 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { StorageQuotaService, StorageQuota } from './storage-quota.service';
 
 /**
@@ -16,8 +10,9 @@ import { StorageQuotaService, StorageQuota } from './storage-quota.service';
  * Gère les endpoints liés au stockage (quotas, espace disponible)
  */
 @ApiTags('Storage')
+@ApiBearerAuth()
 @Controller('storage')
-@UseGuards(ThrottlerGuard)
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 export class StorageController {
   constructor(private readonly storageQuotaService: StorageQuotaService) {}
 
@@ -72,10 +67,10 @@ export class StorageController {
       },
     },
   })
-  async getQuota(): Promise<StorageQuota> {
-    // TODO: Get userId from authenticated user
-    const userId = '123e4567-e89b-12d3-a456-426614174000';
-
-    return await this.storageQuotaService.getQuota(userId);
+  async getQuota(
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') userRole: string,
+  ): Promise<StorageQuota> {
+    return await this.storageQuotaService.getQuota(userId, userRole);
   }
 }

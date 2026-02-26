@@ -174,9 +174,17 @@ export class Subscription {
       throw new Error('Currency must be a valid ISO 4217 code (3 characters)');
     }
 
-    const validFrequencies: SubscriptionFrequency[] = ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'];
+    const validFrequencies: SubscriptionFrequency[] = [
+      'one-time',
+      'weekly',
+      'monthly',
+      'quarterly',
+      'yearly',
+    ];
     if (!validFrequencies.includes(this._frequency)) {
-      throw new Error('Invalid frequency. Must be: one-time, weekly, monthly, quarterly, or yearly');
+      throw new Error(
+        'Invalid frequency. Must be: one-time, weekly, monthly, quarterly, or yearly',
+      );
     }
 
     const validStatuses: SubscriptionStatus[] = ['active', 'paused', 'cancelled', 'trial'];
@@ -225,9 +233,17 @@ export class Subscription {
   }
 
   public updateFrequency(newFrequency: SubscriptionFrequency): void {
-    const validFrequencies: SubscriptionFrequency[] = ['one-time', 'weekly', 'monthly', 'quarterly', 'yearly'];
+    const validFrequencies: SubscriptionFrequency[] = [
+      'one-time',
+      'weekly',
+      'monthly',
+      'quarterly',
+      'yearly',
+    ];
     if (!validFrequencies.includes(newFrequency)) {
-      throw new Error('Invalid frequency. Must be: one-time, weekly, monthly, quarterly, or yearly');
+      throw new Error(
+        'Invalid frequency. Must be: one-time, weekly, monthly, quarterly, or yearly',
+      );
     }
     this._frequency = newFrequency;
     this.recalculateNextDueDate();

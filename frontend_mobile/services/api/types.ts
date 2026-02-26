@@ -27,17 +27,51 @@ export interface RefreshTokenRequest {
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  photoR2Key?: string;
+  photoUrl?: string;
   role: string;
+  status: string;
+  timezone: string;
+  language: string;
+  emailVerified: boolean;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
-  email?: string;
+  phone?: string;
+  language?: string;
+  timezone?: string;
+  photoR2Key?: string;
+}
+
+export interface UploadUserPhotoFile {
+  uri: string;
+  name: string;
+  type: string;
+}
+
+export interface RequestRgpdExport {
+  format?: 'json' | 'csv';
+}
+
+export interface RgpdExportResponse {
+  id: string;
+  userId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
+  format: 'json' | 'csv';
+  fileR2Key?: string;
+  fileSize?: number;
+  signedUrl?: string;
+  expiresAt?: string;
+  errorMessage?: string;
+  requestedBy: 'user' | 'admin' | 'automated';
+  createdAt: string;
+  completedAt?: string;
 }
 
 export interface Category {
@@ -142,4 +176,49 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface Folder {
+  id: string;
+  userId: string;
+  name: string;
+  parentId?: string;
+  color?: string;
+  icon?: string;
+  isDefault: boolean;
+  documentCount?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface CreateFolderRequest {
+  name: string;
+  parentId?: string;
+  color?: string;
+  icon?: string;
+}
+
+export interface UpdateFolderRequest {
+  name?: string;
+  color?: string;
+  icon?: string;
+  parentId?: string;
+}
+
+export interface FolderFilters {
+  parentId?: string;
+  isDefault?: boolean;
+  includeDeleted?: boolean;
+}
+
+export interface StorageQuota {
+  totalBytes: number;
+  usedBytes: number;
+  availableBytes: number;
+  usagePercentage: number;
+  documentCount: number;
+  totalFormatted: string;
+  usedFormatted: string;
+  availableFormatted: string;
 }
