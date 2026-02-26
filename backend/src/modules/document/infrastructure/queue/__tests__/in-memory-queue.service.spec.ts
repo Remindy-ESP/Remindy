@@ -251,6 +251,56 @@ describe('InMemoryQueueService', () => {
         'test.pdf',
       );
 
+      // Attendre suffisamment longtemps pour toutes les tentatives
+      await new Promise(resolve => setTimeout(resolve, 30000));
+
+      expect(mockRepository.updateOcrStatus).toHaveBeenCalledWith(
+        'doc-123',
+        'failed',
+        expect.stringContaining('OCR failed after 3 attempts'),
+      );
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'ocr.failed',
+        expect.objectContaining({
+          documentId: 'doc-123',
+          userId: 'user-123',
+          error: 'Download failed',
+          attempts: 3,
+        }),
+      );
+    }, 35000);
+
+    it('should retry on failure with exponential backoff', async () => {
+      let attemptCount = 0;
+      mockR2Service.downloadFile.mockImplementation(() => {
+        attemptCount++;
+        if (attemptCount < 3) {
+          return Promise.reject(new Error('Temporary error'));
+        }
+        return Promise.resolve(Buffer.from('success'));
+      });
+
+      mockOcrService.extractText.mockResolvedValue('text');
+      mockOcrService.cleanExtractedText.mockReturnValue('text');
+      mockGeminiParser.parseDocument.mockResolvedValue({
+        provider: 'Test',
+        amount: 10.0,
+        currency: 'EUR',
+        date: new Date(),
+        frequency: 'mensuel' as const,
+        category: 'autre' as const,
+        confidence: 0.9,
+      });
+
+      await service.addDocumentToQueue(
+        'doc-123',
+        'user-123',
+        'r2-key-123',
+        'application/pdf',
+        'test.pdf',
+      );
+
       // Attendre juste le premier retry
       await new Promise(resolve => setTimeout(resolve, 5500));
 
