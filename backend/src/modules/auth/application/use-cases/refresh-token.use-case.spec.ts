@@ -223,8 +223,8 @@ describe('RefreshTokenUseCase', () => {
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
         sub: 'user-123',
         role: Role.USER_PREMIUM,
-        mfaEnabled: false,
-        mfaVerified: false,
+        "mfaEnabled": false,
+        "mfaVerified": false,
       });
 
       expect(tokenService.generateRefreshToken).toHaveBeenCalledWith({
