@@ -158,7 +158,7 @@ describe('CategoryRepository', () => {
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         '(category.userId = :userId OR category.isSystem = true)',
-        { userId: 'user-123' }
+        { userId: 'user-123' },
       );
     });
 
@@ -330,7 +330,11 @@ describe('CategoryRepository', () => {
     });
 
     it('should return false when affected is undefined', async () => {
-      typeOrmRepository.softDelete.mockResolvedValue({ affected: undefined, raw: {}, generatedMaps: [] });
+      typeOrmRepository.softDelete.mockResolvedValue({
+        affected: undefined,
+        raw: {},
+        generatedMaps: [],
+      });
 
       const result = await repository.softDelete('cat-123');
 

@@ -28,6 +28,9 @@ describe('SubscriptionService', () => {
     currency: 'EUR',
     notes: 'Streaming service',
     categoryId: 'cat1',
+    userId: 'user1',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
   };
 
   const mockSubscriptions: Subscription[] = [
@@ -38,18 +41,23 @@ describe('SubscriptionService', () => {
       amount: 9.99,
       frequency: 'monthly',
       startDate: '2024-01-01T00:00:00.000Z',
+      nextDueDate: '2024-02-01T00:00:00.000Z',
       status: 'active',
       currency: 'EUR',
+      userId: 'user1',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
     },
   ];
 
   const mockEvents: Event[] = [
     {
       id: '1',
+      title: 'Netflix - February',
       subscriptionId: '1',
-      amount: 15.99,
       dueDate: '2024-02-01T00:00:00.000Z',
       status: 'PENDING',
+      userId: 'user1',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
     },

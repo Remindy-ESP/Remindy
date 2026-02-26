@@ -41,12 +41,7 @@ describe('UpdateUserProfileDto', () => {
     });
 
     it('should accept valid phone number formats', async () => {
-      const validNumbers = [
-        '+33612345678',
-        '0612345678',
-        '+1234567890',
-        '(123) 456-7890',
-      ];
+      const validNumbers = ['+33612345678', '0612345678', '+1234567890', '(123) 456-7890'];
 
       for (const phone of validNumbers) {
         const dto = new UpdateUserProfileDto();

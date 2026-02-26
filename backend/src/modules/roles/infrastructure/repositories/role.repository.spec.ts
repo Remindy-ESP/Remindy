@@ -190,10 +190,7 @@ describe('RoleRepository', () => {
       const result = await repository.update('user_freemium', updateData);
 
       expect(result).toEqual(updatedRole);
-      expect(mockRepository.update).toHaveBeenCalledWith(
-        { key: 'user_freemium' },
-        updateData,
-      );
+      expect(mockRepository.update).toHaveBeenCalledWith({ key: 'user_freemium' }, updateData);
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { key: 'user_freemium' },
       });
@@ -230,10 +227,7 @@ describe('RoleRepository', () => {
 
       expect(result?.label).toBe('New Label');
       expect(result?.description).toBe(mockRole.description);
-      expect(mockRepository.update).toHaveBeenCalledWith(
-        { key: 'user_freemium' },
-        updateData,
-      );
+      expect(mockRepository.update).toHaveBeenCalledWith({ key: 'user_freemium' }, updateData);
     });
 
     it('should update only description', async () => {

@@ -1,9 +1,30 @@
 import { Stack } from 'expo-router';
+import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Platform } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
+import AppStatusScreen from '@/components/system/AppStatusScreen';
+import { CoachMarksProvider } from '@/features/coach-marks/CoachMarksContext';
+import CoachMarksOverlay from '@/components/system/CoachMarksOverlay';
+
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <AppStatusScreen
+      code="500"
+      title="Une erreur est survenue"
+      message="Un probleme inattendu a empeche l affichage de cette page. Vous pouvez reessayer."
+      actions={[
+        {
+          label: 'Reessayer',
+          onPress: retry,
+          testID: 'error-500-retry-button',
+        },
+      ]}
+    />
+  );
+}
 
 export default function RootLayout() {
   useEffect(() => {
@@ -25,28 +46,49 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <StatusBar style="light" />
-      <View style={{ flex: 1 }}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: '#fff' },
-          }}
-        >
-          <Stack.Screen
-            name="index"
-            options={{
+      <CoachMarksProvider>
+        <StatusBar style="light" />
+        <View style={{ flex: 1 }}>
+          <Stack
+            screenOptions={{
               headerShown: false,
+              contentStyle: { backgroundColor: '#fff' },
             }}
-          />
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              headerShown: false,
-            }}
-          />
-        </Stack>
-      </View>
+          >
+            <Stack.Screen
+              name="index"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="onboarding"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="forgot-password"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="reset-password"
+              options={{
+                headerShown: false,
+              }}
+            />
+          </Stack>
+          <CoachMarksOverlay />
+        </View>
+      </CoachMarksProvider>
     </AuthProvider>
   );
 }

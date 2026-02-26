@@ -84,7 +84,7 @@ describe('UpdateMyProfileUseCase', () => {
       const dto: UpdateUserMeRequestDto = { firstName: 'Test' };
 
       await expect(useCase.execute('', dto)).rejects.toThrow(
-        'UpdateMyProfileUseCase called without userId'
+        'UpdateMyProfileUseCase called without userId',
       );
 
       expect(userRepo.updateProfile).not.toHaveBeenCalled();
@@ -94,7 +94,7 @@ describe('UpdateMyProfileUseCase', () => {
       const dto: UpdateUserMeRequestDto = { firstName: 'Test' };
 
       await expect(useCase.execute(null as any, dto)).rejects.toThrow(
-        'UpdateMyProfileUseCase called without userId'
+        'UpdateMyProfileUseCase called without userId',
       );
 
       expect(userRepo.updateProfile).not.toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe('UpdateMyProfileUseCase', () => {
       const dto: UpdateUserMeRequestDto = { firstName: 'Test' };
 
       await expect(useCase.execute(undefined as any, dto)).rejects.toThrow(
-        'UpdateMyProfileUseCase called without userId'
+        'UpdateMyProfileUseCase called without userId',
       );
 
       expect(userRepo.updateProfile).not.toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ firstName: 'NewFirstName' })
+        expect.objectContaining({ firstName: 'NewFirstName' }),
       );
     });
 
@@ -134,7 +134,7 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ lastName: 'NewLastName' })
+        expect.objectContaining({ lastName: 'NewLastName' }),
       );
     });
 
@@ -148,7 +148,7 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ phone: '+33699887766' })
+        expect.objectContaining({ phone: '+33699887766' }),
       );
     });
 
@@ -162,7 +162,7 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ language: 'en' })
+        expect.objectContaining({ language: 'en' }),
       );
     });
 
@@ -176,7 +176,7 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ timezone: 'America/New_York' })
+        expect.objectContaining({ timezone: 'America/New_York' }),
       );
     });
 
@@ -190,7 +190,7 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ photoR2Key: 'photos/new-photo.jpg' })
+        expect.objectContaining({ photoR2Key: 'photos/new-photo.jpg' }),
       );
     });
   });

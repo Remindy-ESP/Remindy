@@ -64,7 +64,7 @@ describe('JwtTokenService', () => {
         {
           secret: resetSecret,
           expiresIn: '15m',
-        }
+        },
       );
     });
 
@@ -91,9 +91,7 @@ describe('JwtTokenService', () => {
       const accessSecret = 'access_token_secret';
       const accessExpiration = '15m';
 
-      configService.get
-        .mockReturnValueOnce(accessSecret)
-        .mockReturnValueOnce(accessExpiration);
+      configService.get.mockReturnValueOnce(accessSecret).mockReturnValueOnce(accessExpiration);
       jwtService.sign.mockReturnValue(expectedToken);
 
       const result = service.generateAccessToken(payload);
@@ -125,7 +123,7 @@ describe('JwtTokenService', () => {
           email: 'admin@example.com',
           role_key: 'ADMIN',
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -187,9 +185,7 @@ describe('JwtTokenService', () => {
       const refreshSecret = 'refresh_token_secret';
       const refreshExpiration = '7d';
 
-      configService.get
-        .mockReturnValueOnce(refreshSecret)
-        .mockReturnValueOnce(refreshExpiration);
+      configService.get.mockReturnValueOnce(refreshSecret).mockReturnValueOnce(refreshExpiration);
       jwtService.sign.mockReturnValue(expectedToken);
 
       const result = service.generateRefreshToken(payload);
@@ -219,7 +215,7 @@ describe('JwtTokenService', () => {
           sub: 'user-789',
           sessionId: 'session-123',
         }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });

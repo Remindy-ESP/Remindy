@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { RegisterRequestDto } from '../dto/register-request.dto';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
@@ -16,7 +16,7 @@ export class RegisterUserUseCase {
   async execute(dto: RegisterRequestDto) {
     const existing = await this.userRepo.findByEmail(dto.email);
     if (existing) {
-      throw new Error('Email already used');
+      throw new ConflictException('Email already used');
     }
 
     const hash = await this.passwordService.hash(dto.password);

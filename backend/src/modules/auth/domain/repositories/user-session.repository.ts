@@ -30,4 +30,6 @@ export abstract class IUserSessionRepository {
   abstract findActiveByRefreshTokenHash(hash: string): Promise<{ id: string } | null>;
 
   abstract revokeSession(sessionId: string): Promise<void>;
+
+  abstract revokeAllForUser(userId: string): Promise<void>;
 }

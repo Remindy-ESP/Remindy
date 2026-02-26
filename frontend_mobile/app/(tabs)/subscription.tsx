@@ -19,6 +19,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
+import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
 interface SubscriptionFormData {
   name: string;
@@ -573,9 +575,11 @@ export default function SubscriptionScreen() {
             {(filterFrequency || filterCategoryId) && ` (${subscriptions.length} au total)`}
           </Text>
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-          <Text style={styles.addButtonText}>+ Ajouter</Text>
-        </TouchableOpacity>
+        <CoachMarkTarget targetKey={COACH_MARK_TARGETS.subscriptionAddButton}>
+          <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
+            <Text style={styles.addButtonText}>+ Ajouter</Text>
+          </TouchableOpacity>
+        </CoachMarkTarget>
       </View>
 
       {/* Filtres */}

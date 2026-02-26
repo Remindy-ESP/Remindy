@@ -14,6 +14,7 @@ describe('UploadDocumentUseCase', () => {
   let useCase: UploadDocumentUseCase;
   let repository: jest.Mocked<IDocumentRepository>;
   let quotaService: jest.Mocked<QuotaService>;
+  let r2Service: jest.Mocked<CloudflareR2Service>;
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<IDocumentRepository>> = {
@@ -24,6 +25,7 @@ describe('UploadDocumentUseCase', () => {
 
     const mockR2Service: Partial<jest.Mocked<CloudflareR2Service>> = {
       uploadFile: jest.fn().mockResolvedValue('https://r2.example.com/file.pdf'),
+      deleteFile: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockQuotaService: Partial<jest.Mocked<QuotaService>> = {
@@ -52,6 +54,7 @@ describe('UploadDocumentUseCase', () => {
     useCase = module.get<UploadDocumentUseCase>(UploadDocumentUseCase);
     repository = module.get(DOCUMENT_REPOSITORY);
     quotaService = module.get(QuotaService);
+    r2Service = module.get(CloudflareR2Service);
   });
 
   it('should upload a document successfully', async () => {
@@ -208,5 +211,52 @@ describe('UploadDocumentUseCase', () => {
 
     await expect(useCase.execute(dto)).rejects.toThrow(ForbiddenException);
     expect(repository.create).not.toHaveBeenCalled();
+  });
+
+  it('should cleanup R2 file if DB save fails', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+    };
+
+    r2Service.uploadFile.mockResolvedValue('https://r2.example.com/test.pdf');
+    repository.create.mockRejectedValue(new Error('DB error'));
+
+    await expect(useCase.execute(dto)).rejects.toThrow('DB error');
+    expect(r2Service.uploadFile).toHaveBeenCalled();
+    expect(r2Service.deleteFile).toHaveBeenCalled();
+    expect(repository.create).toHaveBeenCalled();
+  });
+
+  it('should call checkUserQuota twice to prevent race conditions', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+    };
+
+    const mockDocument = new Document({
+      userId: dto.userId,
+      filename: dto.filename,
+      r2Key: 'test-key',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      ocrStatus: 'pending',
+    });
+
+    repository.create.mockResolvedValue(mockDocument);
+
+    await useCase.execute(dto);
+
+    expect(quotaService.checkUserQuota).toHaveBeenCalledTimes(2);
   });
 });

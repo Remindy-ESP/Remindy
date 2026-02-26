@@ -26,4 +26,12 @@ export class UploadDocumentDto {
   @Type(() => Number)
   @IsInt()
   contract_id?: number;
+
+  @ApiPropertyOptional({
+    description: 'ID du dossier dans lequel uploader le document (optionnel)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsOptional()
+  @IsUUID()
+  folder_id?: string;
 }

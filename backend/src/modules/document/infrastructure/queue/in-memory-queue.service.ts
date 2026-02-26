@@ -71,7 +71,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Ajoute un document à la queue pour traitement OCR asynchrone
    */
-  async addDocumentToQueue(
+  addDocumentToQueue(
     documentId: string,
     userId: string,
     r2Key: string,
@@ -92,10 +92,10 @@ export class InMemoryQueueService implements OnModuleDestroy {
     this.queue.push(job);
     this.logger.log(`Document ${documentId} added to queue with job ID ${jobId}`);
 
-    // Déclencher le traitement immédiatement
-    this.processQueue();
+    // Trigger processing immediately
+    void this.processQueue();
 
-    return jobId;
+    return Promise.resolve(jobId);
   }
 
   /**
@@ -106,7 +106,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
     // Vérifier la queue toutes les 2 secondes
     this.workerInterval = setInterval(() => {
-      this.processQueue();
+      void this.processQueue();
     }, 2000);
 
     this.logger.log('Queue worker started');
@@ -173,22 +173,39 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
       // 2. Télécharger le fichier depuis R2
       this.logger.debug(`Downloading file from R2: ${r2Key}`);
-      const fileBuffer = await this.r2Service.downloadFile(r2Key);
+      const fileBuffer = await this.withTimeout(
+        this.r2Service.downloadFile(r2Key),
+        30000, // 30 seconds for download
+        'File download timed out after 30 seconds',
+      );
 
-      // 3. Extraire le texte via OCR
+      // 3. Extraire le texte via OCR (with timeout)
       this.logger.debug(`Extracting text from ${mimeType} file`);
-      const rawText = await this.ocrService.extractText(fileBuffer, mimeType);
+      const rawText = await this.withTimeout(
+        this.ocrService.extractText(fileBuffer, mimeType),
+        120000, // 2 minutes for OCR extraction
+        'OCR extraction timed out after 2 minutes',
+      );
       const ocrText = this.ocrService.cleanExtractedText(rawText);
 
       if (!ocrText || ocrText.trim().length === 0) {
-        throw new Error('No text could be extracted from the document');
+        // Différencier entre extraction vide (document sans texte) et échec
+        const errorMsg =
+          rawText === ''
+            ? 'Document appears to be blank or contains no readable text (possible scanned image with no content)'
+            : 'Text extraction completed but produced no readable content after cleaning';
+        throw new Error(errorMsg);
       }
 
       this.logger.debug(`Extracted ${ocrText.length} characters of text`);
 
-      // 4. Parser les données via Gemini
+      // 4. Parser les données via Gemini (with timeout)
       this.logger.debug(`Parsing document data with Gemini AI`);
-      const parsedData = await this.geminiParser.parseDocument(ocrText);
+      const parsedData = await this.withTimeout(
+        this.geminiParser.parseDocument(ocrText),
+        60000, // 1 minute for Gemini parsing
+        'Gemini parsing timed out after 1 minute',
+      );
 
       // 5. Mettre à jour le document avec les résultats
       await this.documentRepository.updateOcrAndParsedData(documentId, {
@@ -254,7 +271,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
 
         // Attendre avant de réessayer
         setTimeout(() => {
-          this.processQueue();
+          void this.processQueue();
         }, delay);
       } else {
         // Toutes les tentatives épuisées, marquer comme failed
@@ -306,7 +323,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Récupère le statut d'un job
    */
-  async getJobStatus(jobId: string): Promise<{
+  getJobStatus(jobId: string): Promise<{
     id: string;
     status: string;
     progress: number;
@@ -324,32 +341,46 @@ export class InMemoryQueueService implements OnModuleDestroy {
       throw new Error(`Job ${jobId} not found`);
     }
 
-    return {
+    return Promise.resolve({
       id: job.id,
       status: job.status,
       progress: job.status === 'completed' ? 100 : job.status === 'active' ? 50 : 0,
       attempts: job.attempts,
       failedReason: job.error,
       result: job.result,
-    };
+    });
   }
 
   /**
    * Obtient des statistiques sur la queue
    */
-  async getQueueStats(): Promise<{
+  getQueueStats(): Promise<{
     waiting: number;
     active: number;
     completed: number;
     failed: number;
     delayed: number;
   }> {
-    return {
+    return Promise.resolve({
       waiting: this.queue.filter(j => j.status === 'waiting').length,
       active: this.queue.filter(j => j.status === 'active').length,
       completed: this.completedJobs.length,
       failed: this.failedJobs.length,
       delayed: 0, // Pas de notion de delayed dans cette implémentation simple
-    };
+    });
+  }
+
+  /**
+   * Wrapper pour ajouter un timeout à une promesse
+   */
+  private async withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    errorMessage: string,
+  ): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error(errorMessage)), timeoutMs)),
+    ]);
   }
 }

@@ -1,14 +1,18 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import type { IDocumentRepository } from '../ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../ports/document-repository.interface';
 import { Document } from '../../domain/document.entity';
 import { ReprocessOcrAppDto } from '../dto/reprocess-ocr-app.dto';
+import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 
 @Injectable()
 export class ReprocessOcrUseCase {
+  private readonly logger = new Logger(ReprocessOcrUseCase.name);
+
   constructor(
     @Inject(DOCUMENT_REPOSITORY)
     private readonly documentRepository: IDocumentRepository,
+    private readonly queueService: InMemoryQueueService,
   ) {}
 
   async execute(id: string, userId: string, dto: ReprocessOcrAppDto): Promise<Document> {
@@ -43,7 +47,33 @@ export class ReprocessOcrUseCase {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
-    // TODO: Trigger OCR processing (not implemented yet)
+    // Trigger OCR processing by adding to queue
+    if (!updated.id) {
+      throw new NotFoundException('Document ID is missing');
+    }
+
+    try {
+      const jobId = await this.queueService.addDocumentToQueue(
+        updated.id,
+        updated.userId,
+        updated.r2Key,
+        updated.mimeType,
+        updated.filename,
+      );
+
+      this.logger.log(
+        `Document ${updated.id} added to OCR queue for reprocessing with job ID ${jobId}`,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to add document to queue for reprocessing: ${error.message}`);
+      // Mark as failed since we couldn't queue it
+      await this.documentRepository.updateOcrStatus(
+        updated.id,
+        'failed',
+        `Failed to queue for reprocessing: ${error.message}`,
+      );
+      throw new BadRequestException('Failed to initiate OCR reprocessing');
+    }
 
     return updated;
   }

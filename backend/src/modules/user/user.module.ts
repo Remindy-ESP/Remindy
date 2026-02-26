@@ -23,6 +23,7 @@ import { GetMyPreferencesUseCase } from './application/use-cases/get-my-preferen
 import { UpdateUserPreferencesUseCase } from './application/use-cases/update-user-preferences.use-case';
 import { AuthModule } from '../auth/auth.module';
 import { RgpdExportService } from './application/services/rgpd-export.service';
+import { CloudflareR2Service } from '../document/infrastructure/services/cloudflare-r2.service';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { RgpdExportService } from './application/services/rgpd-export.service';
     UserService,
     UserPreferencesService,
     RgpdExportService,
+    CloudflareR2Service,
     UserTypeOrmRepository,
     UserPreferencesRepository,
     UserSessionRepository,

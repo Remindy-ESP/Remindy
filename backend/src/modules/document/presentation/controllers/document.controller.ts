@@ -11,9 +11,6 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
   BadRequestException,
   UseGuards,
   StreamableFile,
@@ -72,7 +69,6 @@ export class DocumentController {
     private readonly queueService: InMemoryQueueService,
   ) {}
 
-
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))
@@ -96,6 +92,11 @@ export class DocumentController {
           type: 'number',
           description: 'ID du contrat lié (optionnel)',
         },
+        folder_id: {
+          type: 'string',
+          format: 'uuid',
+          description: 'ID du dossier de destination (optionnel)',
+        },
       },
       required: ['file'],
     },
@@ -113,19 +114,35 @@ export class DocumentController {
     @CurrentUser('id') userId: string,
     @Body('subscription_id') subscriptionId?: string,
     @Body('contract_id') contractId?: string,
+    @Body('folder_id') folderId?: string,
     @CurrentUser('role') userRole?: string,
   ): Promise<DocumentResponseDto> {
     console.log('[DocumentController] Upload request received');
-    console.log('[DocumentController] File:', file ? {
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-    } : 'NO FILE');
+    console.log(
+      '[DocumentController] File:',
+      file
+        ? {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+          }
+        : 'NO FILE',
+    );
     console.log('[DocumentController] Body:', { subscriptionId, contractId });
 
     if (!file) {
       console.error('[DocumentController] No file uploaded!');
       throw new BadRequestException('File is required');
+    }
+
+    // Validate file size is not zero
+    if (file.size === 0) {
+      throw new BadRequestException('File is empty (0 bytes)');
+    }
+
+    // Validate filename is not empty or whitespace only
+    if (!file.originalname || file.originalname.trim().length === 0) {
+      throw new BadRequestException('File must have a valid name');
     }
 
     // Manual validation
@@ -158,6 +175,7 @@ export class DocumentController {
       mimeType: file.mimetype,
       subscriptionId,
       contractId: contractId ? parseInt(contractId, 10) : undefined,
+      folderId,
     };
 
     const role = (userRole as 'freemium' | 'premium' | 'admin') || 'freemium';
@@ -262,10 +280,7 @@ export class DocumentController {
   @ApiParam({ name: 'id', description: 'ID du document' })
   @ApiResponse({ status: 204, description: 'Document supprimé avec succès' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser('id') userId: string,
-  ): Promise<void> {
+  async delete(@Param('id') id: string, @CurrentUser('id') userId: string): Promise<void> {
     await this.deleteDocumentUseCase.execute(id, userId);
   }
 

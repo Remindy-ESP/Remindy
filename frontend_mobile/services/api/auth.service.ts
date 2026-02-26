@@ -90,6 +90,16 @@ class AuthService {
   }
 
   /**
+   * Change password for authenticated user
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await apiClient.post(`${this.BASE_PATH}/change-password`, {
+      currentPassword,
+      newPassword,
+    });
+  }
+
+  /**
    * Check if user is authenticated
    */
   async isAuthenticated(): Promise<boolean> {

@@ -8,7 +8,6 @@ describe('DocumentController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let authToken: string;
-  let userId: string;
   let documentId: string;
 
   beforeAll(async () => {
@@ -34,7 +33,6 @@ describe('DocumentController (e2e)', () => {
     // Mock authentication for tests
     // In a real scenario, you would call POST /auth/login
     authToken = 'mock-jwt-token';
-    userId = 'test-user-id-123';
   }, 30000); // Increase timeout to 30 seconds
 
   afterAll(async () => {
@@ -42,7 +40,7 @@ describe('DocumentController (e2e)', () => {
     if (dataSource && documentId) {
       try {
         await dataSource.query('DELETE FROM documents WHERE id = $1', [documentId]);
-      } catch (error) {
+      } catch {
         // Ignore cleanup errors
       }
     }
@@ -253,9 +251,7 @@ describe('DocumentController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get('/documents')
-        .expect(401);
+      await request(app.getHttpServer()).get('/documents').expect(401);
     });
   });
 
@@ -303,9 +299,7 @@ describe('DocumentController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get(`/documents/${documentId}`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/documents/${documentId}`).expect(401);
     });
   });
 
@@ -468,9 +462,7 @@ describe('DocumentController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get(`/documents/${documentId}/download`)
-        .expect(401);
+      await request(app.getHttpServer()).get(`/documents/${documentId}/download`).expect(401);
     });
   });
 
@@ -516,20 +508,20 @@ describe('DocumentController (e2e)', () => {
     it('should require authentication', async () => {
       const someId = '22222222-2222-2222-2222-222222222222';
 
-      await request(app.getHttpServer())
-        .delete(`/documents/${someId}`)
-        .expect(401);
+      await request(app.getHttpServer()).delete(`/documents/${someId}`).expect(401);
     });
   });
 
   describe('Rate limiting', () => {
     it('should apply throttle guard', async () => {
       // Make multiple rapid requests to test throttling
-      const requests = Array(20).fill(null).map(() =>
-        request(app.getHttpServer())
-          .get('/documents')
-          .set('Authorization', `Bearer ${authToken}`)
-      );
+      const requests = Array(20)
+        .fill(null)
+        .map(() =>
+          request(app.getHttpServer())
+            .get('/documents')
+            .set('Authorization', `Bearer ${authToken}`),
+        );
 
       const responses = await Promise.all(requests);
 

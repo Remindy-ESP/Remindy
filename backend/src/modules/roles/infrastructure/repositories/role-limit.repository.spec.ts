@@ -189,10 +189,7 @@ describe('RoleLimitRepository', () => {
       const result = await repository.update('user_freemium', updateData);
 
       expect(result).toEqual(updatedRoleLimit);
-      expect(mockRepository.update).toHaveBeenCalledWith(
-        { role: 'user_freemium' },
-        updateData,
-      );
+      expect(mockRepository.update).toHaveBeenCalledWith({ role: 'user_freemium' }, updateData);
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { role: 'user_freemium' },
       });
@@ -228,10 +225,7 @@ describe('RoleLimitRepository', () => {
       const result = await repository.update('user_freemium', updateData);
 
       expect(result?.canExportData).toBe(true);
-      expect(mockRepository.update).toHaveBeenCalledWith(
-        { role: 'user_freemium' },
-        updateData,
-      );
+      expect(mockRepository.update).toHaveBeenCalledWith({ role: 'user_freemium' }, updateData);
     });
   });
 

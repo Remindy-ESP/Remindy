@@ -119,7 +119,7 @@ describe('CategoryController', () => {
           color: createDto.color,
           userId: userId,
           isSystem: false,
-        })
+        }),
       );
     });
 
@@ -153,7 +153,7 @@ describe('CategoryController', () => {
       expect(createUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: actualUserId,
-        })
+        }),
       );
     });
   });
@@ -214,7 +214,7 @@ describe('CategoryController', () => {
 
       expect(result).toHaveLength(1);
       expect(findAllUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'user-123' })
+        expect.objectContaining({ userId: 'user-123' }),
       );
     });
 
@@ -239,7 +239,7 @@ describe('CategoryController', () => {
 
       expect(result).toHaveLength(1);
       expect(findAllUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Work' })
+        expect.objectContaining({ name: 'Work' }),
       );
     });
 
@@ -329,7 +329,7 @@ describe('CategoryController', () => {
           icon: updateDto.icon,
           color: updateDto.color,
         }),
-        userId
+        userId,
       );
     });
 
