@@ -76,7 +76,7 @@ describe('UserTypeOrmRepository', () => {
       expect(typeOrmRepository.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ deletedAt: IsNull() }),
-        })
+        }),
       );
     });
   });
@@ -176,7 +176,7 @@ describe('UserTypeOrmRepository', () => {
       const updateData = { firstName: 'John' };
 
       await expect(repository.updateProfile('', updateData)).rejects.toThrow(
-        'updateProfile called without userId'
+        'updateProfile called without userId',
       );
 
       expect(typeOrmRepository.update).not.toHaveBeenCalled();
@@ -186,7 +186,7 @@ describe('UserTypeOrmRepository', () => {
       const updateData = { firstName: 'John' };
 
       await expect(repository.updateProfile(null as any, updateData)).rejects.toThrow(
-        'updateProfile called without userId'
+        'updateProfile called without userId',
       );
     });
 
@@ -194,7 +194,7 @@ describe('UserTypeOrmRepository', () => {
       const updateData = { firstName: 'John' };
 
       await expect(repository.updateProfile(undefined as any, updateData)).rejects.toThrow(
-        'updateProfile called without userId'
+        'updateProfile called without userId',
       );
     });
 

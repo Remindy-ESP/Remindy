@@ -174,7 +174,7 @@ describe('DocumentRepository', () => {
 
       expect(queryBuilder.andWhere).toHaveBeenCalledWith(
         'document.subscriptionId = :subscriptionId',
-        { subscriptionId: 'sub-123' }
+        { subscriptionId: 'sub-123' },
       );
     });
 
@@ -352,6 +352,68 @@ describe('DocumentRepository', () => {
       const result = await repository.softDelete('non-existent');
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('findBySubscriptionId', () => {
+    it('should find documents by subscription ID excluding soft-deleted', async () => {
+      const mockEntities: Partial<DocumentEntity>[] = [
+        {
+          id: 'doc-1',
+          userId: 'user-123',
+          subscriptionId: 'sub-123',
+          filename: 'doc1.pdf',
+          r2Key: 'key1',
+          r2Bucket: 'bucket',
+          fileHash: 'hash1',
+          fileSize: 1000,
+          mimeType: 'application/pdf',
+          ocrStatus: 'completed',
+          uploadedAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+        {
+          id: 'doc-2',
+          userId: 'user-123',
+          subscriptionId: 'sub-123',
+          filename: 'doc2.pdf',
+          r2Key: 'key2',
+          r2Bucket: 'bucket',
+          fileHash: 'hash2',
+          fileSize: 2000,
+          mimeType: 'application/pdf',
+          ocrStatus: 'completed',
+          uploadedAt: new Date(),
+          updatedAt: new Date(),
+          deletedAt: null,
+        },
+      ];
+
+      const mockFind = jest.fn().mockResolvedValue(mockEntities);
+      typeOrmRepository.find = mockFind;
+
+      const result = await repository.findBySubscriptionId('sub-123');
+
+      expect(result).toHaveLength(2);
+      expect(mockFind).toHaveBeenCalledWith({
+        where: {
+          subscriptionId: 'sub-123',
+          deletedAt: null,
+        },
+        order: {
+          uploadedAt: 'DESC',
+        },
+      });
+    });
+
+    it('should return empty array when no documents found', async () => {
+      const mockFind = jest.fn().mockResolvedValue([]);
+      typeOrmRepository.find = mockFind;
+
+      const result = await repository.findBySubscriptionId('sub-nonexistent');
+
+      expect(result).toHaveLength(0);
     });
   });
 });

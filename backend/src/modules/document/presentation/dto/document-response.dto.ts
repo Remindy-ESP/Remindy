@@ -25,6 +25,12 @@ export class DocumentResponseDto {
   })
   contract_id?: number;
 
+  @ApiPropertyOptional({
+    description: 'ID du dossier',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  folder_id?: string;
+
   @ApiProperty({
     description: 'Nom du fichier',
     example: 'contrat_internet.pdf',

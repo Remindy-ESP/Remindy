@@ -4,6 +4,7 @@ export interface AppRoute {
     route: string;
     showInBurger: boolean;
     showInFooter: boolean;
+    burgerIcon?: string;
     footerIcon?: string;
 }
 

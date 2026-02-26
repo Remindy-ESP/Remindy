@@ -74,6 +74,12 @@ export default function TabLayout() {
                     />
                 ))}
                 <Tabs.Screen name="profile" options={{ href: null }} />
+                <Tabs.Screen name="profile-edit" options={{ href: null }} />
+                <Tabs.Screen name="profile-security" options={{ href: null }} />
+                <Tabs.Screen name="profile-preferences" options={{ href: null }} />
+                <Tabs.Screen name="profile-privacy" options={{ href: null }} />
+                <Tabs.Screen name="profile-help" options={{ href: null }} />
+                <Tabs.Screen name="profile-about" options={{ href: null }} />
             </Tabs>
         </SafeAreaView>
     );

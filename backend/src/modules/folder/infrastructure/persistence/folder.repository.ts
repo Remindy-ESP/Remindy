@@ -108,13 +108,13 @@ export class FolderRepository implements IFolderRepository {
 
   async findByNameAndUserId(name: string, userId: string): Promise<Folder | null> {
     try {
-      const folderEntity = await this.folderEntityRepository.findOne({
-        where: {
-          name,
-          userId,
-          deletedAt: IsNull(),
-        },
-      });
+      // Case-insensitive search using LOWER()
+      const folderEntity = await this.folderEntityRepository
+        .createQueryBuilder('folder')
+        .where('LOWER(folder.name) = LOWER(:name)', { name })
+        .andWhere('folder.user_id = :userId', { userId })
+        .andWhere('folder.deleted_at IS NULL')
+        .getOne();
 
       if (!folderEntity) {
         return null;
@@ -187,9 +187,10 @@ export class FolderRepository implements IFolderRepository {
         .select('COUNT(document.id)', 'count')
         .getRawOne();
 
-      return parseInt(result?.count || '0', 10);
+      return parseInt(String(result?.count ?? '0'), 10);
     } catch (error) {
-      this.logger.error(`Failed to count documents in folder: ${error.message}`, error.stack);
+      const err = error as Error;
+      this.logger.error(`Failed to count documents in folder: ${err.message}`, err.stack);
       throw error;
     }
   }
@@ -219,6 +220,19 @@ export class FolderRepository implements IFolderRepository {
       return count > 0;
     } catch (error) {
       this.logger.error(`Failed to check folder ownership: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async moveDocumentsToFolder(fromFolderId: string, toFolderId: string | null): Promise<void> {
+    try {
+      await this.folderEntityRepository.manager.query(
+        `UPDATE documents SET folder_id = $1 WHERE folder_id = $2 AND deleted_at IS NULL`,
+        [toFolderId, fromFolderId],
+      );
+      this.logger.log(`Moved documents from folder ${fromFolderId} to ${toFolderId || 'root'}`);
+    } catch (error) {
+      this.logger.error(`Failed to move documents: ${error.message}`, error.stack);
       throw error;
     }
   }

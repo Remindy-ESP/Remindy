@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UpdateUserPreferencesUseCase } from './update-user-preferences.use-case';
 import { UserPreferencesRepository } from '../../infrastructure/repositories/user-preferences.repository';
 import { UpdateUserPreferencesDto } from '../../presentation/dto';
-import { UserPreferenceEntity, Theme } from 'src/infrastructure/database/entities/user-preference.entity';
+import {
+  UserPreferenceEntity,
+  Theme,
+} from 'src/infrastructure/database/entities/user-preference.entity';
 
 describe('UpdateUserPreferencesUseCase', () => {
   let useCase: UpdateUserPreferencesUseCase;
@@ -115,7 +118,7 @@ describe('UpdateUserPreferencesUseCase', () => {
 
       expect(preferencesRepo.update).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ theme: 'dark' })
+        expect.objectContaining({ theme: 'dark' }),
       );
     });
 
@@ -134,7 +137,7 @@ describe('UpdateUserPreferencesUseCase', () => {
 
       expect(preferencesRepo.update).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ theme: 'auto' })
+        expect.objectContaining({ theme: 'auto' }),
       );
     });
 
@@ -183,7 +186,7 @@ describe('UpdateUserPreferencesUseCase', () => {
 
       expect(preferencesRepo.update).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ defaultReminderDelay: 30 })
+        expect.objectContaining({ defaultReminderDelay: 30 }),
       );
     });
 
@@ -202,7 +205,7 @@ describe('UpdateUserPreferencesUseCase', () => {
 
       expect(preferencesRepo.update).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ currency: 'GBP' })
+        expect.objectContaining({ currency: 'GBP' }),
       );
     });
 
@@ -221,7 +224,7 @@ describe('UpdateUserPreferencesUseCase', () => {
 
       expect(preferencesRepo.update).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ showOnlineStatus: false })
+        expect.objectContaining({ showOnlineStatus: false }),
       );
     });
 

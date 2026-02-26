@@ -14,6 +14,7 @@ export class DocumentPresentationMapper {
       user_id: document.userId,
       subscription_id: document.subscriptionId,
       contract_id: document.contractId,
+      folder_id: document.folderId,
       filename: document.filename,
       r2_key: document.r2Key,
       r2_bucket: document.r2Bucket,
@@ -30,7 +31,9 @@ export class DocumentPresentationMapper {
       parsed_provider: document.parsedProvider,
       parsed_amount: document.parsedAmount,
       parsed_currency: document.parsedCurrency,
-      parsed_date: document.parsedDate ? new Date(document.parsedDate).toISOString().split('T')[0] : undefined,
+      parsed_date: document.parsedDate
+        ? new Date(document.parsedDate).toISOString().split('T')[0]
+        : undefined,
       parsed_frequency: document.parsedFrequency,
       parsed_category: document.parsedCategory,
       parsing_confidence: document.parsingConfidence,
@@ -63,6 +66,7 @@ export class DocumentPresentationMapper {
     return {
       filename: dto.filename,
       folderId: dto.folder_id,
+      subscriptionId: dto.subscription_id,
     };
   }
 }

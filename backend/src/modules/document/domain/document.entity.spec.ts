@@ -302,7 +302,7 @@ describe('Document Entity', () => {
     it('should return true for image documents', () => {
       const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 
-      imageTypes.forEach((mimeType) => {
+      imageTypes.forEach(mimeType => {
         const document = new Document({
           ...validDocumentProps,
           mimeType,

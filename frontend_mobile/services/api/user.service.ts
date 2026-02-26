@@ -1,5 +1,11 @@
 import apiClient from './client';
-import { User, UpdateUserRequest } from './types';
+import {
+  User,
+  UpdateUserRequest,
+  RequestRgpdExport,
+  RgpdExportResponse,
+  UploadUserPhotoFile,
+} from './types';
 
 /**
  * User Service
@@ -24,11 +30,40 @@ class UserService {
     return response.data;
   }
 
+  async uploadMyPhoto(file: UploadUserPhotoFile): Promise<User> {
+    const formData = new FormData();
+    formData.append('file', {
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
+    } as any);
+
+    const response = await apiClient.post<User>(`${this.BASE_PATH}/me/photo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    return response.data;
+  }
+
+  async deleteMyPhoto(): Promise<User> {
+    const response = await apiClient.delete<User>(`${this.BASE_PATH}/me/photo`);
+    return response.data;
+  }
+
+  /**
+   * Delete current user account
+   */
+  async deleteMe(): Promise<void> {
+    await apiClient.delete(`${this.BASE_PATH}/me`);
+  }
+
   /**
    * Get user preferences
    */
   async getPreferences(): Promise<any> {
-    const response = await apiClient.get(`${this.BASE_PATH}/me/preferences`);
+    const response = await apiClient.get(`${this.BASE_PATH}/preferences`);
     return response.data;
   }
 
@@ -37,7 +72,7 @@ class UserService {
    */
   async updatePreferences(preferences: any): Promise<any> {
     const response = await apiClient.put(
-      `${this.BASE_PATH}/me/preferences`,
+      `${this.BASE_PATH}/preferences`,
       preferences
     );
     return response.data;
@@ -46,8 +81,11 @@ class UserService {
   /**
    * Export user data (RGPD compliance)
    */
-  async exportData(): Promise<any> {
-    const response = await apiClient.get(`${this.BASE_PATH}/me/export`);
+  async exportData(data: RequestRgpdExport = { format: 'json' }): Promise<RgpdExportResponse> {
+    const response = await apiClient.post<RgpdExportResponse>(
+      `${this.BASE_PATH}/export-data`,
+      data
+    );
     return response.data;
   }
 }

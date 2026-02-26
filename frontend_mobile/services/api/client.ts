@@ -195,6 +195,13 @@ class ApiClient {
     const token = await this.getAccessToken();
     return !!token;
   }
+
+  /**
+   * Get the base URL for constructing direct URLs
+   */
+  getBaseURL(): string {
+    return this.client.defaults.baseURL || '';
+  }
 }
 
 // Export singleton instance

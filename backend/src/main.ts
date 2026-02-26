@@ -55,7 +55,7 @@ async function bootstrap(): Promise<void> {
 
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  await app.listen(3000, '0.0.0.0');
   console.log(`Listening on URL ${await app.getUrl()}`);
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 }

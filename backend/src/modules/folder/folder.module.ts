@@ -37,10 +37,6 @@ import { DocumentModule } from '../document/document.module';
     MoveDocumentToFolderUseCase,
     InitializeDefaultFoldersUseCase,
   ],
-  exports: [
-    FOLDER_REPOSITORY,
-    InitializeDefaultFoldersUseCase,
-    TypeOrmModule,
-  ],
+  exports: [FOLDER_REPOSITORY, InitializeDefaultFoldersUseCase, TypeOrmModule],
 })
 export class FolderModule {}

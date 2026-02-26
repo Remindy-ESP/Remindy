@@ -45,7 +45,11 @@ export class SubscriptionEventGeneratorService {
   /**
    * Calcule le nombre d'occurrences jusqu'à une date cible en fonction de la fréquence
    */
-  calculateOccurrencesCount(startDate: Date, frequency: SubscriptionFrequency, endDate: Date): number {
+  calculateOccurrencesCount(
+    startDate: Date,
+    frequency: SubscriptionFrequency,
+    endDate: Date,
+  ): number {
     if (frequency === 'one-time') {
       return 1;
     }
@@ -76,7 +80,12 @@ export class SubscriptionEventGeneratorService {
    * Calcule les dates d'occurrence à partir de la fréquence
    * Si endDate est fourni, s'arrête à cette date
    */
-  calculateOccurrences(startDate: Date, frequency: SubscriptionFrequency, count: number, endDate?: Date): Date[] {
+  calculateOccurrences(
+    startDate: Date,
+    frequency: SubscriptionFrequency,
+    count: number,
+    endDate?: Date,
+  ): Date[] {
     const occurrences: Date[] = [];
     let currentDate = new Date(startDate);
 
@@ -210,7 +219,10 @@ export class SubscriptionEventGeneratorService {
       const startFromDate = this.addFrequencyInterval(lastEventDate, subscription.frequency);
 
       // Ne pas générer si on a dépassé la date limite
-      if (startFromDate > maxDate || (subscription.endDate && startFromDate > subscription.endDate)) {
+      if (
+        startFromDate > maxDate ||
+        (subscription.endDate && startFromDate > subscription.endDate)
+      ) {
         return [];
       }
 

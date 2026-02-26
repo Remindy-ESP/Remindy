@@ -51,4 +51,4 @@ import { OcrEventListener } from './application/events/ocr-event.listener';
   ],
   exports: [DOCUMENT_REPOSITORY, InMemoryQueueService],
 })
-export class DocumentModule { }
+export class DocumentModule {}

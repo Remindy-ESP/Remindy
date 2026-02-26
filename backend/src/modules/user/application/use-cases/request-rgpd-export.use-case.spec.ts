@@ -97,7 +97,7 @@ describe('RequestRgpdExportUseCase', () => {
 
       rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
 
-      const result = await useCase.execute(userId, dto);
+      await useCase.execute(userId, dto);
 
       expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
     });
@@ -109,7 +109,7 @@ describe('RequestRgpdExportUseCase', () => {
 
       rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
 
-      const result = await useCase.execute(userId, dto);
+      await useCase.execute(userId, dto);
 
       expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
     });

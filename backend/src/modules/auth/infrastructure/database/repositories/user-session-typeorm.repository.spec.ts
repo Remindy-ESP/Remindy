@@ -73,7 +73,7 @@ describe('UserSessionTypeOrmRepository', () => {
           deviceName: params.deviceName,
           expiresAt: params.expiresAt,
           isRevoked: false,
-        })
+        }),
       );
       expect(typeOrmRepository.save).toHaveBeenCalledWith(createdSession);
     });
@@ -110,7 +110,7 @@ describe('UserSessionTypeOrmRepository', () => {
         expect.objectContaining({
           userAgent: null,
           deviceName: null,
-        })
+        }),
       );
     });
   });
@@ -186,7 +186,7 @@ describe('UserSessionTypeOrmRepository', () => {
         {
           refreshTokenHash: params.refreshTokenHash,
           lastActivity: params.lastActivity,
-        }
+        },
       );
     });
   });
@@ -203,7 +203,20 @@ describe('UserSessionTypeOrmRepository', () => {
         { id: sessionId },
         {
           isRevoked: true,
-        }
+        },
+      );
+    });
+  });
+
+  describe('revokeAllForUser', () => {
+    it('should revoke all active sessions for a user', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 2, raw: {}, generatedMaps: [] });
+
+      await repository.revokeAllForUser('user-123');
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { userId: 'user-123', isRevoked: false },
+        { isRevoked: true },
       );
     });
   });
