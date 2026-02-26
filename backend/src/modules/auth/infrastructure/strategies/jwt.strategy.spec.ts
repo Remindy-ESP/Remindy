@@ -51,6 +51,8 @@ describe('JwtStrategy', () => {
         sub: 'user-123',
         role: 'USER_FREEMIUM',
         email: 'test@example.com',
+        mfaEnabled: false,
+        mfaVerified: false,
       };
 
       const result = strategy.validate(payload);
@@ -59,6 +61,8 @@ describe('JwtStrategy', () => {
         id: 'user-123',
         userId: 'user-123',
         role: 'USER_FREEMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
       });
     });
 
@@ -66,12 +70,16 @@ describe('JwtStrategy', () => {
       const payload = {
         sub: 'user-456',
         role: 'ADMIN',
+        mfaEnabled: false,
+        mfaVerified: false,
       };
 
       const result = strategy.validate(payload);
 
       expect(result.userId).toBe('user-456');
       expect(result.role).toBe('ADMIN');
+      expect(result.mfaEnabled).toBe(false);
+      expect(result.mfaVerified).toBe(false);
     });
 
     it('should handle payload with additional fields', () => {
@@ -81,6 +89,8 @@ describe('JwtStrategy', () => {
         email: 'premium@example.com',
         iat: 1234567890,
         exp: 1234567900,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
 
       const result = strategy.validate(payload);
@@ -89,44 +99,79 @@ describe('JwtStrategy', () => {
         id: 'user-789',
         userId: 'user-789',
         role: 'USER_PREMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
       });
     });
 
     it('should work with different user roles', () => {
-      const adminPayload = { sub: 'admin-1', role: 'ADMIN' };
-      const userPayload = { sub: 'user-1', role: 'USER_FREEMIUM' };
-      const premiumPayload = { sub: 'premium-1', role: 'USER_PREMIUM' };
+      const adminPayload = { sub: 'admin-1', role: 'ADMIN', mfaEnabled: false, mfaVerified: false };
+      const userPayload = { sub: 'user-1', role: 'USER_FREEMIUM', mfaEnabled: false, mfaVerified: false };
+      const premiumPayload = { sub: 'premium-1', role: 'USER_PREMIUM', mfaEnabled: false, mfaVerified: false };
 
       expect(strategy.validate(adminPayload).role).toBe('ADMIN');
+      expect(strategy.validate(adminPayload).mfaEnabled).toBe(false);
+      expect(strategy.validate(adminPayload).mfaVerified).toBe(false);
+      
       expect(strategy.validate(userPayload).role).toBe('USER_FREEMIUM');
+      expect(strategy.validate(userPayload).mfaEnabled).toBe(false);
+      expect(strategy.validate(userPayload).mfaVerified).toBe(false);
+      
       expect(strategy.validate(premiumPayload).role).toBe('USER_PREMIUM');
+      expect(strategy.validate(premiumPayload).mfaEnabled).toBe(false);
+      expect(strategy.validate(premiumPayload).mfaVerified).toBe(false);
     });
 
     it('should return userId from sub even when undefined', () => {
       const payload = {
         sub: undefined,
         role: 'USER_FREEMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
       };
 
       const result = strategy.validate(payload);
 
       expect(result.userId).toBeUndefined();
       expect(result.role).toBe('USER_FREEMIUM');
+      expect(result.mfaEnabled).toBe(false);
+      expect(result.mfaVerified).toBe(false);
     });
 
     it('should return role even when undefined', () => {
       const payload = {
         sub: 'user-123',
         role: undefined,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
 
       const result = strategy.validate(payload);
 
       expect(result.userId).toBe('user-123');
       expect(result.role).toBeUndefined();
+      expect(result.mfaEnabled).toBe(false);
+      expect(result.mfaVerified).toBe(false);
     });
 
-    it('should handle empty payload object', () => {
+    it('should handle payload with missing mfa fields', () => {
+      const payload = {
+        sub: 'user-123',
+        role: 'USER_FREEMIUM',
+      };
+
+      const result = strategy.validate(payload);
+
+      expect(result).toEqual({
+        id: 'user-123',
+        userId: 'user-123',
+        role: 'USER_FREEMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
+      });
+    });
+
+    it('should handle empty payload object with default MFA values', () => {
       const payload = {};
 
       const result = strategy.validate(payload);
@@ -135,6 +180,8 @@ describe('JwtStrategy', () => {
         id: undefined,
         userId: undefined,
         role: undefined,
+        mfaEnabled: false,
+        mfaVerified: false,
       });
     });
 
@@ -150,7 +197,7 @@ describe('JwtStrategy', () => {
 
       expect(result).not.toHaveProperty('email');
       expect(result).not.toHaveProperty('name');
-      expect(Object.keys(result)).toEqual(['id', 'userId', 'role']);
+      expect(Object.keys(result)).toEqual(['id', 'userId', 'role', 'mfaEnabled', 'mfaVerified']);
     });
   });
 });

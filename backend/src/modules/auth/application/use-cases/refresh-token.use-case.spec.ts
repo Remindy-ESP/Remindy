@@ -24,6 +24,8 @@ describe('RefreshTokenUseCase', () => {
     lastName: 'Doe',
     phone: '',
     role_key: Role.USER_PREMIUM,
+    "mfaEnabled": false,
+    "mfaVerified": false,
     status: UserStatus.ACTIVE,
     failedLoginCount: 0,
     emailVerified: true,
@@ -143,7 +145,10 @@ describe('RefreshTokenUseCase', () => {
     });
 
     it('should throw UnauthorizedException when session is not found', async () => {
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(null);
 
       await expect(useCase.execute(refreshParams)).rejects.toThrow(UnauthorizedException);
@@ -153,7 +158,10 @@ describe('RefreshTokenUseCase', () => {
     it('should throw UnauthorizedException when session is revoked', async () => {
       const revokedSession = { ...mockSession, isRevoked: true };
 
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(revokedSession);
 
       await expect(useCase.execute(refreshParams)).rejects.toThrow(UnauthorizedException);
@@ -163,7 +171,10 @@ describe('RefreshTokenUseCase', () => {
     it('should throw UnauthorizedException when session is expired', async () => {
       const expiredSession = { ...mockSession, expiresAt: new Date(Date.now() - 86400000) };
 
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(expiredSession);
 
       await expect(useCase.execute(refreshParams)).rejects.toThrow(UnauthorizedException);
@@ -171,7 +182,10 @@ describe('RefreshTokenUseCase', () => {
     });
 
     it('should throw UnauthorizedException when refresh token hash does not match', async () => {
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(mockSession);
       passwordService.compare.mockResolvedValue(false);
 
@@ -180,7 +194,10 @@ describe('RefreshTokenUseCase', () => {
     });
 
     it('should throw UnauthorizedException when user is not found', async () => {
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(mockSession);
       passwordService.compare.mockResolvedValue(true);
       userRepo.findById.mockResolvedValue(null);
@@ -190,7 +207,10 @@ describe('RefreshTokenUseCase', () => {
     });
 
     it('should generate new tokens with correct payloads', async () => {
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(mockSession);
       passwordService.compare.mockResolvedValue(true);
       userRepo.findById.mockResolvedValue(mockUser);
@@ -204,6 +224,8 @@ describe('RefreshTokenUseCase', () => {
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
         sub: 'user-123',
         role: Role.USER_PREMIUM,
+        "mfaEnabled": false,
+        "mfaVerified": false,
       });
 
       expect(tokenService.generateRefreshToken).toHaveBeenCalledWith({
@@ -216,7 +238,10 @@ describe('RefreshTokenUseCase', () => {
       const newRefreshToken = 'brandNewRefreshToken';
       const newHashedToken = 'brandNewHashedToken';
 
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(mockSession);
       passwordService.compare.mockResolvedValue(true);
       userRepo.findById.mockResolvedValue(mockUser);
@@ -237,7 +262,10 @@ describe('RefreshTokenUseCase', () => {
     it('should update lastActivity timestamp', async () => {
       const beforeExecution = Date.now();
 
-      tokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123', sessionId: 'session-123' });
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
       sessionRepo.findActiveSessionById.mockResolvedValue(mockSession);
       passwordService.compare.mockResolvedValue(true);
       userRepo.findById.mockResolvedValue(mockUser);
