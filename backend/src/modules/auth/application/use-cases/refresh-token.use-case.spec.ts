@@ -29,7 +29,6 @@ describe('RefreshTokenUseCase', () => {
     status: UserStatus.ACTIVE,
     failedLoginCount: 0,
     emailVerified: true,
-    mfaEnabled: false,
     createdAt: new Date(),
   });
 
