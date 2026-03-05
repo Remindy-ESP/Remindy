@@ -23,11 +23,12 @@ describe('LoginUseCase', () => {
     firstName: 'John',
     lastName: 'Doe',
     phone: '+1234567890',
+    mfaEnabled: false,
+    mfaVerified: false,
     role_key: Role.USER_FREEMIUM,
     status: UserStatus.ACTIVE,
     failedLoginCount: 0,
     emailVerified: true,
-    mfaEnabled: false,
     createdAt: new Date(),
   });
 
@@ -109,10 +110,14 @@ describe('LoginUseCase', () => {
       });
       expect(userRepo.findByEmail).toHaveBeenCalledWith('test@example.com');
       expect(passwordService.compare).toHaveBeenCalledWith('password123', 'hashedPassword123');
+      
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
         sub: 'user-123',
         role: Role.USER_FREEMIUM,
+        mfaEnabled: false,
+        mfaVerified: false,
       });
+      
       expect(sessionRepo.createSession).toHaveBeenCalled();
     });
 
@@ -216,6 +221,8 @@ describe('LoginUseCase', () => {
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
         sub: 'user-123',
         role: Role.USER_FREEMIUM,
+        mfaEnabled: false,
+        mfaVerified: false,
       });
     });
   });

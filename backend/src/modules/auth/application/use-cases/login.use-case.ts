@@ -63,6 +63,8 @@ export class LoginUseCase {
     const accessToken = this.tokenService.generateAccessToken({
       sub: user.getId(),
       role: user.getRoleKey(),
+      mfaEnabled: user.isMfaEnabled(),
+      mfaVerified: false,
     });
 
     return {

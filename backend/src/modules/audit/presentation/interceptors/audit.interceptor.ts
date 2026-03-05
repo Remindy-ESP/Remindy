@@ -84,7 +84,8 @@ export class AuditInterceptor implements NestInterceptor {
   private extractResourceId(request: Request, config: AuditConfig): string | null {
     // Try route param first
     if (config.resourceIdParam && request.params[config.resourceIdParam]) {
-      return request.params[config.resourceIdParam];
+      const param = request.params[config.resourceIdParam];
+      return Array.isArray(param) ? param[0] : param;
     }
 
     // Try body field
