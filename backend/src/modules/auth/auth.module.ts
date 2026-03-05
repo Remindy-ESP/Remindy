@@ -28,6 +28,9 @@ import { JwtRefreshGuard } from './presentation/guards/jwt-refresh.guard';
 import { JwtRefreshStrategy } from './infrastructure/strategies/jwt-refresh.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { RolesGuard } from './presentation/guards/roles.guard';
+import { UserMfaTypeOrmRepository } from '../admin/infrastructure/database/repositories/user-mfa-typeorm.repository';
+import { TotpService } from '../admin/infrastructure/services/totp.service';
+import { CryptoService } from '../admin/infrastructure/services/crypto.service';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
@@ -47,6 +50,9 @@ import { RolesGuard } from './presentation/guards/roles.guard';
     JwtStrategy,
     JwtRefreshGuard,
     UserOrmMapper,
+    UserMfaTypeOrmRepository,
+    TotpService,
+    CryptoService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
@@ -77,6 +83,6 @@ import { RolesGuard } from './presentation/guards/roles.guard';
       useClass: SendgridEmailService,
     },
   ],
-  exports: [JwtTokenService],
+  exports: [JwtTokenService, ITokenService, UserMfaTypeOrmRepository, TotpService],
 })
 export class AuthModule {}

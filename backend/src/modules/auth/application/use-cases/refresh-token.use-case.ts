@@ -48,6 +48,8 @@ export class RefreshTokenUseCase {
     const newAccessToken = this.tokenService.generateAccessToken({
       sub: userId,
       role: user.getRoleKey(),
+      mfaEnabled: user.isMfaEnabled(),
+      mfaVerified: false,
     });
 
     const newRefreshToken = this.tokenService.generateRefreshToken({
