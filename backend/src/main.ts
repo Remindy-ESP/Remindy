@@ -23,7 +23,7 @@ async function bootstrap(): Promise<void> {
       'Accept',
       'X-Requested-With',
       'boundary', // For multipart/form-data uploads
-      'x-csrf-token', 
+      'x-csrf-token',
     ],
     exposedHeaders: ['Content-Disposition'], // For file downloads
   });
@@ -71,12 +71,14 @@ async function bootstrap(): Promise<void> {
     adminConfig as OpenAPIObject,
     { include: [AdminModule] },
   );
-
+  type SwaggerRequest = {
+    headers?: Record<string, string>;
+  };
   SwaggerModule.setup('api/admin', app, adminDocument, {
     swaggerOptions: {
       persistAuthorization: true,
       withCredentials: true,
-      requestInterceptor: (req: any) => {
+      requestInterceptor: (req: SwaggerRequest): SwaggerRequest => {
         const doc = (globalThis as any).document;
         const cookieStr: string = doc?.cookie ?? '';
         const match = cookieStr.match(/(?:^|;\s*)csrfToken=([^;]+)/);
