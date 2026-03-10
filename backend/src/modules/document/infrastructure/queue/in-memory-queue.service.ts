@@ -338,7 +338,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
       this.failedJobs.find(j => j.id === jobId);
 
     if (!job) {
-      throw new Error(`Job ${jobId} not found`);
+      return Promise.reject(new Error(`Job ${jobId} not found`));
     }
 
     return Promise.resolve({
