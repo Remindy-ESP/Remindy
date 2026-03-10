@@ -1,11 +1,14 @@
+// admin-csrf.guard.ts
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 
 @Injectable()
 export class AdminCsrfGuard implements CanActivate {
   canActivate(ctx: ExecutionContext): boolean {
-    const req = ctx.switchToHttp().getRequest<Request>();
+    // Bypass CSRF en développement pour Swagger
+    if (process.env.NODE_ENV === 'development') return true;
 
+    const req = ctx.switchToHttp().getRequest<Request>();
     const method = req.method.toUpperCase();
     if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) return true;
 

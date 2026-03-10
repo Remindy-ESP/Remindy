@@ -7,4 +7,8 @@ export function assertCanActOnUser(params: { actorRole: Role; targetRole: Role; 
   if (targetRole === Role.SUPER_ADMIN && actorRole !== Role.SUPER_ADMIN) {
     throw new ForbiddenException(`Not allowed to ${action} a super_admin`);
   }
+
+  if (targetRole === Role.USER_ADMIN && actorRole !== Role.SUPER_ADMIN) {
+    throw new ForbiddenException(`Not allowed to ${action} another admin`);
+  }
 }

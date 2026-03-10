@@ -323,7 +323,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Récupère le statut d'un job
    */
-  getJobStatus(jobId: string): Promise<{
+  async getJobStatus(jobId: string): Promise<{
     id: string;
     status: string;
     progress: number;
