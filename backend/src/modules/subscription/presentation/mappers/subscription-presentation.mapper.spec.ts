@@ -87,6 +87,80 @@ describe('SubscriptionPresentationMapper', () => {
       expectedDate.setDate(expectedDate.getDate() + 7);
       expect(appDto.nextDueDate.toISOString()).toBe(expectedDate.toISOString());
     });
+
+    it('should return startDate as nextDueDate for one-time frequency', () => {
+      const createDto: CreateSubscriptionDto = {
+        userId: 'user-abc',
+        name: 'One-time purchase',
+        amount: 50,
+        frequency: 'one-time',
+        startDate: '2025-03-01T00:00:00.000Z',
+      };
+
+      const appDto = SubscriptionPresentationMapper.toCreateAppDto(createDto);
+
+      expect(appDto.nextDueDate.toISOString()).toBe('2025-03-01T00:00:00.000Z');
+    });
+
+    it('should calculate nextDueDate for quarterly frequency', () => {
+      const createDto: CreateSubscriptionDto = {
+        userId: 'user-q',
+        name: 'Quarterly sub',
+        amount: 30,
+        frequency: 'quarterly',
+        startDate: '2025-01-01T00:00:00.000Z',
+      };
+
+      const appDto = SubscriptionPresentationMapper.toCreateAppDto(createDto);
+
+      const expectedDate = new Date('2025-01-01T00:00:00.000Z');
+      expectedDate.setMonth(expectedDate.getMonth() + 3);
+      expect(appDto.nextDueDate.toISOString()).toBe(expectedDate.toISOString());
+    });
+
+    it('should calculate nextDueDate for yearly frequency', () => {
+      const createDto: CreateSubscriptionDto = {
+        userId: 'user-y',
+        name: 'Yearly sub',
+        amount: 100,
+        frequency: 'yearly',
+        startDate: '2025-01-01T00:00:00.000Z',
+      };
+
+      const appDto = SubscriptionPresentationMapper.toCreateAppDto(createDto);
+
+      const expectedDate = new Date('2025-01-01T00:00:00.000Z');
+      expectedDate.setFullYear(expectedDate.getFullYear() + 1);
+      expect(appDto.nextDueDate.toISOString()).toBe(expectedDate.toISOString());
+    });
+
+    it('should throw when userId is not provided', () => {
+      const createDto: CreateSubscriptionDto = {
+        name: 'Test',
+        amount: 10,
+        frequency: 'monthly',
+        startDate: '2025-01-01T00:00:00.000Z',
+      } as CreateSubscriptionDto;
+
+      expect(() => SubscriptionPresentationMapper.toCreateAppDto(createDto)).toThrow(
+        'userId is required for creating subscriptions',
+      );
+    });
+
+    it('should convert endDate when provided', () => {
+      const createDto: CreateSubscriptionDto = {
+        userId: 'user-1',
+        name: 'Test',
+        amount: 10,
+        frequency: 'monthly',
+        startDate: '2025-01-01T00:00:00.000Z',
+        nextDueDate: '2025-02-01T00:00:00.000Z',
+        endDate: '2026-01-01T00:00:00.000Z',
+      };
+
+      const appDto = SubscriptionPresentationMapper.toCreateAppDto(createDto);
+      expect(appDto.endDate).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+    });
   });
 
   describe('toUpdateAppDto', () => {
@@ -114,6 +188,24 @@ describe('SubscriptionPresentationMapper', () => {
       expect(appDto.status).toBe('paused');
       expect(appDto.name).toBeUndefined();
       expect(appDto.amount).toBeUndefined();
+    });
+
+    it('should convert date strings to Date objects when provided', () => {
+      const updateDto: UpdateSubscriptionDto = {
+        startDate: '2025-03-01T00:00:00.000Z',
+        endDate: '2026-03-01T00:00:00.000Z',
+        nextDueDate: '2025-04-01T00:00:00.000Z',
+        trialStartDate: '2025-01-01T00:00:00.000Z',
+        trialEndDate: '2025-01-31T00:00:00.000Z',
+      };
+
+      const appDto = SubscriptionPresentationMapper.toUpdateAppDto(updateDto);
+
+      expect(appDto.startDate).toEqual(new Date('2025-03-01T00:00:00.000Z'));
+      expect(appDto.endDate).toEqual(new Date('2026-03-01T00:00:00.000Z'));
+      expect(appDto.nextDueDate).toEqual(new Date('2025-04-01T00:00:00.000Z'));
+      expect(appDto.trialStartDate).toEqual(new Date('2025-01-01T00:00:00.000Z'));
+      expect(appDto.trialEndDate).toEqual(new Date('2025-01-31T00:00:00.000Z'));
     });
   });
 
