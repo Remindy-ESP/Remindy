@@ -214,6 +214,16 @@ describe('EventController', () => {
   });
 
   describe('reschedule', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(
+        controller.reschedule(mockRequest, 'event-123', { starts_at: '2025-03-01T10:00:00.000Z' }),
+      ).rejects.toThrow(`Event with id event-123 not found`);
+    });
+
     it('should reschedule an event', async () => {
       const rescheduleDto: RescheduleEventDto = {
         starts_at: '2025-03-01T10:00:00.000Z',
@@ -248,6 +258,16 @@ describe('EventController', () => {
   });
 
   describe('updateStatus', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(
+        controller.updateStatus(mockRequest, 'event-123', { status: 'completed' }),
+      ).rejects.toThrow(`Event with id event-123 not found`);
+    });
+
     it('should update event status', async () => {
       const updateStatusDto: UpdateEventStatusDto = {
         status: 'completed',
@@ -272,6 +292,16 @@ describe('EventController', () => {
   });
 
   describe('updatePaymentStatus', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(
+        controller.updatePaymentStatus(mockRequest, 'event-123', { paymentStatus: 'paid' }),
+      ).rejects.toThrow(`Event with id event-123 not found`);
+    });
+
     it('should update event payment status', async () => {
       const updatePaymentStatusDto: UpdateEventPaymentStatusDto = {
         paymentStatus: 'paid',
@@ -300,6 +330,16 @@ describe('EventController', () => {
   });
 
   describe('delete', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.delete(mockRequest, 'event-123')).rejects.toThrow(
+        `Event with id event-123 not found`,
+      );
+    });
+
     it('should delete an event', async () => {
       getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
       findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);

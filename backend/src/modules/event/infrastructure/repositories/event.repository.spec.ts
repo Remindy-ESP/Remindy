@@ -2,35 +2,9 @@ import { Repository } from 'typeorm';
 import { EventRepository } from './event.repository';
 import { EventEntity } from '../persistence/event.entity';
 import { EventMapper } from '../mappers/event.mapper';
-import { Event } from '../../domain/event.entity';
+import { makeEventDomain as makeDomain, makeEventEntity as makeEntity } from '../../__fixtures__/event.fixtures';
 
 jest.mock('../mappers/event.mapper');
-
-function makeDomain(overrides = {}): Event {
-  return new Event({
-    id: 'evt-1',
-    subscriptionId: 'sub-1',
-    title: 'Paiement Netflix',
-    amount: 9.99,
-    startsAt: new Date('2025-01-01'),
-    status: 'scheduled',
-    ...overrides,
-  });
-}
-
-function makeEntity(overrides = {}): EventEntity {
-  return Object.assign(new EventEntity(), {
-    id: 'evt-1',
-    subscriptionId: 'sub-1',
-    title: 'Paiement Netflix',
-    amount: 9.99,
-    startsAt: new Date('2025-01-01'),
-    status: 'scheduled',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  });
-}
 
 type MockQB = {
   andWhere: jest.Mock;

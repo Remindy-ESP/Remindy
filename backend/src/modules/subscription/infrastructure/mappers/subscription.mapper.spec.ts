@@ -129,6 +129,27 @@ describe('SubscriptionMapper', () => {
       expect(entity.id).toBeUndefined();
       expect(entity.userId).toBe(domain.userId);
     });
+
+    it('should map Subscription domain with deletedAt set (covers deletedAt branch)', () => {
+      const domain = new Subscription({
+        id: 'sub-deleted',
+        userId: 'user-789',
+        name: 'Deleted Sub',
+        amount: 9.99,
+        currency: 'EUR',
+        frequency: 'monthly',
+        startDate: new Date('2025-01-01'),
+        nextDueDate: new Date('2025-02-01'),
+        status: 'cancelled',
+        createdAt: new Date('2025-01-01T10:00:00.000Z'),
+        updatedAt: new Date('2025-01-02T10:00:00.000Z'),
+        deletedAt: new Date('2025-03-01T10:00:00.000Z'),
+      });
+
+      const entity = SubscriptionMapper.toPersistence(domain);
+
+      expect(entity.deletedAt).toEqual(new Date('2025-03-01T10:00:00.000Z'));
+    });
   });
 
   describe('toDomainArray', () => {

@@ -1,44 +1,6 @@
 import { EventGenerationService } from './event-generation.service';
-import { Event } from '../../domain/event.entity';
-import { EventSeries } from '../../../event-series/domain/event-series.entity';
-import { Subscription } from '../../../subscription/domain/subscription.entity';
-
-function makeSubscription(overrides = {}): Subscription {
-  return new Subscription({
-    id: 'sub-1',
-    userId: 'user-1',
-    name: 'Netflix',
-    amount: 9.99,
-    currency: 'EUR',
-    frequency: 'monthly',
-    startDate: new Date('2025-01-01'),
-    nextDueDate: new Date('2025-02-01'),
-    status: 'active',
-    ...overrides,
-  });
-}
-
-function makeEventSeries(overrides = {}): EventSeries {
-  return new EventSeries({
-    id: 'series-1',
-    subscriptionId: 'sub-1',
-    rrule: 'FREQ=MONTHLY;INTERVAL=1',
-    dtstart: new Date('2025-01-01'),
-    timezone: 'Europe/Paris',
-    ...overrides,
-  });
-}
-
-function makeEvent(): Event {
-  return new Event({
-    id: 'evt-1',
-    subscriptionId: 'sub-1',
-    title: 'Paiement Netflix',
-    amount: 9.99,
-    startsAt: new Date('2025-01-01'),
-    status: 'scheduled',
-  });
-}
+import { makeSubscription } from '../../../subscription/__fixtures__/subscription.fixtures';
+import { makeEvent, makeEventSeries } from '../../__fixtures__/event.fixtures';
 
 describe('EventGenerationService', () => {
   let sut: EventGenerationService;

@@ -2,41 +2,9 @@ import { Repository } from 'typeorm';
 import { SubscriptionRepository } from './subscription.repository';
 import { SubscriptionEntity } from '../persistence/subscription.entity';
 import { SubscriptionMapper } from '../mappers/subscription.mapper';
-import { Subscription } from '../../domain/subscription.entity';
+import { makeSubscription as makeDomain, makeSubscriptionEntity as makeEntity } from '../../__fixtures__/subscription.fixtures';
 
 jest.mock('../mappers/subscription.mapper');
-
-function makeDomain(overrides = {}): Subscription {
-  return new Subscription({
-    id: 'sub-1',
-    userId: 'user-1',
-    name: 'Netflix',
-    amount: 9.99,
-    currency: 'EUR',
-    frequency: 'monthly',
-    startDate: new Date('2025-01-01'),
-    nextDueDate: new Date('2025-02-01'),
-    status: 'active',
-    ...overrides,
-  });
-}
-
-function makeEntity(overrides = {}): SubscriptionEntity {
-  return Object.assign(new SubscriptionEntity(), {
-    id: 'sub-1',
-    userId: 'user-1',
-    name: 'Netflix',
-    amount: 9.99,
-    currency: 'EUR',
-    frequency: 'monthly',
-    startDate: new Date('2025-01-01'),
-    nextDueDate: new Date('2025-02-01'),
-    status: 'active',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  });
-}
 
 type MockQB = {
   leftJoinAndSelect: jest.Mock;

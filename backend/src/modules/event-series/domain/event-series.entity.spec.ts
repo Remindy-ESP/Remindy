@@ -82,6 +82,14 @@ describe('EventSeries domain entity', () => {
       const es = new EventSeries(makeValidProps());
       expect(() => es.updateTimezone('')).toThrow('Timezone is required');
     });
+
+    it('throws when timezone is whitespace string (validate covers line 103)', () => {
+      // '   ' is truthy so || 'Europe/Paris' does NOT replace it
+      // but trim().length === 0 makes validate() throw
+      expect(() => new EventSeries(makeValidProps({ timezone: '   ' }))).toThrow(
+        'Timezone is required',
+      );
+    });
   });
 
   describe('updateRRule', () => {

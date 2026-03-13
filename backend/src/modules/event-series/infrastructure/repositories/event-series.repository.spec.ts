@@ -2,33 +2,9 @@ import { Repository } from 'typeorm';
 import { EventSeriesRepository } from './event-series.repository';
 import { EventSeriesEntity } from '../persistence/event-series.entity';
 import { EventSeriesMapper } from '../mappers/event-series.mapper';
-import { EventSeries } from '../../domain/event-series.entity';
+import { makeEventSeries as makeDomain, makeEventSeriesEntity as makeEntity } from '../../__fixtures__/event-series.fixtures';
 
 jest.mock('../mappers/event-series.mapper');
-
-function makeDomain(overrides = {}): EventSeries {
-  return new EventSeries({
-    id: 'series-1',
-    subscriptionId: 'sub-1',
-    rrule: 'FREQ=MONTHLY;INTERVAL=1',
-    dtstart: new Date('2025-01-01'),
-    timezone: 'Europe/Paris',
-    ...overrides,
-  });
-}
-
-function makeEntity(overrides = {}): EventSeriesEntity {
-  return Object.assign(new EventSeriesEntity(), {
-    id: 'series-1',
-    subscriptionId: 'sub-1',
-    rrule: 'FREQ=MONTHLY;INTERVAL=1',
-    dtstart: new Date('2025-01-01'),
-    timezone: 'Europe/Paris',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  });
-}
 
 describe('EventSeriesRepository', () => {
   let sut: EventSeriesRepository;

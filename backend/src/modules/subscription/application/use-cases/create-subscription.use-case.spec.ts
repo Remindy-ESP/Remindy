@@ -140,6 +140,34 @@ describe('CreateSubscriptionUseCase', () => {
     await expect(useCase.execute(dto)).rejects.toThrow('Subscription amount cannot be negative');
   });
 
+  it('should use custom eventsToGenerate count when provided', async () => {
+    const dto: CreateSubscriptionAppDto = {
+      userId: 'user-123',
+      name: 'Test Subscription',
+      amount: 10,
+      currency: 'EUR',
+      frequency: 'monthly',
+      startDate: new Date('2025-01-01'),
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
+      generateEvents: true,
+      eventsToGenerate: 12,
+    };
+
+    const expectedSubscription = new Subscription({
+      ...dto,
+    });
+
+    repository.create.mockResolvedValue(expectedSubscription);
+    eventGeneratorService.generateEventsForSubscription.mockResolvedValue([]);
+
+    await useCase.execute(dto);
+
+    expect(eventGeneratorService.generateEventsForSubscription).toHaveBeenCalledWith(
+      expect.objectContaining({ count: 12 }),
+    );
+  });
+
   it('should create subscription with valid frequency', async () => {
     const dto: CreateSubscriptionAppDto = {
       userId: 'user-123',

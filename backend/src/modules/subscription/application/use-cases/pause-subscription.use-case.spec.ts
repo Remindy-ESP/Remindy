@@ -152,6 +152,32 @@ describe('PauseSubscriptionUseCase', () => {
     expect(result.status).toBe('paused');
   });
 
+  it('should throw NotFoundException when update returns null', async () => {
+    const subscriptionId = 'subscription-123';
+
+    const activeSubscription = new Subscription({
+      id: subscriptionId,
+      userId: 'user-123',
+      name: 'Netflix',
+      amount: 15.99,
+      currency: 'EUR',
+      frequency: 'monthly',
+      startDate: new Date('2025-01-01'),
+      nextDueDate: new Date('2025-02-01'),
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    repository.findById.mockResolvedValue(activeSubscription);
+    repository.update.mockResolvedValue(null);
+
+    await expect(useCase.execute(subscriptionId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(subscriptionId)).rejects.toThrow(
+      `Failed to update subscription with id ${subscriptionId}`,
+    );
+  });
+
   it('should handle repository errors', async () => {
     const subscriptionId = 'subscription-123';
     const error = new Error('Database error');

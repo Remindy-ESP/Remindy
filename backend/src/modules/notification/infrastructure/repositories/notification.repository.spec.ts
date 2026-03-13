@@ -2,36 +2,9 @@ import { Repository } from 'typeorm';
 import { NotificationRepository } from './notification.repository';
 import { NotificationEntity } from '../persistence/notification.entity';
 import { NotificationMapper } from '../mappers/notification.mapper';
-import { Notification } from '../../domain/notification.entity';
+import { makeNotification as makeDomain, makeNotificationEntity as makeEntity } from '../../__fixtures__/notification.fixtures';
 
 jest.mock('../mappers/notification.mapper');
-
-function makeDomain(overrides = {}): Notification {
-  return new Notification({
-    id: 'notif-1',
-    userId: 'user-1',
-    type: 'reminder',
-    channel: 'email',
-    title: 'Payment Due',
-    body: 'Your payment is due soon',
-    status: 'pending',
-    ...overrides,
-  });
-}
-
-function makeEntity(overrides = {}): NotificationEntity {
-  return Object.assign(new NotificationEntity(), {
-    id: 'notif-1',
-    userId: 'user-1',
-    type: 'reminder',
-    channel: 'email',
-    title: 'Payment Due',
-    body: 'Your payment is due soon',
-    status: 'pending',
-    createdAt: new Date(),
-    ...overrides,
-  });
-}
 
 type MockQB = {
   andWhere: jest.Mock;
