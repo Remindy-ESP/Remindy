@@ -59,9 +59,7 @@ describe('NotificationEntity (infra persistence)', () => {
   describe('TypeORM relation metadata', () => {
     it('should have ManyToOne relations for user and event', () => {
       const storage = getMetadataArgsStorage();
-      const relations = storage.relations.filter(
-        (rel: any) => rel.target === NotificationEntity,
-      );
+      const relations = storage.relations.filter((rel: any) => rel.target === NotificationEntity);
       expect(relations.length).toBeGreaterThanOrEqual(2);
       // Trigger the type functions to cover the lambda callbacks (lines 26, 33)
       relations.forEach((rel: any) => {

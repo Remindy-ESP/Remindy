@@ -81,7 +81,10 @@ describe('SubscriptionEntity (infra persistence)', () => {
   });
 
   describe('TypeORM column transformer functions', () => {
-    let dateColumnTransformers: Array<{ to: Function; from: Function }>;
+    let dateColumnTransformers: Array<{
+      to: (val: unknown) => unknown;
+      from: (val: unknown) => unknown;
+    }>;
 
     beforeEach(() => {
       const storage = getMetadataArgsStorage();
@@ -146,9 +149,7 @@ describe('SubscriptionEntity (infra persistence)', () => {
   describe('TypeORM relation metadata', () => {
     it('should have ManyToOne relations for user, contract, and category', () => {
       const storage = getMetadataArgsStorage();
-      const relations = storage.relations.filter(
-        (rel: any) => rel.target === SubscriptionEntity,
-      );
+      const relations = storage.relations.filter((rel: any) => rel.target === SubscriptionEntity);
       // There should be 3 ManyToOne relations
       expect(relations.length).toBeGreaterThanOrEqual(3);
       // Trigger the type functions to cover the lambda callbacks

@@ -84,8 +84,8 @@ describe('MarkNotificationAsReadUseCase', () => {
     const userId = 'user-1';
 
     // Use mockImplementation to return fresh instances each call (so markAsRead doesn't throw on repeated calls)
-    repository.findById.mockImplementation(async () =>
-      makeNotification({ id: notificationId, userId }),
+    repository.findById.mockImplementation(() =>
+      Promise.resolve(makeNotification({ id: notificationId, userId })),
     );
     repository.update.mockResolvedValue(null);
 

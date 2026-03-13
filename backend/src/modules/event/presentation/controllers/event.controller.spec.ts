@@ -215,7 +215,10 @@ describe('EventController', () => {
 
   describe('reschedule', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
@@ -259,7 +262,10 @@ describe('EventController', () => {
 
   describe('updateStatus', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
@@ -293,7 +299,10 @@ describe('EventController', () => {
 
   describe('updatePaymentStatus', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
@@ -331,7 +340,10 @@ describe('EventController', () => {
 
   describe('delete', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       getEventByIdUseCase.execute.mockResolvedValue(mockEvent);
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 

@@ -74,9 +74,9 @@ describe('Event domain entity', () => {
     });
 
     it('throws when paymentStatus is invalid', () => {
-      expect(
-        () => new Event(makeValidProps({ paymentStatus: 'invalid' as any })),
-      ).toThrow('Invalid payment status');
+      expect(() => new Event(makeValidProps({ paymentStatus: 'invalid' as any }))).toThrow(
+        'Invalid payment status',
+      );
     });
 
     it('throws when endsAt is before startsAt', () => {
@@ -175,9 +175,9 @@ describe('Event domain entity', () => {
 
     it('throws when endsAt is before startsAt', () => {
       const e = new Event(makeValidProps());
-      expect(() =>
-        e.reschedule(new Date('2025-06-02'), new Date('2025-06-01')),
-      ).toThrow('End date must be after start date');
+      expect(() => e.reschedule(new Date('2025-06-02'), new Date('2025-06-01'))).toThrow(
+        'End date must be after start date',
+      );
     });
   });
 

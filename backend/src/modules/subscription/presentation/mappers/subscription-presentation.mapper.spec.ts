@@ -9,7 +9,7 @@ describe('SubscriptionPresentationMapper', () => {
     it('should map CreateSubscriptionDto to CreateSubscriptionAppDto', () => {
       const createDto: CreateSubscriptionDto = {
         userId: 'user-123',
-        contractId: 'contract-123',
+        contractId: 123,
         name: 'Netflix',
         amount: 9.99,
         currency: 'USD',
@@ -26,7 +26,7 @@ describe('SubscriptionPresentationMapper', () => {
       const appDto = SubscriptionPresentationMapper.toCreateAppDto(createDto);
 
       expect(appDto.userId).toBe('user-123');
-      expect(appDto.contractId).toBe('contract-123');
+      expect(appDto.contractId).toBe(123);
       expect(appDto.name).toBe('Netflix');
       expect(appDto.amount).toBe(9.99);
       expect(appDto.currency).toBe('USD');
@@ -213,7 +213,7 @@ describe('SubscriptionPresentationMapper', () => {
     it('should map SubscriptionFilterDto to SubscriptionFilterAppDto', () => {
       const filterDto: SubscriptionFilterDto = {
         userId: 'user-123',
-        contractId: 'contract-123',
+        contractId: 123,
         name: 'Netflix',
         currency: 'EUR',
         frequency: 'monthly',
@@ -223,7 +223,7 @@ describe('SubscriptionPresentationMapper', () => {
       const appDto = SubscriptionPresentationMapper.toFilterAppDto(filterDto);
 
       expect(appDto.userId).toBe('user-123');
-      expect(appDto.contractId).toBe('contract-123');
+      expect(appDto.contractId).toBe(123);
       expect(appDto.name).toBe('Netflix');
       expect(appDto.currency).toBe('EUR');
       expect(appDto.frequency).toBe('monthly');
@@ -248,7 +248,7 @@ describe('SubscriptionPresentationMapper', () => {
       const subscription = new Subscription({
         id: 'sub-123',
         userId: 'user-123',
-        contractId: 'contract-123',
+        contractId: 123,
         name: 'Netflix',
         amount: 9.99,
         currency: 'EUR',
@@ -268,7 +268,7 @@ describe('SubscriptionPresentationMapper', () => {
 
       expect(dto.id).toBe('sub-123');
       expect(dto.userId).toBe('user-123');
-      expect(dto.contractId).toBe('contract-123');
+      expect(dto.contractId).toBe(123);
       expect(dto.name).toBe('Netflix');
       expect(dto.amount).toBe(9.99);
       expect(dto.currency).toBe('EUR');

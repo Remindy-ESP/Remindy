@@ -2,7 +2,10 @@ import { Repository } from 'typeorm';
 import { SubscriptionRepository } from './subscription.repository';
 import { SubscriptionEntity } from '../persistence/subscription.entity';
 import { SubscriptionMapper } from '../mappers/subscription.mapper';
-import { makeSubscription as makeDomain, makeSubscriptionEntity as makeEntity } from '../../__fixtures__/subscription.fixtures';
+import {
+  makeSubscription as makeDomain,
+  makeSubscriptionEntity as makeEntity,
+} from '../../__fixtures__/subscription.fixtures';
 
 jest.mock('../mappers/subscription.mapper');
 
@@ -71,7 +74,10 @@ describe('SubscriptionRepository', () => {
 
       const result = await sut.findById('sub-1');
 
-      expect(repo.findOne).toHaveBeenCalledWith({ where: { id: 'sub-1' }, relations: ['category'] });
+      expect(repo.findOne).toHaveBeenCalledWith({
+        where: { id: 'sub-1' },
+        relations: ['category'],
+      });
       expect(result).toBe(domain);
     });
 
@@ -105,7 +111,9 @@ describe('SubscriptionRepository', () => {
 
       await sut.findAll({ userId: 'user-1' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('subscription.userId = :userId', { userId: 'user-1' });
+      expect(qb.andWhere).toHaveBeenCalledWith('subscription.userId = :userId', {
+        userId: 'user-1',
+      });
     });
 
     it('applies contractId filter', async () => {
@@ -116,7 +124,9 @@ describe('SubscriptionRepository', () => {
 
       await sut.findAll({ contractId: 42 });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('subscription.contractId = :contractId', { contractId: 42 });
+      expect(qb.andWhere).toHaveBeenCalledWith('subscription.contractId = :contractId', {
+        contractId: 42,
+      });
     });
 
     it('applies name filter (ILIKE)', async () => {
@@ -138,7 +148,9 @@ describe('SubscriptionRepository', () => {
 
       await sut.findAll({ currency: 'EUR' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('subscription.currency = :currency', { currency: 'EUR' });
+      expect(qb.andWhere).toHaveBeenCalledWith('subscription.currency = :currency', {
+        currency: 'EUR',
+      });
     });
 
     it('applies frequency filter', async () => {
@@ -149,7 +161,9 @@ describe('SubscriptionRepository', () => {
 
       await sut.findAll({ frequency: 'monthly' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('subscription.frequency = :frequency', { frequency: 'monthly' });
+      expect(qb.andWhere).toHaveBeenCalledWith('subscription.frequency = :frequency', {
+        frequency: 'monthly',
+      });
     });
 
     it('applies status filter', async () => {
@@ -160,7 +174,9 @@ describe('SubscriptionRepository', () => {
 
       await sut.findAll({ status: 'active' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('subscription.status = :status', { status: 'active' });
+      expect(qb.andWhere).toHaveBeenCalledWith('subscription.status = :status', {
+        status: 'active',
+      });
     });
 
     it('applies categoryId filter', async () => {
@@ -171,7 +187,9 @@ describe('SubscriptionRepository', () => {
 
       await sut.findAll({ categoryId: 'cat-1' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('subscription.categoryId = :categoryId', { categoryId: 'cat-1' });
+      expect(qb.andWhere).toHaveBeenCalledWith('subscription.categoryId = :categoryId', {
+        categoryId: 'cat-1',
+      });
     });
   });
 

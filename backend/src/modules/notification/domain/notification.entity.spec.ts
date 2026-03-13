@@ -70,9 +70,9 @@ describe('Notification domain entity', () => {
     });
 
     it('throws when status is snoozed without snoozedUntil', () => {
-      expect(
-        () => new Notification(makeValidProps({ status: 'snoozed' })),
-      ).toThrow('Snoozed notifications must have a snoozedUntil date');
+      expect(() => new Notification(makeValidProps({ status: 'snoozed' }))).toThrow(
+        'Snoozed notifications must have a snoozedUntil date',
+      );
     });
 
     it('throws when snoozedUntil is in the past and status is snoozed', () => {
@@ -121,9 +121,7 @@ describe('Notification domain entity', () => {
 
     it('throws when snooze date is in the past', () => {
       const n = new Notification(makeValidProps());
-      expect(() => n.snooze(new Date('2020-01-01'))).toThrow(
-        'Snooze date must be in the future',
-      );
+      expect(() => n.snooze(new Date('2020-01-01'))).toThrow('Snooze date must be in the future');
     });
   });
 

@@ -65,9 +65,9 @@ describe('GenerateEventsFromSeriesUseCase', () => {
     it('should throw when event series not found', async () => {
       repository.findById.mockResolvedValue(null);
 
-      await expect(
-        useCase.execute('non-existent', new Date(), new Date(), 12),
-      ).rejects.toThrow('Event series non-existent not found');
+      await expect(useCase.execute('non-existent', new Date(), new Date(), 12)).rejects.toThrow(
+        'Event series non-existent not found',
+      );
     });
 
     it('should use default maxOccurrences of 365 when not provided', async () => {

@@ -1,5 +1,4 @@
 import { SubscriptionEventGeneratorService } from './subscription-event-generator.service';
-import { EVENT_REPOSITORY } from '../../../event/application/ports/event-repository.interface';
 import { makeSubscription } from '../../__fixtures__/subscription.fixtures';
 import { makeEvent } from '../../../event/__fixtures__/event.fixtures';
 
@@ -91,11 +90,7 @@ describe('SubscriptionEventGeneratorService', () => {
     it('calls calculateOccurrencesCount with 2099-12-31 as end date', () => {
       const spy = jest.spyOn(sut, 'calculateOccurrencesCount');
       sut.calculateOccurrencesUntil2099(new Date('2025-01-01'), 'monthly');
-      expect(spy).toHaveBeenCalledWith(
-        new Date('2025-01-01'),
-        'monthly',
-        new Date('2099-12-31'),
-      );
+      expect(spy).toHaveBeenCalledWith(new Date('2025-01-01'), 'monthly', new Date('2099-12-31'));
     });
   });
 
@@ -161,8 +156,9 @@ describe('SubscriptionEventGeneratorService', () => {
       expect(eventRepository.createMany).toHaveBeenCalled();
       const calledWith = eventRepository.createMany.mock.calls[0][0] as Event[];
       // Should not include the Jan 1 duplicate
-      expect(calledWith.every(e => e.startsAt.getMonth() !== 0 || e.startsAt.getDate() !== 1))
-        .toBe(true);
+      expect(calledWith.every(e => e.startsAt.getMonth() !== 0 || e.startsAt.getDate() !== 1)).toBe(
+        true,
+      );
       expect(result).toEqual(createdEvents);
     });
 
@@ -215,7 +211,11 @@ describe('SubscriptionEventGeneratorService', () => {
       const lastEvent = makeEvent(endDate);
       eventRepository.findBySubscriptionId.mockResolvedValue([lastEvent]);
 
-      const subscription = makeSubscription({ startDate, nextDueDate: new Date('2025-02-01'), endDate });
+      const subscription = makeSubscription({
+        startDate,
+        nextDueDate: new Date('2025-02-01'),
+        endDate,
+      });
       const result = await sut.regenerateEventsIfNeeded(subscription);
 
       expect(result).toEqual([]);
@@ -283,8 +283,8 @@ describe('SubscriptionEventGeneratorService', () => {
       soon.setMonth(soon.getMonth() + 1);
       // First call (initial check) returns the last event; subsequent calls return [] for dedup
       eventRepository.findBySubscriptionId
-        .mockResolvedValueOnce([makeEvent(soon)])  // regenerateEventsIfNeeded initial check
-        .mockResolvedValue([]);                    // generateEventsForSubscription dedup check
+        .mockResolvedValueOnce([makeEvent(soon)]) // regenerateEventsIfNeeded initial check
+        .mockResolvedValue([]); // generateEventsForSubscription dedup check
       eventRepository.createMany.mockResolvedValue([]);
 
       // weekly + 240 months ahead generates ~1040 occurrences → breaks at 500
@@ -303,7 +303,7 @@ describe('SubscriptionEventGeneratorService', () => {
       soon.setMonth(soon.getMonth() + 1);
       eventRepository.findBySubscriptionId
         .mockResolvedValueOnce([makeEvent(soon)]) // initial check
-        .mockResolvedValue([]);                   // dedup check inside generateEventsForSubscription
+        .mockResolvedValue([]); // dedup check inside generateEventsForSubscription
       eventRepository.createMany.mockResolvedValue([]);
 
       // monthsAhead = 900 → targetDate = ~2101 > maxDate 2099-12-31
@@ -343,7 +343,11 @@ describe('SubscriptionEventGeneratorService', () => {
       const startDate = new Date('2025-01-01');
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + 4);
-      const subscription = makeSubscription({ startDate, nextDueDate: new Date('2025-02-01'), endDate });
+      const subscription = makeSubscription({
+        startDate,
+        nextDueDate: new Date('2025-02-01'),
+        endDate,
+      });
 
       eventRepository.createMany.mockResolvedValue([]);
 

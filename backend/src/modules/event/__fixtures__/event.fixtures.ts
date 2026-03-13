@@ -3,7 +3,10 @@ import { EventEntity } from '../infrastructure/persistence/event.entity';
 export { makeEventSeries } from '../../event-series/__fixtures__/event-series.fixtures';
 
 /** Use when startsAt varies (service tests, dedup tests). */
-export function makeEvent(startsAt: Date = new Date('2025-01-01'), overrides: Record<string, any> = {}): Event {
+export function makeEvent(
+  startsAt: Date = new Date('2025-01-01'),
+  overrides: Record<string, any> = {},
+): Event {
   return new Event({
     id: 'evt-1',
     subscriptionId: 'sub-1',

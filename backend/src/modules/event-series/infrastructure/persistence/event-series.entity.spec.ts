@@ -42,9 +42,7 @@ describe('EventSeriesEntity (infra persistence)', () => {
   describe('TypeORM relation metadata', () => {
     it('should have OneToOne relation for subscription (covers line 21)', () => {
       const storage = getMetadataArgsStorage();
-      const relations = storage.relations.filter(
-        (rel: any) => rel.target === EventSeriesEntity,
-      );
+      const relations = storage.relations.filter((rel: any) => rel.target === EventSeriesEntity);
       expect(relations.length).toBeGreaterThanOrEqual(1);
       // Trigger the type functions to cover the lambda callbacks
       relations.forEach((rel: any) => {

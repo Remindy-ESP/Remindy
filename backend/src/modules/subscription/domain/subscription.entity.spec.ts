@@ -88,15 +88,15 @@ describe('Subscription domain entity', () => {
     });
 
     it('throws when frequency is invalid', () => {
-      expect(
-        () => new Subscription(makeValidProps({ frequency: 'daily' as any })),
-      ).toThrow('Invalid frequency');
+      expect(() => new Subscription(makeValidProps({ frequency: 'daily' as any }))).toThrow(
+        'Invalid frequency',
+      );
     });
 
     it('throws when status is invalid', () => {
-      expect(
-        () => new Subscription(makeValidProps({ status: 'unknown' as any })),
-      ).toThrow('Invalid status');
+      expect(() => new Subscription(makeValidProps({ status: 'unknown' as any }))).toThrow(
+        'Invalid status',
+      );
     });
 
     it('throws when trial end date is before trial start date', () => {
@@ -235,7 +235,9 @@ describe('Subscription domain entity', () => {
     });
 
     it('recalculates for monthly', () => {
-      const s = new Subscription(makeValidProps({ startDate: new Date('2025-01-01'), frequency: 'yearly' }));
+      const s = new Subscription(
+        makeValidProps({ startDate: new Date('2025-01-01'), frequency: 'yearly' }),
+      );
       s.updateFrequency('monthly');
       expect(s.nextDueDate.getMonth()).toBe(1); // February
     });
@@ -266,9 +268,9 @@ describe('Subscription domain entity', () => {
 
     it('throws when nextDueDate is before or equal to startDate', () => {
       const s = new Subscription(makeValidProps());
-      expect(() =>
-        s.updateDates(new Date('2025-06-01'), new Date('2025-05-01')),
-      ).toThrow('Next due date must be after start date');
+      expect(() => s.updateDates(new Date('2025-06-01'), new Date('2025-05-01'))).toThrow(
+        'Next due date must be after start date',
+      );
     });
 
     it('throws when endDate is before or equal to startDate', () => {
@@ -298,9 +300,9 @@ describe('Subscription domain entity', () => {
 
     it('throws when trialEndDate is before trialStartDate', () => {
       const s = new Subscription(makeValidProps());
-      expect(() =>
-        s.updateTrialDates(new Date('2025-02-01'), new Date('2025-01-01')),
-      ).toThrow('Trial end date must be after trial start date');
+      expect(() => s.updateTrialDates(new Date('2025-02-01'), new Date('2025-01-01'))).toThrow(
+        'Trial end date must be after trial start date',
+      );
     });
   });
 

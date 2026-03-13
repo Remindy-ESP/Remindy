@@ -2,7 +2,10 @@ import { Repository } from 'typeorm';
 import { EventRepository } from './event.repository';
 import { EventEntity } from '../persistence/event.entity';
 import { EventMapper } from '../mappers/event.mapper';
-import { makeEventDomain as makeDomain, makeEventEntity as makeEntity } from '../../__fixtures__/event.fixtures';
+import {
+  makeEventDomain as makeDomain,
+  makeEventEntity as makeEntity,
+} from '../../__fixtures__/event.fixtures';
 
 jest.mock('../mappers/event.mapper');
 
@@ -158,7 +161,9 @@ describe('EventRepository', () => {
 
       await sut.findAll({ subscriptionId: 'sub-1' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('event.subscriptionId = :subscriptionId', { subscriptionId: 'sub-1' });
+      expect(qb.andWhere).toHaveBeenCalledWith('event.subscriptionId = :subscriptionId', {
+        subscriptionId: 'sub-1',
+      });
     });
 
     it('applies status filter', async () => {
@@ -180,7 +185,9 @@ describe('EventRepository', () => {
 
       await sut.findAll({ paymentStatus: 'paid' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('event.paymentStatus = :paymentStatus', { paymentStatus: 'paid' });
+      expect(qb.andWhere).toHaveBeenCalledWith('event.paymentStatus = :paymentStatus', {
+        paymentStatus: 'paid',
+      });
     });
 
     it('applies custom sort (amount:desc)', async () => {
@@ -298,8 +305,12 @@ describe('EventRepository', () => {
 
       expect(qb.update).toHaveBeenCalledWith(EventEntity);
       expect(qb.set).toHaveBeenCalledWith({ status: 'canceled' });
-      expect(qb.where).toHaveBeenCalledWith('subscriptionId = :subscriptionId', { subscriptionId: 'sub-1' });
-      expect(qb.andWhere).toHaveBeenCalledWith('status = :scheduledStatus', { scheduledStatus: 'scheduled' });
+      expect(qb.where).toHaveBeenCalledWith('subscriptionId = :subscriptionId', {
+        subscriptionId: 'sub-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :scheduledStatus', {
+        scheduledStatus: 'scheduled',
+      });
       expect(result).toBe(3);
     });
 

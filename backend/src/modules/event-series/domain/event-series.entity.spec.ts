@@ -44,10 +44,7 @@ describe('EventSeries domain entity', () => {
       const props = makeValidProps();
       delete (props as any).timezone;
       const es = new EventSeries({ ...props, timezone: '' });
-      // empty timezone triggers the default fallback via || 'Europe/Paris'
-      // Actually the constructor sets _timezone = props.timezone || 'Europe/Paris'
-      // but validate() checks if timezone is empty and throws
-      // So we need to pass no timezone to use the default
+      expect(es.timezone).toBe('Europe/Paris');
     });
 
     it('throws when subscriptionId is empty', () => {
@@ -57,21 +54,19 @@ describe('EventSeries domain entity', () => {
     });
 
     it('throws when rrule is empty', () => {
-      expect(() => new EventSeries(makeValidProps({ rrule: '  ' }))).toThrow(
-        'RRULE is required',
-      );
+      expect(() => new EventSeries(makeValidProps({ rrule: '  ' }))).toThrow('RRULE is required');
     });
 
     it('throws when dtstart is missing', () => {
-      expect(
-        () => new EventSeries(makeValidProps({ dtstart: null as any })),
-      ).toThrow('Start date (dtstart) is required');
+      expect(() => new EventSeries(makeValidProps({ dtstart: null as any }))).toThrow(
+        'Start date (dtstart) is required',
+      );
     });
 
     it('throws when rrule does not start with FREQ=', () => {
-      expect(
-        () => new EventSeries(makeValidProps({ rrule: 'INTERVAL=1;FREQ=MONTHLY' })),
-      ).toThrow('RRULE must start with FREQ=');
+      expect(() => new EventSeries(makeValidProps({ rrule: 'INTERVAL=1;FREQ=MONTHLY' }))).toThrow(
+        'RRULE must start with FREQ=',
+      );
     });
 
     it('throws when timezone is empty string after trim', () => {
@@ -120,9 +115,7 @@ describe('EventSeries domain entity', () => {
 
     it('throws when dtstart is null', () => {
       const es = new EventSeries(makeValidProps());
-      expect(() => es.updateDtstart(null as any)).toThrow(
-        'Start date (dtstart) is required',
-      );
+      expect(() => es.updateDtstart(null as any)).toThrow('Start date (dtstart) is required');
     });
   });
 

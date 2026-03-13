@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { RescheduleEventUseCase } from './reschedule-event.use-case';
-import {
-  IEventRepository,
-  EVENT_REPOSITORY,
-} from '../ports/event-repository.interface';
+import { IEventRepository, EVENT_REPOSITORY } from '../ports/event-repository.interface';
 import { Event } from '../../domain/event.entity';
 import { RescheduleEventAppDto } from '../dto/reschedule-event-app.dto';
 import { makeEventDomain } from '../../__fixtures__/event.fixtures';
@@ -89,10 +86,9 @@ describe('RescheduleEventUseCase', () => {
 
   it('should throw NotFoundException when update returns null', async () => {
     const eventId = 'evt-1';
-    const event = makeEventDomain({ id: eventId });
     const dto: RescheduleEventAppDto = { startsAt: new Date('2025-03-01') };
 
-    repository.findById.mockImplementation(async () => makeEventDomain({ id: eventId }));
+    repository.findById.mockImplementation(() => Promise.resolve(makeEventDomain({ id: eventId })));
     repository.update.mockResolvedValue(null);
 
     await expect(useCase.execute(eventId, dto)).rejects.toThrow(NotFoundException);

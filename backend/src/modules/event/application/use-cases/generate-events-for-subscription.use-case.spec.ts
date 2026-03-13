@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GenerateEventsForSubscriptionUseCase, GenerateEventsForSubscriptionDto } from './generate-events-for-subscription.use-case';
 import {
-  IEventRepository,
-  EVENT_REPOSITORY,
-} from '../ports/event-repository.interface';
+  GenerateEventsForSubscriptionUseCase,
+  GenerateEventsForSubscriptionDto,
+} from './generate-events-for-subscription.use-case';
+import { IEventRepository, EVENT_REPOSITORY } from '../ports/event-repository.interface';
 import { Event } from '../../domain/event.entity';
 import { makeEventDomain } from '../../__fixtures__/event.fixtures';
 
@@ -27,7 +27,9 @@ describe('GenerateEventsForSubscriptionUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get<GenerateEventsForSubscriptionUseCase>(GenerateEventsForSubscriptionUseCase);
+    useCase = module.get<GenerateEventsForSubscriptionUseCase>(
+      GenerateEventsForSubscriptionUseCase,
+    );
     repository = module.get(EVENT_REPOSITORY);
   });
 
@@ -56,10 +58,9 @@ describe('GenerateEventsForSubscriptionUseCase', () => {
 
     expect(result).toBe(createdEvents);
     expect(repository.findBySubscriptionId).toHaveBeenCalledWith('sub-1');
-    expect(repository.createMany).toHaveBeenCalledWith(expect.arrayContaining([
-      expect.any(Event),
-      expect.any(Event),
-    ]));
+    expect(repository.createMany).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.any(Event), expect.any(Event)]),
+    );
     expect(repository.createMany.mock.calls[0][0]).toHaveLength(2);
   });
 
@@ -135,9 +136,7 @@ describe('GenerateEventsForSubscriptionUseCase', () => {
       subscriptionName: 'Netflix',
       subscriptionAmount: 9.99,
       eventSeriesId: 'series-1',
-      occurrences: [
-        { startsAt: new Date('2025-02-01T10:00:00.000Z') },
-      ],
+      occurrences: [{ startsAt: new Date('2025-02-01T10:00:00.000Z') }],
     };
 
     repository.findBySubscriptionId.mockResolvedValue([]);

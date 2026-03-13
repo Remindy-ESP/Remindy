@@ -224,7 +224,10 @@ describe('SubscriptionController', () => {
     });
 
     it('should enrich response with category when entity has category', async () => {
-      const subscriptionWithId = { ...mockSubscription, id: 'subscription-123' } as unknown as Subscription;
+      const subscriptionWithId = {
+        ...mockSubscription,
+        id: 'subscription-123',
+      } as unknown as Subscription;
       const mockCategoryEntity = {
         id: 'cat-1',
         name: 'Streaming',
@@ -274,7 +277,10 @@ describe('SubscriptionController', () => {
     });
 
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(controller.findById(mockRequest, 'subscription-123')).rejects.toThrow(
@@ -314,12 +320,15 @@ describe('SubscriptionController', () => {
 
   describe('update', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
-      await expect(
-        controller.update(mockRequest, 'subscription-123', {}),
-      ).rejects.toThrow('Subscription with id subscription-123 not found');
+      await expect(controller.update(mockRequest, 'subscription-123', {})).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
     });
 
     it('should update a subscription', async () => {
@@ -362,7 +371,10 @@ describe('SubscriptionController', () => {
     });
 
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(controller.delete(mockRequest, 'subscription-123')).rejects.toThrow(
@@ -373,7 +385,10 @@ describe('SubscriptionController', () => {
 
   describe('pause', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(controller.pause(mockRequest, 'subscription-123')).rejects.toThrow(
@@ -400,7 +415,10 @@ describe('SubscriptionController', () => {
 
   describe('resume', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(controller.resume(mockRequest, 'subscription-123')).rejects.toThrow(
@@ -422,7 +440,10 @@ describe('SubscriptionController', () => {
 
   describe('getEvents', () => {
     it('should throw NotFoundException when subscription belongs to another user', async () => {
-      const otherUserSubscription = { ...mockSubscription, userId: 'other-user' } as unknown as Subscription;
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(controller.getEvents(mockRequest, 'subscription-123')).rejects.toThrow(

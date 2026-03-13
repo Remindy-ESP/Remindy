@@ -2,7 +2,10 @@ import { Repository } from 'typeorm';
 import { EventSeriesRepository } from './event-series.repository';
 import { EventSeriesEntity } from '../persistence/event-series.entity';
 import { EventSeriesMapper } from '../mappers/event-series.mapper';
-import { makeEventSeries as makeDomain, makeEventSeriesEntity as makeEntity } from '../../__fixtures__/event-series.fixtures';
+import {
+  makeEventSeries as makeDomain,
+  makeEventSeriesEntity as makeEntity,
+} from '../../__fixtures__/event-series.fixtures';
 
 jest.mock('../mappers/event-series.mapper');
 

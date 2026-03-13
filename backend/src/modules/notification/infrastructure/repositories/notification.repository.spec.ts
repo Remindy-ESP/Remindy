@@ -2,7 +2,10 @@ import { Repository } from 'typeorm';
 import { NotificationRepository } from './notification.repository';
 import { NotificationEntity } from '../persistence/notification.entity';
 import { NotificationMapper } from '../mappers/notification.mapper';
-import { makeNotification as makeDomain, makeNotificationEntity as makeEntity } from '../../__fixtures__/notification.fixtures';
+import {
+  makeNotification as makeDomain,
+  makeNotificationEntity as makeEntity,
+} from '../../__fixtures__/notification.fixtures';
 
 jest.mock('../mappers/notification.mapper');
 
@@ -71,7 +74,9 @@ describe('NotificationRepository', () => {
 
       await sut.findAll({ userId: 'user-1' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('notification.userId = :userId', { userId: 'user-1' });
+      expect(qb.andWhere).toHaveBeenCalledWith('notification.userId = :userId', {
+        userId: 'user-1',
+      });
       expect(qb.orderBy).toHaveBeenCalledWith('notification.createdAt', 'DESC');
     });
 
@@ -94,7 +99,9 @@ describe('NotificationRepository', () => {
 
       await sut.findAll({ userId: 'user-1', channel: 'push' });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('notification.channel = :channel', { channel: 'push' });
+      expect(qb.andWhere).toHaveBeenCalledWith('notification.channel = :channel', {
+        channel: 'push',
+      });
     });
 
     it('applies status filter', async () => {
