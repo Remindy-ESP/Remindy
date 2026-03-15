@@ -88,6 +88,23 @@ describe('EventSeriesMapper', () => {
       expect(entity.id).toBeUndefined();
       expect(entity.subscriptionId).toBe(domain.subscriptionId);
     });
+
+    it('should map EventSeries domain with deletedAt set (covers deletedAt branch)', () => {
+      const domain = new EventSeries({
+        id: 'series-deleted',
+        subscriptionId: 'sub-789',
+        rrule: 'FREQ=MONTHLY;INTERVAL=1',
+        dtstart: new Date('2025-01-01T10:00:00.000Z'),
+        timezone: 'Europe/Paris',
+        createdAt: new Date('2025-01-01T10:00:00.000Z'),
+        updatedAt: new Date('2025-01-02T10:00:00.000Z'),
+        deletedAt: new Date('2025-03-01T10:00:00.000Z'),
+      });
+
+      const entity = EventSeriesMapper.toPersistence(domain);
+
+      expect(entity.deletedAt).toEqual(new Date('2025-03-01T10:00:00.000Z'));
+    });
   });
 
   describe('toDomainArray', () => {
