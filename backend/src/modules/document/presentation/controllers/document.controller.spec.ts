@@ -179,6 +179,7 @@ describe('DocumentController', () => {
         {
           userId: 'user-123',
           filename: 'test-document.pdf',
+          folderId: 'freemium',
           fileBuffer: mockFile.buffer,
           fileSize: 1024000,
           mimeType: 'application/pdf',
@@ -231,6 +232,7 @@ describe('DocumentController', () => {
         {
           userId: 'user-123',
           filename: 'test-document.pdf',
+          folderId: undefined,
           fileBuffer: mockFile.buffer,
           fileSize: 1024000,
           mimeType: 'application/pdf',
