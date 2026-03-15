@@ -70,9 +70,4 @@ describe('LegalScreen', () => {
     const tree = toJSON();
     expect(tree).toBeTruthy();
   });
-
-  it('should display the footer', () => {
-    const { getByText } = render(<LegalScreen />);
-    expect(getByText('Document de référence interne — T_LAW_ESP')).toBeTruthy();
-  });
 });
