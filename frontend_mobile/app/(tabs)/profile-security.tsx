@@ -189,7 +189,7 @@ export default function ProfileSecurityScreen() {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => router.push('/forgot-password')}
+            onPress={() => router.push('/forgot-password' as any)}
             testID="security-forgot-button"
             activeOpacity={0.85}
           >

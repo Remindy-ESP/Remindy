@@ -106,17 +106,27 @@ describe('JwtStrategy', () => {
 
     it('should work with different user roles', () => {
       const adminPayload = { sub: 'admin-1', role: 'ADMIN', mfaEnabled: false, mfaVerified: false };
-      const userPayload = { sub: 'user-1', role: 'USER_FREEMIUM', mfaEnabled: false, mfaVerified: false };
-      const premiumPayload = { sub: 'premium-1', role: 'USER_PREMIUM', mfaEnabled: false, mfaVerified: false };
+      const userPayload = {
+        sub: 'user-1',
+        role: 'USER_FREEMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
+      };
+      const premiumPayload = {
+        sub: 'premium-1',
+        role: 'USER_PREMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
+      };
 
       expect(strategy.validate(adminPayload).role).toBe('ADMIN');
       expect(strategy.validate(adminPayload).mfaEnabled).toBe(false);
       expect(strategy.validate(adminPayload).mfaVerified).toBe(false);
-      
+
       expect(strategy.validate(userPayload).role).toBe('USER_FREEMIUM');
       expect(strategy.validate(userPayload).mfaEnabled).toBe(false);
       expect(strategy.validate(userPayload).mfaVerified).toBe(false);
-      
+
       expect(strategy.validate(premiumPayload).role).toBe('USER_PREMIUM');
       expect(strategy.validate(premiumPayload).mfaEnabled).toBe(false);
       expect(strategy.validate(premiumPayload).mfaVerified).toBe(false);

@@ -110,14 +110,14 @@ describe('LoginUseCase', () => {
       });
       expect(userRepo.findByEmail).toHaveBeenCalledWith('test@example.com');
       expect(passwordService.compare).toHaveBeenCalledWith('password123', 'hashedPassword123');
-      
+
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
         sub: 'user-123',
         role: Role.USER_FREEMIUM,
         mfaEnabled: false,
         mfaVerified: false,
       });
-      
+
       expect(sessionRepo.createSession).toHaveBeenCalled();
     });
 
