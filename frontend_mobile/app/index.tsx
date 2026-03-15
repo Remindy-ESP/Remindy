@@ -41,7 +41,7 @@ export default function AuthScreen() {
         }
 
         if (!cancelled && !seen) {
-          router.replace('/onboarding');
+          router.replace('/onboarding' as any);
           return;
         }
       } catch (err) {
@@ -255,7 +255,7 @@ export default function AuthScreen() {
 
           {isLogin && (
             <TouchableOpacity
-              onPress={() => router.push('/forgot-password')}
+              onPress={() => router.push('/forgot-password' as any)}
               testID="forgot-password-link"
               disabled={loading}
             >
