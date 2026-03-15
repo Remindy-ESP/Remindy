@@ -126,7 +126,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             testID="edit-profile-item"
             style={styles.editButton}
-            onPress={() => router.push('/(tabs)/profile-edit')}
+            onPress={() => router.push('/(tabs)/profile-edit' as any)}
             activeOpacity={0.8}
           >
             <Ionicons name="create-outline" size={16} color="#E5E7FF" />
@@ -149,25 +149,25 @@ export default function ProfileScreen() {
           testID="notifications-item"
           icon="notifications-outline"
           label="Notifications"
-          onPress={() => router.push('/(tabs)/notifications')}
+          onPress={() => router.push('/(tabs)/notifications' as any)}
         />
         <MenuItem
           testID="preferences-item"
           icon="settings-outline"
           label="Preferences"
-          onPress={() => router.push('/(tabs)/profile-preferences')}
+          onPress={() => router.push('/(tabs)/profile-preferences' as any)}
         />
         <MenuItem
           testID="security-item"
           icon="shield-checkmark-outline"
           label="Securite"
-          onPress={() => router.push('/(tabs)/profile-security')}
+          onPress={() => router.push('/(tabs)/profile-security' as any)}
         />
         <MenuItem
           testID="privacy-item"
           icon="lock-closed-outline"
           label="Confidentialite"
-          onPress={() => router.push('/(tabs)/profile-privacy')}
+          onPress={() => router.push('/(tabs)/profile-privacy' as any)}
         />
       </View>
 
@@ -178,13 +178,13 @@ export default function ProfileScreen() {
           testID="help-item"
           icon="help-circle-outline"
           label="Aide"
-          onPress={() => router.push('/(tabs)/profile-help')}
+          onPress={() => router.push('/(tabs)/profile-help' as any)}
         />
         <MenuItem
           testID="about-item"
           icon="information-circle-outline"
           label="A propos"
-          onPress={() => router.push('/(tabs)/profile-about')}
+          onPress={() => router.push('/(tabs)/profile-about' as any)}
         />
       </View>
 
