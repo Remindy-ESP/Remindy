@@ -80,8 +80,8 @@ describe('RegenerateEventsTask', () => {
       expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledTimes(2);
       expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledWith(
         mockSubscription,
-        12,
-        3,
+        24,
+        6,
       );
       expect(loggerSpy).toHaveBeenCalledWith('Starting event regeneration task...');
       expect(loggerSpy).toHaveBeenCalledWith('Found 2 active subscriptions');
@@ -218,8 +218,8 @@ describe('RegenerateEventsTask', () => {
 
       expect(eventGeneratorService.regenerateEventsIfNeeded).toHaveBeenCalledWith(
         mockSubscription,
-        12,
-        3,
+        24,
+        6,
       );
     });
   });

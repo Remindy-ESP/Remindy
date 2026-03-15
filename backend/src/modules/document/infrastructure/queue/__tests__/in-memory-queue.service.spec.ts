@@ -105,10 +105,10 @@ describe('InMemoryQueueService', () => {
         'test.pdf',
       );
 
-      const status = await service.getJobStatus(jobId);
+      const jobStatus = await service.getJobStatus(jobId);
 
       // Le job peut être en waiting ou active selon le timing
-      expect(status).toMatchObject({
+      expect(jobStatus).toMatchObject({
         id: jobId,
         status: expect.stringMatching(/waiting|active|failed/),
         attempts: expect.any(Number),
