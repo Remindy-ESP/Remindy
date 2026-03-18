@@ -15,7 +15,7 @@ import { AdminUsersService } from './application/admin-users.service';
 import { AuditModule } from '../audit/audit.module';
 import { AdminUsersController } from './presentation/controllers/admin-users.controller';
 @Module({
-  imports: [AuditModule, AuthModule, TypeOrmModule.forFeature([EUser, UserSessionEntity])],
+  imports: [AuthModule, AuditModule, TypeOrmModule.forFeature([EUser, UserSessionEntity])],
   controllers: [
     AdminMeController,
     AdminMfaController,
