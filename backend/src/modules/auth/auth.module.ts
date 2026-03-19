@@ -20,7 +20,8 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-c
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case';
 import { IEmailService } from './infrastructure/services/email.service';
-import { SendgridEmailService } from './infrastructure/services/sendgrid-email.service';
+// import { SendgridEmailService } from './infrastructure/services/sendgrid-email.service';
+import { BrevoEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 import { UsersModule } from '../user/user.module';
@@ -31,9 +32,11 @@ import { RolesGuard } from './presentation/guards/roles.guard';
 import { UserMfaTypeOrmRepository } from '../admin/infrastructure/database/repositories/user-mfa-typeorm.repository';
 import { TotpService } from '../admin/infrastructure/services/totp.service';
 import { CryptoService } from '../admin/infrastructure/services/crypto.service';
+import { AdminModule } from '../admin/admin.module';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
+    forwardRef(() => AdminModule),
     TypeOrmModule.forFeature([EUser, UserSessionEntity]),
     JwtModule.register({}),
   ],
@@ -78,9 +81,13 @@ import { CryptoService } from '../admin/infrastructure/services/crypto.service';
       provide: IUserAuthRepository,
       useClass: UserAuthTypeOrmRepository,
     },
+    // {
+    //   provide: IEmailService,
+    //   useClass: SendgridEmailService,
+    // },
     {
       provide: IEmailService,
-      useClass: SendgridEmailService,
+      useClass: BrevoEmailService,
     },
   ],
   exports: [JwtTokenService, ITokenService, UserMfaTypeOrmRepository, TotpService],

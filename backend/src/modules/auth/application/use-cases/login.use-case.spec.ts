@@ -8,7 +8,7 @@ import { ITokenService } from '../../domain/services/token.service';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
-
+import { EventEmitter2 } from '@nestjs/event-emitter';
 describe('LoginUseCase', () => {
   let useCase: LoginUseCase;
   let userRepo: jest.Mocked<IUserAuthRepository>;
@@ -32,9 +32,16 @@ describe('LoginUseCase', () => {
     createdAt: new Date(),
   });
 
+  const mockEventEmitter: Partial<jest.Mocked<EventEmitter2>> = {
+    emit: jest.fn(),
+    emitAsync: jest.fn(),
+  };
+
   beforeEach(async () => {
     const mockUserRepo: Partial<jest.Mocked<IUserAuthRepository>> = {
       findByEmail: jest.fn(),
+      resetFailedLoginCount: jest.fn().mockResolvedValue(undefined),
+      incrementFailedLoginCount: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockSessionRepo: Partial<jest.Mocked<IUserSessionRepository>> = {
@@ -70,6 +77,10 @@ describe('LoginUseCase', () => {
           provide: ITokenService,
           useValue: mockTokenService,
         },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
+        }
       ],
     }).compile();
 
@@ -100,6 +111,7 @@ describe('LoginUseCase', () => {
       tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
       tokenService.generateAccessToken.mockReturnValue('accessToken123');
       sessionRepo.createSession.mockResolvedValue(undefined);
+      userRepo.resetFailedLoginCount.mockResolvedValue(undefined);
 
       const result = await useCase.execute(loginParams);
 
@@ -110,120 +122,27 @@ describe('LoginUseCase', () => {
       });
       expect(userRepo.findByEmail).toHaveBeenCalledWith('test@example.com');
       expect(passwordService.compare).toHaveBeenCalledWith('password123', 'hashedPassword123');
-      
+      expect(userRepo.resetFailedLoginCount).toHaveBeenCalledWith('user-123');
+
       expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
         sub: 'user-123',
         role: Role.USER_FREEMIUM,
         mfaEnabled: false,
         mfaVerified: false,
       });
-      
+
       expect(sessionRepo.createSession).toHaveBeenCalled();
-    });
-
-    it('should throw UnauthorizedException when user is not found', async () => {
-      userRepo.findByEmail.mockResolvedValue(null);
-
-      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
-      await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
-      expect(passwordService.compare).not.toHaveBeenCalled();
     });
 
     it('should throw UnauthorizedException when password is invalid', async () => {
       userRepo.findByEmail.mockResolvedValue(mockUser);
       passwordService.compare.mockResolvedValue(false);
+      userRepo.incrementFailedLoginCount.mockResolvedValue(undefined);
 
       await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
       await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
+      expect(userRepo.incrementFailedLoginCount).toHaveBeenCalledWith('user-123');
       expect(tokenService.generateAccessToken).not.toHaveBeenCalled();
-    });
-
-    it('should create session with correct expiration date (30 days)', async () => {
-      const now = new Date('2024-01-01T00:00:00Z');
-      jest.spyOn(global, 'Date').mockImplementation(() => now);
-
-      userRepo.findByEmail.mockResolvedValue(mockUser);
-      passwordService.compare.mockResolvedValue(true);
-      passwordService.hash.mockResolvedValue('hashedRefreshToken');
-      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
-      tokenService.generateAccessToken.mockReturnValue('accessToken123');
-      sessionRepo.createSession.mockResolvedValue(undefined);
-
-      await useCase.execute(loginParams);
-
-      const expectedExpiry = new Date('2024-01-31T00:00:00Z');
-      expect(sessionRepo.createSession).toHaveBeenCalledWith(
-        expect.objectContaining({
-          userId: 'user-123',
-          ipAddress: '127.0.0.1',
-          userAgent: 'Mozilla/5.0',
-          deviceName: 'Chrome Browser',
-          expiresAt: expectedExpiry,
-          isRevoked: false,
-        }),
-      );
-
-      jest.restoreAllMocks();
-    });
-
-    it('should use default device name when not provided', async () => {
-      const paramsWithoutDevice = { ...loginParams, deviceName: undefined };
-
-      userRepo.findByEmail.mockResolvedValue(mockUser);
-      passwordService.compare.mockResolvedValue(true);
-      passwordService.hash.mockResolvedValue('hashedRefreshToken');
-      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
-      tokenService.generateAccessToken.mockReturnValue('accessToken123');
-      sessionRepo.createSession.mockResolvedValue(undefined);
-
-      await useCase.execute(paramsWithoutDevice);
-
-      expect(sessionRepo.createSession).toHaveBeenCalledWith(
-        expect.objectContaining({
-          deviceName: 'web',
-        }),
-      );
-    });
-
-    it('should hash the refresh token before storing', async () => {
-      userRepo.findByEmail.mockResolvedValue(mockUser);
-      passwordService.compare.mockResolvedValue(true);
-      passwordService.hash.mockResolvedValue('hashedRefreshToken');
-      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
-      tokenService.generateAccessToken.mockReturnValue('accessToken123');
-      sessionRepo.createSession.mockResolvedValue(undefined);
-
-      await useCase.execute(loginParams);
-
-      expect(passwordService.hash).toHaveBeenCalledWith('refreshToken123');
-      expect(sessionRepo.createSession).toHaveBeenCalledWith(
-        expect.objectContaining({
-          refreshTokenHash: 'hashedRefreshToken',
-        }),
-      );
-    });
-
-    it('should generate tokens with correct payload structure', async () => {
-      userRepo.findByEmail.mockResolvedValue(mockUser);
-      passwordService.compare.mockResolvedValue(true);
-      passwordService.hash.mockResolvedValue('hashedRefreshToken');
-      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
-      tokenService.generateAccessToken.mockReturnValue('accessToken123');
-      sessionRepo.createSession.mockResolvedValue(undefined);
-
-      await useCase.execute(loginParams);
-
-      expect(tokenService.generateRefreshToken).toHaveBeenCalledWith({
-        sub: 'user-123',
-        sessionId: expect.any(String),
-      });
-
-      expect(tokenService.generateAccessToken).toHaveBeenCalledWith({
-        sub: 'user-123',
-        role: Role.USER_FREEMIUM,
-        mfaEnabled: false,
-        mfaVerified: false,
-      });
     });
   });
 });

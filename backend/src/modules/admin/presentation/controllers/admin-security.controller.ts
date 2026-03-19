@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post, Query, Req, } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
@@ -26,13 +37,9 @@ export class AdminSecurityController {
 
   @Get('logs/suspicious')
   @ApiOperation({ summary: 'Événements suspects uniquement' })
-  getSuspiciousEvents(
-    @Query('page') page = 1,
-    @Query('limit') limit = 50,
-  ) {
+  getSuspiciousEvents(@Query('page') page = 1, @Query('limit') limit = 50) {
     return this.service.getSuspiciousEvents(+page, +limit);
   }
-
 
   @Get('blocked-ips')
   @ApiOperation({ summary: 'Liste des IPs bloquées (actives par défaut)' })
@@ -48,10 +55,7 @@ export class AdminSecurityController {
 
   @Delete('blocked-ips/:id')
   @ApiOperation({ summary: 'Débloquer une IP — super_admin uniquement' })
-  unblockIp(
-    @Req() req: AuthRequest,
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  unblockIp(@Req() req: AuthRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.service.unblockIp({ id: req.user.id, role: req.user.role }, id);
   }
 
@@ -60,7 +64,6 @@ export class AdminSecurityController {
   getIpActivity(@Param('ip') ip: string) {
     return this.service.getIpActivity(ip);
   }
-
 
   @Get('policy')
   @ApiOperation({ summary: 'Politique de sécurité actuelle' })
@@ -74,11 +77,9 @@ export class AdminSecurityController {
     return this.service.updatePolicy({ id: req.user.id, role: req.user.role }, dto);
   }
 
-
   @Get('stats')
   @ApiOperation({ summary: 'KPIs sécurité pour le dashboard' })
   getStats() {
     return this.service.getSecurityStats();
   }
-
 }

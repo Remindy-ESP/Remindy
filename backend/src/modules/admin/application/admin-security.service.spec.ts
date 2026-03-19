@@ -7,7 +7,6 @@ import {
 import { BlockReason } from 'src/infrastructure/database/entities/blocked-ip.entity';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 
-
 const mockLogsRepo = {
   create: jest.fn(),
   save: jest.fn(),
@@ -30,7 +29,6 @@ const mockPolicyRepo = {
   save: jest.fn(),
 };
 
-
 const makeQb = (result: any = null, count = 0) => ({
   where: jest.fn().mockReturnThis(),
   andWhere: jest.fn().mockReturnThis(),
@@ -38,7 +36,9 @@ const makeQb = (result: any = null, count = 0) => ({
   skip: jest.fn().mockReturnThis(),
   take: jest.fn().mockReturnThis(),
   getMany: jest.fn().mockResolvedValue(Array.isArray(result) ? result : result ? [result] : []),
-  getManyAndCount: jest.fn().mockResolvedValue([Array.isArray(result) ? result : result ? [result] : [], count]),
+  getManyAndCount: jest
+    .fn()
+    .mockResolvedValue([Array.isArray(result) ? result : result ? [result] : [], count]),
   getOne: jest.fn().mockResolvedValue(result),
   getCount: jest.fn().mockResolvedValue(count),
   insert: jest.fn().mockReturnThis(),
@@ -48,16 +48,11 @@ const makeQb = (result: any = null, count = 0) => ({
   execute: jest.fn().mockResolvedValue({}),
 });
 
-
 const makeService = () =>
-  new AdminSecurityService(
-    mockLogsRepo as any,
-    mockBlockedIpRepo as any,
-    mockPolicyRepo as any,
-  );
+  new AdminSecurityService(mockLogsRepo as any, mockBlockedIpRepo as any, mockPolicyRepo as any);
 
 const superAdmin = { id: 'actor-super', role: Role.SUPER_ADMIN };
-const userAdmin  = { id: 'actor-admin', role: Role.USER_ADMIN };
+const userAdmin = { id: 'actor-admin', role: Role.USER_ADMIN };
 
 const makeLog = (overrides: Partial<any> = {}) => ({
   id: 'log-1',
@@ -107,39 +102,51 @@ const makeBlockedIp = (overrides: Partial<any> = {}) => ({
 
 beforeEach(() => jest.clearAllMocks());
 
-
 describe('admin-security.policy — assertCanActOnSecurity', () => {
   const { assertCanActOnSecurity } = jest.requireActual('../domain/policies/admin-security.policy');
 
   it('SUPER_ADMIN peut bloquer une IP', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.SUPER_ADMIN, action: 'block-ip' })).not.toThrow();
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.SUPER_ADMIN, action: 'block-ip' }),
+    ).not.toThrow();
   });
 
   it('SUPER_ADMIN peut débloquer une IP', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.SUPER_ADMIN, action: 'unblock-ip' })).not.toThrow();
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.SUPER_ADMIN, action: 'unblock-ip' }),
+    ).not.toThrow();
   });
 
   it('SUPER_ADMIN peut modifier la politique', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.SUPER_ADMIN, action: 'update-policy' })).not.toThrow();
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.SUPER_ADMIN, action: 'update-policy' }),
+    ).not.toThrow();
   });
 
   it('USER_ADMIN ne peut PAS bloquer une IP', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'block-ip' })).toThrow(ForbiddenException);
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'block-ip' }),
+    ).toThrow(ForbiddenException);
   });
 
   it('USER_ADMIN ne peut PAS débloquer une IP', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'unblock-ip' })).toThrow(ForbiddenException);
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'unblock-ip' }),
+    ).toThrow(ForbiddenException);
   });
 
   it('USER_ADMIN ne peut PAS modifier la politique', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'update-policy' })).toThrow(ForbiddenException);
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'update-policy' }),
+    ).toThrow(ForbiddenException);
   });
 
   it('USER_ADMIN peut lire (action lecture = autorisée)', () => {
-    expect(() => assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'read-logs' })).not.toThrow();
+    expect(() =>
+      assertCanActOnSecurity({ actorRole: Role.USER_ADMIN, action: 'read-logs' }),
+    ).not.toThrow();
   });
 });
-
 
 describe('AdminSecurityService — listeners @OnEvent', () => {
   it('onLoginSuccess enregistre LOGIN_SUCCESS avec severity INFO', async () => {
@@ -148,7 +155,10 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
     mockLogsRepo.save.mockResolvedValue(log);
 
     await makeService().onLoginSuccess({
-      userId: 'u-1', userEmail: 'a@a.com', ipAddress: '1.1.1.1', userAgent: 'curl',
+      userId: 'u-1',
+      userEmail: 'a@a.com',
+      ipAddress: '1.1.1.1',
+      userAgent: 'curl',
     });
 
     expect(mockLogsRepo.create).toHaveBeenCalledWith(
@@ -161,12 +171,17 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
   });
 
   it('onLoginFailure enregistre LOGIN_FAILURE avec severity WARNING', async () => {
-    const log = makeLog({ eventType: SecurityEventType.LOGIN_FAILURE, severity: SecuritySeverity.WARNING });
+    const log = makeLog({
+      eventType: SecurityEventType.LOGIN_FAILURE,
+      severity: SecuritySeverity.WARNING,
+    });
     mockLogsRepo.create.mockReturnValue(log);
     mockLogsRepo.save.mockResolvedValue(log);
 
     await makeService().onLoginFailure({
-      userEmail: 'a@a.com', ipAddress: '1.1.1.1', userAgent: 'curl',
+      userEmail: 'a@a.com',
+      ipAddress: '1.1.1.1',
+      userAgent: 'curl',
       metadata: { reason: 'invalid_password' },
     });
 
@@ -193,7 +208,9 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
     mockBlockedIpRepo.findOneOrFail.mockResolvedValue(makeBlockedIp());
 
     await makeService().onBruteForce({
-      userEmail: 'a@a.com', ipAddress: '9.9.9.9', metadata: { attempts: 5 },
+      userEmail: 'a@a.com',
+      ipAddress: '9.9.9.9',
+      metadata: { attempts: 5 },
     });
 
     expect(mockLogsRepo.create).toHaveBeenCalledWith(
@@ -238,7 +255,10 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
     await makeService().onLogout({ userId: 'u-1', ipAddress: '1.1.1.1' });
 
     expect(mockLogsRepo.create).toHaveBeenCalledWith(
-      expect.objectContaining({ eventType: SecurityEventType.LOGOUT, severity: SecuritySeverity.INFO }),
+      expect.objectContaining({
+        eventType: SecurityEventType.LOGOUT,
+        severity: SecuritySeverity.INFO,
+      }),
     );
   });
 
@@ -255,11 +275,18 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
   });
 
   it('onUserBanned enregistre ADMIN_USER_BANNED avec severity WARNING', async () => {
-    const log = makeLog({ eventType: SecurityEventType.ADMIN_USER_BANNED, severity: SecuritySeverity.WARNING });
+    const log = makeLog({
+      eventType: SecurityEventType.ADMIN_USER_BANNED,
+      severity: SecuritySeverity.WARNING,
+    });
     mockLogsRepo.create.mockReturnValue(log);
     mockLogsRepo.save.mockResolvedValue(log);
 
-    await makeService().onUserBanned({ actorId: 'actor-1', targetUserId: 'target-1', reason: 'spam' });
+    await makeService().onUserBanned({
+      actorId: 'actor-1',
+      targetUserId: 'target-1',
+      reason: 'spam',
+    });
 
     expect(mockLogsRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -286,7 +313,10 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
   });
 
   it('onSessionRevoked enregistre ADMIN_SESSION_REVOKED avec severity WARNING', async () => {
-    const log = makeLog({ eventType: SecurityEventType.ADMIN_SESSION_REVOKED, severity: SecuritySeverity.WARNING });
+    const log = makeLog({
+      eventType: SecurityEventType.ADMIN_SESSION_REVOKED,
+      severity: SecuritySeverity.WARNING,
+    });
     mockLogsRepo.create.mockReturnValue(log);
     mockLogsRepo.save.mockResolvedValue(log);
 
@@ -306,7 +336,11 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
     mockLogsRepo.create.mockReturnValue(log);
     mockLogsRepo.save.mockResolvedValue(log);
 
-    await makeService().onCsrfViolation({ userId: 'u-1', ipAddress: '1.1.1.1', resource: 'POST /admin/test' });
+    await makeService().onCsrfViolation({
+      userId: 'u-1',
+      ipAddress: '1.1.1.1',
+      resource: 'POST /admin/test',
+    });
 
     expect(mockLogsRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -317,7 +351,6 @@ describe('AdminSecurityService — listeners @OnEvent', () => {
     );
   });
 });
-
 
 describe('AdminSecurityService.getLogs()', () => {
   it('retourne les logs paginés sans filtre', async () => {
@@ -337,7 +370,9 @@ describe('AdminSecurityService.getLogs()', () => {
 
     await makeService().getLogs({ severity: SecuritySeverity.CRITICAL });
 
-    expect(qb.andWhere).toHaveBeenCalledWith('log.severity = :severity', { severity: SecuritySeverity.CRITICAL });
+    expect(qb.andWhere).toHaveBeenCalledWith('log.severity = :severity', {
+      severity: SecuritySeverity.CRITICAL,
+    });
   });
 
   it('applique le filtre eventType', async () => {
@@ -346,7 +381,9 @@ describe('AdminSecurityService.getLogs()', () => {
 
     await makeService().getLogs({ eventType: SecurityEventType.LOGIN_FAILURE });
 
-    expect(qb.andWhere).toHaveBeenCalledWith('log.eventType = :eventType', { eventType: SecurityEventType.LOGIN_FAILURE });
+    expect(qb.andWhere).toHaveBeenCalledWith('log.eventType = :eventType', {
+      eventType: SecurityEventType.LOGIN_FAILURE,
+    });
   });
 
   it('applique le filtre isSuspicious', async () => {
@@ -364,11 +401,16 @@ describe('AdminSecurityService.getLogs()', () => {
 
     await makeService().getLogs({ from: '2024-01-01T00:00:00Z', to: '2024-12-31T23:59:59Z' });
 
-    expect(qb.andWhere).toHaveBeenCalledWith('log.createdAt >= :from', expect.objectContaining({ from: expect.any(Date) }));
-    expect(qb.andWhere).toHaveBeenCalledWith('log.createdAt <= :to', expect.objectContaining({ to: expect.any(Date) }));
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'log.createdAt >= :from',
+      expect.objectContaining({ from: expect.any(Date) }),
+    );
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'log.createdAt <= :to',
+      expect.objectContaining({ to: expect.any(Date) }),
+    );
   });
 });
-
 
 describe('AdminSecurityService.getSuspiciousEvents()', () => {
   it('retourne uniquement les événements suspects', async () => {
@@ -382,7 +424,6 @@ describe('AdminSecurityService.getSuspiciousEvents()', () => {
     expect(result.total).toBe(1);
   });
 });
-
 
 describe('AdminSecurityService.blockIp()', () => {
   const dto = { ipAddress: '1.2.3.4', reason: BlockReason.MANUAL, notes: 'test' };
@@ -437,7 +478,6 @@ describe('AdminSecurityService.blockIp()', () => {
   });
 });
 
-
 describe('AdminSecurityService.unblockIp()', () => {
   it('débloque une IP existante (super_admin)', async () => {
     mockBlockedIpRepo.findOne.mockResolvedValue(makeBlockedIp());
@@ -465,7 +505,6 @@ describe('AdminSecurityService.unblockIp()', () => {
   });
 });
 
-
 describe('AdminSecurityService.isIpBlocked()', () => {
   it('retourne true si IP active trouvée', async () => {
     const qb = makeQb(makeBlockedIp());
@@ -481,7 +520,6 @@ describe('AdminSecurityService.isIpBlocked()', () => {
     expect(await makeService().isIpBlocked('5.5.5.5')).toBe(false);
   });
 });
-
 
 describe('AdminSecurityService.getPolicy()', () => {
   it('retourne la politique existante', async () => {
@@ -513,18 +551,16 @@ describe('AdminSecurityService.updatePolicy()', () => {
   });
 
   it('lève ForbiddenException si USER_ADMIN tente de modifier', async () => {
-    await expect(makeService().updatePolicy(userAdmin, { maxLoginAttempts: 3 }))
-      .rejects.toThrow(ForbiddenException);
+    await expect(makeService().updatePolicy(userAdmin, { maxLoginAttempts: 3 })).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(mockPolicyRepo.save).not.toHaveBeenCalled();
   });
 });
 
-
 describe('AdminSecurityService.getSecurityStats()', () => {
   it('retourne les KPIs de sécurité', async () => {
-    mockLogsRepo.count
-      .mockResolvedValueOnce(3)
-      .mockResolvedValueOnce(7);
+    mockLogsRepo.count.mockResolvedValueOnce(3).mockResolvedValueOnce(7);
 
     const qb = makeQb([], 2);
     mockBlockedIpRepo.createQueryBuilder.mockReturnValue(qb);
@@ -538,7 +574,6 @@ describe('AdminSecurityService.getSecurityStats()', () => {
     });
   });
 });
-
 
 describe('AdminSecurityService.getIpActivity()', () => {
   it('retourne les logs récents et le statut de blocage', async () => {

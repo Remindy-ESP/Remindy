@@ -1,11 +1,18 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum BlockReason {
-  BRUTE_FORCE          = 'brute_force',
-  SUSPICIOUS_ACTIVITY  = 'suspicious_activity',
-  MANUAL               = 'manual',
-  RATE_LIMIT           = 'rate_limit',
-  CSRF_ATTACK          = 'csrf_attack',
+  BRUTE_FORCE = 'brute_force',
+  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
+  MANUAL = 'manual',
+  RATE_LIMIT = 'rate_limit',
+  CSRF_ATTACK = 'csrf_attack',
 }
 
 @Entity('blocked_ips')
