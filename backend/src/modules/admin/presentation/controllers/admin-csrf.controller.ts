@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Res } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { AdminPreMfa } from '../decorators/admin-pre-mfa.decorator';
-  
+
 @Controller('admin/auth')
 export class AdminCsrfController {
   @Get('csrf')
@@ -12,7 +12,7 @@ export class AdminCsrfController {
     res.cookie('csrfToken', token, {
       httpOnly: false,
       sameSite: 'lax',
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
     });
 
     return { csrfToken: token };

@@ -3,6 +3,10 @@ import { AdminUsersService } from './admin-users.service';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 
+const mockEventEmitter = {
+  emit: jest.fn(),
+  emitAsync: jest.fn(),
+};
 
 const mockUsersRepo = {
   createQueryBuilder: jest.fn(),
@@ -15,10 +19,10 @@ const mockSessionsRepo = {
 };
 
 const makeService = () =>
-  new AdminUsersService(mockUsersRepo as any, mockSessionsRepo as any);
+  new AdminUsersService(mockUsersRepo as any, mockSessionsRepo as any, mockEventEmitter as any);
 
 const superAdmin = { id: 'actor-1', role: Role.SUPER_ADMIN };
-const userAdmin  = { id: 'actor-2', role: Role.USER_ADMIN };
+const userAdmin = { id: 'actor-2', role: Role.USER_ADMIN };
 
 const makeUser = (overrides: Partial<any> = {}) => ({
   id: 'user-1',
@@ -30,8 +34,11 @@ const makeUser = (overrides: Partial<any> = {}) => ({
   ...overrides,
 });
 
-beforeEach(() => jest.clearAllMocks());
-
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockEventEmitter.emit.mockClear();
+  mockEventEmitter.emitAsync.mockClear();
+});
 
 describe('admin-user.policy — assertCanActOnUser', () => {
   const { assertCanActOnUser } = jest.requireActual('../domain/policies/admin-user.policy');
@@ -44,7 +51,11 @@ describe('admin-user.policy — assertCanActOnUser', () => {
 
   it('SUPER_ADMIN peut agir sur un autre SUPER_ADMIN', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.SUPER_ADMIN, targetRole: Role.SUPER_ADMIN, action: 'ban' }),
+      assertCanActOnUser({
+        actorRole: Role.SUPER_ADMIN,
+        targetRole: Role.SUPER_ADMIN,
+        action: 'ban',
+      }),
     ).not.toThrow();
   });
 
@@ -56,17 +67,24 @@ describe('admin-user.policy — assertCanActOnUser', () => {
 
   it('USER_ADMIN ne peut PAS agir sur un SUPER_ADMIN', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.USER_ADMIN, targetRole: Role.SUPER_ADMIN, action: 'ban' }),
+      assertCanActOnUser({
+        actorRole: Role.USER_ADMIN,
+        targetRole: Role.SUPER_ADMIN,
+        action: 'ban',
+      }),
     ).toThrow(ForbiddenException);
   });
 
   it('USER_ADMIN ne peut PAS agir sur un autre USER_ADMIN', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.USER_ADMIN, targetRole: Role.USER_ADMIN, action: 'ban' }),
+      assertCanActOnUser({
+        actorRole: Role.USER_ADMIN,
+        targetRole: Role.USER_ADMIN,
+        action: 'ban',
+      }),
     ).toThrow(ForbiddenException);
   });
 });
-
 
 describe('AdminUsersService.ban()', () => {
   it('banne un user classique', async () => {
@@ -77,6 +95,11 @@ describe('AdminUsersService.ban()', () => {
 
     expect(mockUsersRepo.update).toHaveBeenCalledWith('user-1', { status: UserStatus.BANNED });
     expect(result).toEqual({ ok: true, status: UserStatus.BANNED, reason: 'spam' });
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.admin.user.banned', {
+      actorId: superAdmin.id,
+      targetUserId: 'user-1',
+      reason: 'spam',
+    });
   });
 
   it('lève une ForbiddenException si USER_ADMIN tente de bannir un SUPER_ADMIN', async () => {
@@ -84,6 +107,7 @@ describe('AdminUsersService.ban()', () => {
 
     await expect(makeService().ban(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
     expect(mockUsersRepo.update).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 
   it('lève une ForbiddenException si USER_ADMIN tente de bannir un autre USER_ADMIN', async () => {
@@ -91,15 +115,16 @@ describe('AdminUsersService.ban()', () => {
 
     await expect(makeService().ban(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
     expect(mockUsersRepo.update).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 
-  it('lève une NotFoundException si le user n\'existe pas', async () => {
+  it("lève une NotFoundException si le user n'existe pas", async () => {
     mockUsersRepo.findOne.mockResolvedValue(null);
 
     await expect(makeService().ban(superAdmin, 'unknown')).rejects.toThrow(NotFoundException);
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 });
-
 
 describe('AdminUsersService.unban()', () => {
   it('débanne un user classique', async () => {
@@ -110,18 +135,22 @@ describe('AdminUsersService.unban()', () => {
 
     expect(mockUsersRepo.update).toHaveBeenCalledWith('user-1', { status: UserStatus.ACTIVE });
     expect(result).toEqual({ ok: true, status: UserStatus.ACTIVE });
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.admin.user.unbanned', {
+      actorId: superAdmin.id,
+      targetUserId: 'user-1',
+    });
   });
 
   it('lève une ForbiddenException si USER_ADMIN tente de débannir un SUPER_ADMIN', async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser({ role_key: Role.SUPER_ADMIN }));
 
     await expect(makeService().unban(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 });
 
-
 describe('AdminUsersService.revokeSessions()', () => {
-  it('révoque les sessions d\'un user classique', async () => {
+  it("révoque les sessions d'un user classique", async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser());
     mockSessionsRepo.delete.mockResolvedValue({});
 
@@ -129,22 +158,31 @@ describe('AdminUsersService.revokeSessions()', () => {
 
     expect(mockSessionsRepo.delete).toHaveBeenCalledWith({ user: { id: 'user-1' } });
     expect(result).toEqual({ ok: true });
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.admin.session.revoked', {
+      actorId: superAdmin.id,
+      targetUserId: 'user-1',
+    });
   });
 
-  it('lève une ForbiddenException si USER_ADMIN tente de révoquer les sessions d\'un SUPER_ADMIN', async () => {
+  it("lève une ForbiddenException si USER_ADMIN tente de révoquer les sessions d'un SUPER_ADMIN", async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser({ role_key: Role.SUPER_ADMIN }));
 
-    await expect(makeService().revokeSessions(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+    await expect(makeService().revokeSessions(userAdmin, 'user-1')).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(mockSessionsRepo.delete).not.toHaveBeenCalled();
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 
-  it('lève une NotFoundException si le user n\'existe pas', async () => {
+  it("lève une NotFoundException si le user n'existe pas", async () => {
     mockUsersRepo.findOne.mockResolvedValue(null);
 
-    await expect(makeService().revokeSessions(superAdmin, 'unknown')).rejects.toThrow(NotFoundException);
+    await expect(makeService().revokeSessions(superAdmin, 'unknown')).rejects.toThrow(
+      NotFoundException,
+    );
+    expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
 });
-
 
 describe('AdminUsersService.resetPassword()', () => {
   it('met à jour passwordChangedAt', async () => {
@@ -168,17 +206,18 @@ describe('AdminUsersService.resetPassword()', () => {
     expect(result).toEqual({ ok: true });
   });
 
-  it('lève une ForbiddenException si USER_ADMIN tente de reset le password d\'un SUPER_ADMIN', async () => {
+  it("lève une ForbiddenException si USER_ADMIN tente de reset le password d'un SUPER_ADMIN", async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser({ role_key: Role.SUPER_ADMIN }));
 
-    await expect(makeService().resetPassword(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+    await expect(makeService().resetPassword(userAdmin, 'user-1')).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(mockUsersRepo.update).not.toHaveBeenCalled();
   });
 });
 
-
 describe('AdminUsersService.verifyEmail()', () => {
-  it('vérifie l\'email d\'un user classique', async () => {
+  it("vérifie l'email d'un user classique", async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser());
     mockUsersRepo.update.mockResolvedValue({});
 
@@ -191,13 +230,14 @@ describe('AdminUsersService.verifyEmail()', () => {
   it('lève une ForbiddenException si USER_ADMIN agit sur un USER_ADMIN', async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser({ role_key: Role.USER_ADMIN }));
 
-    await expect(makeService().verifyEmail(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+    await expect(makeService().verifyEmail(userAdmin, 'user-1')).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });
 
-
 describe('AdminUsersService.forceMfa()', () => {
-  it('active le MFA d\'un user classique', async () => {
+  it("active le MFA d'un user classique", async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser());
     mockUsersRepo.update.mockResolvedValue({});
 

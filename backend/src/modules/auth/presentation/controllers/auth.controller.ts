@@ -128,7 +128,7 @@ export class AuthController {
     @Body() body?: { refreshToken?: string },
   ) {
     // Accept refresh token from either cookies (web) or request body (mobile)
-    const refreshToken: string | undefined = req.cookies?.refreshToken || body?.refreshToken;
+    const refreshToken = (req.cookies?.refreshToken as string | undefined) || body?.refreshToken;
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token missing');
@@ -156,14 +156,12 @@ export class AuthController {
   @Post('logout')
   @ApiBearerAuth('access-token')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const { user } = req as Request & { user: { userId: string; role: string } };
-
-    const userId = user.userId;
-
-    await this.logoutUseCase.execute(userId);
-
+    const cookieToken = req.cookies?.refreshToken;
+    const refreshToken = typeof cookieToken === 'string' ? cookieToken : undefined;
+    if (refreshToken) {
+      await this.logoutUseCase.execute(refreshToken);
+    }
     res.clearCookie('refreshToken', { path: '/' });
-
     return { success: true };
   }
 

@@ -2,8 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OnEvent } from '@nestjs/event-emitter';
-import { SecurityEventType, SecurityLogEntity, SecuritySeverity, } from 'src/infrastructure/database/entities/security-log.entity';
-import { BlockedIpEntity, BlockReason, } from 'src/infrastructure/database/entities/blocked-ip.entity';
+import {
+  SecurityEventType,
+  SecurityLogEntity,
+  SecuritySeverity,
+} from 'src/infrastructure/database/entities/security-log.entity';
+import {
+  BlockedIpEntity,
+  BlockReason,
+} from 'src/infrastructure/database/entities/blocked-ip.entity';
 import { SecurityPolicyEntity } from 'src/infrastructure/database/entities/security-policy.entity';
 import { SecurityLogsQueryDto } from '../presentation/dto/security-logs-query.dto';
 import { BlockIpDto } from '../presentation/dto/block-ip.dto';
@@ -38,7 +45,6 @@ export class AdminSecurityService {
     @InjectRepository(SecurityPolicyEntity)
     private readonly policyRepo: Repository<SecurityPolicyEntity>,
   ) {}
-
 
   @OnEvent('security.login.success')
   async onLoginSuccess(payload: {
@@ -141,21 +147,22 @@ export class AdminSecurityService {
     });
   }
 
-
   async getLogs(query: SecurityLogsQueryDto) {
     const { page = 1, limit = 50, from, to, ...filters } = query;
 
     const qb = this.logsRepo.createQueryBuilder('log');
 
-    if (filters.eventType) qb.andWhere('log.eventType = :eventType', { eventType: filters.eventType });
-    if (filters.severity)  qb.andWhere('log.severity = :severity', { severity: filters.severity });
-    if (filters.userId)    qb.andWhere('log.userId = :userId', { userId: filters.userId });
-    if (filters.ipAddress) qb.andWhere('log.ipAddress = :ipAddress', { ipAddress: filters.ipAddress });
+    if (filters.eventType)
+      qb.andWhere('log.eventType = :eventType', { eventType: filters.eventType });
+    if (filters.severity) qb.andWhere('log.severity = :severity', { severity: filters.severity });
+    if (filters.userId) qb.andWhere('log.userId = :userId', { userId: filters.userId });
+    if (filters.ipAddress)
+      qb.andWhere('log.ipAddress = :ipAddress', { ipAddress: filters.ipAddress });
     if (filters.isSuspicious !== undefined) {
       qb.andWhere('log.isSuspicious = :s', { s: filters.isSuspicious });
     }
     if (from) qb.andWhere('log.createdAt >= :from', { from: new Date(from) });
-    if (to)   qb.andWhere('log.createdAt <= :to', { to: new Date(to) });
+    if (to) qb.andWhere('log.createdAt <= :to', { to: new Date(to) });
 
     qb.orderBy('log.createdAt', 'DESC')
       .skip((page - 1) * limit)
@@ -205,7 +212,6 @@ export class AdminSecurityService {
 
     return saved;
   }
-
 
   async getBlockedIps(onlyActive = true) {
     const now = new Date();
@@ -287,7 +293,6 @@ export class AdminSecurityService {
     return { ipAddress, isBlocked, recentLogs };
   }
 
-
   async getPolicy(): Promise<SecurityPolicyEntity> {
     let policy = await this.policyRepo.findOne({ where: { id: 'global' } });
     if (!policy) {
@@ -304,7 +309,6 @@ export class AdminSecurityService {
     Object.assign(policy, dto);
     return this.policyRepo.save(policy);
   }
-
 
   async getSecurityStats() {
     const now = new Date();
@@ -326,10 +330,9 @@ export class AdminSecurityService {
     };
   }
 
-
   private resolveSeverity(eventType: SecurityEventType): SecuritySeverity {
     if (CRITICAL_EVENTS.has(eventType)) return SecuritySeverity.CRITICAL;
-    if (WARNING_EVENTS.has(eventType))  return SecuritySeverity.WARNING;
+    if (WARNING_EVENTS.has(eventType)) return SecuritySeverity.WARNING;
     return SecuritySeverity.INFO;
   }
 

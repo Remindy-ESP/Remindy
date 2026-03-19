@@ -1,22 +1,22 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum SecurityEventType {
-  LOGIN_SUCCESS         = 'login.success',
-  LOGIN_FAILURE         = 'login.failure',
-  LOGIN_BRUTE_FORCE     = 'login.brute_force',
-  LOGOUT                = 'logout',
-  PASSWORD_RESET        = 'password.reset',
-  ADMIN_USER_BANNED     = 'admin.user.banned',
-  ADMIN_USER_UNBANNED   = 'admin.user.unbanned',
+  LOGIN_SUCCESS = 'login.success',
+  LOGIN_FAILURE = 'login.failure',
+  LOGIN_BRUTE_FORCE = 'login.brute_force',
+  LOGOUT = 'logout',
+  PASSWORD_RESET = 'password.reset',
+  ADMIN_USER_BANNED = 'admin.user.banned',
+  ADMIN_USER_UNBANNED = 'admin.user.unbanned',
   ADMIN_SESSION_REVOKED = 'admin.session.revoked',
-  IP_BLOCKED            = 'ip.blocked',
-  IP_UNBLOCKED          = 'ip.unblocked',
-  CSRF_VIOLATION        = 'csrf.violation',
+  IP_BLOCKED = 'ip.blocked',
+  IP_UNBLOCKED = 'ip.unblocked',
+  CSRF_VIOLATION = 'csrf.violation',
 }
 
 export enum SecuritySeverity {
-  INFO     = 'info',
-  WARNING  = 'warning',
+  INFO = 'info',
+  WARNING = 'warning',
   CRITICAL = 'critical',
 }
 
