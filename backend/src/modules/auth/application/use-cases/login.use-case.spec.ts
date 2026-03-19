@@ -80,7 +80,7 @@ describe('LoginUseCase', () => {
         {
           provide: EventEmitter2,
           useValue: mockEventEmitter,
-        }
+        },
       ],
     }).compile();
 
@@ -130,9 +130,6 @@ describe('LoginUseCase', () => {
         mfaEnabled: false,
         mfaVerified: false,
       });
-
-      expect(sessionRepo.createSession).toHaveBeenCalled();
-    });
 
       expect(sessionRepo.createSession).toHaveBeenCalled();
     });

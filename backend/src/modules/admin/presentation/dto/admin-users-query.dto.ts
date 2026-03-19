@@ -31,7 +31,7 @@ export class AdminUsersQueryDto {
   status?: UserStatus;
 
   @ApiPropertyOptional({
-    description: 'Filtrer par vérification d\'email',
+    description: "Filtrer par vérification d'email",
   })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
