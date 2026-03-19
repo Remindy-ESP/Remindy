@@ -134,6 +134,9 @@ describe('LoginUseCase', () => {
       expect(sessionRepo.createSession).toHaveBeenCalled();
     });
 
+      expect(sessionRepo.createSession).toHaveBeenCalled();
+    });
+
     it('should throw UnauthorizedException when password is invalid', async () => {
       userRepo.findByEmail.mockResolvedValue(mockUser);
       passwordService.compare.mockResolvedValue(false);

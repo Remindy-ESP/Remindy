@@ -52,7 +52,7 @@ describe('InMemoryQueueService', () => {
     service = module.get<InMemoryQueueService>(InMemoryQueueService);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     service.onModuleDestroy();
     jest.clearAllTimers();
     jest.useRealTimers();
