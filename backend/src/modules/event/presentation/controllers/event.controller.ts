@@ -38,6 +38,7 @@ import { EventPresentationMapper } from '../mappers/event-presentation.mapper';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { FindSubscriptionUseCase } from 'src/modules/subscription/application/use-cases/find-subscription.use-case';
 import { FindAllSubscriptionsUseCase } from 'src/modules/subscription/application/use-cases/find-all-subscriptions.use-case';
+import { SubscriptionPresentationMapper } from 'src/modules/subscription/presentation/mappers/subscription-presentation.mapper';
 
 @ApiTags('Calendar - Événements')
 @Controller('calendar')
@@ -122,13 +123,15 @@ export class EventController {
 
     const userEvents = events.filter(event => userSubscriptionIds.has(event.subscriptionId));
 
-    // Enrichir les événements avec les informations de subscription
+    // Enrichir les événements avec les informations de subscription (sérialisées avec category)
     return userEvents.map(event => {
       const dto = EventPresentationMapper.toResponseDto(event);
       const subscription = subscriptionMap.get(event.subscriptionId);
       return {
         ...dto,
-        subscription: subscription || undefined,
+        subscription: subscription
+          ? SubscriptionPresentationMapper.toResponseDto(subscription)
+          : undefined,
         userId: user.userId,
       };
     });
