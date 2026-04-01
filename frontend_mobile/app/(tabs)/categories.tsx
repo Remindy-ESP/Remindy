@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -74,6 +74,7 @@ export default function CategoriesScreen() {
       setCreateModalVisible(false);
       await fetchCategories();
     } catch (err) {
+      console.error('Error creating category:', err);
       Alert.alert('Erreur', "Impossible de créer la catégorie.");
     } finally {
       setCreating(false);
@@ -94,6 +95,7 @@ export default function CategoriesScreen() {
       setRenameModalVisible(false);
       await fetchCategories();
     } catch (err) {
+      console.error('Error renaming category:', err);
       Alert.alert('Erreur', "Impossible de renommer la catégorie.");
     } finally {
       setRenaming(false);
