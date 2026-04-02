@@ -48,7 +48,7 @@ describe('ReprocessOcrUseCase', () => {
           useValue: {
             add: jest.fn(),
             getJobStatus: jest.fn(),
-            addDocumentToQueue: jest.fn().mockResolvedValue({ jobId: 'job-123' }), // ajouter ceci
+            addDocumentToQueue: jest.fn().mockResolvedValue({ jobId: 'job-123' }),
           },
         },
       ],
