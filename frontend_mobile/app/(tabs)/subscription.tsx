@@ -614,7 +614,7 @@ export default function SubscriptionScreen() {
             >
               <Picker.Item label="Toutes" value="" />
               {categories.map((cat) => (
-                <Picker.Item key={cat.id} label={`${cat.icon} ${cat.name}`} value={cat.id} />
+                <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
               ))}
             </Picker>
           </View>
@@ -734,7 +734,7 @@ export default function SubscriptionScreen() {
                   >
                     <Picker.Item label="Aucune catégorie" value="" />
                     {categories.map((cat) => (
-                      <Picker.Item key={cat.id} label={`${cat.icon} ${cat.name}`} value={cat.id} />
+                      <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
                     ))}
                   </Picker>
                 </View>
