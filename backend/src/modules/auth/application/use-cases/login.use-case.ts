@@ -1,10 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { IPasswordService } from '../../domain/services/password.service';
 import { ITokenService } from '../../domain/services/token.service';
 import { LoginResponseDto } from '../../presentation/dto/login-response.dto';
+
+const BRUTE_FORCE_THRESHOLD = 5;
 
 @Injectable()
 export class LoginUseCase {
@@ -13,6 +16,7 @@ export class LoginUseCase {
     private readonly sessionRepo: IUserSessionRepository,
     private readonly passwordService: IPasswordService,
     private readonly tokenService: ITokenService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(params: {
@@ -23,7 +27,14 @@ export class LoginUseCase {
     deviceName?: string;
   }): Promise<LoginResponseDto> {
     const user = await this.userRepo.findByEmail(params.email);
+
     if (!user) {
+      this.eventEmitter.emit('security.login.failure', {
+        userEmail: params.email,
+        ipAddress: params.ipAddress,
+        userAgent: params.userAgent,
+        metadata: { reason: 'user_not_found' },
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -33,8 +44,29 @@ export class LoginUseCase {
     );
 
     if (!isPasswordValid) {
+      // Incrémenter le compteur d'échecs
+      await this.userRepo.incrementFailedLoginCount(user.getId());
+      const failedCount = (user.getFailedLoginCount?.() ?? 0) + 1;
+
+      if (failedCount >= BRUTE_FORCE_THRESHOLD) {
+        this.eventEmitter.emit('security.login.brute_force', {
+          userEmail: params.email,
+          ipAddress: params.ipAddress,
+          metadata: { attempts: failedCount },
+        });
+      } else {
+        this.eventEmitter.emit('security.login.failure', {
+          userEmail: params.email,
+          ipAddress: params.ipAddress,
+          userAgent: params.userAgent,
+          metadata: { reason: 'invalid_password', attempts: failedCount },
+        });
+      }
+
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    await this.userRepo.resetFailedLoginCount(user.getId());
 
     const sessionId = randomUUID();
 
@@ -65,6 +97,13 @@ export class LoginUseCase {
       role: user.getRoleKey(),
       mfaEnabled: user.isMfaEnabled(),
       mfaVerified: false,
+    });
+
+    this.eventEmitter.emit('security.login.success', {
+      userId: user.getId(),
+      userEmail: params.email,
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
     });
 
     return {

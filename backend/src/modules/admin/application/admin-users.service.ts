@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EUser, UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import { UserSessionEntity } from 'src/infrastructure/database/entities';
 import { AdminUsersQueryDto } from '../presentation/dto/admin-users-query.dto';
@@ -13,6 +14,7 @@ export class AdminUsersService {
     @InjectRepository(EUser) private readonly usersRepo: Repository<EUser>,
     @InjectRepository(UserSessionEntity)
     private readonly sessionsRepo: Repository<UserSessionEntity>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async list(actor: { id: string; role: Role }, query: AdminUsersQueryDto) {
@@ -100,6 +102,13 @@ export class AdminUsersService {
     assertCanActOnUser({ actorRole: actor.role, targetRole: user.role_key, action: 'ban' });
 
     await this.usersRepo.update(userId, { status: UserStatus.BANNED });
+
+    this.eventEmitter.emit('security.admin.user.banned', {
+      actorId: actor.id,
+      targetUserId: userId,
+      reason,
+    });
+
     return { ok: true, status: UserStatus.BANNED, reason };
   }
 
@@ -108,6 +117,12 @@ export class AdminUsersService {
     assertCanActOnUser({ actorRole: actor.role, targetRole: user.role_key, action: 'unban' });
 
     await this.usersRepo.update(userId, { status: UserStatus.ACTIVE });
+
+    this.eventEmitter.emit('security.admin.user.unbanned', {
+      actorId: actor.id,
+      targetUserId: userId,
+    });
+
     return { ok: true, status: UserStatus.ACTIVE };
   }
 
@@ -142,6 +157,7 @@ export class AdminUsersService {
     await this.usersRepo.update(userId, { passwordChangedAt: new Date() });
     return { ok: true };
   }
+
   async revokeSessions(actor: { id: string; role: Role }, userId: string, _meta?: any) {
     const user = await this.mustGetUser(userId);
     assertCanActOnUser({
@@ -151,8 +167,15 @@ export class AdminUsersService {
     });
 
     await this.sessionsRepo.delete({ user: { id: userId } as any });
+
+    this.eventEmitter.emit('security.admin.session.revoked', {
+      actorId: actor.id,
+      targetUserId: userId,
+    });
+
     return { ok: true };
   }
+
   private async mustGetUser(id: string) {
     const user = await this.usersRepo.findOne({
       where: { id },

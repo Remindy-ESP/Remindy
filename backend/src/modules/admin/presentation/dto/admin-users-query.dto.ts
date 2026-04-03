@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsEnum, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { UserStatus } from 'src/infrastructure/database/entities/user.entity'; 
+import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import { Role } from '../../../auth/domain/value-objects/role.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
@@ -13,7 +13,6 @@ export class AdminUsersQueryDto {
   @IsString()
   q?: string;
 
-  
   @ApiPropertyOptional({
     description: 'Filtrer par rôle',
     enum: Role,
@@ -32,7 +31,7 @@ export class AdminUsersQueryDto {
   status?: UserStatus;
 
   @ApiPropertyOptional({
-    description: 'Filtrer par vérification d\'email',
+    description: "Filtrer par vérification d'email",
   })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
