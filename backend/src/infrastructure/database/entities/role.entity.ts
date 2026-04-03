@@ -16,7 +16,6 @@ export class RoleEntity {
   @CreateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   createdAt: Date;
 
-  // Relations
   @OneToMany(() => EUser, user => user.role_key)
   users: EUser[];
 
