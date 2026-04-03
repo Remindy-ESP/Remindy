@@ -3,7 +3,7 @@ import { SubscriptionEntity } from '../persistence/subscription.entity';
 
 export class SubscriptionMapper {
   static toDomain(entity: SubscriptionEntity): Subscription {
-    return new Subscription({
+    const subscription = new Subscription({
       id: entity.id,
       userId: entity.userId,
       contractId: entity.contractId,
@@ -25,6 +25,9 @@ export class SubscriptionMapper {
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,
     });
+    // Carry the eagerly-loaded category relation so it can be serialized in response DTOs
+    (subscription as any).category = entity.category ?? undefined;
+    return subscription;
   }
 
   static toPersistence(domain: Subscription): SubscriptionEntity {

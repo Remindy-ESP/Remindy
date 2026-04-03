@@ -71,7 +71,11 @@ export default function DashboardScreen() {
     }, [])
   );
 
-  const selectedDateEvents = selected ? getEventsForDate(selected) : [];
+  const selectedDateEvents = selected
+    ? getEventsForDate(selected).filter((e) =>
+        selectedCategory ? e.subscription?.category?.name === selectedCategory : true
+      )
+    : [];
   const filteredEvents = selectedCategory
     ? getEventsByCategory(selectedCategory)
     : events;
@@ -322,7 +326,7 @@ export default function DashboardScreen() {
                     activeOpacity={0.7}
                   >
                     <Text style={styles.categoryText}>
-                      {category.icon} {category.name}
+                      {category.name}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -402,7 +406,7 @@ export default function DashboardScreen() {
         </View>
 
         <View style={styles.contentSection}>
-          {getEventsForPeriod(activePeriod, selected).length === 0 ? (
+          {getEventsForPeriod(activePeriod, selected, selectedCategory).length === 0 ? (
             <Text style={{ color: '#999', textAlign: 'center', marginVertical: 20 }}>
               Aucune dépense pour cette période
             </Text>
@@ -412,7 +416,7 @@ export default function DashboardScreen() {
               nestedScrollEnabled={true}
               showsVerticalScrollIndicator={true}
             >
-              {getEventsForPeriod(activePeriod, selected).map((event) => (
+              {getEventsForPeriod(activePeriod, selected, selectedCategory).map((event) => (
                 <View key={event.id} style={styles.expenseItem}>
                   <View style={styles.expenseLeft}>
                     <View style={styles.expenseIconPlaceholder} />
@@ -426,7 +430,7 @@ export default function DashboardScreen() {
                     </View>
                   </View>
                   <Text style={styles.expenseAmount}>
-                    {event.subscription?.amount ? `${event.subscription.amount}€` : '-'}
+                    {parseFloat(event.totalAmount.toFixed(2))}€
                   </Text>
                 </View>
               ))}

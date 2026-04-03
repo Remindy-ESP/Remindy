@@ -109,7 +109,13 @@ export default function GlobalHeader() {
 
                             <View style={styles.separator} />
 
-                            <TouchableOpacity style={styles.menuItem}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => {
+                                    closeProfileMenu();
+                                    router.push('/(tabs)/categories' as any);
+                                }}
+                            >
                                 <Text style={styles.menuItemText}>Catégories</Text>
                             </TouchableOpacity>
 
