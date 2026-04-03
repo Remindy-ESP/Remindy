@@ -63,6 +63,7 @@ import { AuthModule } from '../auth/auth.module';
     CreateAuditLogUseCase,
     PurgeAuditLogsUseCase,
     AuditInterceptor,
+    FindAllAuditLogsUseCase,
   ],
 })
 export class AuditModule {}
