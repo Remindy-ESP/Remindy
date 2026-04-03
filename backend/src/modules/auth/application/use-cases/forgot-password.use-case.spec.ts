@@ -6,7 +6,7 @@ import { IEmailService } from '../../infrastructure/services/email.service';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
-
+import { EventEmitter2 } from '@nestjs/event-emitter';
 describe('ForgotPasswordUseCase', () => {
   let useCase: ForgotPasswordUseCase;
   let userRepo: jest.Mocked<IUserAuthRepository>;
@@ -56,15 +56,22 @@ describe('ForgotPasswordUseCase', () => {
           provide: IEmailService,
           useValue: mockEmailService,
         },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
+        },
       ],
     }).compile();
-
     useCase = module.get<ForgotPasswordUseCase>(ForgotPasswordUseCase);
     userRepo = module.get(IUserAuthRepository);
     tokenService = module.get(ITokenService);
     emailService = module.get(IEmailService);
+    eventEmitter = module.get(EventEmitter2);
   });
-
+  const mockEventEmitter: Partial<jest.Mocked<EventEmitter2>> = {
+    emit: jest.fn(),
+    emitAsync: jest.fn(),
+  };
   it('should be defined', () => {
     expect(useCase).toBeDefined();
   });

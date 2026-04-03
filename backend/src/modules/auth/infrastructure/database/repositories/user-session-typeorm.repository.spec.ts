@@ -63,6 +63,7 @@ describe('UserSessionTypeOrmRepository', () => {
       const result = await repository.createSession(params);
 
       expect(result).toEqual({ id: 'session-123' });
+
       expect(typeOrmRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           id: params.id,
@@ -106,6 +107,7 @@ describe('UserSessionTypeOrmRepository', () => {
       const result = await repository.createSession(params);
 
       expect(result).toEqual({ id: 'session-456' });
+
       expect(typeOrmRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           userAgent: null,
@@ -235,7 +237,7 @@ describe('UserSessionTypeOrmRepository', () => {
 
       const result = await repository.findActiveByRefreshTokenHash('token_hash');
 
-      expect(result).toEqual({ id: 'session-123' });
+      expect(result).toEqual({ id: 'session-123', userId: 'user-123' });
       expect(typeOrmRepository.findOne).toHaveBeenCalledWith({
         where: {
           refreshTokenHash: 'token_hash',

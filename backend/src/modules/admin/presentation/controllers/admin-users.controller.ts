@@ -14,7 +14,6 @@ type AuthenticatedRequest = Request & {
 
 @ApiTags('Admin / Users')
 @ApiBearerAuth('access-token')
-
 @Controller('admin/users')
 @Admin()
 export class AdminUsersController {

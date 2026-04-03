@@ -15,7 +15,7 @@ export class AdminCsrfController {
     res.cookie('csrfToken', token, {
       httpOnly: false,
       sameSite: 'lax',
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
     });
 
     return { csrfToken: token };
