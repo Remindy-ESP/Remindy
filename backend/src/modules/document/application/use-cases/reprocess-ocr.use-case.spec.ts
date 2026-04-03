@@ -18,7 +18,7 @@ describe('ReprocessOcrUseCase', () => {
       findById: jest.fn(),
       update: jest.fn(),
       updateOcrStatus: jest.fn(),
-  };
+    };
 
     const mockR2Service: Partial<jest.Mocked<CloudflareR2Service>> = {
       downloadFile: jest.fn().mockResolvedValue(Buffer.from('pdf content')),
@@ -43,9 +43,14 @@ describe('ReprocessOcrUseCase', () => {
         { provide: CloudflareR2Service, useValue: mockR2Service },
         { provide: OcrService, useValue: mockOcrService },
         { provide: GeminiParserService, useValue: mockGeminiParser },
-        { provide: InMemoryQueueService, useValue: { add: jest.fn(), getJobStatus: jest.fn(), addDocumentToQueue: jest.fn().mockResolvedValue({ jobId: 'job-123' }), // ajouter ceci
-    }
-},
+        {
+          provide: InMemoryQueueService,
+          useValue: {
+            add: jest.fn(),
+            getJobStatus: jest.fn(),
+            addDocumentToQueue: jest.fn().mockResolvedValue({ jobId: 'job-123' }),
+          },
+        },
       ],
     }).compile();
 

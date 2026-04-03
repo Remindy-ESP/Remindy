@@ -19,3 +19,8 @@ export { ContractEntity } from './contract.entity';
 
 // Audit entities
 export { AdminAuditLogEntity } from './admin-audit-log.entity';
+
+// Security entities
+export { SecurityLogEntity } from './security-log.entity';
+export { BlockedIpEntity } from './blocked-ip.entity';
+export { SecurityPolicyEntity } from './security-policy.entity';

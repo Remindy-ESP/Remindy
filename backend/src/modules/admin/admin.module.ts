@@ -14,8 +14,25 @@ import { EUser, UserSessionEntity } from 'src/infrastructure/database/entities';
 import { AdminUsersService } from './application/admin-users.service';
 import { AuditModule } from '../audit/audit.module';
 import { AdminUsersController } from './presentation/controllers/admin-users.controller';
+import { forwardRef } from '@nestjs/common';
+import { SecurityLogEntity } from 'src/infrastructure/database/entities/security-log.entity';
+import { BlockedIpEntity } from 'src/infrastructure/database/entities/blocked-ip.entity';
+import { SecurityPolicyEntity } from 'src/infrastructure/database/entities/security-policy.entity';
+import { AdminSecurityService } from './application/admin-security.service';
+import { AdminSecurityController } from './presentation/controllers/admin-security.controller';
+
 @Module({
-  imports: [AuditModule, AuthModule, TypeOrmModule.forFeature([EUser, UserSessionEntity])],
+  imports: [
+    AuditModule,
+    forwardRef(() => AuthModule),
+    TypeOrmModule.forFeature([
+      EUser,
+      UserSessionEntity,
+      SecurityLogEntity,
+      BlockedIpEntity,
+      SecurityPolicyEntity,
+    ]),
+  ],
   controllers: [
     AdminMeController,
     AdminMfaController,
@@ -23,7 +40,16 @@ import { AdminUsersController } from './presentation/controllers/admin-users.con
     AdminSuperController,
     AdminUsersTestController,
     AdminUsersController,
+    AdminSecurityController,
   ],
-  providers: [AdminRolesGuard, AdminMfaGuard, AdminCsrfGuard, SuperAdminGuard, AdminUsersService],
+  providers: [
+    AdminRolesGuard,
+    AdminMfaGuard,
+    AdminCsrfGuard,
+    SuperAdminGuard,
+    AdminUsersService,
+    AdminSecurityService,
+  ],
+  exports: [AdminSecurityService],
 })
 export class AdminModule {}
