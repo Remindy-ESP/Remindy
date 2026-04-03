@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { ITokenService } from '../../domain/services/token.service';
 import { IEmailService } from '../../infrastructure/services/email.service';
@@ -9,6 +10,7 @@ export class ForgotPasswordUseCase {
     private readonly userRepo: IUserAuthRepository,
     private readonly tokenService: ITokenService,
     private readonly emailService: IEmailService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(email: string): Promise<void> {
@@ -27,6 +29,10 @@ export class ForgotPasswordUseCase {
     await this.emailService.sendPasswordResetEmail({
       to: user.getEmail(),
       resetLink,
+    });
+
+    this.eventEmitter.emit('security.password.reset', {
+      userEmail: user.getEmail(),
     });
   }
 
