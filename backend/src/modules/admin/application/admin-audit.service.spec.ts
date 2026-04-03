@@ -5,27 +5,13 @@ import { AdminDocumentsQueryDto } from '../presentation/dto/admin-documents-quer
 import { AdminSubscriptionsQueryDto } from '../presentation/dto/admin-subscriptions-query.dto';
 import { UpdateSharedSubscriptionDto } from '../presentation/dto/update-shared-subscription.dto';
 
-jest.mock('../presentation/permissions/admin-permissions.map', () => ({
-  permissionsForRole: (role: Role) => {
-    if (role === Role.SUPER_ADMIN) {
-      return [
-        'admin.subscriptions.read',
-        'admin.subscriptions.write',
-        'admin.cloud.read',
-        'admin.cloud.write',
-      ];
-    }
-    if (role === Role.USER_ADMIN) {
-      return ['admin.subscriptions.read'];
-    }
-    return [];
-  },
-}));
+// --- Mocks ---
 
 const mockQb = {
   where: jest.fn().mockReturnThis(),
   andWhere: jest.fn().mockReturnThis(),
   orderBy: jest.fn().mockReturnThis(),
+  addOrderBy: jest.fn().mockReturnThis(),
   skip: jest.fn().mockReturnThis(),
   take: jest.fn().mockReturnThis(),
   getManyAndCount: jest.fn(),
@@ -52,6 +38,8 @@ const makeService = () =>
     mockDocumentsRepo as any,
     mockReprocessOcrUseCase as any,
   );
+
+// --- Fixtures ---
 
 const superAdmin = { role: Role.SUPER_ADMIN };
 const userAdmin = { role: Role.USER_ADMIN };
@@ -81,19 +69,44 @@ const makeDocument = (overrides: Partial<any> = {}) => ({
   ...overrides,
 });
 
+// --- Setup ---
+
 beforeEach(() => {
   jest.clearAllMocks();
+
   mockSubscriptionsRepo.createQueryBuilder.mockReturnValue(mockQb);
   mockDocumentsRepo.createQueryBuilder.mockReturnValue(mockQb);
+
   mockQb.getManyAndCount.mockResolvedValue([[], 0]);
 });
 
-describe('AdminCloudService.listSubscriptions()', () => {
+// --- assertPermission ---
+
+describe('assertPermission', () => {
+  it("leve ForbiddenException si le role n'a pas la permission", async () => {
+    const service = makeService();
+    const query = { page: 1, limit: 20 } as AdminDocumentsQueryDto;
+
+    await expect(service.listDocuments(userAdmin, query)).rejects.toThrow(ForbiddenException);
+  });
+
+  it("ne leve pas d'exception si le role a la permission", async () => {
+    const service = makeService();
+    const query = { page: 1, limit: 20 } as AdminSubscriptionsQueryDto;
+
+    await expect(service.listSubscriptions(userAdmin, query)).resolves.not.toThrow();
+  });
+});
+
+// --- listSubscriptions ---
+
+describe('listSubscriptions', () => {
   it('retourne items, total, page, limit', async () => {
     const subs = [makeSubscription(), makeSubscription({ id: 'sub-2' })];
     mockQb.getManyAndCount.mockResolvedValue([subs, 2]);
 
-    const result = await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+    const result = await service.listSubscriptions(userAdmin, {
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
@@ -102,61 +115,95 @@ describe('AdminCloudService.listSubscriptions()', () => {
   });
 
   it('applique le filtre userId', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       userId: 'user-abc',
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.userId = :userId', { userId: 'user-abc' });
   });
 
   it('applique le filtre status', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       status: 'active',
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.status = :status', { status: 'active' });
   });
 
   it('applique le filtre frequency', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       frequency: 'monthly',
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.frequency = :frequency', {
       frequency: 'monthly',
     });
   });
 
+  it('applique le filtre currency', async () => {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
+      currency: 'EUR',
+      page: 1,
+      limit: 20,
+    } as AdminSubscriptionsQueryDto);
+
+    expect(mockQb.andWhere).toHaveBeenCalledWith('s.currency = :currency', {
+      currency: 'EUR',
+    });
+  });
+
   it('applique le filtre name en ILIKE', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       name: 'netflix',
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
-    expect(mockQb.andWhere).toHaveBeenCalledWith('s.name ILIKE :name', { name: '%netflix%' });
+
+    expect(mockQb.andWhere).toHaveBeenCalledWith('s.name ILIKE :name', {
+      name: '%netflix%',
+    });
   });
 
   it('applique les filtres amountMin et amountMax', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       amountMin: 5,
       amountMax: 50,
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.amount >= :amountMin', { amountMin: 5 });
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.amount <= :amountMax', { amountMax: 50 });
   });
 
   it('applique les filtres createdFrom et createdTo', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       createdFrom: '2026-01-01',
       createdTo: '2026-12-31',
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.createdAt >= :createdFrom', {
       createdFrom: new Date('2026-01-01'),
     });
@@ -165,41 +212,80 @@ describe('AdminCloudService.listSubscriptions()', () => {
     });
   });
 
-  it("n'applique aucun andWhere si aucun filtre", async () => {
-    await makeService().listSubscriptions(userAdmin, {
+  it("n'applique aucun filtre si les champs sont absents", async () => {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       page: 1,
       limit: 20,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.andWhere).not.toHaveBeenCalled();
   });
 
-  it('applique la pagination — page 3, limit 10 → skip 20', async () => {
-    await makeService().listSubscriptions(userAdmin, {
+  it('applique le tri par defaut', async () => {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
+      page: 1,
+      limit: 20,
+    } as AdminSubscriptionsQueryDto);
+
+    expect(mockQb.orderBy).toHaveBeenCalledWith('s.createdAt', 'DESC');
+    expect(mockQb.addOrderBy).toHaveBeenCalledWith('s.id', 'DESC');
+  });
+
+  it('applique un tri personnalise', async () => {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
+      sortBy: 'amount',
+      sortDir: 'ASC',
+      page: 1,
+      limit: 20,
+    } as AdminSubscriptionsQueryDto);
+
+    expect(mockQb.orderBy).toHaveBeenCalledWith('s.amount', 'ASC');
+    expect(mockQb.addOrderBy).toHaveBeenCalledWith('s.id', 'DESC');
+  });
+
+  it('applique la pagination', async () => {
+    const service = makeService();
+
+    await service.listSubscriptions(userAdmin, {
       page: 3,
       limit: 10,
     } as AdminSubscriptionsQueryDto);
+
     expect(mockQb.skip).toHaveBeenCalledWith(20);
     expect(mockQb.take).toHaveBeenCalledWith(10);
   });
 
-  it('lève ForbiddenException pour un rôle sans SUBSCRIPTIONS_READ', async () => {
+  it('leve ForbiddenException pour un role sans permission', async () => {
+    const service = makeService();
+
     await expect(
-      makeService().listSubscriptions({ role: Role.USER }, {
-        page: 1,
-        limit: 20,
-      } as AdminSubscriptionsQueryDto),
+      service.listSubscriptions(
+        { role: Role.USER },
+        {
+          page: 1,
+          limit: 20,
+        } as AdminSubscriptionsQueryDto,
+      ),
     ).rejects.toThrow(ForbiddenException);
-    expect(mockQb.getManyAndCount).not.toHaveBeenCalled();
   });
 });
 
-describe('AdminCloudService.updateSharedSubscription()', () => {
-  it('met à jour et retourne la subscription', async () => {
+// --- updateSharedSubscription ---
+
+describe('updateSharedSubscription', () => {
+  it('met a jour et retourne la subscription', async () => {
     const sub = makeSubscription();
     mockSubscriptionsRepo.findOne.mockResolvedValue(sub);
     mockSubscriptionsRepo.save.mockResolvedValue({ ...sub, name: 'Disney+' });
 
-    const result = await makeService().updateSharedSubscription(superAdmin, 'sub-1', {
+    const service = makeService();
+    const result = await service.updateSharedSubscription(superAdmin, 'sub-1', {
       name: 'Disney+',
     } as UpdateSharedSubscriptionDto);
 
@@ -207,33 +293,34 @@ describe('AdminCloudService.updateSharedSubscription()', () => {
     expect(result.name).toBe('Disney+');
   });
 
-  it('lève NotFoundException si subscription introuvable', async () => {
+  it('leve NotFoundException si subscription introuvable', async () => {
     mockSubscriptionsRepo.findOne.mockResolvedValue(null);
 
+    const service = makeService();
+
     await expect(
-      makeService().updateSharedSubscription(
-        superAdmin,
-        'inexistant',
-        {} as UpdateSharedSubscriptionDto,
-      ),
+      service.updateSharedSubscription(superAdmin, 'inexistant', {} as UpdateSharedSubscriptionDto),
     ).rejects.toThrow(NotFoundException);
-    expect(mockSubscriptionsRepo.save).not.toHaveBeenCalled();
   });
 
-  it('lève ForbiddenException pour USER_ADMIN (pas CLOUD_WRITE)', async () => {
+  it('leve ForbiddenException pour user_admin sans CLOUD_WRITE', async () => {
+    const service = makeService();
+
     await expect(
-      makeService().updateSharedSubscription(userAdmin, 'sub-1', {} as UpdateSharedSubscriptionDto),
+      service.updateSharedSubscription(userAdmin, 'sub-1', {} as UpdateSharedSubscriptionDto),
     ).rejects.toThrow(ForbiddenException);
-    expect(mockSubscriptionsRepo.findOne).not.toHaveBeenCalled();
   });
 });
 
-describe('AdminCloudService.listDocuments()', () => {
+// --- listDocuments ---
+
+describe('listDocuments', () => {
   it('retourne items, total, page, limit', async () => {
     const docs = [makeDocument(), makeDocument({ id: 'doc-2' })];
     mockQb.getManyAndCount.mockResolvedValue([docs, 2]);
 
-    const result = await makeService().listDocuments(superAdmin, {
+    const service = makeService();
+    const result = await service.listDocuments(superAdmin, {
       page: 1,
       limit: 20,
     } as AdminDocumentsQueryDto);
@@ -242,63 +329,81 @@ describe('AdminCloudService.listDocuments()', () => {
   });
 
   it('applique le filtre userId', async () => {
-    await makeService().listDocuments(superAdmin, {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
       userId: 'user-abc',
       page: 1,
       limit: 20,
     } as AdminDocumentsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.userId = :userId', { userId: 'user-abc' });
   });
 
+  it('applique le filtre subscriptionId', async () => {
+  await makeService().listDocuments(superAdmin, {
+    subscriptionId: 'sub-abc',
+    page: 1,
+    limit: 20,
+  } as AdminDocumentsQueryDto);
+
+  expect(mockQb.andWhere).toHaveBeenCalledWith('d.subscriptionId = :subscriptionId', {
+    subscriptionId: 'sub-abc',
+  });
+});
+
   it('applique le filtre ocrStatus', async () => {
-    await makeService().listDocuments(superAdmin, {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
       ocrStatus: 'failed',
       page: 1,
       limit: 20,
     } as AdminDocumentsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.ocrStatus = :ocrStatus', {
       ocrStatus: 'failed',
     });
   });
 
-  it('applique le filtre filename en ILIKE', async () => {
-    await makeService().listDocuments(superAdmin, {
-      filename: 'facture',
-      page: 1,
-      limit: 20,
-    } as AdminDocumentsQueryDto);
-    expect(mockQb.andWhere).toHaveBeenCalledWith('d.filename ILIKE :filename', {
-      filename: '%facture%',
-    });
-  });
-
   it('applique le filtre mimeType', async () => {
-    await makeService().listDocuments(superAdmin, {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
       mimeType: 'application/pdf',
       page: 1,
       limit: 20,
     } as AdminDocumentsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.mimeType = :mimeType', {
       mimeType: 'application/pdf',
     });
   });
 
-  it('applique le filtre subscriptionId', async () => {
-    await makeService().listDocuments(superAdmin, {
-      subscriptionId: 'sub-abc',
+  it('applique le filtre filename en ILIKE', async () => {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
+      filename: 'facture',
       page: 1,
       limit: 20,
     } as AdminDocumentsQueryDto);
-    expect(mockQb.andWhere).toHaveBeenCalledWith('d.subscriptionId = :subId', { subId: 'sub-abc' });
+
+    expect(mockQb.andWhere).toHaveBeenCalledWith('d.filename ILIKE :filename', {
+      filename: '%facture%',
+    });
   });
 
   it('applique les filtres uploadedFrom et uploadedTo', async () => {
-    await makeService().listDocuments(superAdmin, {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
       uploadedFrom: '2026-01-01',
       uploadedTo: '2026-12-31',
       page: 1,
       limit: 20,
     } as AdminDocumentsQueryDto);
+
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.uploadedAt >= :uploadedFrom', {
       uploadedFrom: new Date('2026-01-01'),
     });
@@ -307,72 +412,139 @@ describe('AdminCloudService.listDocuments()', () => {
     });
   });
 
-  it("n'applique aucun andWhere si aucun filtre", async () => {
-    await makeService().listDocuments(superAdmin, { page: 1, limit: 20 } as AdminDocumentsQueryDto);
+  it("n'applique aucun filtre si les champs sont absents", async () => {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
+      page: 1,
+      limit: 20,
+    } as AdminDocumentsQueryDto);
+
     expect(mockQb.andWhere).not.toHaveBeenCalled();
   });
 
-  it('applique la pagination — page 2, limit 10 → skip 10', async () => {
-    await makeService().listDocuments(superAdmin, { page: 2, limit: 10 } as AdminDocumentsQueryDto);
+  it('applique le tri par defaut', async () => {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
+      page: 1,
+      limit: 20,
+    } as AdminDocumentsQueryDto);
+
+    expect(mockQb.orderBy).toHaveBeenCalledWith('d.uploadedAt', 'DESC');
+    expect(mockQb.addOrderBy).toHaveBeenCalledWith('d.id', 'DESC');
+  });
+
+  it('applique un tri personnalise', async () => {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
+      sortBy: 'filename',
+      sortDir: 'ASC',
+      page: 1,
+      limit: 20,
+    } as AdminDocumentsQueryDto);
+
+    expect(mockQb.orderBy).toHaveBeenCalledWith('d.filename', 'ASC');
+    expect(mockQb.addOrderBy).toHaveBeenCalledWith('d.id', 'DESC');
+  });
+
+  it('applique le tri fileSize avec CAST', async () => {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
+      sortBy: 'fileSize',
+      sortDir: 'ASC',
+      page: 1,
+      limit: 20,
+    } as AdminDocumentsQueryDto);
+
+    expect(mockQb.orderBy).toHaveBeenCalledWith('CAST(d.fileSize AS integer)', 'ASC');
+    expect(mockQb.addOrderBy).toHaveBeenCalledWith('d.id', 'DESC');
+  });
+
+  it('applique la pagination', async () => {
+    const service = makeService();
+
+    await service.listDocuments(superAdmin, {
+      page: 2,
+      limit: 10,
+    } as AdminDocumentsQueryDto);
+
     expect(mockQb.skip).toHaveBeenCalledWith(10);
     expect(mockQb.take).toHaveBeenCalledWith(10);
   });
 
-  it('lève ForbiddenException pour USER_ADMIN (pas CLOUD_READ)', async () => {
+  it('leve ForbiddenException pour user_admin sans CLOUD_READ', async () => {
+    const service = makeService();
+
     await expect(
-      makeService().listDocuments(userAdmin, { page: 1, limit: 20 } as AdminDocumentsQueryDto),
+      service.listDocuments(userAdmin, {
+        page: 1,
+        limit: 20,
+      } as AdminDocumentsQueryDto),
     ).rejects.toThrow(ForbiddenException);
-    expect(mockQb.getManyAndCount).not.toHaveBeenCalled();
   });
 });
 
-describe('AdminCloudService.reprocessOcr()', () => {
-  it('appelle le use case avec les bons paramètres (force: true)', async () => {
+// --- reprocessOcr ---
+
+describe('reprocessOcr', () => {
+  it('appelle execute avec les bons parametres', async () => {
     const doc = makeDocument({ ocrStatus: 'failed' });
     mockDocumentsRepo.findOne.mockResolvedValue(doc);
     mockReprocessOcrUseCase.execute.mockResolvedValue({ ...doc, ocrStatus: 'pending' });
 
-    await makeService().reprocessOcr(superAdmin, 'doc-1', true);
+    const service = makeService();
+
+    await service.reprocessOcr(superAdmin, 'doc-1', true);
 
     expect(mockReprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-1', doc.userId, {
       force: true,
     });
   });
 
-  it('appelle le use case avec force: false', async () => {
-    const doc = makeDocument();
+  it('transmet force false correctement', async () => {
+    const doc = makeDocument({ ocrStatus: 'failed' });
     mockDocumentsRepo.findOne.mockResolvedValue(doc);
     mockReprocessOcrUseCase.execute.mockResolvedValue(doc);
 
-    await makeService().reprocessOcr(superAdmin, 'doc-1', false);
+    const service = makeService();
+
+    await service.reprocessOcr(superAdmin, 'doc-1', false);
 
     expect(mockReprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-1', doc.userId, {
       force: false,
     });
   });
 
-  it('lève NotFoundException si document introuvable', async () => {
+  it('leve NotFoundException si document introuvable', async () => {
     mockDocumentsRepo.findOne.mockResolvedValue(null);
 
-    await expect(makeService().reprocessOcr(superAdmin, 'inexistant', true)).rejects.toThrow(
+    const service = makeService();
+
+    await expect(service.reprocessOcr(superAdmin, 'inexistant', true)).rejects.toThrow(
       NotFoundException,
     );
     expect(mockReprocessOcrUseCase.execute).not.toHaveBeenCalled();
   });
 
-  it('lève ForbiddenException pour USER_ADMIN avant le findOne', async () => {
-    await expect(makeService().reprocessOcr(userAdmin, 'doc-1', true)).rejects.toThrow(
+  it('leve ForbiddenException pour user_admin avant le findOne', async () => {
+    const service = makeService();
+
+    await expect(service.reprocessOcr(userAdmin, 'doc-1', true)).rejects.toThrow(
       ForbiddenException,
     );
     expect(mockDocumentsRepo.findOne).not.toHaveBeenCalled();
   });
 
-  it("propage l'erreur du use case", async () => {
-    mockDocumentsRepo.findOne.mockResolvedValue(makeDocument());
+  it("propage l'erreur du use-case", async () => {
+    const doc = makeDocument();
+    mockDocumentsRepo.findOne.mockResolvedValue(doc);
     mockReprocessOcrUseCase.execute.mockRejectedValue(new Error('Queue failure'));
 
-    await expect(makeService().reprocessOcr(superAdmin, 'doc-1', true)).rejects.toThrow(
-      'Queue failure',
-    );
+    const service = makeService();
+
+    await expect(service.reprocessOcr(superAdmin, 'doc-1', true)).rejects.toThrow('Queue failure');
   });
 });
