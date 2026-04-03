@@ -1,7 +1,6 @@
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AdminRgpdService } from './admin-rgpd.service';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
-import { AdminPermissions } from '../presentation/permissions/admin.permissions';
 
 jest.mock('../presentation/permissions/admin-permissions.map', () => ({
   AdminPermissions: {

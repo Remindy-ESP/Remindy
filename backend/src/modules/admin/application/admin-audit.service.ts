@@ -1,7 +1,7 @@
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { permissionsForRole } from '../presentation/permissions/admin-permissions.map';
-import { AdminPermissions } from '../presentation/permissions/admin.permissions';
+import { AdminPermission, AdminPermissions } from '../presentation/permissions/admin.permissions';
 import { FindAllAuditLogsUseCase } from 'src/modules/audit/application/use-cases/find-all-audit-logs.use-case';
 import { AdminAuditQueryDto } from '../presentation/dto/admin-audit-query.dto';
 
@@ -29,9 +29,10 @@ export class AdminAuditService {
     });
   }
 
-  private assertPermission(role: Role, permission: string): void {
+  private assertPermission(role: Role, permission: AdminPermission): void {
     const perms = permissionsForRole(role);
-    if (!perms.includes(permission as any)) {
+
+    if (!perms.includes(permission)) {
       throw new ForbiddenException(`Permission requise : ${permission}`);
     }
   }

@@ -11,7 +11,7 @@ import { RgpdExportEntity } from 'src/infrastructure/database/entities/rgpd-expo
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { assertCanActOnUser } from '../domain/policies/admin-user.policy';
 import { permissionsForRole } from '../presentation/permissions/admin-permissions.map';
-import { AdminPermissions } from '../presentation/permissions/admin.permissions';
+import { AdminPermission, AdminPermissions } from '../presentation/permissions/admin.permissions';
 import { RgpdExportsQueryDto } from '../presentation/dto/rgpd-exports-query.dto';
 
 const EXPORT_COOLDOWN_MINUTES = 60;
@@ -136,9 +136,9 @@ export class AdminRgpdService {
     return { ok: true, userId, deletedAt };
   }
 
-  private assertPermission(role: Role, permission: string): void {
+  private assertPermission(role: Role, permission: AdminPermission): void {
     const perms = permissionsForRole(role);
-    if (!perms.includes(permission as any)) {
+    if (!perms.includes(permission)) {
       throw new ForbiddenException(`Permission requise : ${permission}`);
     }
   }
