@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { SelectQueryBuilder, Repository } from 'typeorm';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { permissionsForRole } from '../presentation/permissions/admin-permissions.map';
 import { AdminPermission, AdminPermissions } from '../presentation/permissions/admin.permissions';
@@ -10,6 +10,8 @@ import { AdminDocumentsQueryDto } from '../presentation/dto/admin-documents-quer
 import { AdminSubscriptionsQueryDto } from '../presentation/dto/admin-subscriptions-query.dto';
 import { UpdateSharedSubscriptionDto } from '../presentation/dto/update-shared-subscription.dto';
 import { DocumentEntity } from 'src/modules/document/infrastructure/persistence/document.entity';
+
+type QueryFilter = [boolean, string, Record<string, unknown>];
 
 @Injectable()
 export class AdminCloudService {
@@ -30,30 +32,64 @@ export class AdminCloudService {
     }
   }
 
+  private applyFilters<T extends object>(qb: SelectQueryBuilder<T>, filters: QueryFilter[]) {
+    for (const [condition, clause, params] of filters) {
+      if (condition) {
+        qb.andWhere(clause, params);
+      }
+    }
+  }
+
+  private applyPagination<T extends object>(
+    qb: SelectQueryBuilder<T>,
+    page: number,
+    limit: number,
+  ) {
+    qb.skip((page - 1) * limit).take(limit);
+  }
+
   async listSubscriptions(actor: { role: Role }, query: AdminSubscriptionsQueryDto) {
     this.assertPermission(actor.role, AdminPermissions.SUBSCRIPTIONS_READ);
 
     const qb = this.subscriptionsRepo.createQueryBuilder('s').where('s.deletedAt IS NULL');
 
-    if (query.userId) qb.andWhere('s.userId = :userId', { userId: query.userId });
-    if (query.status) qb.andWhere('s.status = :status', { status: query.status });
-    if (query.frequency) qb.andWhere('s.frequency = :frequency', { frequency: query.frequency });
-    if (query.currency) qb.andWhere('s.currency = :currency', { currency: query.currency });
-    if (query.name) qb.andWhere('s.name ILIKE :name', { name: `%${query.name}%` });
-    if (query.amountMin !== undefined)
-      qb.andWhere('s.amount >= :amountMin', { amountMin: query.amountMin });
-    if (query.amountMax !== undefined)
-      qb.andWhere('s.amount <= :amountMax', { amountMax: query.amountMax });
-    if (query.createdFrom)
-      qb.andWhere('s.createdAt >= :createdFrom', { createdFrom: new Date(query.createdFrom) });
-    if (query.createdTo)
-      qb.andWhere('s.createdAt <= :createdTo', { createdTo: new Date(query.createdTo) });
+    const filters: QueryFilter[] = [
+      [!!query.userId, 's.userId = :userId', { userId: query.userId }],
+      [!!query.status, 's.status = :status', { status: query.status }],
+      [!!query.frequency, 's.frequency = :frequency', { frequency: query.frequency }],
+      [!!query.currency, 's.currency = :currency', { currency: query.currency }],
+      [!!query.name, 's.name ILIKE :name', { name: `%${query.name}%` }],
+      [query.amountMin !== undefined, 's.amount >= :amountMin', { amountMin: query.amountMin }],
+      [query.amountMax !== undefined, 's.amount <= :amountMax', { amountMax: query.amountMax }],
+      [
+        !!query.createdFrom,
+        's.createdAt >= :createdFrom',
+        { createdFrom: new Date(query.createdFrom!) },
+      ],
+      [!!query.createdTo, 's.createdAt <= :createdTo', { createdTo: new Date(query.createdTo!) }],
+    ];
 
-    qb.orderBy(`s.${query.sortBy ?? 'createdAt'}`, query.sortDir ?? 'DESC')
-      .skip((query.page - 1) * query.limit)
-      .take(query.limit);
+    this.applyFilters(qb, filters);
+
+    const sortableFields: Record<string, string> = {
+      createdAt: 's.createdAt',
+      amount: 's.amount',
+      name: 's.name',
+      status: 's.status',
+      frequency: 's.frequency',
+      currency: 's.currency',
+      userId: 's.userId',
+    };
+
+    const sortField = sortableFields[query.sortBy ?? 'createdAt'] ?? 's.createdAt';
+    const sortDir = query.sortDir ?? 'DESC';
+
+    qb.orderBy(sortField, sortDir).addOrderBy('s.id', 'DESC');
+
+    this.applyPagination(qb, query.page, query.limit);
 
     const [items, total] = await qb.getManyAndCount();
+
     return { items, total, page: query.page, limit: query.limit };
   }
 
@@ -65,7 +101,9 @@ export class AdminCloudService {
     this.assertPermission(actor.role, AdminPermissions.CLOUD_WRITE);
 
     const sub = await this.subscriptionsRepo.findOne({ where: { id } });
-    if (!sub) throw new NotFoundException('Subscription not found');
+    if (!sub) {
+      throw new NotFoundException('Subscription not found');
+    }
 
     Object.assign(sub, dto);
     return this.subscriptionsRepo.save(sub);
@@ -76,29 +114,49 @@ export class AdminCloudService {
 
     const qb = this.documentsRepo.createQueryBuilder('d').where('d.deletedAt IS NULL');
 
-    if (query.userId) qb.andWhere('d.userId = :userId', { userId: query.userId });
-    if (query.subscriptionId)
-      qb.andWhere('d.subscriptionId = :subId', { subId: query.subscriptionId });
-    if (query.ocrStatus) qb.andWhere('d.ocrStatus = :ocrStatus', { ocrStatus: query.ocrStatus });
-    if (query.mimeType) qb.andWhere('d.mimeType = :mimeType', { mimeType: query.mimeType });
-    if (query.filename)
-      qb.andWhere('d.filename ILIKE :filename', { filename: `%${query.filename}%` });
-    if (query.uploadedFrom)
-      qb.andWhere('d.uploadedAt >= :uploadedFrom', { uploadedFrom: new Date(query.uploadedFrom) });
-    if (query.uploadedTo)
-      qb.andWhere('d.uploadedAt <= :uploadedTo', { uploadedTo: new Date(query.uploadedTo) });
+    const filters: QueryFilter[] = [
+      [!!query.userId, 'd.userId = :userId', { userId: query.userId }],
+      [
+        !!query.subscriptionId,
+        'd.subscriptionId = :subscriptionId',
+        { subscriptionId: query.subscriptionId },
+      ],
+      [!!query.ocrStatus, 'd.ocrStatus = :ocrStatus', { ocrStatus: query.ocrStatus }],
+      [!!query.mimeType, 'd.mimeType = :mimeType', { mimeType: query.mimeType }],
+      [!!query.filename, 'd.filename ILIKE :filename', { filename: `%${query.filename}%` }],
+      [
+        !!query.uploadedFrom,
+        'd.uploadedAt >= :uploadedFrom',
+        { uploadedFrom: new Date(query.uploadedFrom!) },
+      ],
+      [
+        !!query.uploadedTo,
+        'd.uploadedAt <= :uploadedTo',
+        { uploadedTo: new Date(query.uploadedTo!) },
+      ],
+    ];
 
-    qb.orderBy(`d.${query.sortBy ?? 'uploadedAt'}`, query.sortDir ?? 'DESC')
-      .skip((query.page - 1) * query.limit)
-      .take(query.limit);
-    const sortField =
-      query.sortBy === 'fileSize'
-        ? `CAST(d.fileSize AS integer)`
-        : `d.${query.sortBy ?? 'uploadedAt'}`;
+    this.applyFilters(qb, filters);
 
-    qb.orderBy(sortField, query.sortDir ?? 'DESC');
+    const sortableFields: Record<string, string> = {
+      uploadedAt: 'd.uploadedAt',
+      filename: 'd.filename',
+      mimeType: 'd.mimeType',
+      ocrStatus: 'd.ocrStatus',
+      userId: 'd.userId',
+      subscriptionId: 'd.subscriptionId',
+      fileSize: 'CAST(d.fileSize AS integer)',
+    };
+
+    const sortField = sortableFields[query.sortBy ?? 'uploadedAt'] ?? 'd.uploadedAt';
+    const sortDir = query.sortDir ?? 'DESC';
+
+    qb.orderBy(sortField, sortDir).addOrderBy('d.id', 'DESC');
+
+    this.applyPagination(qb, query.page, query.limit);
 
     const [items, total] = await qb.getManyAndCount();
+
     return { items, total, page: query.page, limit: query.limit };
   }
 
@@ -106,7 +164,9 @@ export class AdminCloudService {
     this.assertPermission(actor.role, AdminPermissions.CLOUD_WRITE);
 
     const doc = await this.documentsRepo.findOne({ where: { id: documentId } });
-    if (!doc) throw new NotFoundException('Document not found');
+    if (!doc) {
+      throw new NotFoundException('Document not found');
+    }
 
     return this.reprocessOcrUseCase.execute(documentId, doc.userId, { force });
   }
