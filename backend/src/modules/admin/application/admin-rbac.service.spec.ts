@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { AdminRbacService } from './admin-rbac.service';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
-import { AdminPermissions } from '../presentation/permissions/admin.permissions';
 
 jest.mock('../presentation/permissions/admin-permissions.map', () => ({
   AdminPermissions: {

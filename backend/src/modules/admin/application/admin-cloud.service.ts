@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { permissionsForRole } from '../presentation/permissions/admin-permissions.map';
-import { AdminPermissions } from '../presentation/permissions/admin.permissions';
+import { AdminPermission, AdminPermissions } from '../presentation/permissions/admin.permissions';
 import { SubscriptionEntity } from 'src/modules/subscription/infrastructure/persistence/subscription.entity';
 import { ReprocessOcrUseCase } from 'src/modules/document/application/use-cases/reprocess-ocr.use-case';
 import { AdminDocumentsQueryDto } from '../presentation/dto/admin-documents-query.dto';
@@ -23,9 +23,9 @@ export class AdminCloudService {
     private readonly reprocessOcrUseCase: ReprocessOcrUseCase,
   ) {}
 
-  private assertPermission(role: Role, permission: string) {
+  private assertPermission(role: Role, permission: AdminPermission) {
     const perms = permissionsForRole(role);
-    if (!perms.includes(permission as any)) {
+    if (!perms.includes(permission)) {
       throw new ForbiddenException(`Permission requise : ${permission}`);
     }
   }

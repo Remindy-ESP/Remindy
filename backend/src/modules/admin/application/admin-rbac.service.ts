@@ -11,7 +11,7 @@ import { RoleEntity } from 'src/infrastructure/database/entities/role.entity';
 import { RolePermissionEntity } from 'src/infrastructure/database/entities/role-permission.entity';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { permissionsForRole } from '../presentation/permissions/admin-permissions.map';
-import { AdminPermissions } from '../presentation/permissions/admin.permissions';
+import { AdminPermission, AdminPermissions } from '../presentation/permissions/admin.permissions';
 import { CreateRoleDto, UpdateRoleDto } from '../presentation/dto/admin-rbac.dto';
 
 const SYSTEM_ROLES = new Set<string>([Role.SUPER_ADMIN, Role.USER_ADMIN]);
@@ -134,9 +134,9 @@ export class AdminRbacService {
     };
   }
 
-  private assertPermission(role: Role, permission: string): void {
+  private assertPermission(role: Role, permission: AdminPermission): void {
     const perms = permissionsForRole(role);
-    if (!perms.includes(permission as any)) {
+    if (!perms.includes(permission)) {
       throw new ForbiddenException(`Permission requise : ${permission}`);
     }
   }
