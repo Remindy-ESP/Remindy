@@ -3,6 +3,7 @@ import * as jwt from 'jsonwebtoken';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IPasswordService } from '../../domain/services/password.service';
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ResetPasswordUseCase {
@@ -10,6 +11,7 @@ export class ResetPasswordUseCase {
     private readonly userRepo: IUserAuthRepository,
     private readonly passwordService: IPasswordService,
     private readonly sessionRepo: IUserSessionRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async execute(params: { token: string; newPassword: string }): Promise<void> {
@@ -40,5 +42,7 @@ export class ResetPasswordUseCase {
     const passwordHash = await this.passwordService.hash(params.newPassword);
     await this.userRepo.updatePassword(user.getId(), passwordHash);
     await this.sessionRepo.revokeAllForUser(user.getId());
+
+    this.eventEmitter.emit('security.password.reset', { userEmail: user.getEmail() });
   }
 }

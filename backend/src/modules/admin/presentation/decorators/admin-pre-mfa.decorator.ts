@@ -1,7 +1,7 @@
 import { applyDecorators, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { AdminRolesGuard } from '../guards/admin-roles.guard';
 
 export function AdminPreMfa() {
-  return applyDecorators(UseGuards(JwtAuthGuard, AdminRolesGuard));
+  return applyDecorators(ApiBearerAuth('access-token'), UseGuards(AdminRolesGuard));
 }

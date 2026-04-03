@@ -8,4 +8,8 @@ export abstract class IUserAuthRepository {
   abstract save(user: AuthUser): Promise<AuthUser>;
 
   abstract updatePassword(userId: string, passwordHash: string): Promise<void>;
+
+  abstract incrementFailedLoginCount(userId: string): Promise<void>;
+
+  abstract resetFailedLoginCount(userId: string): Promise<void>;
 }
