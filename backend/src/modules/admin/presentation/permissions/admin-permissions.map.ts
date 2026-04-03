@@ -17,6 +17,7 @@ export function permissionsForRole(role: Role): AdminPermission[] {
         AdminPermissions.SUPPORT_WRITE,
         AdminPermissions.SUBSCRIPTIONS_READ,
         AdminPermissions.AUDIT_READ,
+        AdminPermissions.RBAC_READ,
       ];
 
     default:
