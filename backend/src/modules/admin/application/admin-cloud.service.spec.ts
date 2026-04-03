@@ -265,13 +265,10 @@ describe('listSubscriptions', () => {
     const service = makeService();
 
     await expect(
-      service.listSubscriptions(
-        { role: Role.USER },
-        {
-          page: 1,
-          limit: 20,
-        } as AdminSubscriptionsQueryDto,
-      ),
+      service.listSubscriptions({ role: Role.USER }, {
+        page: 1,
+        limit: 20,
+      } as AdminSubscriptionsQueryDto),
     ).rejects.toThrow(ForbiddenException);
   });
 });
@@ -341,16 +338,16 @@ describe('listDocuments', () => {
   });
 
   it('applique le filtre subscriptionId', async () => {
-  await makeService().listDocuments(superAdmin, {
-    subscriptionId: 'sub-abc',
-    page: 1,
-    limit: 20,
-  } as AdminDocumentsQueryDto);
+    await makeService().listDocuments(superAdmin, {
+      subscriptionId: 'sub-abc',
+      page: 1,
+      limit: 20,
+    } as AdminDocumentsQueryDto);
 
-  expect(mockQb.andWhere).toHaveBeenCalledWith('d.subscriptionId = :subscriptionId', {
-    subscriptionId: 'sub-abc',
+    expect(mockQb.andWhere).toHaveBeenCalledWith('d.subscriptionId = :subscriptionId', {
+      subscriptionId: 'sub-abc',
+    });
   });
-});
 
   it('applique le filtre ocrStatus', async () => {
     const service = makeService();
