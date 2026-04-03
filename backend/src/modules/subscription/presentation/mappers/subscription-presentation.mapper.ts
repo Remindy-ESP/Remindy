@@ -77,6 +77,8 @@ export class SubscriptionPresentationMapper {
     response.userId = subscription.userId;
     response.contractId = subscription.contractId;
     response.categoryId = subscription.categoryId;
+    // Include the eagerly-loaded category object if available
+    response.category = (subscription as any).category ?? undefined;
     response.name = subscription.name;
     response.amount = subscription.amount;
     response.currency = subscription.currency;

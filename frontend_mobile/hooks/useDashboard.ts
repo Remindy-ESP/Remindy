@@ -3,6 +3,11 @@ import { categoryService, eventService, type Category, type Event } from '@/serv
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';
 
+export interface AggregatedEvent extends Event {
+  totalAmount: number;
+  occurrences: number;
+}
+
 export function useDashboard() {
   const [selected, setSelected] = useState('');
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
@@ -51,7 +56,7 @@ export function useDashboard() {
   };
 
   // Filter events by period
-  const getEventsForPeriod = (period: TimePeriod, dateString?: string): Event[] => {
+  const getEventsForPeriod = (period: TimePeriod, dateString?: string, categoryName?: string | null): AggregatedEvent[] => {
     const referenceDate = dateString ? new Date(dateString) : new Date();
     if (isNaN(referenceDate.getTime())) return [];
 
@@ -60,13 +65,16 @@ export function useDashboard() {
       const eventDate = new Date(event.dueDate);
       if (isNaN(eventDate.getTime())) return false;
 
+      // Apply category filter
+      if (categoryName && event.subscription?.category?.name !== categoryName) return false;
+
       switch (period) {
         case 'day':
           return eventDate.toISOString().split('T')[0] === referenceDate.toISOString().split('T')[0];
 
         case 'week': {
           const startOfWeek = new Date(referenceDate);
-          startOfWeek.setDate(referenceDate.getDate() - referenceDate.getDay()); // Sunday
+          startOfWeek.setDate(referenceDate.getDate() - referenceDate.getDay());
           startOfWeek.setHours(0, 0, 0, 0);
 
           const endOfWeek = new Date(startOfWeek);
@@ -90,24 +98,35 @@ export function useDashboard() {
       }
     });
 
-    // Post-processing for 'year' to deduplicate ONLY 'one-time' subscriptions
+    // For 'year': aggregate by subscription ID, sum all occurrence amounts
     if (period === 'year') {
-      const seenOneTimeSubscriptions = new Set<string>();
-      return filteredEvents.filter((event) => {
-        // If it's a one-time subscription, we only want to show it once per year
-        if (event.subscription?.frequency === 'one-time' && event.subscription.id) {
-          if (seenOneTimeSubscriptions.has(event.subscription.id)) {
-            return false;
-          }
-          seenOneTimeSubscriptions.add(event.subscription.id);
-          return true;
+      const aggregationMap = new Map<string, AggregatedEvent>();
+
+      filteredEvents.forEach((event) => {
+        const subId = event.subscription?.id ?? event.id;
+        const amount = event.subscription?.amount ?? 0;
+
+        if (aggregationMap.has(subId)) {
+          const existing = aggregationMap.get(subId)!;
+          existing.totalAmount = parseFloat((existing.totalAmount + amount).toFixed(2));
+          existing.occurrences += 1;
+        } else {
+          aggregationMap.set(subId, {
+            ...event,
+            totalAmount: amount,
+            occurrences: 1,
+          });
         }
-        // For all other frequencies (monthly, weekly, etc.), show all occurrences
-        return true;
       });
+
+      return Array.from(aggregationMap.values());
     }
 
-    return filteredEvents;
+    return filteredEvents.map((event) => ({
+      ...event,
+      totalAmount: event.subscription?.amount ?? 0,
+      occurrences: 1,
+    }));
   };
 
   // Filter events by selected date
