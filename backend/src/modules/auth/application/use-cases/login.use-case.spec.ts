@@ -42,6 +42,7 @@ describe('LoginUseCase', () => {
       findByEmail: jest.fn(),
       resetFailedLoginCount: jest.fn().mockResolvedValue(undefined),
       incrementFailedLoginCount: jest.fn().mockResolvedValue(undefined),
+      updateLastLoginAt: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockSessionRepo: Partial<jest.Mocked<IUserSessionRepository>> = {

@@ -24,3 +24,7 @@ export { AdminAuditLogEntity } from './admin-audit-log.entity';
 export { SecurityLogEntity } from './security-log.entity';
 export { BlockedIpEntity } from './blocked-ip.entity';
 export { SecurityPolicyEntity } from './security-policy.entity';
+
+// Support ticket entities
+export { SupportTicketEntity } from './support-ticket.entity';
+export { SupportTicketMessageEntity } from './support-ticket-message.entity';
