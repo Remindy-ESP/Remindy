@@ -43,9 +43,15 @@ export class BlockedIpEntity {
   @Column({ type: 'uuid', nullable: true })
   blockedBy!: string | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    type: 'timestamptz',
+    default: () => 'now()',
+  })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({
+    type: 'timestamptz',
+    default: () => 'now()',
+  })
   updatedAt!: Date;
 }
