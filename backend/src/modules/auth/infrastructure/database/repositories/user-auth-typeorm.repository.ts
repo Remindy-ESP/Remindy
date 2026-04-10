@@ -50,4 +50,8 @@ export class UserAuthTypeOrmRepository implements IUserAuthRepository {
   async resetFailedLoginCount(userId: string): Promise<void> {
     await this.repo.update({ id: userId }, { failedLoginCount: 0 });
   }
+
+  async updateLastLoginAt(userId: string, date: Date): Promise<void> {
+    await this.repo.update({ id: userId }, { lastLoginAt: date });
+  }
 }

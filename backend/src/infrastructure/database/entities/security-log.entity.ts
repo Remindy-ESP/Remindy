@@ -58,6 +58,9 @@ export class SecurityLogEntity {
   @Column({ type: 'boolean', default: false })
   isSuspicious!: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    type: 'timestamptz',
+    default: () => 'now()',
+  })
   createdAt!: Date;
 }

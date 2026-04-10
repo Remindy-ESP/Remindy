@@ -67,6 +67,7 @@ export class LoginUseCase {
     }
 
     await this.userRepo.resetFailedLoginCount(user.getId());
+    await this.userRepo.updateLastLoginAt(user.getId(), new Date());
 
     const sessionId = randomUUID();
 
