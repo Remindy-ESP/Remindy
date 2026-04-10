@@ -44,9 +44,15 @@ export class SecurityPolicyEntity {
   @Column({ type: 'simple-array', default: '' })
   allowedOrigins!: string[];
 
-  @CreateDateColumn()
+  @CreateDateColumn({
+    type: 'timestamptz',
+    default: () => 'now()',
+  })
   createdAt!: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({
+    type: 'timestamptz',
+    default: () => 'now()',
+  })
   updatedAt!: Date;
 }

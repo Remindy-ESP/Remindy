@@ -33,6 +33,14 @@ import { AdminRgpdService } from './application/admin-rgpd.service';
 import { AdminRbacService } from './application/admin-rbac.service';
 import { AdminAuditController } from './presentation/controllers/admin-audit.controller';
 import { AdminAuditService } from './application/admin-audit.service';
+import { AdminDashboardController } from './presentation/controllers/admin-dashboard.controller';
+import { AdminDashboardService } from './application/admin-dashboard.service';
+import {
+  SupportTicketEntity,
+  SupportTicketMessageEntity,
+} from 'src/infrastructure/database/entities';
+import { AdminTicketsService } from './application/admin-tickets.service';
+import { AdminTicketsController } from './presentation/controllers/admin-tickets.controller';
 @Module({
   imports: [
     AuditModule,
@@ -49,6 +57,8 @@ import { AdminAuditService } from './application/admin-audit.service';
       RgpdExportEntity,
       RoleEntity,
       RolePermissionEntity,
+      SupportTicketEntity,
+      SupportTicketMessageEntity,
     ]),
   ],
   controllers: [
@@ -63,6 +73,8 @@ import { AdminAuditService } from './application/admin-audit.service';
     AdminRgpdController,
     AdminRbacController,
     AdminAuditController,
+    AdminTicketsController,
+    AdminDashboardController,
   ],
   providers: [
     AdminRolesGuard,
@@ -75,6 +87,8 @@ import { AdminAuditService } from './application/admin-audit.service';
     AdminRgpdService,
     AdminRbacService,
     AdminAuditService,
+    AdminTicketsService,
+    AdminDashboardService,
   ],
   exports: [AdminSecurityService],
 })
