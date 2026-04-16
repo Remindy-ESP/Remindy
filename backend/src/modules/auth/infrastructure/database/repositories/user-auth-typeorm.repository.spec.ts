@@ -235,4 +235,45 @@ describe('UserAuthTypeOrmRepository', () => {
       expect(updateData.passwordChangedAt.getTime()).toBeLessThanOrEqual(afterUpdate.getTime());
     });
   });
+
+  describe('incrementFailedLoginCount', () => {
+    it('increments the failed login counter', async () => {
+      (typeOrmRepository as any).increment = jest.fn().mockResolvedValue(undefined);
+
+      await repository.incrementFailedLoginCount('user-123');
+
+      expect((typeOrmRepository as any).increment).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        'failedLoginCount',
+        1,
+      );
+    });
+  });
+
+  describe('resetFailedLoginCount', () => {
+    it('resets the failed login counter to zero', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.resetFailedLoginCount('user-123');
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        { failedLoginCount: 0 },
+      );
+    });
+  });
+
+  describe('updateLastLoginAt', () => {
+    it('updates lastLoginAt with the provided date', async () => {
+      const date = new Date('2025-01-20T10:00:00.000Z');
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.updateLastLoginAt('user-123', date);
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        { lastLoginAt: date },
+      );
+    });
+  });
 });

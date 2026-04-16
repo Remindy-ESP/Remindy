@@ -192,4 +192,52 @@ describe('UserService', () => {
       });
     });
   });
+
+  describe('updateUserProfile additional branches', () => {
+    it('accepts an empty phone string when explicitly provided', async () => {
+      const updatedUser = {
+        ...mockUser,
+        phone: '',
+      };
+
+      userRepository.findById.mockResolvedValueOnce(mockUser as any);
+      userRepository.findById.mockResolvedValueOnce(updatedUser as any);
+
+      const result = await service.updateUserProfile('user-123', { phone: '' });
+
+      expect(userRepository.updateProfile).toHaveBeenCalledWith('user-123', { phone: '' });
+      expect(result.phone).toBe('');
+    });
+
+    it('throws when user cannot be found after update', async () => {
+      userRepository.findById.mockResolvedValueOnce(mockUser as any);
+      userRepository.findById.mockResolvedValueOnce(null);
+
+      await expect(
+        service.updateUserProfile('user-123', { firstName: 'Updated' }),
+      ).rejects.toThrow(new NotFoundException('User not found after update'));
+    });
+  });
+
+  describe('deleteAccount', () => {
+    it('soft deletes preferences first, then the user account', async () => {
+      const userPreferencesRepository = (service as any).userPreferencesRepository;
+
+      userRepository.findById.mockResolvedValue(mockUser as any);
+      userPreferencesRepository.softDelete.mockResolvedValue(undefined);
+
+      await service.deleteAccount('user-123');
+
+      expect(userPreferencesRepository.softDelete).toHaveBeenCalledWith('user-123');
+      expect(userRepository.softDelete).toHaveBeenCalledWith('user-123');
+    });
+
+    it('throws when deleting a non-existing user', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.deleteAccount('missing-user')).rejects.toThrow(
+        new NotFoundException('User not found'),
+      );
+    });
+  });
 });
