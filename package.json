@@ -1,0 +1,15 @@
+{
+  "name": "remindy",
+  "private": true,
+  "description": "Remindy monorepo — backend NestJS + mobile Expo + admin React",
+  "scripts": {
+    "setup": "node scripts/setup-env.js",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:mobile": "npm --prefix frontend_mobile run start:tunnel",
+    "dev:admin": "npm --prefix frontend_admin run dev",
+    "migrate": "npm --prefix backend run migration:run",
+    "migrate:revert": "npm --prefix backend run migration:revert",
+    "test:backend": "npm --prefix backend run test",
+    "test:mobile": "npm --prefix frontend_mobile run test"
+  }
+}

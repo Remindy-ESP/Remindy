@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "start:tunnel": "expo start --tunnel",
     "start:staging": "node scripts/load-env.js staging && expo start",
     "start:prod": "node scripts/load-env.js production && expo start",
     "reset-project": "node ./scripts/reset-project.js",
