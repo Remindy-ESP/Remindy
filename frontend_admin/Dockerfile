@@ -17,7 +17,7 @@ ENV NGINX_PORT=8080
 
 COPY --chmod=444 nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=builder --chown=nginx:nginx --chmod=555 /app/dist /usr/share/nginx/html
+COPY --from=builder --chmod=555 /app/dist /usr/share/nginx/html
 
 USER nginx
 
