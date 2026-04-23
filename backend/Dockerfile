@@ -20,13 +20,12 @@ RUN apk add --no-cache tini=~0.19 && \
 
 WORKDIR /app
 
-COPY --chown=remindy:nodejs package.json package-lock.json ./
+COPY --chown=remindy:nodejs --chmod=444 package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && \
     npm cache clean --force && \
     chmod -R 555 /app/node_modules
 
-COPY --from=builder --chown=remindy:nodejs /app/dist ./dist
-RUN chmod -R 555 ./dist
+COPY --from=builder --chown=remindy:nodejs --chmod=555 /app/dist ./dist
 
 USER remindy
 
