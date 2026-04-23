@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner (${{ matrix.target.name }})
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ matrix.target.path }}
@@ -41,7 +41,7 @@ jobs:
 
       - name: Run Trivy for SARIF upload (${{ matrix.target.name }})
         if: always()
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: ${{ matrix.target.path }}
@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Scan Dockerfiles & IaC
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .
