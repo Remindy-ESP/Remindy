@@ -8,9 +8,6 @@ concurrency:
   group: docker-preprod-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
 env:
   REGISTRY: docker.io
   IMAGE_REPO: remindy/remindy-t-esp
@@ -21,6 +18,8 @@ jobs:
   build-and-push:
     name: Build & push ${{ matrix.service.name }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     strategy:
       fail-fast: false
