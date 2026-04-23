@@ -5,7 +5,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-COPY . .
+COPY tsconfig.json tsconfig.node.json vite.config.ts index.html ./
+COPY src ./src
+COPY public ./public
 RUN npm run build
 
 
@@ -13,9 +15,9 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine AS production
 
 ENV NGINX_PORT=8080
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=444 nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=builder --chown=nginx:nginx /app/dist /usr/share/nginx/html
+COPY --from=builder --chown=nginx:nginx --chmod=555 /app/dist /usr/share/nginx/html
 
 USER nginx
 
