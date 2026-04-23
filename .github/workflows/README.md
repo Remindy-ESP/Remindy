@@ -111,12 +111,114 @@ feature/* ──PR──> develop ──PR──> preprod ──PR──> master
 
 ---
 
+### 4️⃣ **Commit Lint** (`commit-lint.yml`)
+
+**Déclencheur :** PR vers `develop`, `preprod`, `master`
+
+Valide que **tous les commits** de la PR respectent le format Conventional Commits. **Bloquant** : une PR avec un seul commit non-conventionnel ne peut pas être mergée.
+
+---
+
+### 5️⃣ **Security - Trivy Scan** (`security-trivy-scan.yml`)
+
+**Déclencheur :** PR vers `develop`, `preprod`, `master`
+
+Scan de sécurité indépendant :
+- Filesystem scan (backend, frontend_admin, frontend_mobile) — dépendances + secrets
+- Config scan (Dockerfile, IaC)
+
+Bloque la PR en cas de vuln **CRITICAL** ou **HIGH** avec fix disponible.
+
+---
+
+### 6️⃣ **Docker - Build & Push** (`docker-build-develop.yml`, `docker-build-preprod.yml`)
+
+**Déclencheur :** push sur `develop` (après merge) / push sur `preprod` (après merge)
+
+Build les images backend + admin en `linux/amd64`, push sur Docker Hub (`remindy/remindy-t-esp`), scan Trivy sur l'image poussée.
+
+Tags publiés :
+- develop → `backend-dev-<sha7>`, `admin-dev-<sha7>` (+ variante datée)
+- preprod → `backend-preprod-<sha7>`, `admin-preprod-<sha7>` (+ variante datée)
+
+---
+
+### 7️⃣ **Docker - Release** (`docker-release-master.yml`)
+
+**Déclencheur :** push sur `master` (après merge)
+
+1. semantic-release analyse les commits conventionnels depuis le dernier tag.
+2. Calcule la nouvelle version, crée le tag Git `vX.Y.Z`, génère `CHANGELOG.md` et la GitHub Release.
+3. Build & push des images `backend-vX.Y.Z` + `admin-vX.Y.Z`.
+4. Scan Trivy bloquant (CRITICAL/HIGH).
+
+Aucune image n'est publiée si aucun commit ne justifie une release (`feat`, `fix`, `perf`, `refactor`, `revert`, `BREAKING CHANGE`).
+
+---
+
+## ✍️ Conventional Commits (obligatoire)
+
+Le format est strict — sinon `commit-lint` bloque la PR et semantic-release ne fonctionne pas.
+
+### Format
+
+```
+<type>(<scope optionnel>): <sujet en minuscules, sans point final>
+
+[corps optionnel]
+
+[BREAKING CHANGE: description]
+```
+
+### Types et impact sur la version
+
+| Type | Version | Utilisation |
+|---|---|---|
+| `feat` | **minor** | Nouvelle fonctionnalité |
+| `fix` | **patch** | Correction de bug |
+| `perf` | patch | Amélioration perf |
+| `refactor` | patch | Refactoring |
+| `revert` | patch | Revert d'un commit |
+| `docs` | aucun | Documentation |
+| `style` | aucun | Formatage |
+| `chore` | aucun | Maintenance |
+| `test` | aucun | Tests |
+| `build` | aucun | Build system |
+| `ci` | aucun | CI/CD |
+| `BREAKING CHANGE:` (footer) | **major** | Rupture d'API |
+
+### Exemples
+
+```
+feat(auth): ajoute le support MFA via TOTP
+fix(document): corrige le crash lors de l'upload PDF > 10Mo
+refactor(user): simplifie le repository pattern
+chore(deps): bump nestjs to 11.2.0
+
+feat(api)!: retire l'endpoint /v1/legacy-auth
+
+BREAKING CHANGE: l'endpoint /v1/legacy-auth est supprimé, utiliser /v2/auth
+```
+
+### Installation du hook local (1 fois)
+
+```bash
+# depuis la racine du monorepo
+npm install
+```
+
+Husky active automatiquement le hook `commit-msg` qui valide chaque commit côté dev. Si un commit mal formaté passe quand même (ex : `--no-verify`), le workflow `commit-lint` le rattrape sur la PR.
+
+---
+
 ## 🔧 Configuration des Secrets GitHub
 
 Allez dans **Settings > Secrets and variables > Actions** et ajoutez :
 
 | Secret | Description | Utilisation |
 |--------|-------------|-------------|
+| `DOCKERHUB_USERNAME` | Login Docker Hub (`remindy`) | docker-build-* + docker-release-master |
+| `DOCKERHUB_TOKEN` | Access token Docker Hub (Read + Write + Delete) | docker-build-* + docker-release-master |
 | `NEON_PROJECT_ID` | ID du projet Neon | Toutes les pipelines |
 | `NEON_API_KEY` | Clé API Neon | Toutes les pipelines |
 | `NEON_TEST_BRANCH_ID` | ID de la branche "test" | Tests de migrations CI/CD |
@@ -244,11 +346,14 @@ git push origin feature/RMD-005
 
 ## 🚀 Prochaines étapes
 
-1. ✅ Configurer les secrets GitHub
-2. ✅ Créer les branches Neon (develop, production)
-3. ✅ Tester avec une PR vers develop
-4. ✅ Ajouter des tests unitaires/E2E si manquants
-5. ⏳ Configurer le déploiement automatique (optionnel)
+1. ✅ Configurer les secrets GitHub (Neon + `DOCKERHUB_USERNAME` + `DOCKERHUB_TOKEN`)
+2. ✅ Créer le repo Docker Hub privé `remindy/remindy-t-esp`
+3. ✅ Créer les branches Neon (develop, production)
+4. ✅ Installer le hook husky localement (`npm install` à la racine du monorepo)
+5. ✅ Activer les branch protection rules (rendre `commit-lint` et `security-trivy-scan` bloquants)
+6. ✅ Tester avec une PR vers develop
+7. ✅ Ajouter des tests unitaires/E2E si manquants
+8. ⏳ Configurer le déploiement automatique (optionnel)
 
 ---
 
