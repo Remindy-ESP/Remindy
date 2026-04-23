@@ -106,18 +106,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Compute version parts
+      - name: Compute release tag
         id: version-parts
-        run: |
-          VERSION="${{ needs.semantic-release.outputs.new_release_version }}"
-          GIT_TAG="${{ needs.semantic-release.outputs.new_release_git_tag }}"
-          MAJOR_MINOR=$(echo "$VERSION" | awk -F. '{print $1"."$2}')
-          MAJOR=$(echo "$VERSION" | awk -F. '{print $1}')
-          {
-            echo "full_tag=${{ matrix.service.name }}-${GIT_TAG}"
-            echo "minor_tag=${{ matrix.service.name }}-v${MAJOR_MINOR}"
-            echo "major_tag=${{ matrix.service.name }}-v${MAJOR}"
-          } >> "$GITHUB_OUTPUT"
+        run: echo "full_tag=${{ matrix.service.name }}-${{ needs.semantic-release.outputs.new_release_git_tag }}" >> "$GITHUB_OUTPUT"
 
       - name: Extract image metadata
         id: meta
@@ -126,8 +117,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}
           tags: |
             type=raw,value=${{ steps.version-parts.outputs.full_tag }}
-            type=raw,value=${{ steps.version-parts.outputs.minor_tag }}
-            type=raw,value=${{ steps.version-parts.outputs.major_tag }}
           labels: |
             org.opencontainers.image.title=remindy-${{ matrix.service.name }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
