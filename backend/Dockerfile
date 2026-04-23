@@ -1,25 +1,39 @@
-FROM node:22-alpine AS builder
+FROM node:22.11.0-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
 
 COPY . .
 RUN npm run build
 
-FROM node:22-alpine AS production
+
+FROM node:22.11.0-alpine AS production
+
+ENV NODE_ENV=production \
+    PORT=3000
+
+RUN apk add --no-cache tini=~0.19 && \
+    addgroup -g 1001 -S nodejs && \
+    adduser -S -u 1001 -G nodejs remindy
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN chown node:node package*.json && chmod 444 package*.json && npm ci --omit=dev
+COPY --chown=remindy:nodejs package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts && \
+    npm cache clean --force && \
+    chmod -R 555 /app/node_modules
 
-COPY --from=builder /app/dist ./dist
-RUN chown -R node:node ./dist && chmod -R 555 ./dist
+COPY --from=builder --chown=remindy:nodejs /app/dist ./dist
+RUN chmod -R 555 ./dist
 
-USER node
+USER remindy
 
 EXPOSE 3000
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "dist/main"]
