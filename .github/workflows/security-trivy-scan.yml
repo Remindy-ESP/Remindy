@@ -4,14 +4,13 @@ on:
   pull_request:
     branches: [develop, preprod, master]
 
-permissions:
-  contents: read
-  security-events: write
-
 jobs:
   trivy-fs-scan:
     name: Trivy filesystem scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
 
     strategy:
       fail-fast: false
@@ -61,6 +60,8 @@ jobs:
   trivy-config-scan:
     name: Trivy config & Dockerfile scan
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
