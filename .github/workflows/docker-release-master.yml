@@ -112,9 +112,11 @@ jobs:
           GIT_TAG="${{ needs.semantic-release.outputs.new_release_git_tag }}"
           MAJOR_MINOR=$(echo "$VERSION" | awk -F. '{print $1"."$2}')
           MAJOR=$(echo "$VERSION" | awk -F. '{print $1}')
-          echo "full_tag=${{ matrix.service.name }}-${GIT_TAG}" >> "$GITHUB_OUTPUT"
-          echo "minor_tag=${{ matrix.service.name }}-v${MAJOR_MINOR}" >> "$GITHUB_OUTPUT"
-          echo "major_tag=${{ matrix.service.name }}-v${MAJOR}" >> "$GITHUB_OUTPUT"
+          {
+            echo "full_tag=${{ matrix.service.name }}-${GIT_TAG}"
+            echo "minor_tag=${{ matrix.service.name }}-v${MAJOR_MINOR}"
+            echo "major_tag=${{ matrix.service.name }}-v${MAJOR}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Extract image metadata
         id: meta
