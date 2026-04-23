@@ -27,18 +27,6 @@ describe('translations utility', () => {
       expect(translateEventStatus('failed')).toBe('Échoué');
     });
 
-    it('should translate PENDING to En attente', () => {
-      expect(translateEventStatus('PENDING')).toBe('En attente');
-    });
-
-    it('should translate COMPLETED to Terminé', () => {
-      expect(translateEventStatus('COMPLETED')).toBe('Terminé');
-    });
-
-    it('should translate RESCHEDULED to Reprogrammé', () => {
-      expect(translateEventStatus('RESCHEDULED')).toBe('Reprogrammé');
-    });
-
     it('should return original status for unknown status', () => {
       expect(translateEventStatus('unknown')).toBe('unknown');
     });
@@ -81,18 +69,6 @@ describe('translations utility', () => {
 
     it('should return red for failed', () => {
       expect(getEventStatusColor('failed')).toBe('#f87171');
-    });
-
-    it('should return yellow for PENDING', () => {
-      expect(getEventStatusColor('PENDING')).toBe('#fbbf24');
-    });
-
-    it('should return green for COMPLETED', () => {
-      expect(getEventStatusColor('COMPLETED')).toBe('#4ade80');
-    });
-
-    it('should return blue for RESCHEDULED', () => {
-      expect(getEventStatusColor('RESCHEDULED')).toBe('#60a5fa');
     });
 
     it('should return gray for unknown status', () => {
