@@ -41,7 +41,7 @@ class EventService {
    */
   async updateStatus(
     id: string,
-    status: 'PENDING' | 'COMPLETED' | 'RESCHEDULED'
+    status: 'scheduled' | 'completed' | 'canceled' | 'failed'
   ): Promise<Event> {
     const response = await apiClient.patch<Event>(
       `${this.BASE_PATH}/${id}/status`,
