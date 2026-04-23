@@ -36,11 +36,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Compute short SHA and build timestamp
+      - name: Compute short SHA
         id: meta-vars
-        run: |
-          echo "short_sha=$(echo "${{ github.sha }}" | cut -c1-7)" >> "$GITHUB_OUTPUT"
-          echo "build_date=$(date -u +'%Y%m%d')" >> "$GITHUB_OUTPUT"
+        run: echo "short_sha=$(echo "${{ github.sha }}" | cut -c1-7)" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
@@ -64,13 +62,11 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}
           tags: |
             type=raw,value=${{ matrix.service.name }}-${{ env.ENV_PREFIX }}-${{ steps.meta-vars.outputs.short_sha }}
-            type=raw,value=${{ matrix.service.name }}-${{ env.ENV_PREFIX }}-${{ steps.meta-vars.outputs.build_date }}-${{ steps.meta-vars.outputs.short_sha }}
           labels: |
             org.opencontainers.image.title=remindy-${{ matrix.service.name }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ matrix.service.name }}-${{ env.ENV_PREFIX }}-${{ steps.meta-vars.outputs.short_sha }}
-            org.opencontainers.image.created=${{ steps.meta-vars.outputs.build_date }}
             remindy.service=${{ matrix.service.name }}
             remindy.environment=${{ env.ENV_PREFIX }}
 
