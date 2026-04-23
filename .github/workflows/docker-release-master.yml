@@ -148,7 +148,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}-release
 
       - name: Scan pushed image with Trivy (blocking)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_REPO }}:${{ steps.version-parts.outputs.full_tag }}
           ignore-unfixed: true
