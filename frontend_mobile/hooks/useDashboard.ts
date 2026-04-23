@@ -45,7 +45,8 @@ export function useDashboard() {
       ]);
 
       setCategories(categoriesData);
-      setEvents(eventsData);
+      // Exclure les événements annulés — ils ne doivent pas apparaître sur le calendrier
+      setEvents(eventsData.filter(e => e.status !== 'canceled'));
       console.log("eventsData", JSON.stringify(eventsData));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);

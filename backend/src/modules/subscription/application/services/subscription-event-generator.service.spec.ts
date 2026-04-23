@@ -122,11 +122,20 @@ describe('SubscriptionEventGeneratorService', () => {
       expect(result).toHaveLength(0);
     });
 
-    it('uses monthly interval for one-time when count > 1 (addFrequencyInterval default)', () => {
-      // Calling calculateOccurrences with 'one-time' and count=2 triggers
-      // addFrequencyInterval with 'one-time' which falls to default (monthly)
-      const result = sut.calculateOccurrences(new Date('2025-01-01'), 'one-time', 2);
-      expect(result).toHaveLength(2);
+    it('returns exactly one occurrence for one-time regardless of count', () => {
+      const result = sut.calculateOccurrences(new Date('2025-01-01'), 'one-time', 24);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(new Date('2025-01-01'));
+    });
+
+    it('returns empty array for one-time when startDate is after endDate', () => {
+      const result = sut.calculateOccurrences(
+        new Date('2025-06-01'),
+        'one-time',
+        24,
+        new Date('2025-01-01'),
+      );
+      expect(result).toHaveLength(0);
     });
   });
 
