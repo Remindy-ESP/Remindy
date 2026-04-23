@@ -2,7 +2,7 @@
  * Utility functions for translating status values from English to French
  */
 
-export type EventStatus = 'scheduled' | 'completed' | 'canceled' | 'failed' | 'PENDING' | 'COMPLETED' | 'RESCHEDULED';
+export type EventStatus = 'scheduled' | 'completed' | 'canceled' | 'failed';
 export type PaymentStatus = 'pending' | 'paid' | 'failed';
 
 /**
@@ -15,9 +15,6 @@ export function translateEventStatus(status: string): string {
     'canceled': 'Annulé',
     'cancelled': 'Annulé',
     'failed': 'Échoué',
-    'PENDING': 'En attente',
-    'COMPLETED': 'Terminé',
-    'RESCHEDULED': 'Reprogrammé',
   };
 
   return statusMap[status] || status;
@@ -46,9 +43,6 @@ export function getEventStatusColor(status: string): string {
     'canceled': '#9ca3af', // gray
     'cancelled': '#9ca3af', // gray
     'failed': '#f87171', // red
-    'PENDING': '#fbbf24', // yellow
-    'COMPLETED': '#4ade80', // green
-    'RESCHEDULED': '#60a5fa', // blue
   };
 
   return colorMap[status] || '#9ca3af';
