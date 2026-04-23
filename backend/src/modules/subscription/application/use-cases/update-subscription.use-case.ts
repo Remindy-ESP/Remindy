@@ -56,7 +56,10 @@ export class UpdateSubscriptionUseCase {
 
     if (dto.startDate !== undefined || dto.nextDueDate !== undefined || dto.endDate !== undefined) {
       const newStartDate = dto.startDate ?? existingSubscription.startDate;
-      const newNextDueDate = dto.nextDueDate ?? existingSubscription.nextDueDate;
+      // If startDate changed but nextDueDate wasn't explicitly provided, pass undefined so the
+      // entity recalculates nextDueDate from the new startDate + frequency automatically.
+      const newNextDueDate =
+        dto.nextDueDate ?? (dto.startDate !== undefined ? undefined : existingSubscription.nextDueDate);
       const newEndDate = dto.endDate !== undefined ? dto.endDate : existingSubscription.endDate;
       existingSubscription.updateDates(newStartDate, newNextDueDate, newEndDate);
     }
@@ -115,13 +118,16 @@ export class UpdateSubscriptionUseCase {
       // 3. Générer les événements manquants / recréer le calendrier depuis la nouvelle startDate
       //    (generateEventsForSubscription déduplique en ignorant les 'canceled')
       if (updated.frequency !== 'one-time') {
-        const count = updated.endDate
-          ? this.eventGeneratorService.calculateOccurrencesCount(
-              updated.startDate,
-              updated.frequency,
-              updated.endDate,
-            )
-          : 500; // Pas de date de fin : générer sur ~40 ans max
+        const horizon = new Date();
+        horizon.setMonth(horizon.getMonth() + 24);
+        const effectiveEnd = updated.endDate
+          ? new Date(Math.min(new Date(updated.endDate).getTime(), horizon.getTime()))
+          : horizon;
+        const count = this.eventGeneratorService.calculateOccurrencesCount(
+          updated.startDate,
+          updated.frequency,
+          effectiveEnd,
+        );
         await this.eventGeneratorService.generateEventsForSubscription({
           subscription: updated,
           count,

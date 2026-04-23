@@ -56,11 +56,12 @@ export class SubscriptionEventGeneratorService {
 
     let count = 0;
     let currentDate = new Date(startDate);
+    // TypeORM date columns come back as strings — always coerce to Date for reliable comparison
+    const endDateObj = new Date(endDate);
 
-    // Limite de sécurité pour éviter les boucles infinies
     const maxIterations = 10000;
 
-    while (currentDate <= endDate && count < maxIterations) {
+    while (currentDate <= endDateObj && count < maxIterations) {
       count++;
       currentDate = this.addFrequencyInterval(currentDate, frequency);
     }
@@ -86,18 +87,20 @@ export class SubscriptionEventGeneratorService {
     count: number,
     endDate?: Date,
   ): Date[] {
-    // Une opération unique ne génère qu'une seule occurrence, quelle que soit la valeur de count
+    // TypeORM date columns come back as strings — always coerce to Date for reliable comparison
+    const startDateObj = new Date(startDate);
+    const endDateObj = endDate ? new Date(endDate) : undefined;
+
     if (frequency === 'one-time') {
-      if (endDate && startDate > endDate) return [];
-      return [new Date(startDate)];
+      if (endDateObj && startDateObj > endDateObj) return [];
+      return [startDateObj];
     }
 
     const occurrences: Date[] = [];
-    let currentDate = new Date(startDate);
+    let currentDate = new Date(startDateObj);
 
     for (let i = 0; i < count; i++) {
-      // Si une date de fin est définie, ne pas générer d'événement après cette date
-      if (endDate && currentDate > endDate) {
+      if (endDateObj && currentDate > endDateObj) {
         break;
       }
 

@@ -36,7 +36,7 @@ export class SubscriptionPresentationMapper {
       color: dto.color,
       notes: dto.notes,
       generateEvents: dto.generateEvents ?? true,
-      eventsToGenerate: dto.eventsToGenerate ?? 12,
+      eventsToGenerate: dto.eventsToGenerate,
       timezone: dto.timezone ?? 'Europe/Paris',
     };
   }

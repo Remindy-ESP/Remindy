@@ -249,15 +249,19 @@ export class Subscription {
     this.recalculateNextDueDate();
   }
 
-  public updateDates(startDate: Date, nextDueDate: Date, endDate?: Date): void {
-    if (nextDueDate <= startDate) {
-      throw new Error('Next due date must be after start date');
-    }
+  public updateDates(startDate: Date, nextDueDate: Date | undefined, endDate?: Date): void {
     if (endDate && endDate <= startDate) {
       throw new Error('End date must be after start date');
     }
     this._startDate = startDate;
-    this._nextDueDate = nextDueDate;
+    if (nextDueDate !== undefined) {
+      if (nextDueDate <= startDate) {
+        throw new Error('Next due date must be after start date');
+      }
+      this._nextDueDate = nextDueDate;
+    } else {
+      this.recalculateNextDueDate();
+    }
     this._endDate = endDate;
   }
 

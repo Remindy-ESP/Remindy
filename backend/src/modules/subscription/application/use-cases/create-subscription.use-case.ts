@@ -40,12 +40,23 @@ export class CreateSubscriptionUseCase {
     // Créer la subscription
     const createdSubscription = await this.subscriptionRepository.create(subscription);
 
-    // Générer les événements si demandé (par défaut: true)
     let eventsGenerated = 0;
     if (dto.generateEvents !== false) {
-      // Par défaut, générer 24 mois pour les abonnements récurrents
-      // Le scheduler régénérera automatiquement pour maintenir l'avance
-      const count = dto.eventsToGenerate ?? 24;
+      let count: number;
+      if (dto.eventsToGenerate !== undefined) {
+        count = dto.eventsToGenerate;
+      } else {
+        const horizon = new Date();
+        horizon.setMonth(horizon.getMonth() + 24);
+        const effectiveEnd = createdSubscription.endDate
+          ? new Date(Math.min(new Date(createdSubscription.endDate).getTime(), horizon.getTime()))
+          : horizon;
+        count = this.eventGeneratorService.calculateOccurrencesCount(
+          createdSubscription.startDate,
+          createdSubscription.frequency,
+          effectiveEnd,
+        );
+      }
       const events = await this.eventGeneratorService.generateEventsForSubscription({
         subscription: createdSubscription,
         count,
