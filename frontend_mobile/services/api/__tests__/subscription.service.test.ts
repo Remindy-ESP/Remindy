@@ -56,7 +56,7 @@ describe('SubscriptionService', () => {
       title: 'Netflix - February',
       subscriptionId: '1',
       dueDate: '2024-02-01T00:00:00.000Z',
-      status: 'PENDING',
+      status: 'scheduled',
       userId: 'user1',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
