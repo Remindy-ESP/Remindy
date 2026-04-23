@@ -10,6 +10,13 @@
     "migrate": "npm --prefix backend run migration:run",
     "migrate:revert": "npm --prefix backend run migration:revert",
     "test:backend": "npm --prefix backend run test",
-    "test:mobile": "npm --prefix frontend_mobile run test"
+    "test:mobile": "npm --prefix frontend_mobile run test",
+    "prepare": "husky",
+    "commitlint": "commitlint --edit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "husky": "^9.1.7"
   }
 }
