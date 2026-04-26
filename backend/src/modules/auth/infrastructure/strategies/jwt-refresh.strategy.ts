@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
@@ -23,6 +23,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
     userId: string;
     sessionId: string;
   } {
+    if (!payload?.sub || !payload?.sessionId) {
+      throw new UnauthorizedException('Refresh token payload missing required claims');
+    }
+
     return {
       userId: payload.sub,
       sessionId: payload.sessionId,
