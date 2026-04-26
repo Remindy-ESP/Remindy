@@ -164,94 +164,86 @@ export class CreateDocumentsTable1699999999999 implements MigrationInterface {
     await ensureIndex('idx_documents_r2_key', ['r2_key'], true);
     await ensureIndex('idx_documents_uploaded_at', ['uploaded_at']);
 
-    // Créer les foreign keys (en supposant que les tables existent)
-    // Note: Ajuster selon votre schéma existant
+    // Créer les foreign keys.
+    //
+    // We can't use try/catch around createForeignKey: any failed query inside
+    // a transaction poisons it (Postgres 25P02), so the trailing INSERT into
+    // the migrations table also fails. Pre-check both the local column and
+    // the referenced table before attempting the FK.
     const documentsTable = await queryRunner.getTable('documents');
 
-    // Helper function to check if a foreign key exists
     const foreignKeyExists = (fkName: string): boolean => {
       return documentsTable?.foreignKeys.some(fk => fk.name === fkName) || false;
     };
-
-    if (!foreignKeyExists('fk_documents_user')) {
-      try {
-        await queryRunner.createForeignKey(
-          'documents',
-          new TableForeignKey({
-            name: 'fk_documents_user',
-            columnNames: ['user_id'],
-            referencedTableName: 'users',
-            referencedColumnNames: ['id'],
-            onDelete: 'CASCADE',
-          }),
-        );
-      } catch (error) {
-        // Ignore si la table users n'existe pas encore
-        console.warn('Could not create foreign key for users table:', error.message);
+    const ensureForeignKey = async (
+      fk: TableForeignKey & { name?: string },
+      localColumn: string,
+      referencedTable: string,
+    ): Promise<void> => {
+      const fkName = fk.name ?? '';
+      if (foreignKeyExists(fkName)) {
+        console.log(`Foreign key ${fkName} already exists, skipping`);
+        return;
       }
-    } else {
-      console.log('Foreign key fk_documents_user already exists, skipping');
-    }
-
-    if (!foreignKeyExists('fk_documents_subscription')) {
-      try {
-        await queryRunner.createForeignKey(
-          'documents',
-          new TableForeignKey({
-            name: 'fk_documents_subscription',
-            columnNames: ['subscription_id'],
-            referencedTableName: 'subscriptions',
-            referencedColumnNames: ['id'],
-            onDelete: 'SET NULL',
-          }),
-        );
-      } catch (error) {
-        // Ignore si la table subscriptions n'existe pas encore
-        console.warn('Could not create foreign key for subscriptions table:', error.message);
+      if (!columnExists(localColumn)) {
+        console.log(`Skipping ${fkName}: documents.${localColumn} not present (legacy schema)`);
+        return;
       }
-    } else {
-      console.log('Foreign key fk_documents_subscription already exists, skipping');
-    }
-
-    if (!foreignKeyExists('fk_documents_contract')) {
-      try {
-        await queryRunner.createForeignKey(
-          'documents',
-          new TableForeignKey({
-            name: 'fk_documents_contract',
-            columnNames: ['contract_id'],
-            referencedTableName: 'contracts',
-            referencedColumnNames: ['id'],
-            onDelete: 'SET NULL',
-          }),
-        );
-      } catch (error) {
-        // Ignore si la table contracts n'existe pas encore
-        console.warn('Could not create foreign key for contracts table:', error.message);
+      const referencedExists = await queryRunner.hasTable(referencedTable);
+      if (!referencedExists) {
+        console.log(`Skipping ${fkName}: referenced table "${referencedTable}" not present yet`);
+        return;
       }
-    } else {
-      console.log('Foreign key fk_documents_contract already exists, skipping');
-    }
+      await queryRunner.createForeignKey('documents', fk);
+    };
 
-    if (!foreignKeyExists('fk_documents_folder')) {
-      try {
-        await queryRunner.createForeignKey(
-          'documents',
-          new TableForeignKey({
-            name: 'fk_documents_folder',
-            columnNames: ['folder_id'],
-            referencedTableName: 'folders',
-            referencedColumnNames: ['id'],
-            onDelete: 'SET NULL',
-          }),
-        );
-      } catch (error) {
-        // Ignore si la table folders n'existe pas encore
-        console.warn('Could not create foreign key for folders table:', error.message);
-      }
-    } else {
-      console.log('Foreign key fk_documents_folder already exists, skipping');
-    }
+    await ensureForeignKey(
+      new TableForeignKey({
+        name: 'fk_documents_user',
+        columnNames: ['user_id'],
+        referencedTableName: 'users',
+        referencedColumnNames: ['id'],
+        onDelete: 'CASCADE',
+      }),
+      'user_id',
+      'users',
+    );
+
+    await ensureForeignKey(
+      new TableForeignKey({
+        name: 'fk_documents_subscription',
+        columnNames: ['subscription_id'],
+        referencedTableName: 'subscriptions',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      }),
+      'subscription_id',
+      'subscriptions',
+    );
+
+    await ensureForeignKey(
+      new TableForeignKey({
+        name: 'fk_documents_contract',
+        columnNames: ['contract_id'],
+        referencedTableName: 'contracts',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      }),
+      'contract_id',
+      'contracts',
+    );
+
+    await ensureForeignKey(
+      new TableForeignKey({
+        name: 'fk_documents_folder',
+        columnNames: ['folder_id'],
+        referencedTableName: 'folders',
+        referencedColumnNames: ['id'],
+        onDelete: 'SET NULL',
+      }),
+      'folder_id',
+      'folders',
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
