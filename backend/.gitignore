@@ -15,7 +15,10 @@ lerna-debug.log*
 # Env
 .env.production
 .env.staging
+.env
 .env.develop
+.env.docker
+!.env.docker.example
 
 # OS
 .DS_Store
@@ -23,6 +26,12 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+*.lcov
+lcov.info
+lcov-report/
+clover.xml
+coverage.json
+.coverage
 
 # IDEs and editors
 /.idea
@@ -59,3 +68,6 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Files
+CLAUDE.md

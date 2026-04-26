@@ -1,45 +1,87 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import GlobalHeader from '@/components/GlobalHeader';
+import { useAuth } from '@/context/AuthContext';
+import { APP_ROUTES } from '@/navigation/MenuConfig';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+    const router = useRouter();
+    const { isAuthenticated, isLoading } = useAuth();
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
-  );
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.replace('/');
+        }
+    }, [isAuthenticated, isLoading]);
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#06071D' }}>
+                <ActivityIndicator size="large" color="#6366f1" />
+            </View>
+        );
+    }
+
+    if (!isAuthenticated) return null;
+
+    const footerRoutes = APP_ROUTES.filter(r => r.showInFooter);
+    const hiddenRoutes = APP_ROUTES.filter(r => !r.showInFooter);
+
+    return (
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
+            <GlobalHeader />
+
+            <Tabs
+                screenOptions={{
+                    headerShown: false,
+                    tabBarActiveTintColor: '#6366f1',
+                    tabBarInactiveTintColor: '#9ca3af',
+                    tabBarStyle: {
+                        backgroundColor: '#06071D',
+                        height: 60,
+                        paddingBottom: 8,
+                        paddingTop: 8,
+                        borderTopWidth: 0,
+                    },
+                }}
+            >
+                {footerRoutes.map(route => (
+                    <Tabs.Screen
+                        key={route.key}
+                        name={route.route.replace('/(tabs)/', '')}
+                        options={{
+                            title: ' ',
+                            tabBarLabel: '',
+                            tabBarIcon: ({ color, size }) => (
+                                <Ionicons
+                                    name={route.footerIcon as any}
+                                    size={size}
+                                    color={color}
+                                />
+                            ),
+                        }}
+                    />
+                ))}
+                {hiddenRoutes.map(route => (
+                    <Tabs.Screen
+                        key={route.key}
+                        name={route.route.replace('/(tabs)/', '')}
+                        options={{ href: null }}
+                    />
+                ))}
+                <Tabs.Screen name="profile" options={{ href: null }} />
+                <Tabs.Screen name="profile-edit" options={{ href: null }} />
+                <Tabs.Screen name="profile-security" options={{ href: null }} />
+                <Tabs.Screen name="profile-preferences" options={{ href: null }} />
+                <Tabs.Screen name="profile-privacy" options={{ href: null }} />
+                <Tabs.Screen name="profile-help" options={{ href: null }} />
+                <Tabs.Screen name="profile-about" options={{ href: null }} />
+                <Tabs.Screen name="categories" options={{ href: null }} />
+            </Tabs>
+        </SafeAreaView>
+    );
 }
