@@ -80,15 +80,23 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
           NODE_ENV: test
-          # Test-only secrets — required for AppModule boot (passport-jwt
-          # throws at strategy ctor when secretOrKey is undefined). Not
-          # used to verify any real token; mocks override the token service
-          # in suites that exercise auth.
+          # Test-only values — needed for AppModule boot. Several providers
+          # throw in their constructor when these env vars are missing
+          # (passport-jwt strategies, CryptoService, CloudflareR2Service,
+          # GeminiParserService). Suites that exercise these features mock
+          # the underlying clients, so these values are never used to call
+          # a real service.
           JWT_ACCESS_TOKEN_SECRET: ci-test-access-secret-not-for-production-use
           JWT_REFRESH_TOKEN_SECRET: ci-test-refresh-secret-not-for-production-use
           JWT_PASSWORD_RESET_SECRET: ci-test-reset-secret-not-for-production-use
           JWT_ACCESS_TOKEN_EXPIRATION: 15m
           JWT_REFRESH_TOKEN_EXPIRATION: 30d
+          MFA_SECRET_KEY: ci-test-mfa-secret-not-for-production-use
+          R2_ACCOUNT_ID: ci-test-r2-account
+          R2_ACCESS_KEY_ID: ci-test-r2-access-key
+          R2_SECRET_ACCESS_KEY: ci-test-r2-secret-key
+          R2_BUCKET_NAME: ci-test-bucket
+          GEMINI_API_KEY: ci-test-gemini-key
 
       - name: 🗄️ Get Neon connection string (Test branch)
         id: neon-connection
