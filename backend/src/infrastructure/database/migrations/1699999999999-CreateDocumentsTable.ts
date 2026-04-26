@@ -125,95 +125,44 @@ export class CreateDocumentsTable1699999999999 implements MigrationInterface {
     // Créer les index pour améliorer les performances
     const table = await queryRunner.getTable('documents');
 
-    // Helper function to check if an index exists
+    // Helpers — guard against partial schemas (e.g. when documents was
+    // created by an earlier InitialSchema migration that uses different
+    // column names like file_r2_key / created_at and lacks folder_id).
     const indexExists = (indexName: string): boolean => {
       return table?.indices.some(index => index.name === indexName) || false;
     };
-
-    if (!indexExists('idx_documents_user_id')) {
+    const columnExists = (columnName: string): boolean => {
+      return table?.columns.some(col => col.name === columnName) || false;
+    };
+    const ensureIndex = async (
+      indexName: string,
+      columnNames: string[],
+      isUnique = false,
+    ): Promise<void> => {
+      if (indexExists(indexName)) {
+        console.log(`Index ${indexName} already exists, skipping`);
+        return;
+      }
+      const missing = columnNames.filter(c => !columnExists(c));
+      if (missing.length > 0) {
+        console.log(
+          `Skipping ${indexName}: documents.${missing.join(', ')} not present (legacy schema)`,
+        );
+        return;
+      }
       await queryRunner.createIndex(
         'documents',
-        new TableIndex({
-          name: 'idx_documents_user_id',
-          columnNames: ['user_id'],
-        }),
+        new TableIndex({ name: indexName, columnNames, isUnique }),
       );
-    } else {
-      console.log('Index idx_documents_user_id already exists, skipping');
-    }
+    };
 
-    if (!indexExists('idx_documents_subscription_id')) {
-      await queryRunner.createIndex(
-        'documents',
-        new TableIndex({
-          name: 'idx_documents_subscription_id',
-          columnNames: ['subscription_id'],
-        }),
-      );
-    } else {
-      console.log('Index idx_documents_subscription_id already exists, skipping');
-    }
-
-    if (!indexExists('idx_documents_contract_id')) {
-      await queryRunner.createIndex(
-        'documents',
-        new TableIndex({
-          name: 'idx_documents_contract_id',
-          columnNames: ['contract_id'],
-        }),
-      );
-    } else {
-      console.log('Index idx_documents_contract_id already exists, skipping');
-    }
-
-    if (!indexExists('idx_documents_folder_id')) {
-      await queryRunner.createIndex(
-        'documents',
-        new TableIndex({
-          name: 'idx_documents_folder_id',
-          columnNames: ['folder_id'],
-        }),
-      );
-    } else {
-      console.log('Index idx_documents_folder_id already exists, skipping');
-    }
-
-    if (!indexExists('idx_documents_ocr_status')) {
-      await queryRunner.createIndex(
-        'documents',
-        new TableIndex({
-          name: 'idx_documents_ocr_status',
-          columnNames: ['ocr_status'],
-        }),
-      );
-    } else {
-      console.log('Index idx_documents_ocr_status already exists, skipping');
-    }
-
-    if (!indexExists('idx_documents_r2_key')) {
-      await queryRunner.createIndex(
-        'documents',
-        new TableIndex({
-          name: 'idx_documents_r2_key',
-          columnNames: ['r2_key'],
-          isUnique: true,
-        }),
-      );
-    } else {
-      console.log('Index idx_documents_r2_key already exists, skipping');
-    }
-
-    if (!indexExists('idx_documents_uploaded_at')) {
-      await queryRunner.createIndex(
-        'documents',
-        new TableIndex({
-          name: 'idx_documents_uploaded_at',
-          columnNames: ['uploaded_at'],
-        }),
-      );
-    } else {
-      console.log('Index idx_documents_uploaded_at already exists, skipping');
-    }
+    await ensureIndex('idx_documents_user_id', ['user_id']);
+    await ensureIndex('idx_documents_subscription_id', ['subscription_id']);
+    await ensureIndex('idx_documents_contract_id', ['contract_id']);
+    await ensureIndex('idx_documents_folder_id', ['folder_id']);
+    await ensureIndex('idx_documents_ocr_status', ['ocr_status']);
+    await ensureIndex('idx_documents_r2_key', ['r2_key'], true);
+    await ensureIndex('idx_documents_uploaded_at', ['uploaded_at']);
 
     // Créer les foreign keys (en supposant que les tables existent)
     // Note: Ajuster selon votre schéma existant
