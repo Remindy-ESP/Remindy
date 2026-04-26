@@ -1,0 +1,18 @@
+import type { SubscriptionFrequency, SubscriptionStatus } from '../../domain/subscription.entity';
+
+export interface UpdateSubscriptionAppDto {
+  contractId?: number;
+  categoryId?: string;
+  name?: string;
+  amount?: number;
+  currency?: string;
+  frequency?: SubscriptionFrequency;
+  startDate?: Date;
+  endDate?: Date;
+  nextDueDate?: Date;
+  trialStartDate?: Date;
+  trialEndDate?: Date;
+  status?: SubscriptionStatus;
+  color?: string;
+  notes?: string;
+}
