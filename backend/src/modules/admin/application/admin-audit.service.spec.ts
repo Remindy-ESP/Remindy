@@ -3,7 +3,6 @@ import { AdminCloudService } from './admin-cloud.service';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { AdminDocumentsQueryDto } from '../presentation/dto/admin-documents-query.dto';
 import { AdminSubscriptionsQueryDto } from '../presentation/dto/admin-subscriptions-query.dto';
-import { UpdateSharedSubscriptionDto } from '../presentation/dto/update-shared-subscription.dto';
 
 // --- Mocks ---
 
