@@ -53,7 +53,7 @@ async function bootstrap(): Promise<void> {
 
   const config = swaggerConfigBuilder.build();
 
-  const document: OpenAPIObject = SwaggerModule.createDocument(app, config as OpenAPIObject);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
 
@@ -66,11 +66,9 @@ async function bootstrap(): Promise<void> {
     .addApiKey({ type: 'apiKey', in: 'header', name: 'x-csrf-token' }, 'admin-csrf-header')
     .build();
 
-  const adminDocument: OpenAPIObject = SwaggerModule.createDocument(
-    app,
-    adminConfig as OpenAPIObject,
-    { include: [AdminModule] },
-  );
+  const adminDocument: OpenAPIObject = SwaggerModule.createDocument(app, adminConfig, {
+    include: [AdminModule],
+  });
   type SwaggerRequest = {
     headers?: Record<string, string>;
   };

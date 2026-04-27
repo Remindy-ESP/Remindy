@@ -108,7 +108,7 @@ describe('listSubscriptions', () => {
     const result = await service.listSubscriptions(userAdmin, {
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(result).toEqual({ items: subs, total: 2, page: 1, limit: 20 });
   });
@@ -120,7 +120,7 @@ describe('listSubscriptions', () => {
       userId: 'user-abc',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.userId = :userId', { userId: 'user-abc' });
   });
@@ -132,7 +132,7 @@ describe('listSubscriptions', () => {
       status: 'active',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.status = :status', { status: 'active' });
   });
@@ -144,7 +144,7 @@ describe('listSubscriptions', () => {
       frequency: 'monthly',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.frequency = :frequency', {
       frequency: 'monthly',
@@ -158,7 +158,7 @@ describe('listSubscriptions', () => {
       currency: 'EUR',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.currency = :currency', {
       currency: 'EUR',
@@ -172,7 +172,7 @@ describe('listSubscriptions', () => {
       name: 'netflix',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.name ILIKE :name', {
       name: '%netflix%',
@@ -187,7 +187,7 @@ describe('listSubscriptions', () => {
       amountMax: 50,
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.amount >= :amountMin', { amountMin: 5 });
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.amount <= :amountMax', { amountMax: 50 });
@@ -201,7 +201,7 @@ describe('listSubscriptions', () => {
       createdTo: '2026-12-31',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('s.createdAt >= :createdFrom', {
       createdFrom: new Date('2026-01-01'),
@@ -217,7 +217,7 @@ describe('listSubscriptions', () => {
     await service.listSubscriptions(userAdmin, {
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.andWhere).not.toHaveBeenCalled();
   });
@@ -228,7 +228,7 @@ describe('listSubscriptions', () => {
     await service.listSubscriptions(userAdmin, {
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.orderBy).toHaveBeenCalledWith('s.createdAt', 'DESC');
     expect(mockQb.addOrderBy).toHaveBeenCalledWith('s.id', 'DESC');
@@ -242,7 +242,7 @@ describe('listSubscriptions', () => {
       sortDir: 'ASC',
       page: 1,
       limit: 20,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.orderBy).toHaveBeenCalledWith('s.amount', 'ASC');
     expect(mockQb.addOrderBy).toHaveBeenCalledWith('s.id', 'DESC');
@@ -254,7 +254,7 @@ describe('listSubscriptions', () => {
     await service.listSubscriptions(userAdmin, {
       page: 3,
       limit: 10,
-    } as AdminSubscriptionsQueryDto);
+    });
 
     expect(mockQb.skip).toHaveBeenCalledWith(20);
     expect(mockQb.take).toHaveBeenCalledWith(10);
@@ -264,10 +264,13 @@ describe('listSubscriptions', () => {
     const service = makeService();
 
     await expect(
-      service.listSubscriptions({ role: Role.USER }, {
-        page: 1,
-        limit: 20,
-      } as AdminSubscriptionsQueryDto),
+      service.listSubscriptions(
+        { role: Role.USER },
+        {
+          page: 1,
+          limit: 20,
+        },
+      ),
     ).rejects.toThrow(ForbiddenException);
   });
 });
@@ -283,7 +286,7 @@ describe('updateSharedSubscription', () => {
     const service = makeService();
     const result = await service.updateSharedSubscription(superAdmin, 'sub-1', {
       name: 'Disney+',
-    } as UpdateSharedSubscriptionDto);
+    });
 
     expect(mockSubscriptionsRepo.save).toHaveBeenCalledWith({ ...sub, name: 'Disney+' });
     expect(result.name).toBe('Disney+');
@@ -294,17 +297,17 @@ describe('updateSharedSubscription', () => {
 
     const service = makeService();
 
-    await expect(
-      service.updateSharedSubscription(superAdmin, 'inexistant', {} as UpdateSharedSubscriptionDto),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.updateSharedSubscription(superAdmin, 'inexistant', {})).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('leve ForbiddenException pour user_admin sans CLOUD_WRITE', async () => {
     const service = makeService();
 
-    await expect(
-      service.updateSharedSubscription(userAdmin, 'sub-1', {} as UpdateSharedSubscriptionDto),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.updateSharedSubscription(userAdmin, 'sub-1', {})).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });
 
@@ -319,7 +322,7 @@ describe('listDocuments', () => {
     const result = await service.listDocuments(superAdmin, {
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(result).toEqual({ items: docs, total: 2, page: 1, limit: 20 });
   });
@@ -331,7 +334,7 @@ describe('listDocuments', () => {
       userId: 'user-abc',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.userId = :userId', { userId: 'user-abc' });
   });
@@ -341,7 +344,7 @@ describe('listDocuments', () => {
       subscriptionId: 'sub-abc',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.subscriptionId = :subscriptionId', {
       subscriptionId: 'sub-abc',
@@ -355,7 +358,7 @@ describe('listDocuments', () => {
       ocrStatus: 'failed',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.ocrStatus = :ocrStatus', {
       ocrStatus: 'failed',
@@ -369,7 +372,7 @@ describe('listDocuments', () => {
       mimeType: 'application/pdf',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.mimeType = :mimeType', {
       mimeType: 'application/pdf',
@@ -383,7 +386,7 @@ describe('listDocuments', () => {
       filename: 'facture',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.filename ILIKE :filename', {
       filename: '%facture%',
@@ -398,7 +401,7 @@ describe('listDocuments', () => {
       uploadedTo: '2026-12-31',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).toHaveBeenCalledWith('d.uploadedAt >= :uploadedFrom', {
       uploadedFrom: new Date('2026-01-01'),
@@ -414,7 +417,7 @@ describe('listDocuments', () => {
     await service.listDocuments(superAdmin, {
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.andWhere).not.toHaveBeenCalled();
   });
@@ -425,7 +428,7 @@ describe('listDocuments', () => {
     await service.listDocuments(superAdmin, {
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.orderBy).toHaveBeenCalledWith('d.uploadedAt', 'DESC');
     expect(mockQb.addOrderBy).toHaveBeenCalledWith('d.id', 'DESC');
@@ -439,7 +442,7 @@ describe('listDocuments', () => {
       sortDir: 'ASC',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.orderBy).toHaveBeenCalledWith('d.filename', 'ASC');
     expect(mockQb.addOrderBy).toHaveBeenCalledWith('d.id', 'DESC');
@@ -453,7 +456,7 @@ describe('listDocuments', () => {
       sortDir: 'ASC',
       page: 1,
       limit: 20,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.orderBy).toHaveBeenCalledWith('CAST(d.fileSize AS integer)', 'ASC');
     expect(mockQb.addOrderBy).toHaveBeenCalledWith('d.id', 'DESC');
@@ -465,7 +468,7 @@ describe('listDocuments', () => {
     await service.listDocuments(superAdmin, {
       page: 2,
       limit: 10,
-    } as AdminDocumentsQueryDto);
+    });
 
     expect(mockQb.skip).toHaveBeenCalledWith(10);
     expect(mockQb.take).toHaveBeenCalledWith(10);
@@ -478,7 +481,7 @@ describe('listDocuments', () => {
       service.listDocuments(userAdmin, {
         page: 1,
         limit: 20,
-      } as AdminDocumentsQueryDto),
+      }),
     ).rejects.toThrow(ForbiddenException);
   });
 });
