@@ -71,7 +71,6 @@ describe('ResetPasswordUseCase', () => {
     userRepo = module.get(IUserAuthRepository);
     passwordService = module.get(IPasswordService);
     sessionRepo = module.get(IUserSessionRepository);
-    eventEmitter = module.get(EventEmitter2);
 
     process.env.JWT_PASSWORD_RESET_SECRET = 'test-secret-key';
   });
