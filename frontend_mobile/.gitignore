@@ -9,6 +9,16 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Tests
+/coverage
+/.nyc_output
+*.lcov
+lcov.info
+lcov-report/
+clover.xml
+coverage.json
+.coverage
+
 # Native
 .kotlin/
 *.orig.*
@@ -32,6 +42,10 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+.env.development
+.env.production
+.env.staging
 
 # typescript
 *.tsbuildinfo

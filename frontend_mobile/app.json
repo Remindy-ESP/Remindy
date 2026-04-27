@@ -33,7 +33,11 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-navigation-bar",
+      "expo-localization",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
