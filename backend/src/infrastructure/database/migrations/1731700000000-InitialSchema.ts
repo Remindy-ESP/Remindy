@@ -6,9 +6,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // ===== CREATE TABLES WITHOUT FOREIGN KEYS FIRST =====
 
-    // Create roles table
     await queryRunner.query(`
-      CREATE TABLE "roles" (
+      CREATE TABLE IF NOT EXISTS "roles" (
         "key" text NOT NULL,
         "label" varchar(100) NOT NULL,
         "description" text,
@@ -17,9 +16,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create contracts table
     await queryRunner.query(`
-      CREATE TABLE "contracts" (
+      CREATE TABLE IF NOT EXISTS "contracts" (
         "id" SERIAL NOT NULL,
         "type" varchar(50) NOT NULL,
         "label" varchar(100) NOT NULL,
@@ -33,9 +31,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create users table
     await queryRunner.query(`
-      CREATE TABLE "users" (
+      CREATE TABLE IF NOT EXISTS "users" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "email" varchar(255) NOT NULL,
         "password_hash" varchar(255),
@@ -61,9 +58,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create user_preferences table
     await queryRunner.query(`
-      CREATE TABLE "user_preferences" (
+      CREATE TABLE IF NOT EXISTS "user_preferences" (
         "user_id" uuid NOT NULL,
         "theme" varchar(20) NOT NULL DEFAULT 'light',
         "notification_email" boolean NOT NULL DEFAULT true,
@@ -78,9 +74,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create user_sessions table
     await queryRunner.query(`
-      CREATE TABLE "user_sessions" (
+      CREATE TABLE IF NOT EXISTS "user_sessions" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "refresh_token_hash" varchar(255) NOT NULL,
@@ -96,9 +91,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create role_limits table
     await queryRunner.query(`
-      CREATE TABLE "role_limits" (
+      CREATE TABLE IF NOT EXISTS "role_limits" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "role_key" text NOT NULL,
         "resource" varchar(50) NOT NULL,
@@ -111,9 +105,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create rgpd_exports table
     await queryRunner.query(`
-      CREATE TABLE "rgpd_exports" (
+      CREATE TABLE IF NOT EXISTS "rgpd_exports" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "status" varchar(20) NOT NULL DEFAULT 'pending',
@@ -127,9 +120,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create subscriptions table
     await queryRunner.query(`
-      CREATE TABLE "subscriptions" (
+      CREATE TABLE IF NOT EXISTS "subscriptions" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "contract_id" integer,
@@ -159,9 +151,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create event_series table
     await queryRunner.query(`
-      CREATE TABLE "event_series" (
+      CREATE TABLE IF NOT EXISTS "event_series" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "subscription_id" uuid NOT NULL,
         "rrule" text NOT NULL,
@@ -177,9 +168,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create events table
     await queryRunner.query(`
-      CREATE TABLE "events" (
+      CREATE TABLE IF NOT EXISTS "events" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "subscription_id" uuid NOT NULL,
         "event_series_id" uuid,
@@ -201,9 +191,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create reminders table
     await queryRunner.query(`
-      CREATE TABLE "reminders" (
+      CREATE TABLE IF NOT EXISTS "reminders" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "subscription_id" uuid,
@@ -221,9 +210,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create notifications table
     await queryRunner.query(`
-      CREATE TABLE "notifications" (
+      CREATE TABLE IF NOT EXISTS "notifications" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "event_id" uuid,
@@ -252,9 +240,8 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // Create documents table
     await queryRunner.query(`
-      CREATE TABLE "documents" (
+      CREATE TABLE IF NOT EXISTS "documents" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "user_id" uuid NOT NULL,
         "contract_id" integer,
@@ -274,316 +261,323 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // ===== ADD FOREIGN KEYS =====
+    // ===== ADD FOREIGN KEYS (idempotent via exception handler) =====
 
-    // Foreign keys for users
     await queryRunner.query(`
-      ALTER TABLE "users"
-      ADD CONSTRAINT "fk_users_role"
-      FOREIGN KEY ("role_key") REFERENCES "roles"("key")
-      ON DELETE RESTRICT
-    `);
-
-    // Foreign keys for user_preferences
-    await queryRunner.query(`
-      ALTER TABLE "user_preferences"
-      ADD CONSTRAINT "fk_user_preferences_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
-    `);
-
-    // Foreign keys for user_sessions
-    await queryRunner.query(`
-      ALTER TABLE "user_sessions"
-      ADD CONSTRAINT "fk_user_sessions_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
-    `);
-
-    // Foreign keys for role_limits
-    await queryRunner.query(`
-      ALTER TABLE "role_limits"
-      ADD CONSTRAINT "fk_role_limits_role"
-      FOREIGN KEY ("role_key") REFERENCES "roles"("key")
-      ON DELETE CASCADE
-    `);
-
-    // Foreign keys for rgpd_exports
-    await queryRunner.query(`
-      ALTER TABLE "rgpd_exports"
-      ADD CONSTRAINT "fk_rgpd_exports_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
-    `);
-
-    // Foreign keys for subscriptions
-    await queryRunner.query(`
-      ALTER TABLE "subscriptions"
-      ADD CONSTRAINT "fk_subscriptions_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
+      DO $$ BEGIN
+        ALTER TABLE "users" ADD CONSTRAINT "fk_users_role"
+          FOREIGN KEY ("role_key") REFERENCES "roles"("key") ON DELETE RESTRICT;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "subscriptions"
-      ADD CONSTRAINT "fk_subscriptions_contract"
-      FOREIGN KEY ("contract_id") REFERENCES "contracts"("id")
-      ON DELETE SET NULL
-    `);
-
-    // Foreign keys for event_series
-    await queryRunner.query(`
-      ALTER TABLE "event_series"
-      ADD CONSTRAINT "fk_event_series_subscription"
-      FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id")
-      ON DELETE CASCADE
-    `);
-
-    // Foreign keys for events
-    await queryRunner.query(`
-      ALTER TABLE "events"
-      ADD CONSTRAINT "fk_events_subscription"
-      FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id")
-      ON DELETE CASCADE
+      DO $$ BEGIN
+        ALTER TABLE "user_preferences" ADD CONSTRAINT "fk_user_preferences_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "events"
-      ADD CONSTRAINT "fk_events_event_series"
-      FOREIGN KEY ("event_series_id") REFERENCES "event_series"("id")
-      ON DELETE SET NULL
-    `);
-
-    // Foreign keys for reminders
-    await queryRunner.query(`
-      ALTER TABLE "reminders"
-      ADD CONSTRAINT "fk_reminders_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
+      DO $$ BEGIN
+        ALTER TABLE "user_sessions" ADD CONSTRAINT "fk_user_sessions_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "reminders"
-      ADD CONSTRAINT "fk_reminders_subscription"
-      FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id")
-      ON DELETE CASCADE
-    `);
-
-    // Foreign keys for notifications
-    await queryRunner.query(`
-      ALTER TABLE "notifications"
-      ADD CONSTRAINT "fk_notifications_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
+      DO $$ BEGIN
+        ALTER TABLE "role_limits" ADD CONSTRAINT "fk_role_limits_role"
+          FOREIGN KEY ("role_key") REFERENCES "roles"("key") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "notifications"
-      ADD CONSTRAINT "fk_notifications_event"
-      FOREIGN KEY ("event_id") REFERENCES "events"("id")
-      ON DELETE SET NULL
+      DO $$ BEGIN
+        ALTER TABLE "rgpd_exports" ADD CONSTRAINT "fk_rgpd_exports_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "notifications"
-      ADD CONSTRAINT "fk_notifications_reminder"
-      FOREIGN KEY ("reminder_id") REFERENCES "reminders"("id")
-      ON DELETE SET NULL
-    `);
-
-    // Foreign keys for documents
-    await queryRunner.query(`
-      ALTER TABLE "documents"
-      ADD CONSTRAINT "fk_documents_user"
-      FOREIGN KEY ("user_id") REFERENCES "users"("id")
-      ON DELETE CASCADE
+      DO $$ BEGIN
+        ALTER TABLE "subscriptions" ADD CONSTRAINT "fk_subscriptions_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "documents"
-      ADD CONSTRAINT "fk_documents_contract"
-      FOREIGN KEY ("contract_id") REFERENCES "contracts"("id")
-      ON DELETE SET NULL
+      DO $$ BEGIN
+        ALTER TABLE "subscriptions" ADD CONSTRAINT "fk_subscriptions_contract"
+          FOREIGN KEY ("contract_id") REFERENCES "contracts"("id") ON DELETE SET NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
     await queryRunner.query(`
-      ALTER TABLE "documents"
-      ADD CONSTRAINT "fk_documents_subscription"
-      FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id")
-      ON DELETE SET NULL
+      DO $$ BEGIN
+        ALTER TABLE "event_series" ADD CONSTRAINT "fk_event_series_subscription"
+          FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
 
-    // ===== CREATE INDEXES =====
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "events" ADD CONSTRAINT "fk_events_subscription"
+          FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
 
-    // Indexes for users
-    await queryRunner.query(`CREATE INDEX "idx_users_email" ON "users"("email")`);
-    await queryRunner.query(`CREATE INDEX "idx_users_role" ON "users"("role_key")`);
-    await queryRunner.query(`CREATE INDEX "idx_users_status" ON "users"("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_users_deleted_at" ON "users"("deleted_at")`);
-    await queryRunner.query(`CREATE INDEX "idx_users_last_login" ON "users"("last_login_at")`);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "events" ADD CONSTRAINT "fk_events_event_series"
+          FOREIGN KEY ("event_series_id") REFERENCES "event_series"("id") ON DELETE SET NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "reminders" ADD CONSTRAINT "fk_reminders_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "reminders" ADD CONSTRAINT "fk_reminders_subscription"
+          FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_event"
+          FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE SET NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_reminder"
+          FOREIGN KEY ("reminder_id") REFERENCES "reminders"("id") ON DELETE SET NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "documents" ADD CONSTRAINT "fk_documents_user"
+          FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "documents" ADD CONSTRAINT "fk_documents_contract"
+          FOREIGN KEY ("contract_id") REFERENCES "contracts"("id") ON DELETE SET NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "documents" ADD CONSTRAINT "fk_documents_subscription"
+          FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE SET NULL;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
+
+    // ===== CREATE INDEXES (IF NOT EXISTS) =====
+
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users"("email")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_role" ON "users"("role_key")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_status" ON "users"("status")`);
     await queryRunner.query(
-      `CREATE INDEX "idx_users_failed_login" ON "users"("failed_login_count")`,
-    );
-
-    // Indexes for user_sessions
-    await queryRunner.query(
-      `CREATE INDEX "idx_user_sessions_user_id" ON "user_sessions"("user_id")`,
+      `CREATE INDEX IF NOT EXISTS "idx_users_deleted_at" ON "users"("deleted_at")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_user_sessions_refresh_token_hash" ON "user_sessions"("refresh_token_hash")`,
+      `CREATE INDEX IF NOT EXISTS "idx_users_last_login" ON "users"("last_login_at")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_user_sessions_expires_at" ON "user_sessions"("expires_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_user_sessions_is_revoked" ON "user_sessions"("is_revoked")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX "idx_user_sessions_deleted_at" ON "user_sessions"("deleted_at")`,
+      `CREATE INDEX IF NOT EXISTS "idx_users_failed_login" ON "users"("failed_login_count")`,
     );
 
-    // Indexes for rgpd_exports
-    await queryRunner.query(`CREATE INDEX "idx_rgpd_exports_user_id" ON "rgpd_exports"("user_id")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_user_id" ON "user_sessions"("user_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_refresh_token_hash" ON "user_sessions"("refresh_token_hash")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_expires_at" ON "user_sessions"("expires_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_is_revoked" ON "user_sessions"("is_revoked")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_deleted_at" ON "user_sessions"("deleted_at")`,
+    );
 
-    // Indexes for subscriptions
     await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_user_id" ON "subscriptions"("user_id")`,
+      `CREATE INDEX IF NOT EXISTS "idx_rgpd_exports_user_id" ON "rgpd_exports"("user_id")`,
+    );
+
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_user_id" ON "subscriptions"("user_id")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_contract_id" ON "subscriptions"("contract_id")`,
-    );
-    await queryRunner.query(`CREATE INDEX "idx_subscriptions_status" ON "subscriptions"("status")`);
-    await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_next_due_date" ON "subscriptions"("next_due_date")`,
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_contract_id" ON "subscriptions"("contract_id")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_start_date" ON "subscriptions"("start_date")`,
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_status" ON "subscriptions"("status")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_created_at" ON "subscriptions"("created_at")`,
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_next_due_date" ON "subscriptions"("next_due_date")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_deleted_at" ON "subscriptions"("deleted_at")`,
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_start_date" ON "subscriptions"("start_date")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_subscriptions_frequency" ON "subscriptions"("frequency")`,
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_created_at" ON "subscriptions"("created_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_deleted_at" ON "subscriptions"("deleted_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_frequency" ON "subscriptions"("frequency")`,
     );
     await queryRunner.query(`
-      CREATE UNIQUE INDEX "uq_subscriptions_user_name"
+      CREATE UNIQUE INDEX IF NOT EXISTS "uq_subscriptions_user_name"
       ON "subscriptions"("user_id", LOWER("name"))
       WHERE "deleted_at" IS NULL
     `);
 
-    // Indexes for event_series
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "idx_event_series_subscription_id" ON "event_series"("subscription_id")`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "idx_event_series_subscription_id" ON "event_series"("subscription_id")`,
     );
-    await queryRunner.query(`CREATE INDEX "idx_event_series_dtstart" ON "event_series"("dtstart")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_event_series_dtstart" ON "event_series"("dtstart")`,
+    );
     await queryRunner.query(`
-      CREATE INDEX "idx_event_series_deleted_at"
+      CREATE INDEX IF NOT EXISTS "idx_event_series_deleted_at"
       ON "event_series"("deleted_at")
       WHERE "deleted_at" IS NULL
     `);
 
-    // Indexes for events
     await queryRunner.query(
-      `CREATE INDEX "idx_events_subscription_id" ON "events"("subscription_id")`,
+      `CREATE INDEX IF NOT EXISTS "idx_events_subscription_id" ON "events"("subscription_id")`,
     );
     await queryRunner.query(`
-      CREATE INDEX "idx_events_event_series_id"
+      CREATE INDEX IF NOT EXISTS "idx_events_event_series_id"
       ON "events"("event_series_id")
       WHERE "event_series_id" IS NOT NULL
     `);
-    await queryRunner.query(`CREATE INDEX "idx_events_starts_at" ON "events"("starts_at")`);
-    await queryRunner.query(`CREATE INDEX "idx_events_status" ON "events"("status")`);
     await queryRunner.query(
-      `CREATE INDEX "idx_events_subscription_starts" ON "events"("subscription_id", "starts_at")`,
+      `CREATE INDEX IF NOT EXISTS "idx_events_starts_at" ON "events"("starts_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_events_status" ON "events"("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_events_subscription_starts" ON "events"("subscription_id", "starts_at")`,
     );
     await queryRunner.query(`
-      CREATE INDEX "idx_events_not_deleted"
+      CREATE INDEX IF NOT EXISTS "idx_events_not_deleted"
       ON "events"("id")
       WHERE "deleted_at" IS NULL
     `);
 
-    // Indexes for reminders
-    await queryRunner.query(`CREATE INDEX "idx_reminders_user_id" ON "reminders"("user_id")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_reminders_user_id" ON "reminders"("user_id")`,
+    );
     await queryRunner.query(`
-      CREATE INDEX "idx_reminders_subscription_id"
+      CREATE INDEX IF NOT EXISTS "idx_reminders_subscription_id"
       ON "reminders"("subscription_id")
       WHERE "subscription_id" IS NOT NULL
     `);
-    await queryRunner.query(`CREATE INDEX "idx_reminders_type" ON "reminders"("type")`);
-    await queryRunner.query(`CREATE INDEX "idx_reminders_enabled" ON "reminders"("enabled")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_reminders_type" ON "reminders"("type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_reminders_enabled" ON "reminders"("enabled")`,
+    );
     await queryRunner.query(`
-      CREATE INDEX "idx_reminders_not_deleted"
+      CREATE INDEX IF NOT EXISTS "idx_reminders_not_deleted"
       ON "reminders"("id")
       WHERE "deleted_at" IS NULL
     `);
 
-    // Indexes for notifications
     await queryRunner.query(
-      `CREATE INDEX "idx_notifications_user_id" ON "notifications"("user_id")`,
+      `CREATE INDEX IF NOT EXISTS "idx_notifications_user_id" ON "notifications"("user_id")`,
     );
     await queryRunner.query(`
-      CREATE INDEX "idx_notifications_event_id"
+      CREATE INDEX IF NOT EXISTS "idx_notifications_event_id"
       ON "notifications"("event_id")
       WHERE "event_id" IS NOT NULL
     `);
     await queryRunner.query(`
-      CREATE INDEX "idx_notifications_reminder_id"
+      CREATE INDEX IF NOT EXISTS "idx_notifications_reminder_id"
       ON "notifications"("reminder_id")
       WHERE "reminder_id" IS NOT NULL
     `);
-    await queryRunner.query(`CREATE INDEX "idx_notifications_type" ON "notifications"("type")`);
-    await queryRunner.query(`CREATE INDEX "idx_notifications_status" ON "notifications"("status")`);
     await queryRunner.query(
-      `CREATE INDEX "idx_notifications_channel" ON "notifications"("channel")`,
+      `CREATE INDEX IF NOT EXISTS "idx_notifications_type" ON "notifications"("type")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_notifications_created_at" ON "notifications"("created_at")`,
+      `CREATE INDEX IF NOT EXISTS "idx_notifications_status" ON "notifications"("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_notifications_channel" ON "notifications"("channel")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_notifications_created_at" ON "notifications"("created_at")`,
     );
     await queryRunner.query(`
-      CREATE INDEX "idx_notifications_sent_at"
+      CREATE INDEX IF NOT EXISTS "idx_notifications_sent_at"
       ON "notifications"("sent_at")
       WHERE "sent_at" IS NOT NULL
     `);
     await queryRunner.query(`
-      CREATE INDEX "idx_notifications_unread"
+      CREATE INDEX IF NOT EXISTS "idx_notifications_unread"
       ON "notifications"("user_id", "read_at")
       WHERE "read_at" IS NULL
     `);
     await queryRunner.query(`
-      CREATE INDEX "idx_notifications_snoozed"
+      CREATE INDEX IF NOT EXISTS "idx_notifications_snoozed"
       ON "notifications"("snoozed_until")
       WHERE "status" = 'snoozed' AND "snoozed_until" IS NOT NULL
     `);
     await queryRunner.query(
-      `CREATE INDEX "idx_notifications_user_status_created" ON "notifications"("user_id", "status", "created_at")`,
+      `CREATE INDEX IF NOT EXISTS "idx_notifications_user_status_created" ON "notifications"("user_id", "status", "created_at")`,
     );
     await queryRunner.query(`
-      CREATE INDEX "idx_notifications_not_deleted"
+      CREATE INDEX IF NOT EXISTS "idx_notifications_not_deleted"
       ON "notifications"("id")
       WHERE "deleted_at" IS NULL
     `);
 
-    // Indexes for documents
-    await queryRunner.query(`CREATE INDEX "idx_documents_user_id" ON "documents"("user_id")`);
     await queryRunner.query(
-      `CREATE INDEX "idx_documents_contract_id" ON "documents"("contract_id")`,
+      `CREATE INDEX IF NOT EXISTS "idx_documents_user_id" ON "documents"("user_id")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_documents_subscription_id" ON "documents"("subscription_id")`,
+      `CREATE INDEX IF NOT EXISTS "idx_documents_contract_id" ON "documents"("contract_id")`,
     );
-    await queryRunner.query(`CREATE INDEX "idx_documents_ocr_status" ON "documents"("ocr_status")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_documents_subscription_id" ON "documents"("subscription_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_documents_ocr_status" ON "documents"("ocr_status")`,
+    );
     await queryRunner.query(`
-      CREATE INDEX "idx_documents_not_deleted"
+      CREATE INDEX IF NOT EXISTS "idx_documents_not_deleted"
       ON "documents"("id")
       WHERE "deleted_at" IS NULL
     `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // Drop all tables in reverse order
     await queryRunner.query(`DROP TABLE IF EXISTS "documents" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "notifications" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "reminders" CASCADE`);
