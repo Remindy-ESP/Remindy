@@ -1,9 +1,10 @@
-import { Controller, Get, Req } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Req } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Admin } from '../decorators/admin.decorator';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { AdminDashboardService } from '../../application/admin-dashboard.service';
+import { ApiAdminDashboard } from '../../../../swagger/decorators/api-admin.decorator';
 
 type AuthReq = Request & { user: { id: string; role: Role } };
 
@@ -14,8 +15,7 @@ type AuthReq = Request & { user: { id: string; role: Role } };
 export class AdminDashboardController {
   constructor(private readonly service: AdminDashboardService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'Vue agrégée des KPIs admin' })
+  @ApiAdminDashboard()
   getOverview(@Req() req: AuthReq) {
     return this.service.getOverview({ role: req.user.role });
   }

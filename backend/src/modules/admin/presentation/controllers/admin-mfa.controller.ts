@@ -1,4 +1,5 @@
-import { Body, Controller, ForbiddenException, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Req, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import * as qrcode from 'qrcode';
 import { Throttle, seconds } from '@nestjs/throttler';
@@ -8,6 +9,11 @@ import { TotpService } from '../../infrastructure/services/totp.service';
 import { ITokenService } from 'src/modules/auth/domain/services/token.service';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { UserThrottlerGuard } from '../guards/user-throttler.guard';
+import {
+  ApiAdminMfaSetup,
+  ApiAdminMfaEnable,
+  ApiAdminMfaVerify,
+} from '../../../../swagger/decorators/api-admin.decorator';
 
 type AdminAuthRequest = Request & {
   user: {
@@ -18,6 +24,8 @@ type AdminAuthRequest = Request & {
   };
 };
 
+@ApiTags('Admin / MFA')
+@ApiBearerAuth('access-token')
 @UseGuards(UserThrottlerGuard)
 @Controller('admin/auth/mfa')
 export class AdminMfaController {
@@ -28,13 +36,13 @@ export class AdminMfaController {
   ) {}
 
   @Throttle({ default: { limit: 1, ttl: 60 } })
-  @Post('throttle-test')
-  test() {
+  @Throttle({ default: { limit: 1, ttl: 60 } })
+  throttleTest() {
     return { ok: true };
   }
 
+  @ApiAdminMfaSetup()
   @Throttle({ default: { limit: 3, ttl: seconds(300) } })
-  @Post('setup')
   @AdminPreMfa()
   async setup(@Req() req: AdminAuthRequest) {
     const userId = req.user.id;
@@ -52,8 +60,8 @@ export class AdminMfaController {
     return { otpauthUrl, qrCodeDataUrl };
   }
 
+  @ApiAdminMfaEnable()
   @Throttle({ default: { limit: 3, ttl: seconds(60) } })
-  @Post('enable')
   @AdminPreMfa()
   async enable(@Req() req: AdminAuthRequest, @Body() body: { code: string }) {
     const userId = req.user.id;
@@ -81,8 +89,8 @@ export class AdminMfaController {
     return { accessToken };
   }
 
+  @ApiAdminMfaVerify()
   @Throttle({ default: { limit: 5, ttl: seconds(60) } })
-  @Post('verify')
   @AdminPreMfa()
   async verify(@Req() req: AdminAuthRequest, @Body() body: { code: string }) {
     const userId = req.user.id;
