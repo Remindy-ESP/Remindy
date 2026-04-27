@@ -145,5 +145,80 @@ describe('LoginUseCase', () => {
       expect(userRepo.incrementFailedLoginCount).toHaveBeenCalledWith('user-123');
       expect(tokenService.generateAccessToken).not.toHaveBeenCalled();
     });
+
+    it('should throw when account is locked due to too many failed attempts', async () => {
+      const lockedUser = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 5,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(lockedUser);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(loginParams)).rejects.toThrow(
+        'Account temporarily locked due to too many failed attempts',
+      );
+      expect(passwordService.compare).not.toHaveBeenCalled();
+    });
+
+    it('should throw when account is not active', async () => {
+      const bannedUser = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.BANNED,
+        failedLoginCount: 0,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(bannedUser);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Account is inactive');
+      expect(passwordService.compare).not.toHaveBeenCalled();
+    });
+
+    it('should emit brute_force event when failed attempts reach threshold', async () => {
+      const nearLockUser = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 4,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(nearLockUser);
+      passwordService.compare.mockResolvedValue(false);
+      userRepo.incrementFailedLoginCount.mockResolvedValue(undefined);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'security.login.brute_force',
+        expect.objectContaining({ userEmail: loginParams.email }),
+      );
+    });
   });
 });
