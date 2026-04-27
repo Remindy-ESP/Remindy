@@ -1,24 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Query,
-  Req,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Body, Param, Query, UseGuards, Req, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateEventSeriesDto } from '../dto/create-event-series.dto';
@@ -29,6 +10,11 @@ import { GenerateEventsFromSeriesUseCase } from '../../application/use-cases/gen
 import { EventSeriesPresentationMapper } from '../mappers/event-series-presentation.mapper';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { FindSubscriptionUseCase } from 'src/modules/subscription/application/use-cases/find-subscription.use-case';
+import {
+  ApiEventSeriesCreate,
+  ApiEventSeriesFindBySubscription,
+  ApiEventSeriesGenerate,
+} from '../../../../swagger/decorators/api-event-series.decorator';
 
 @ApiTags('Event Series - Récurrence')
 @Controller('event-series')
@@ -42,15 +28,7 @@ export class EventSeriesController {
     private readonly findSubscriptionUseCase: FindSubscriptionUseCase,
   ) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Créer une règle de récurrence pour un abonnement' })
-  @ApiResponse({
-    status: 201,
-    description: 'Règle de récurrence créée avec succès',
-    type: EventSeriesResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiEventSeriesCreate()
   async create(
     @Req() req: Request,
     @Body() createDto: CreateEventSeriesDto,
@@ -67,15 +45,7 @@ export class EventSeriesController {
     return EventSeriesPresentationMapper.toResponseDto(eventSeries);
   }
 
-  @Get('subscription/:subscriptionId')
-  @ApiOperation({ summary: "Récupérer la règle de récurrence d'un abonnement" })
-  @ApiParam({ name: 'subscriptionId', description: "ID de l'abonnement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Règle de récurrence trouvée',
-    type: EventSeriesResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Règle de récurrence non trouvée' })
+  @ApiEventSeriesFindBySubscription()
   async findBySubscription(
     @Req() req: Request,
     @Param('subscriptionId') subscriptionId: string,
@@ -91,43 +61,7 @@ export class EventSeriesController {
     return EventSeriesPresentationMapper.toResponseDto(eventSeries);
   }
 
-  @Get(':id/generate')
-  @ApiOperation({ summary: "Générer les occurrences d'événements pour une période" })
-  @ApiParam({ name: 'id', description: 'ID de la règle de récurrence' })
-  @ApiQuery({
-    name: 'start',
-    required: false,
-    description: 'Date de début (ISO 8601)',
-    example: '2025-01-01T00:00:00Z',
-  })
-  @ApiQuery({
-    name: 'end',
-    required: false,
-    description: 'Date de fin (ISO 8601)',
-    example: '2025-12-31T23:59:59Z',
-  })
-  @ApiQuery({
-    name: 'max',
-    required: false,
-    type: Number,
-    description: "Nombre maximum d'occurrences",
-    example: 12,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Occurrences générées',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          subscriptionId: { type: 'string' },
-          eventSeriesId: { type: 'string' },
-          startsAt: { type: 'string', format: 'date-time' },
-        },
-      },
-    },
-  })
+  @ApiEventSeriesGenerate()
   async generateEvents(
     @Req() req: Request,
     @Param('id') id: string,
@@ -138,7 +72,7 @@ export class EventSeriesController {
     const { user } = req as Request & { user: { userId: string; role: string } };
 
     const startDate = start ? new Date(start) : new Date();
-    const endDate = end ? new Date(end) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // +1 year
+    const endDate = end ? new Date(end) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
     const maxOccurrences = max ? Number(max) : 365;
 
     const occurrences = await this.generateEventsUseCase.execute(

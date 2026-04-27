@@ -1,26 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Req,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Body, Param, Query, UseGuards, Req, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CreateSubscriptionDto } from '../dto/create-subscription.dto';
@@ -43,6 +22,17 @@ import { Repository } from 'typeorm';
 import { SubscriptionEntity } from '../../infrastructure/persistence/subscription.entity';
 import { CategoryPresentationMapper } from '../../../category/presentation/mappers/category-presentation.mapper';
 import { CategoryMapper } from '../../../category/infrastructure/mappers/category.mapper';
+import {
+  ApiSubscriptionCreate,
+  ApiSubscriptionFindAll,
+  ApiSubscriptionFindByFrequency,
+  ApiSubscriptionFindById,
+  ApiSubscriptionUpdate,
+  ApiSubscriptionDelete,
+  ApiSubscriptionPause,
+  ApiSubscriptionResume,
+  ApiSubscriptionGetEvents,
+} from '../../../../swagger/decorators/api-subscription.decorator';
 
 @ApiTags('Abonnements')
 @Controller('subscriptions')
@@ -63,15 +53,7 @@ export class SubscriptionController {
     private readonly subscriptionRepository: Repository<SubscriptionEntity>,
   ) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Créer un nouvel abonnement' })
-  @ApiResponse({
-    status: 201,
-    description: 'Abonnement créé avec succès',
-    type: SubscriptionResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiSubscriptionCreate()
   async create(
     @Req() req: Request,
     @Body() createDto: CreateSubscriptionDto,
@@ -84,7 +66,6 @@ export class SubscriptionController {
     const responseDto = SubscriptionPresentationMapper.toResponseDto(result.subscription);
     responseDto.eventsGenerated = result.eventsGenerated;
 
-    // Enrichir avec la catégorie si présente
     if (result.subscription.categoryId) {
       const entity = await this.subscriptionRepository.findOne({
         where: { id: result.subscription.id },
@@ -99,28 +80,7 @@ export class SubscriptionController {
     return responseDto;
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Récupérer tous les abonnements avec filtres optionnels' })
-  @ApiQuery({ name: 'contractId', required: false, description: 'Filtrer par ID de contrat' })
-  @ApiQuery({ name: 'name', required: false, description: 'Filtrer par nom (recherche partielle)' })
-  @ApiQuery({ name: 'currency', required: false, description: 'Filtrer par devise' })
-  @ApiQuery({
-    name: 'frequency',
-    required: false,
-    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
-    description: 'Filtrer par fréquence de facturation',
-  })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: ['active', 'paused', 'cancelled', 'trial'],
-    description: 'Filtrer par statut',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Liste des abonnements',
-    type: [SubscriptionResponseDto],
-  })
+  @ApiSubscriptionFindAll()
   async findAll(
     @Req() req: Request,
     @Query() filters: SubscriptionFilterDto,
@@ -150,19 +110,7 @@ export class SubscriptionController {
     return responseDtos;
   }
 
-  @Get('frequency/:type')
-  @ApiOperation({ summary: 'Récupérer les abonnements par fréquence de facturation' })
-  @ApiParam({
-    name: 'type',
-    enum: ['weekly', 'monthly', 'quarterly', 'yearly'],
-    description: 'Fréquence de facturation (weekly/monthly/quarterly/yearly)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Liste des abonnements pour la fréquence spécifiée',
-    type: [SubscriptionResponseDto],
-  })
-  @ApiResponse({ status: 400, description: 'Fréquence invalide' })
+  @ApiSubscriptionFindByFrequency()
   async findByFrequency(
     @Req() req: Request,
     @Param('type') type: string,
@@ -173,15 +121,7 @@ export class SubscriptionController {
     return SubscriptionPresentationMapper.toResponseDtoArray(userSubscriptions);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Récupérer un abonnement par son ID' })
-  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Abonnement trouvé',
-    type: SubscriptionResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  @ApiSubscriptionFindById()
   async findById(@Req() req: Request, @Param('id') id: string): Promise<SubscriptionResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const subscription = await this.findSubscriptionUseCase.findById(id);
@@ -206,16 +146,7 @@ export class SubscriptionController {
     return responseDto;
   }
 
-  @Put(':id')
-  @ApiOperation({ summary: 'Mettre à jour un abonnement' })
-  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Abonnement mis à jour avec succès',
-    type: SubscriptionResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
-  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiSubscriptionUpdate()
   async update(
     @Req() req: Request,
     @Param('id') id: string,
@@ -233,12 +164,7 @@ export class SubscriptionController {
     return SubscriptionPresentationMapper.toResponseDto(subscription);
   }
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Supprimer un abonnement (soft delete)' })
-  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
-  @ApiResponse({ status: 204, description: 'Abonnement supprimé avec succès' })
-  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  @ApiSubscriptionDelete()
   async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const existing = await this.findSubscriptionUseCase.findById(id);
@@ -250,16 +176,7 @@ export class SubscriptionController {
     await this.deleteSubscriptionUseCase.execute(id);
   }
 
-  @Post(':id/pause')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Mettre en pause un abonnement' })
-  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Abonnement mis en pause avec succès',
-    type: SubscriptionResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  @ApiSubscriptionPause()
   async pause(@Req() req: Request, @Param('id') id: string): Promise<SubscriptionResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const existing = await this.findSubscriptionUseCase.findById(id);
@@ -272,16 +189,7 @@ export class SubscriptionController {
     return SubscriptionPresentationMapper.toResponseDto(subscription);
   }
 
-  @Post(':id/resume')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Réactiver un abonnement en pause' })
-  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Abonnement réactivé avec succès',
-    type: SubscriptionResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  @ApiSubscriptionResume()
   async resume(@Req() req: Request, @Param('id') id: string): Promise<SubscriptionResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const existing = await this.findSubscriptionUseCase.findById(id);
@@ -294,34 +202,7 @@ export class SubscriptionController {
     return SubscriptionPresentationMapper.toResponseDto(subscription);
   }
 
-  @Get(':id/events')
-  @ApiOperation({ summary: "Récupérer tous les événements d'un abonnement" })
-  @ApiParam({ name: 'id', description: "ID de l'abonnement" })
-  @ApiResponse({
-    status: 200,
-    description: "Liste des événements de l'abonnement",
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          subscriptionId: { type: 'string' },
-          eventSeriesId: { type: 'string' },
-          title: { type: 'string' },
-          amount: { type: 'number' },
-          startsAt: { type: 'string', format: 'date-time' },
-          endsAt: { type: 'string', format: 'date-time' },
-          status: { type: 'string' },
-          paymentStatus: { type: 'string' },
-          notes: { type: 'string', format: 'date-time' },
-          createdAt: { type: 'string', format: 'date-time' },
-          updatedAt: { type: 'string', format: 'date-time' },
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 404, description: 'Abonnement non trouvé' })
+  @ApiSubscriptionGetEvents()
   async getEvents(@Req() req: Request, @Param('id') id: string) {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const existing = await this.findSubscriptionUseCase.findById(id);

@@ -1,4 +1,5 @@
 import { Controller, Param, Post, Req } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EUser } from 'src/infrastructure/database/entities/user.entity';
@@ -6,6 +7,7 @@ import { Admin } from '../decorators/admin.decorator';
 import { assertCanActOnUser } from '../../domain/policies/admin-user.policy';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 
+@ApiExcludeController()
 @Controller('admin/users-test')
 export class AdminUsersTestController {
   constructor(

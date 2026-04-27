@@ -472,7 +472,10 @@ describe('UpdateSubscriptionUseCase', () => {
 
     // Seul cancelEventsAfterDate doit être appelé, pas updateFutureEventsStatus
     expect(mockEventRepository.updateFutureEventsStatus).not.toHaveBeenCalled();
-    expect(mockEventRepository.cancelEventsAfterDate).toHaveBeenCalledWith(subscriptionId, newEndDate);
+    expect(mockEventRepository.cancelEventsAfterDate).toHaveBeenCalledWith(
+      subscriptionId,
+      newEndDate,
+    );
   });
 
   it('should not call cancelEventsAfterDate when endDate is not in the update', async () => {
