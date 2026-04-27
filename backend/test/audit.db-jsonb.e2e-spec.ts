@@ -164,8 +164,8 @@ describeDbBacked('Audit JSONB (db-backed e2e)', () => {
 
   afterAll(async () => {
     try {
-      await auditRepo.delete({ action: testActionManual } as any);
-      await auditRepo.delete({ action: testActionDecorated } as any);
+      await auditRepo.delete({ action: testActionManual });
+      await auditRepo.delete({ action: testActionDecorated });
     } catch {
       // best-effort cleanup
     }

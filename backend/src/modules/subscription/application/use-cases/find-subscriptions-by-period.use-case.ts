@@ -25,6 +25,6 @@ export class FindSubscriptionsByPeriodUseCase {
       );
     }
 
-    return await this.subscriptionRepository.findByFrequency(frequency as SubscriptionFrequency);
+    return await this.subscriptionRepository.findByFrequency(frequency);
   }
 }
