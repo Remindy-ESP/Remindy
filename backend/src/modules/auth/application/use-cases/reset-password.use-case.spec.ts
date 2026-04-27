@@ -16,7 +16,6 @@ describe('ResetPasswordUseCase', () => {
   let userRepo: jest.Mocked<IUserAuthRepository>;
   let passwordService: jest.Mocked<IPasswordService>;
   let sessionRepo: jest.Mocked<IUserSessionRepository>;
-  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   const mockUser = new AuthUser({
     id: 'user-123',
@@ -72,7 +71,6 @@ describe('ResetPasswordUseCase', () => {
     userRepo = module.get(IUserAuthRepository);
     passwordService = module.get(IPasswordService);
     sessionRepo = module.get(IUserSessionRepository);
-    eventEmitter = module.get(EventEmitter2);
 
     process.env.JWT_PASSWORD_RESET_SECRET = 'test-secret-key';
   });

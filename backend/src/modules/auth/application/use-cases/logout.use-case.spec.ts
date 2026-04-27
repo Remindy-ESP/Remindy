@@ -7,9 +7,6 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('LogoutUseCase', () => {
   let useCase: LogoutUseCase;
-  let sessionRepo: jest.Mocked<IUserSessionRepository>;
-  let passwordService: jest.Mocked<IPasswordService>;
-  let tokenService: jest.Mocked<ITokenService>;
 
   const mockSessionRepo = {
     findActiveSessionById: jest.fn(),
@@ -59,9 +56,6 @@ describe('LogoutUseCase', () => {
     }).compile();
 
     useCase = module.get<LogoutUseCase>(LogoutUseCase);
-    sessionRepo = module.get(IUserSessionRepository);
-    passwordService = module.get(IPasswordService);
-    tokenService = module.get(ITokenService);
   });
 
   it('should be defined', () => {
