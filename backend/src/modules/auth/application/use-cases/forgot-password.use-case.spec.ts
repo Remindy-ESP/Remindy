@@ -12,7 +12,6 @@ describe('ForgotPasswordUseCase', () => {
   let userRepo: jest.Mocked<IUserAuthRepository>;
   let tokenService: jest.Mocked<ITokenService>;
   let emailService: jest.Mocked<IEmailService>;
-  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   const mockUser = new AuthUser({
     id: 'user-123',
@@ -67,7 +66,6 @@ describe('ForgotPasswordUseCase', () => {
     userRepo = module.get(IUserAuthRepository);
     tokenService = module.get(ITokenService);
     emailService = module.get(IEmailService);
-    eventEmitter = module.get(EventEmitter2);
   });
   const mockEventEmitter: Partial<jest.Mocked<EventEmitter2>> = {
     emit: jest.fn(),

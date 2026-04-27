@@ -13,12 +13,14 @@ async function bootstrap(): Promise<void> {
   });
 
   // Restrict origins in production via ALLOWED_ORIGINS (comma-separated list)
-  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean);
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
 
   app.enableCors({
     origin: allowedOrigins?.length
       ? (origin, callback) => {
-          if (!origin || allowedOrigins.includes(origin)) {
+          if (!origin || allowedOrigins.includes(origin as string)) {
             callback(null, true);
           } else {
             callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -63,7 +65,7 @@ async function bootstrap(): Promise<void> {
 
   const config = swaggerConfigBuilder.build();
 
-  const document: OpenAPIObject = SwaggerModule.createDocument(app, config as OpenAPIObject);
+  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup('api', app, document);
 
@@ -76,11 +78,9 @@ async function bootstrap(): Promise<void> {
     .addApiKey({ type: 'apiKey', in: 'header', name: 'x-csrf-token' }, 'admin-csrf-header')
     .build();
 
-  const adminDocument: OpenAPIObject = SwaggerModule.createDocument(
-    app,
-    adminConfig as OpenAPIObject,
-    { include: [AdminModule] },
-  );
+  const adminDocument: OpenAPIObject = SwaggerModule.createDocument(app, adminConfig, {
+    include: [AdminModule],
+  });
   type SwaggerRequest = {
     headers?: Record<string, string>;
   };
