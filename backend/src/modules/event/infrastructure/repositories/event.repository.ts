@@ -143,7 +143,7 @@ export class EventRepository implements IEventRepository {
     const result = await this.repository
       .createQueryBuilder()
       .update(EventEntity)
-      .set({ status: 'canceled' as any })
+      .set({ status: 'canceled' })
       .where('subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('startsAt >= :startOfDay', { startOfDay })
       .andWhere('startsAt <= :endOfDay', { endOfDay })
@@ -157,7 +157,7 @@ export class EventRepository implements IEventRepository {
     const result = await this.repository
       .createQueryBuilder()
       .update(EventEntity)
-      .set({ status: 'canceled' as any })
+      .set({ status: 'canceled' })
       .where('subscriptionId = :subscriptionId', { subscriptionId })
       .andWhere('startsAt > :afterDate', { afterDate })
       .andWhere('status = :scheduledStatus', { scheduledStatus: 'scheduled' })

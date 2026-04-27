@@ -1,10 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import type { OpenAPIObject } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
-import { AdminModule } from './modules/admin/admin.module';
+import { setupSwagger } from './swagger/swagger.config';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -12,15 +10,14 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
 
-  // Restrict origins in production via ALLOWED_ORIGINS (comma-separated list)
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
     .map(o => o.trim())
     .filter(Boolean);
 
   app.enableCors({
     origin: allowedOrigins?.length
-      ? (origin, callback) => {
-          if (!origin || allowedOrigins.includes(origin as string)) {
+      ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+          if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
           } else {
             callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -34,10 +31,10 @@ async function bootstrap(): Promise<void> {
       'Authorization',
       'Accept',
       'X-Requested-With',
-      'boundary', // For multipart/form-data uploads
+      'boundary',
       'x-csrf-token',
     ],
-    exposedHeaders: ['Content-Disposition'], // For file downloads
+    exposedHeaders: ['Content-Disposition'],
   });
 
   app.use(cookieParser());
@@ -50,56 +47,8 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const swaggerConfigBuilder = new DocumentBuilder()
-    .setTitle('API Documentation for Remindy')
-    .setDescription('Documentation de l’API')
-    .setVersion('v1')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-      'access-token',
-    );
+  setupSwagger(app);
 
-  const config = swaggerConfigBuilder.build();
-
-  const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
-
-  SwaggerModule.setup('api', app, document);
-
-  const adminConfig = new DocumentBuilder()
-    .setTitle('Remindy Admin API')
-    .setDescription('Endpoints /admin/*')
-    .setVersion('v1')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'access-token')
-    .addCookieAuth('csrfToken', { type: 'apiKey', in: 'cookie' }, 'admin-csrf-cookie')
-    .addApiKey({ type: 'apiKey', in: 'header', name: 'x-csrf-token' }, 'admin-csrf-header')
-    .build();
-
-  const adminDocument: OpenAPIObject = SwaggerModule.createDocument(app, adminConfig, {
-    include: [AdminModule],
-  });
-  type SwaggerRequest = {
-    headers?: Record<string, string>;
-  };
-  SwaggerModule.setup('api/admin', app, adminDocument, {
-    swaggerOptions: {
-      persistAuthorization: true,
-      withCredentials: true,
-      requestInterceptor: (req: SwaggerRequest): SwaggerRequest => {
-        const doc = (globalThis as any).document;
-        const cookieStr: string = doc?.cookie ?? '';
-        const match = cookieStr.match(/(?:^|;\s*)csrfToken=([^;]+)/);
-        if (match?.[1]) {
-          req.headers = req.headers || {};
-          req.headers['x-csrf-token'] = decodeURIComponent(match[1]);
-        }
-        return req;
-      },
-    },
-  });
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
   const port = process.env.PORT ?? 3000;
   await app.listen(port, '0.0.0.0');

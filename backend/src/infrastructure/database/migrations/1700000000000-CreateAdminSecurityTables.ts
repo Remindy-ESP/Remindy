@@ -21,7 +21,14 @@ export class CreateAdminSecurityTables1700000000000 implements MigrationInterfac
       )
     `);
 
-    for (const col of ['eventType', 'severity', 'ipAddress', 'userId', 'isSuspicious', 'createdAt']) {
+    for (const col of [
+      'eventType',
+      'severity',
+      'ipAddress',
+      'userId',
+      'isSuspicious',
+      'createdAt',
+    ]) {
       await queryRunner.query(
         `CREATE INDEX IF NOT EXISTS "idx_security_logs_${col}" ON "security_logs"("${col}")`,
       );
