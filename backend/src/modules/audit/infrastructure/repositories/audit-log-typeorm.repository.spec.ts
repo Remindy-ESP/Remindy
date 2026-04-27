@@ -40,7 +40,7 @@ function createQueryBuilderMock(): MockQueryBuilder {
     delete: jest.fn(),
     from: jest.fn(),
     execute: jest.fn(),
-  } as MockQueryBuilder;
+  };
 
   qb.where.mockReturnValue(qb);
   qb.andWhere.mockReturnValue(qb);
@@ -78,12 +78,9 @@ describe('AuditLogTypeOrmRepository', () => {
     mapper = {
       toEntity: jest.fn(),
       toDomain: jest.fn(),
-    } as unknown as jest.Mocked<AuditLogMapper>;
+    };
 
-    sut = new AuditLogTypeOrmRepository(
-      repository as Repository<AdminAuditLogEntity>,
-      mapper as AuditLogMapper,
-    );
+    sut = new AuditLogTypeOrmRepository(repository as Repository<AdminAuditLogEntity>, mapper);
   });
 
   it('creates an audit log via mapper + repository.save', async () => {

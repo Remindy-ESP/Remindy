@@ -268,23 +268,53 @@ export class InitialSchema1731700000000 implements MigrationInterface {
     // expects before the FK and index blocks run.
 
     // users
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password_hash" varchar(255)`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "first_name" varchar(100)`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_name" varchar(100)`);
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password_hash" varchar(255)`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "first_name" varchar(100)`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_name" varchar(100)`,
+    );
     await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "phone" varchar(20)`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "photo_r2_key" varchar(500)`);
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "photo_r2_key" varchar(500)`,
+    );
     await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "role_key" text`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'active'`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "timezone" varchar(50) NOT NULL DEFAULT 'Europe/Paris'`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "language" varchar(10) NOT NULL DEFAULT 'fr'`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified" boolean NOT NULL DEFAULT false`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mfa_enabled" boolean NOT NULL DEFAULT false`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mfa_secret" varchar(255)`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "failed_login_count" integer NOT NULL DEFAULT 0`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password_changed_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'active'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "timezone" varchar(50) NOT NULL DEFAULT 'Europe/Paris'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "language" varchar(10) NOT NULL DEFAULT 'fr'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_verified" boolean NOT NULL DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mfa_enabled" boolean NOT NULL DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "mfa_secret" varchar(255)`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_login_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "failed_login_count" integer NOT NULL DEFAULT 0`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password_changed_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // Ensure user_freemium role exists, then backfill any users missing role_key
     await queryRunner.query(`
@@ -292,88 +322,198 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       VALUES ('user_freemium', 'Free User', now())
       ON CONFLICT ("key") DO NOTHING
     `);
-    await queryRunner.query(`UPDATE "users" SET "role_key" = 'user_freemium' WHERE "role_key" IS NULL`);
+    await queryRunner.query(
+      `UPDATE "users" SET "role_key" = 'user_freemium' WHERE "role_key" IS NULL`,
+    );
 
     // user_preferences
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "theme" varchar(20) NOT NULL DEFAULT 'light'`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "notification_email" boolean NOT NULL DEFAULT true`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "notification_push" boolean NOT NULL DEFAULT true`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "notification_sms" boolean NOT NULL DEFAULT false`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "default_reminder_delay" integer NOT NULL DEFAULT 24`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "show_online_status" boolean NOT NULL DEFAULT true`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "created_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "theme" varchar(20) NOT NULL DEFAULT 'light'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "notification_email" boolean NOT NULL DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "notification_push" boolean NOT NULL DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "notification_sms" boolean NOT NULL DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "default_reminder_delay" integer NOT NULL DEFAULT 24`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "show_online_status" boolean NOT NULL DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "created_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_preferences" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
 
     // user_sessions
-    await queryRunner.query(`ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "ip_address" varchar(45)`);
-    await queryRunner.query(`ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "user_agent" text`);
-    await queryRunner.query(`ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "is_revoked" boolean NOT NULL DEFAULT false`);
-    await queryRunner.query(`ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "ip_address" varchar(45)`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "user_agent" text`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "is_revoked" boolean NOT NULL DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "user_sessions" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // role_limits
-    await queryRunner.query(`ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "resource" varchar(50)`);
-    await queryRunner.query(`ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "max_count" integer`);
+    await queryRunner.query(
+      `ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "resource" varchar(50)`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "max_count" integer`,
+    );
     await queryRunner.query(`ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "role_key" text`);
-    await queryRunner.query(`ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
+    await queryRunner.query(
+      `ALTER TABLE "role_limits" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
 
     // rgpd_exports
-    await queryRunner.query(`ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'pending'`);
-    await queryRunner.query(`ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "file_r2_key" varchar(500)`);
-    await queryRunner.query(`ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "requested_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "completed_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "expires_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
+    await queryRunner.query(
+      `ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'pending'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "file_r2_key" varchar(500)`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "requested_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "completed_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "expires_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "rgpd_exports" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
 
     // subscriptions
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "contract_id" integer`);
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "currency" varchar(3) NOT NULL DEFAULT 'EUR'`);
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "trial_start_date" date`);
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "trial_end_date" date`);
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'active'`);
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "color" varchar(7)`);
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "contract_id" integer`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "currency" varchar(3) NOT NULL DEFAULT 'EUR'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "trial_start_date" date`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "trial_end_date" date`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'active'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "color" varchar(7)`,
+    );
     await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "notes" text`);
-    await queryRunner.query(`ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp`);
+    await queryRunner.query(
+      `ALTER TABLE "subscriptions" ADD COLUMN IF NOT EXISTS "deleted_at" timestamp`,
+    );
 
     // event_series
-    await queryRunner.query(`ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "exdates" timestamptz[]`);
-    await queryRunner.query(`ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "rdates" timestamptz[]`);
-    await queryRunner.query(`ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "exdates" timestamptz[]`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "rdates" timestamptz[]`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "event_series" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // events
     await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "event_series_id" uuid`);
     await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "ends_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "payment_status" varchar(20)`);
+    await queryRunner.query(
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "payment_status" varchar(20)`,
+    );
     await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "notes" text`);
-    await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "events" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // reminders
-    await queryRunner.query(`ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "subscription_id" uuid`);
-    await queryRunner.query(`ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "enabled" boolean NOT NULL DEFAULT true`);
-    await queryRunner.query(`ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "subscription_id" uuid`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "enabled" boolean NOT NULL DEFAULT true`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "reminders" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // notifications
     await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "event_id" uuid`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "reminder_id" uuid`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "sent_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "read_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "is_snoozed" boolean NOT NULL DEFAULT false`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "snoozed_until" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'pending'`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "reminder_id" uuid`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "sent_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "read_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "is_snoozed" boolean NOT NULL DEFAULT false`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "snoozed_until" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "status" varchar(20) NOT NULL DEFAULT 'pending'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "notifications" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // documents
-    await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "contract_id" integer`);
-    await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "subscription_id" uuid`);
+    await queryRunner.query(
+      `ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "contract_id" integer`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "subscription_id" uuid`,
+    );
     await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "ocr_text" text`);
-    await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "ocr_status" varchar(20) NOT NULL DEFAULT 'pending'`);
-    await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "ocr_processed_at" timestamptz`);
-    await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`);
-    await queryRunner.query(`ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`);
+    await queryRunner.query(
+      `ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "ocr_status" varchar(20) NOT NULL DEFAULT 'pending'`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "ocr_processed_at" timestamptz`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "updated_at" timestamptz NOT NULL DEFAULT now()`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "documents" ADD COLUMN IF NOT EXISTS "deleted_at" timestamptz`,
+    );
 
     // ===== ADD FOREIGN KEYS =====
     // Each FK is guarded against both duplicate_object (FK already exists) and
