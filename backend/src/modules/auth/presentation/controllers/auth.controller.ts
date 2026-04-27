@@ -112,6 +112,7 @@ export class AuthController {
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
+      secure: process.env.NODE_ENV !== 'development',
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
@@ -155,9 +156,15 @@ export class AuthController {
 
   @Post('logout')
   @ApiBearerAuth('access-token')
-  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body() body?: { refreshToken?: string },
+  ) {
     const cookieToken = req.cookies?.refreshToken;
-    const refreshToken = typeof cookieToken === 'string' ? cookieToken : undefined;
+    const refreshToken =
+      (typeof cookieToken === 'string' ? cookieToken : undefined) ??
+      (typeof body?.refreshToken === 'string' ? body.refreshToken : undefined);
     if (refreshToken) {
       await this.logoutUseCase.execute(refreshToken);
     }

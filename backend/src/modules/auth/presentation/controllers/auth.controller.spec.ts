@@ -279,6 +279,7 @@ describe('AuthController', () => {
       });
       expect(mockResponse.cookie).toHaveBeenCalledWith('refreshToken', tokens.refreshToken, {
         httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
@@ -487,6 +488,22 @@ describe('AuthController', () => {
       await controller.logout(reqWithToken1 as Request, mockResponse as Response);
 
       expect(logoutUseCase.execute).toHaveBeenCalledWith('refresh_token_456');
+    });
+
+    it('should logout mobile client using body refresh token when no cookie is present', async () => {
+      const reqWithoutCookie = { ...mockRequest, cookies: {} };
+
+      logoutUseCase.execute.mockResolvedValue(undefined);
+
+      const result = await controller.logout(
+        reqWithoutCookie as Request,
+        mockResponse as Response,
+        { refreshToken: 'mobile_refresh_token' },
+      );
+
+      expect(logoutUseCase.execute).toHaveBeenCalledWith('mobile_refresh_token');
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+      expect(result).toEqual({ success: true });
     });
   });
 
