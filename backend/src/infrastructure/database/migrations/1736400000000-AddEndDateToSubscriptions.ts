@@ -4,17 +4,17 @@ export class AddEndDateToSubscriptions1736400000000 implements MigrationInterfac
   name = 'AddEndDateToSubscriptions1736400000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Add end_date column to subscriptions table
     await queryRunner.query(`
       ALTER TABLE "subscriptions"
-      ADD COLUMN "end_date" date NULL
+      ADD COLUMN IF NOT EXISTS "end_date" date NULL
     `);
 
-    // Add check constraint to ensure end_date is after start_date
     await queryRunner.query(`
-      ALTER TABLE "subscriptions"
-      ADD CONSTRAINT "chk_subscriptions_end_date_after_start"
-      CHECK (end_date IS NULL OR end_date > start_date)
+      DO $$ BEGIN
+        ALTER TABLE "subscriptions"
+          ADD CONSTRAINT "chk_subscriptions_end_date_after_start"
+          CHECK (end_date IS NULL OR end_date > start_date);
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
   }
 
