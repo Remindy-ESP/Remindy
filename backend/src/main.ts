@@ -12,9 +12,19 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
 
-  // Enable CORS for mobile app development
+  // Restrict origins in production via ALLOWED_ORIGINS (comma-separated list)
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean);
+
   app.enableCors({
-    origin: true, // Allow all origins in development
+    origin: allowedOrigins?.length
+      ? (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+          }
+        }
+      : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
