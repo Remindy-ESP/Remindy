@@ -261,319 +261,433 @@ export class InitialSchema1731700000000 implements MigrationInterface {
       )
     `);
 
-    // ===== ADD FOREIGN KEYS (idempotent via exception handler) =====
+    // ===== ADD FOREIGN KEYS =====
+    // Each FK is guarded against both duplicate_object (FK already exists) and
+    // undefined_column (pre-existing table has a different schema than expected).
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "users" ADD CONSTRAINT "fk_users_role"
           FOREIGN KEY ("role_key") REFERENCES "roles"("key") ON DELETE RESTRICT;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "user_preferences" ADD CONSTRAINT "fk_user_preferences_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "user_sessions" ADD CONSTRAINT "fk_user_sessions_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "role_limits" ADD CONSTRAINT "fk_role_limits_role"
           FOREIGN KEY ("role_key") REFERENCES "roles"("key") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "rgpd_exports" ADD CONSTRAINT "fk_rgpd_exports_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "subscriptions" ADD CONSTRAINT "fk_subscriptions_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "subscriptions" ADD CONSTRAINT "fk_subscriptions_contract"
           FOREIGN KEY ("contract_id") REFERENCES "contracts"("id") ON DELETE SET NULL;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "event_series" ADD CONSTRAINT "fk_event_series_subscription"
           FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "events" ADD CONSTRAINT "fk_events_subscription"
           FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "events" ADD CONSTRAINT "fk_events_event_series"
           FOREIGN KEY ("event_series_id") REFERENCES "event_series"("id") ON DELETE SET NULL;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "reminders" ADD CONSTRAINT "fk_reminders_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "reminders" ADD CONSTRAINT "fk_reminders_subscription"
           FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_event"
           FOREIGN KEY ("event_id") REFERENCES "events"("id") ON DELETE SET NULL;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "notifications" ADD CONSTRAINT "fk_notifications_reminder"
           FOREIGN KEY ("reminder_id") REFERENCES "reminders"("id") ON DELETE SET NULL;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "documents" ADD CONSTRAINT "fk_documents_user"
           FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "documents" ADD CONSTRAINT "fk_documents_contract"
           FOREIGN KEY ("contract_id") REFERENCES "contracts"("id") ON DELETE SET NULL;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
     await queryRunner.query(`
       DO $$ BEGIN
         ALTER TABLE "documents" ADD CONSTRAINT "fk_documents_subscription"
           FOREIGN KEY ("subscription_id") REFERENCES "subscriptions"("id") ON DELETE SET NULL;
-      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+      EXCEPTION WHEN duplicate_object OR undefined_column THEN NULL; END $$
     `);
 
-    // ===== CREATE INDEXES (IF NOT EXISTS) =====
+    // ===== CREATE INDEXES =====
+    // Each index is wrapped in DO $$ to silently skip if the target column does
+    // not exist on a pre-existing table (legacy schema mismatch).
 
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users"("email")`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_role" ON "users"("role_key")`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "idx_users_status" ON "users"("status")`);
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_users_deleted_at" ON "users"("deleted_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_users_last_login" ON "users"("last_login_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_users_failed_login" ON "users"("failed_login_count")`,
-    );
-
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_user_id" ON "user_sessions"("user_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_refresh_token_hash" ON "user_sessions"("refresh_token_hash")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_expires_at" ON "user_sessions"("expires_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_is_revoked" ON "user_sessions"("is_revoked")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_user_sessions_deleted_at" ON "user_sessions"("deleted_at")`,
-    );
-
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_rgpd_exports_user_id" ON "rgpd_exports"("user_id")`,
-    );
-
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_user_id" ON "subscriptions"("user_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_contract_id" ON "subscriptions"("contract_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_status" ON "subscriptions"("status")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_next_due_date" ON "subscriptions"("next_due_date")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_start_date" ON "subscriptions"("start_date")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_created_at" ON "subscriptions"("created_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_deleted_at" ON "subscriptions"("deleted_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_subscriptions_frequency" ON "subscriptions"("frequency")`,
-    );
     await queryRunner.query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS "uq_subscriptions_user_name"
-      ON "subscriptions"("user_id", LOWER("name"))
-      WHERE "deleted_at" IS NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_users_email" ON "users"("email");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_users_role" ON "users"("role_key");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_users_status" ON "users"("status");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_users_deleted_at" ON "users"("deleted_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_users_last_login" ON "users"("last_login_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_users_failed_login" ON "users"("failed_login_count");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
 
-    await queryRunner.query(
-      `CREATE UNIQUE INDEX IF NOT EXISTS "idx_event_series_subscription_id" ON "event_series"("subscription_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_event_series_dtstart" ON "event_series"("dtstart")`,
-    );
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_event_series_deleted_at"
-      ON "event_series"("deleted_at")
-      WHERE "deleted_at" IS NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_user_sessions_user_id" ON "user_sessions"("user_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_user_sessions_refresh_token_hash" ON "user_sessions"("refresh_token_hash");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_user_sessions_expires_at" ON "user_sessions"("expires_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_user_sessions_is_revoked" ON "user_sessions"("is_revoked");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_user_sessions_deleted_at" ON "user_sessions"("deleted_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
 
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_events_subscription_id" ON "events"("subscription_id")`,
-    );
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_events_event_series_id"
-      ON "events"("event_series_id")
-      WHERE "event_series_id" IS NOT NULL
-    `);
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_events_starts_at" ON "events"("starts_at")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_events_status" ON "events"("status")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_events_subscription_starts" ON "events"("subscription_id", "starts_at")`,
-    );
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_events_not_deleted"
-      ON "events"("id")
-      WHERE "deleted_at" IS NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_rgpd_exports_user_id" ON "rgpd_exports"("user_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
 
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_reminders_user_id" ON "reminders"("user_id")`,
-    );
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_reminders_subscription_id"
-      ON "reminders"("subscription_id")
-      WHERE "subscription_id" IS NOT NULL
-    `);
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_reminders_type" ON "reminders"("type")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_reminders_enabled" ON "reminders"("enabled")`,
-    );
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_reminders_not_deleted"
-      ON "reminders"("id")
-      WHERE "deleted_at" IS NULL
-    `);
-
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_notifications_user_id" ON "notifications"("user_id")`,
-    );
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_notifications_event_id"
-      ON "notifications"("event_id")
-      WHERE "event_id" IS NOT NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_user_id" ON "subscriptions"("user_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_notifications_reminder_id"
-      ON "notifications"("reminder_id")
-      WHERE "reminder_id" IS NOT NULL
-    `);
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_notifications_type" ON "notifications"("type")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_notifications_status" ON "notifications"("status")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_notifications_channel" ON "notifications"("channel")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_notifications_created_at" ON "notifications"("created_at")`,
-    );
-    await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_notifications_sent_at"
-      ON "notifications"("sent_at")
-      WHERE "sent_at" IS NOT NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_contract_id" ON "subscriptions"("contract_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_notifications_unread"
-      ON "notifications"("user_id", "read_at")
-      WHERE "read_at" IS NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_status" ON "subscriptions"("status");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_notifications_snoozed"
-      ON "notifications"("snoozed_until")
-      WHERE "status" = 'snoozed' AND "snoozed_until" IS NOT NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_next_due_date" ON "subscriptions"("next_due_date");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_notifications_user_status_created" ON "notifications"("user_id", "status", "created_at")`,
-    );
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_notifications_not_deleted"
-      ON "notifications"("id")
-      WHERE "deleted_at" IS NULL
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_start_date" ON "subscriptions"("start_date");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_created_at" ON "subscriptions"("created_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_deleted_at" ON "subscriptions"("deleted_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_subscriptions_frequency" ON "subscriptions"("frequency");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE UNIQUE INDEX IF NOT EXISTS "uq_subscriptions_user_name"
+        ON "subscriptions"("user_id", LOWER("name"))
+        WHERE "deleted_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
 
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_documents_user_id" ON "documents"("user_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_documents_contract_id" ON "documents"("contract_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_documents_subscription_id" ON "documents"("subscription_id")`,
-    );
-    await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_documents_ocr_status" ON "documents"("ocr_status")`,
-    );
     await queryRunner.query(`
-      CREATE INDEX IF NOT EXISTS "idx_documents_not_deleted"
-      ON "documents"("id")
-      WHERE "deleted_at" IS NULL
+      DO $$ BEGIN
+        CREATE UNIQUE INDEX IF NOT EXISTS "idx_event_series_subscription_id" ON "event_series"("subscription_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_event_series_dtstart" ON "event_series"("dtstart");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_event_series_deleted_at"
+        ON "event_series"("deleted_at")
+        WHERE "deleted_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_events_subscription_id" ON "events"("subscription_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_events_event_series_id"
+        ON "events"("event_series_id")
+        WHERE "event_series_id" IS NOT NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_events_starts_at" ON "events"("starts_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_events_status" ON "events"("status");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_events_subscription_starts" ON "events"("subscription_id", "starts_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_events_not_deleted"
+        ON "events"("id")
+        WHERE "deleted_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_reminders_user_id" ON "reminders"("user_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_reminders_subscription_id"
+        ON "reminders"("subscription_id")
+        WHERE "subscription_id" IS NOT NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_reminders_type" ON "reminders"("type");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_reminders_enabled" ON "reminders"("enabled");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_reminders_not_deleted"
+        ON "reminders"("id")
+        WHERE "deleted_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_user_id" ON "notifications"("user_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_event_id"
+        ON "notifications"("event_id")
+        WHERE "event_id" IS NOT NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_reminder_id"
+        ON "notifications"("reminder_id")
+        WHERE "reminder_id" IS NOT NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_type" ON "notifications"("type");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_status" ON "notifications"("status");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_channel" ON "notifications"("channel");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_created_at" ON "notifications"("created_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_sent_at"
+        ON "notifications"("sent_at")
+        WHERE "sent_at" IS NOT NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_unread"
+        ON "notifications"("user_id", "read_at")
+        WHERE "read_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_snoozed"
+        ON "notifications"("snoozed_until")
+        WHERE "status" = 'snoozed' AND "snoozed_until" IS NOT NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_user_status_created" ON "notifications"("user_id", "status", "created_at");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_notifications_not_deleted"
+        ON "notifications"("id")
+        WHERE "deleted_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_documents_user_id" ON "documents"("user_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_documents_contract_id" ON "documents"("contract_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_documents_subscription_id" ON "documents"("subscription_id");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_documents_ocr_status" ON "documents"("ocr_status");
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
+    `);
+    await queryRunner.query(`
+      DO $$ BEGIN
+        CREATE INDEX IF NOT EXISTS "idx_documents_not_deleted"
+        ON "documents"("id")
+        WHERE "deleted_at" IS NULL;
+      EXCEPTION WHEN undefined_column THEN NULL; END $$
     `);
   }
 
