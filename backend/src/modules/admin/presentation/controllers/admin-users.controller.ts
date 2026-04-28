@@ -1,10 +1,8 @@
 import {
   Body,
   Controller,
-  Get,
   Param,
   ParseUUIDPipe,
-  Post,
   Query,
   Req,
   UseInterceptors,
@@ -20,6 +18,16 @@ import { BanUserDto } from '../dto/ban-user.dto';
 import { AuditInterceptor } from 'src/modules/audit/presentation/interceptors/audit.interceptor';
 import { Severity } from 'src/modules/audit/domain/enums/severity.enum';
 import { Audit } from 'src/modules/audit/presentation/decorators/audit.decorator';
+import {
+  ApiAdminUsersList,
+  ApiAdminUsersGetById,
+  ApiAdminUsersBan,
+  ApiAdminUsersUnban,
+  ApiAdminUsersVerifyEmail,
+  ApiAdminUsersForceMfa,
+  ApiAdminUsersRevokeSessions,
+  ApiAdminUsersResetPassword,
+} from '../../../../swagger/decorators/api-admin.decorator';
 
 type AuthenticatedRequest = Request & {
   user: { id: string; role: Role };
@@ -33,19 +41,19 @@ type AuthenticatedRequest = Request & {
 export class AdminUsersController {
   constructor(private readonly service: AdminUsersService) {}
 
-  @Get()
+  @ApiAdminUsersList()
   list(@Req() req: AuthenticatedRequest, @Query() query: AdminUsersQueryDto) {
     const actor = { id: req.user.id, role: req.user.role };
     return this.service.list(actor, query);
   }
 
-  @Get(':id')
+  @ApiAdminUsersGetById()
   getById(@Req() req: AuthenticatedRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     const actor = { id: req.user.id, role: req.user.role };
     return this.service.getById(actor, id);
   }
 
-  @Post(':id/ban')
+  @ApiAdminUsersBan()
   @Audit({
     action: 'user.ban',
     resourceType: 'user',
@@ -62,7 +70,7 @@ export class AdminUsersController {
     return this.service.ban(actor, id, body.reason, meta);
   }
 
-  @Post(':id/unban')
+  @ApiAdminUsersUnban()
   @Audit({ action: 'user.unban', resourceType: 'user', resourceIdParam: 'id' })
   unban(@Req() req: AuthenticatedRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     const actor = { id: req.user.id, role: req.user.role };
@@ -70,7 +78,7 @@ export class AdminUsersController {
     return this.service.unban(actor, id, meta);
   }
 
-  @Post(':id/verify-email')
+  @ApiAdminUsersVerifyEmail()
   @Audit({ action: 'user.verify-email', resourceType: 'user', resourceIdParam: 'id' })
   verifyEmail(@Req() req: AuthenticatedRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     const actor = { id: req.user.id, role: req.user.role };
@@ -78,7 +86,7 @@ export class AdminUsersController {
     return this.service.verifyEmail(actor, id, meta);
   }
 
-  @Post(':id/force-mfa')
+  @ApiAdminUsersForceMfa()
   @Audit({ action: 'user.force-mfa', resourceType: 'user', resourceIdParam: 'id' })
   forceMfa(@Req() req: AuthenticatedRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     const actor = { id: req.user.id, role: req.user.role };
@@ -86,7 +94,7 @@ export class AdminUsersController {
     return this.service.forceMfa(actor, id, meta);
   }
 
-  @Post(':id/revoke-sessions')
+  @ApiAdminUsersRevokeSessions()
   @Audit({ action: 'user.revoke-sessions', resourceType: 'user', resourceIdParam: 'id' })
   revokeSessions(@Req() req: AuthenticatedRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     const actor = { id: req.user.id, role: req.user.role };
@@ -94,7 +102,7 @@ export class AdminUsersController {
     return this.service.revokeSessions(actor, id, meta);
   }
 
-  @Post(':id/reset-password')
+  @ApiAdminUsersResetPassword()
   @Audit({ action: 'user.reset-password', resourceType: 'user', resourceIdParam: 'id' })
   resetPassword(@Req() req: AuthenticatedRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     const actor = { id: req.user.id, role: req.user.role };
