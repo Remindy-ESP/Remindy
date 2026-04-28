@@ -4,15 +4,17 @@ export class AddOneTimeFrequency1767527759769 implements MigrationInterface {
   name = 'AddOneTimeFrequency1767527759769';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Drop the existing frequency constraint
     await queryRunner.query(`
-      ALTER TABLE "subscriptions" DROP CONSTRAINT "chk_subscriptions_frequency"
+      DO $$ BEGIN
+        ALTER TABLE "subscriptions" DROP CONSTRAINT "chk_subscriptions_frequency";
+      EXCEPTION WHEN undefined_object THEN NULL; END $$
     `);
 
-    // Add the new constraint with 'one-time' included
     await queryRunner.query(`
-      ALTER TABLE "subscriptions" ADD CONSTRAINT "chk_subscriptions_frequency"
-      CHECK (frequency IN ('one-time', 'weekly', 'monthly', 'quarterly', 'yearly'))
+      DO $$ BEGIN
+        ALTER TABLE "subscriptions" ADD CONSTRAINT "chk_subscriptions_frequency"
+          CHECK (frequency IN ('one-time', 'weekly', 'monthly', 'quarterly', 'yearly'));
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
     `);
   }
 

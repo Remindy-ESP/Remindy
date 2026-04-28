@@ -1,65 +1,36 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex, TableForeignKey } from 'typeorm';
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateRolePermissionsTable1770000000000 implements MigrationInterface {
   name = 'CreateRolePermissionsTable1770000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.createTable(
-      new Table({
-        name: 'role_permissions',
-        columns: [
-          {
-            name: 'id',
-            type: 'uuid',
-            isPrimary: true,
-            generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
-          },
-          {
-            name: 'role_key',
-            type: 'text',
-            isNullable: false,
-          },
-          {
-            name: 'permission',
-            type: 'varchar',
-            length: '100',
-            isNullable: false,
-          },
-          {
-            name: 'created_at',
-            type: 'timestamptz',
-            default: 'now()',
-          },
-        ],
-        uniques: [{ name: 'uq_role_permission', columnNames: ['role_key', 'permission'] }],
-      }),
-      true,
+    await queryRunner.query(`
+      CREATE TABLE IF NOT EXISTS "role_permissions" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "role_key" text NOT NULL,
+        "permission" varchar(100) NOT NULL,
+        "created_at" timestamptz NOT NULL DEFAULT now(),
+        CONSTRAINT "pk_role_permissions" PRIMARY KEY ("id"),
+        CONSTRAINT "uq_role_permission" UNIQUE ("role_key", "permission")
+      )
+    `);
+
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_role_permissions_role_key" ON "role_permissions"("role_key")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "idx_role_permissions_permission" ON "role_permissions"("permission")`,
     );
 
-    await queryRunner.createIndex(
-      'role_permissions',
-      new TableIndex({ name: 'idx_role_permissions_role_key', columnNames: ['role_key'] }),
-    );
-
-    await queryRunner.createIndex(
-      'role_permissions',
-      new TableIndex({ name: 'idx_role_permissions_permission', columnNames: ['permission'] }),
-    );
-
-    await queryRunner.createForeignKey(
-      'role_permissions',
-      new TableForeignKey({
-        name: 'fk_role_permissions_role',
-        columnNames: ['role_key'],
-        referencedTableName: 'roles',
-        referencedColumnNames: ['key'],
-        onDelete: 'CASCADE',
-      }),
-    );
+    await queryRunner.query(`
+      DO $$ BEGIN
+        ALTER TABLE "role_permissions" ADD CONSTRAINT "fk_role_permissions_role"
+          FOREIGN KEY ("role_key") REFERENCES "roles"("key") ON DELETE CASCADE;
+      EXCEPTION WHEN duplicate_object THEN NULL; END $$
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('role_permissions', true);
+    await queryRunner.query(`DROP TABLE IF EXISTS "role_permissions" CASCADE`);
   }
 }

@@ -223,7 +223,7 @@ describe('DocumentController', () => {
         uploadedAt: mockDocument.uploadedAt,
         updatedAt: mockDocument.updatedAt,
       };
-      const documentWithoutLinks = new Document(documentProps as any);
+      const documentWithoutLinks = new Document(documentProps);
       uploadDocumentUseCase.execute.mockResolvedValue(documentWithoutLinks);
 
       const result = await controller.upload(mockRequest, mockFile, 'user-123');

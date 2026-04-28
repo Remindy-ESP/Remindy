@@ -138,9 +138,7 @@ export class SubscriptionEventGeneratorService {
     // Les événements annulés sont exclus : ils peuvent être recréés si le calendrier est recalculé
     const existingEvents = await this.eventRepository.findBySubscriptionId(subscription.id!);
     const existingDates = new Set(
-      existingEvents
-        .filter(e => e.status !== 'canceled')
-        .map(e => toUTCDateString(e.startsAt)),
+      existingEvents.filter(e => e.status !== 'canceled').map(e => toUTCDateString(e.startsAt)),
     );
 
     // Calculer les occurrences en respectant la date de fin si elle existe
