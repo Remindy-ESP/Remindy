@@ -70,7 +70,7 @@ export default function CategoriesScreen() {
     }
     try {
       setCreating(true);
-      await categoryService.create({ name: newName.trim(), icon: '', color: newColor });
+      await categoryService.create({ name: newName.trim(), icon: 'folder', color: newColor });
       setCreateModalVisible(false);
       await fetchCategories();
     } catch (err) {
