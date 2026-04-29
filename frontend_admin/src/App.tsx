@@ -10,6 +10,7 @@ import { MfaPage } from '@/modules/auth/ui/MfaPage';
 import { DashboardPage } from '@/modules/dashboard/ui/DashboardPage';
 import { UserListPage } from '@/modules/users/ui/UserListPage';
 import { UserDetailPage } from '@/modules/users/ui/UserDetailPage';
+import { AuditLogsPage } from '@/modules/audit/ui/AuditLogsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,8 +27,8 @@ function AppRoutes() {
   if (!isAuthenticated) {
     return (
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='*' element={<Navigate to='/login' replace />} />
       </Routes>
     );
   }
@@ -35,8 +36,8 @@ function AppRoutes() {
   if (needsMfaSetup || needsMfaVerify) {
     return (
       <Routes>
-        <Route path="/mfa" element={<MfaPage />} />
-        <Route path="*" element={<Navigate to="/mfa" replace />} />
+        <Route path='/mfa' element={<MfaPage />} />
+        <Route path='*' element={<Navigate to='/mfa' replace />} />
       </Routes>
     );
   }
@@ -44,12 +45,13 @@ function AppRoutes() {
   return (
     <Routes>
       <Route element={<AdminLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/users" element={<UserListPage />} />
-        <Route path="/users/:id" element={<UserDetailPage />} />
+        <Route path='/dashboard' element={<DashboardPage />} />
+        <Route path='/users' element={<UserListPage />} />
+        <Route path='/users/:id' element={<UserDetailPage />} />
+        <Route path='/audit' element={<AuditLogsPage />} />
       </Route>
-      <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path='/login' element={<Navigate to='/dashboard' replace />} />
+      <Route path='*' element={<Navigate to='/dashboard' replace />} />
     </Routes>
   );
 }
@@ -62,7 +64,7 @@ export default function App() {
           <AuthProvider>
             <AppRoutes />
             <Toaster
-              position="bottom-right"
+              position='bottom-right'
               toastOptions={{
                 style: { borderRadius: 10, fontSize: 14 },
               }}
