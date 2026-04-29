@@ -1,9 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import type { OpenAPIObject } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
+import { setupSwagger } from './swagger/swagger.config';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -11,9 +10,20 @@ async function bootstrap(): Promise<void> {
     rawBody: true,
   });
 
-  // Enable CORS for mobile app development
+  const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
+    .map(o => o.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: true, // Allow all origins in development
+    origin: allowedOrigins?.length
+      ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+          }
+        }
+      : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -21,9 +31,10 @@ async function bootstrap(): Promise<void> {
       'Authorization',
       'Accept',
       'X-Requested-With',
-      'boundary', // For multipart/form-data uploads
+      'boundary',
+      'x-csrf-token',
     ],
-    exposedHeaders: ['Content-Disposition'], // For file downloads
+    exposedHeaders: ['Content-Disposition'],
   });
 
   app.use(cookieParser());
@@ -36,28 +47,12 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const swaggerConfigBuilder = new DocumentBuilder()
-    .setTitle('API Documentation for Remindy')
-    .setDescription('Documentation de l’API')
-    .setVersion('v1')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-      },
-      'access-token',
-    );
+  setupSwagger(app);
 
-  const config = swaggerConfigBuilder.build();
-
-  const document: OpenAPIObject = SwaggerModule.createDocument(app, config as OpenAPIObject);
-
-  SwaggerModule.setup('api', app, document);
-
-  await app.listen(3000, '0.0.0.0');
-  console.log(`Listening on URL ${await app.getUrl()}`);
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Listening on 0.0.0.0:${port}`);
 }
 
 bootstrap().catch(err => {

@@ -279,6 +279,7 @@ describe('AuthController', () => {
       });
       expect(mockResponse.cookie).toHaveBeenCalledWith('refreshToken', tokens.refreshToken, {
         httpOnly: true,
+        secure: process.env.NODE_ENV !== 'development',
         sameSite: 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
@@ -444,37 +445,65 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should logout user and clear cookie', async () => {
-      const reqWithUser = {
+      const reqWithRefreshToken = {
         ...mockRequest,
-        user: { userId: 'user-123', role: 'USER_FREEMIUM' },
+        cookies: { refreshToken: 'refresh_token_123' },
       };
 
       logoutUseCase.execute.mockResolvedValue(undefined);
 
       const result = await controller.logout(
-        reqWithUser as Request & { user: { userId: string; role: string } },
+        reqWithRefreshToken as Request,
         mockResponse as Response,
       );
 
-      expect(logoutUseCase.execute).toHaveBeenCalledWith('user-123');
+      expect(logoutUseCase.execute).toHaveBeenCalledWith('refresh_token_123');
       expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
       expect(result).toEqual({ success: true });
     });
 
-    it('should handle logout with different user ids', async () => {
-      const reqWithUser = {
+    it('should handle logout without refresh token', async () => {
+      const reqWithoutToken = {
         ...mockRequest,
-        user: { userId: 'user-456', role: 'ADMIN' },
+        cookies: {},
       };
 
       logoutUseCase.execute.mockResolvedValue(undefined);
 
-      await controller.logout(
-        reqWithUser as Request & { user: { userId: string; role: string } },
+      const result = await controller.logout(reqWithoutToken as Request, mockResponse as Response);
+
+      expect(logoutUseCase.execute).not.toHaveBeenCalled();
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should handle logout with different refresh tokens', async () => {
+      const reqWithToken1 = {
+        ...mockRequest,
+        cookies: { refreshToken: 'refresh_token_456' },
+      };
+
+      logoutUseCase.execute.mockResolvedValue(undefined);
+
+      await controller.logout(reqWithToken1 as Request, mockResponse as Response);
+
+      expect(logoutUseCase.execute).toHaveBeenCalledWith('refresh_token_456');
+    });
+
+    it('should logout mobile client using body refresh token when no cookie is present', async () => {
+      const reqWithoutCookie = { ...mockRequest, cookies: {} };
+
+      logoutUseCase.execute.mockResolvedValue(undefined);
+
+      const result = await controller.logout(
+        reqWithoutCookie as Request,
         mockResponse as Response,
+        { refreshToken: 'mobile_refresh_token' },
       );
 
-      expect(logoutUseCase.execute).toHaveBeenCalledWith('user-456');
+      expect(logoutUseCase.execute).toHaveBeenCalledWith('mobile_refresh_token');
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+      expect(result).toEqual({ success: true });
     });
   });
 

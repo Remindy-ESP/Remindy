@@ -1,26 +1,5 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Patch,
-  Delete,
-  Param,
-  Query,
-  Body,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-  Req,
-  NotFoundException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Body, Param, Query, UseGuards, Req, NotFoundException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { EventResponseDto } from '../dto/event-response.dto';
@@ -38,6 +17,15 @@ import { EventPresentationMapper } from '../mappers/event-presentation.mapper';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import { FindSubscriptionUseCase } from 'src/modules/subscription/application/use-cases/find-subscription.use-case';
 import { FindAllSubscriptionsUseCase } from 'src/modules/subscription/application/use-cases/find-all-subscriptions.use-case';
+import { SubscriptionPresentationMapper } from 'src/modules/subscription/presentation/mappers/subscription-presentation.mapper';
+import {
+  ApiEventFindAll,
+  ApiEventFindOne,
+  ApiEventReschedule,
+  ApiEventUpdateStatus,
+  ApiEventUpdatePaymentStatus,
+  ApiEventDelete,
+} from '../../../../swagger/decorators/api-event.decorator';
 
 @ApiTags('Calendar - Événements')
 @Controller('calendar')
@@ -55,56 +43,7 @@ export class EventController {
     private readonly findAllSubscriptionsUseCase: FindAllSubscriptionsUseCase,
   ) {}
 
-  @Get('events')
-  @ApiOperation({ summary: 'Récupérer les événements du calendrier avec filtres' })
-  @ApiQuery({
-    name: 'start',
-    required: false,
-    description: 'Date de début (ISO 8601)',
-    example: '2025-01-01T00:00:00Z',
-  })
-  @ApiQuery({
-    name: 'end',
-    required: false,
-    description: 'Date de fin (ISO 8601)',
-    example: '2025-12-31T23:59:59Z',
-  })
-  @ApiQuery({
-    name: 'subscription_id',
-    required: false,
-    description: "Filtrer par ID d'abonnement",
-  })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: ['scheduled', 'completed', 'canceled', 'failed'],
-    description: 'Filtrer par statut',
-  })
-  @ApiQuery({
-    name: 'payment_status',
-    required: false,
-    enum: ['pending', 'paid', 'failed'],
-    description: 'Filtrer par statut de paiement',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Nombre limite de résultats (1-1000)',
-    example: 100,
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    enum: ['starts_at:asc', 'starts_at:desc', 'amount:asc', 'amount:desc'],
-    description: 'Tri des résultats',
-    example: 'starts_at:asc',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Liste des événements',
-    type: [EventResponseDto],
-  })
+  @ApiEventFindAll()
   async findAll(
     @Req() req: Request,
     @Query() filters: EventFilterDto,
@@ -122,27 +61,20 @@ export class EventController {
 
     const userEvents = events.filter(event => userSubscriptionIds.has(event.subscriptionId));
 
-    // Enrichir les événements avec les informations de subscription
     return userEvents.map(event => {
       const dto = EventPresentationMapper.toResponseDto(event);
       const subscription = subscriptionMap.get(event.subscriptionId);
       return {
         ...dto,
-        subscription: subscription || undefined,
+        subscription: subscription
+          ? SubscriptionPresentationMapper.toResponseDto(subscription)
+          : undefined,
         userId: user.userId,
       };
     });
   }
 
-  @Get('event/:id')
-  @ApiOperation({ summary: 'Récupérer un événement par son ID' })
-  @ApiParam({ name: 'id', description: "ID de l'événement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Événement trouvé',
-    type: EventResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Événement non trouvé' })
+  @ApiEventFindOne()
   async findOne(@Req() req: Request, @Param('id') id: string): Promise<EventResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const event = await this.getEventByIdUseCase.execute(id);
@@ -155,17 +87,7 @@ export class EventController {
     return EventPresentationMapper.toResponseDto(event);
   }
 
-  @Put('event/:id/reschedule')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Reprogrammer un événement' })
-  @ApiParam({ name: 'id', description: "ID de l'événement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Événement reprogrammé avec succès',
-    type: EventResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Événement non trouvé' })
-  @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiEventReschedule()
   async reschedule(
     @Req() req: Request,
     @Param('id') id: string,
@@ -184,17 +106,7 @@ export class EventController {
     return EventPresentationMapper.toResponseDto(event);
   }
 
-  @Patch('event/:id/status')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Mettre à jour le statut d'un événement" })
-  @ApiParam({ name: 'id', description: "ID de l'événement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Statut mis à jour avec succès',
-    type: EventResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Événement non trouvé' })
-  @ApiResponse({ status: 400, description: 'Transition de statut invalide' })
+  @ApiEventUpdateStatus()
   async updateStatus(
     @Req() req: Request,
     @Param('id') id: string,
@@ -212,16 +124,7 @@ export class EventController {
     return EventPresentationMapper.toResponseDto(event);
   }
 
-  @Patch('event/:id/payment-status')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Mettre à jour le statut de paiement d'un événement" })
-  @ApiParam({ name: 'id', description: "ID de l'événement" })
-  @ApiResponse({
-    status: 200,
-    description: 'Statut de paiement mis à jour avec succès',
-    type: EventResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Événement non trouvé' })
+  @ApiEventUpdatePaymentStatus()
   async updatePaymentStatus(
     @Req() req: Request,
     @Param('id') id: string,
@@ -242,15 +145,7 @@ export class EventController {
     return EventPresentationMapper.toResponseDto(event);
   }
 
-  @Delete('event/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Supprimer un événement (soft delete)' })
-  @ApiParam({ name: 'id', description: "ID de l'événement" })
-  @ApiResponse({
-    status: 204,
-    description: 'Événement supprimé avec succès',
-  })
-  @ApiResponse({ status: 404, description: 'Événement non trouvé' })
+  @ApiEventDelete()
   async delete(@Req() req: Request, @Param('id') id: string): Promise<void> {
     const { user } = req as Request & { user: { userId: string; role: string } };
     const existing = await this.getEventByIdUseCase.execute(id);

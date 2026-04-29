@@ -125,7 +125,10 @@ describe('UpdateFolderUseCase', () => {
       isDefault: false,
     });
 
-    repository.findById.mockResolvedValueOnce(folderB).mockResolvedValueOnce(folderA);
+    repository.findById
+      .mockResolvedValueOnce(folderB)
+      .mockResolvedValueOnce(folderA)
+      .mockResolvedValueOnce(folderA);
 
     const dto: UpdateFolderAppDto = {
       parentId: 'folder-a',

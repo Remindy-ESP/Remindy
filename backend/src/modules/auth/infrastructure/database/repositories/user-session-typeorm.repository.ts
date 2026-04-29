@@ -104,6 +104,6 @@ export class UserSessionTypeOrmRepository implements IUserSessionRepository {
 
     if (!session) return null;
 
-    return { id: session.id };
+    return { id: session.id, userId: session.userId };
   }
 }

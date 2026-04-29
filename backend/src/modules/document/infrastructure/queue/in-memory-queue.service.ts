@@ -323,7 +323,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
   /**
    * Récupère le statut d'un job
    */
-  getJobStatus(jobId: string): Promise<{
+  async getJobStatus(jobId: string): Promise<{
     id: string;
     status: string;
     progress: number;
@@ -338,7 +338,7 @@ export class InMemoryQueueService implements OnModuleDestroy {
       this.failedJobs.find(j => j.id === jobId);
 
     if (!job) {
-      throw new Error(`Job ${jobId} not found`);
+      return Promise.reject(new Error(`Job ${jobId} not found`));
     }
 
     return Promise.resolve({

@@ -178,7 +178,7 @@ describe('UserPreferencesRepository', () => {
       const updatedPrefs = {
         ...existingPrefs,
         ...updateData,
-      } as UserPreferenceEntity;
+      };
 
       typeOrmRepository.findOne.mockResolvedValue(existingPrefs);
       typeOrmRepository.save.mockResolvedValue(updatedPrefs);
@@ -249,7 +249,7 @@ describe('UserPreferencesRepository', () => {
       typeOrmRepository.save.mockResolvedValue({
         ...existingPrefs,
         theme: Theme.DARK,
-      } as UserPreferenceEntity);
+      });
 
       await repository.update(userId, updateData);
 
@@ -289,7 +289,7 @@ describe('UserPreferencesRepository', () => {
       typeOrmRepository.save.mockResolvedValue({
         ...existingPrefs,
         ...updateData,
-      } as UserPreferenceEntity);
+      });
 
       const result = await repository.update(userId, updateData);
 

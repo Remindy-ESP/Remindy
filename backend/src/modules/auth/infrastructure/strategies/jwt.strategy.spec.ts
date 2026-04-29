@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {
@@ -106,23 +107,33 @@ describe('JwtStrategy', () => {
 
     it('should work with different user roles', () => {
       const adminPayload = { sub: 'admin-1', role: 'ADMIN', mfaEnabled: false, mfaVerified: false };
-      const userPayload = { sub: 'user-1', role: 'USER_FREEMIUM', mfaEnabled: false, mfaVerified: false };
-      const premiumPayload = { sub: 'premium-1', role: 'USER_PREMIUM', mfaEnabled: false, mfaVerified: false };
+      const userPayload = {
+        sub: 'user-1',
+        role: 'USER_FREEMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
+      };
+      const premiumPayload = {
+        sub: 'premium-1',
+        role: 'USER_PREMIUM',
+        mfaEnabled: false,
+        mfaVerified: false,
+      };
 
       expect(strategy.validate(adminPayload).role).toBe('ADMIN');
       expect(strategy.validate(adminPayload).mfaEnabled).toBe(false);
       expect(strategy.validate(adminPayload).mfaVerified).toBe(false);
-      
+
       expect(strategy.validate(userPayload).role).toBe('USER_FREEMIUM');
       expect(strategy.validate(userPayload).mfaEnabled).toBe(false);
       expect(strategy.validate(userPayload).mfaVerified).toBe(false);
-      
+
       expect(strategy.validate(premiumPayload).role).toBe('USER_PREMIUM');
       expect(strategy.validate(premiumPayload).mfaEnabled).toBe(false);
       expect(strategy.validate(premiumPayload).mfaVerified).toBe(false);
     });
 
-    it('should return userId from sub even when undefined', () => {
+    it('should throw UnauthorizedException when sub is undefined', () => {
       const payload = {
         sub: undefined,
         role: 'USER_FREEMIUM',
@@ -130,15 +141,10 @@ describe('JwtStrategy', () => {
         mfaVerified: false,
       };
 
-      const result = strategy.validate(payload);
-
-      expect(result.userId).toBeUndefined();
-      expect(result.role).toBe('USER_FREEMIUM');
-      expect(result.mfaEnabled).toBe(false);
-      expect(result.mfaVerified).toBe(false);
+      expect(() => strategy.validate(payload)).toThrow(UnauthorizedException);
     });
 
-    it('should return role even when undefined', () => {
+    it('should throw UnauthorizedException when role is undefined', () => {
       const payload = {
         sub: 'user-123',
         role: undefined,
@@ -146,12 +152,7 @@ describe('JwtStrategy', () => {
         mfaVerified: false,
       };
 
-      const result = strategy.validate(payload);
-
-      expect(result.userId).toBe('user-123');
-      expect(result.role).toBeUndefined();
-      expect(result.mfaEnabled).toBe(false);
-      expect(result.mfaVerified).toBe(false);
+      expect(() => strategy.validate(payload)).toThrow(UnauthorizedException);
     });
 
     it('should handle payload with missing mfa fields', () => {
@@ -171,18 +172,8 @@ describe('JwtStrategy', () => {
       });
     });
 
-    it('should handle empty payload object with default MFA values', () => {
-      const payload = {};
-
-      const result = strategy.validate(payload);
-
-      expect(result).toEqual({
-        id: undefined,
-        userId: undefined,
-        role: undefined,
-        mfaEnabled: false,
-        mfaVerified: false,
-      });
+    it('should throw UnauthorizedException for empty payload', () => {
+      expect(() => strategy.validate({})).toThrow(UnauthorizedException);
     });
 
     it('should not include email or other fields in result', () => {

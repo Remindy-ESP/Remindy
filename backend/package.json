@@ -28,6 +28,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.930.0",
     "@aws-sdk/s3-request-presigner": "^3.930.0",
+    "@getbrevo/brevo": "^5.0.1",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.1",
     "@nestjs/bull": "^11.0.4",
@@ -44,6 +45,7 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^11.0.0",
     "@sendgrid/mail": "^8.1.6",
+    "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "bull": "^4.16.5",
     "cache-manager": "^7.2.0",
@@ -67,8 +69,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/cli": "^11.0.16",
+    "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.0.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
