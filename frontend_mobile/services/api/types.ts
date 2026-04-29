@@ -107,6 +107,7 @@ export interface Subscription {
   currency: string;
   frequency: 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
+  endDate?: string;
   nextDueDate: string;
   trialStartDate?: string;
   trialEndDate?: string;
@@ -125,6 +126,7 @@ export interface CreateSubscriptionRequest {
   currency?: string;
   frequency: 'one-time'| 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate: string;
+  endDate?: string;
   nextDueDate?: string;
   trialStartDate?: string;
   trialEndDate?: string;
@@ -141,6 +143,7 @@ export interface UpdateSubscriptionRequest {
   currency?: string;
   frequency?: 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate?: string;
+  endDate?: string;
   nextDueDate?: string;
   trialStartDate?: string;
   trialEndDate?: string;
@@ -157,7 +160,7 @@ export interface Event {
   title: string;
   description?: string;
   dueDate: string;
-  status: 'PENDING' | 'COMPLETED' | 'RESCHEDULED';
+  status: 'scheduled' | 'completed' | 'canceled' | 'failed';
   subscriptionId: string;
   subscription?: Subscription;
   userId: string;

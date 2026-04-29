@@ -29,6 +29,7 @@ describe('SubscriptionController', () => {
   let pauseSubscriptionUseCase: jest.Mocked<PauseSubscriptionUseCase>;
   let resumeSubscriptionUseCase: jest.Mocked<ResumeSubscriptionUseCase>;
   let findSubscriptionEventsUseCase: jest.Mocked<FindSubscriptionEventsUseCase>;
+  let subscriptionRepository: { find: jest.Mock; findOne: jest.Mock };
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockRequest = {
@@ -120,6 +121,7 @@ describe('SubscriptionController', () => {
     pauseSubscriptionUseCase = module.get(PauseSubscriptionUseCase);
     resumeSubscriptionUseCase = module.get(ResumeSubscriptionUseCase);
     findSubscriptionEventsUseCase = module.get(FindSubscriptionEventsUseCase);
+    subscriptionRepository = module.get(getRepositoryToken(SubscriptionEntity));
   });
 
   describe('create', () => {
@@ -144,12 +146,55 @@ describe('SubscriptionController', () => {
       expect(result.id).toBe('subscription-123');
       expect(createSubscriptionUseCase.execute).toHaveBeenCalled();
     });
+
+    it('should enrich response with category when subscription has categoryId', async () => {
+      const subscriptionWithCategory = {
+        ...mockSubscription,
+        categoryId: 'cat-1',
+      } as unknown as Subscription;
+      const createDto: CreateSubscriptionDto = {
+        contractId: 1,
+        name: 'Netflix Premium',
+        amount: 15.99,
+        currency: 'EUR',
+        frequency: 'monthly',
+        startDate: '2025-01-01',
+        status: 'active',
+        categoryId: 'cat-1',
+      };
+      const mockCategoryEntity = {
+        id: 'cat-1',
+        name: 'Streaming',
+        icon: 'film',
+        isSystem: false,
+        color: '#FF0000',
+        userId: mockUserId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const mockEntity = Object.assign(new SubscriptionEntity(), {
+        id: 'subscription-123',
+        category: mockCategoryEntity,
+      });
+
+      createSubscriptionUseCase.execute.mockResolvedValue({
+        subscription: subscriptionWithCategory,
+        eventsGenerated: 1,
+      });
+      subscriptionRepository.findOne.mockResolvedValue(mockEntity);
+
+      const result = await controller.create(mockRequest, createDto);
+
+      expect(result).toBeDefined();
+      expect(subscriptionRepository.findOne).toHaveBeenCalled();
+    });
   });
 
   describe('findAll', () => {
     it('should return an array of subscriptions', async () => {
       const filters: SubscriptionFilterDto = {};
       findAllSubscriptionsUseCase.execute.mockResolvedValue([mockSubscription]);
+      subscriptionRepository.find.mockResolvedValue([]);
 
       const result = await controller.findAll(mockRequest, filters);
 
@@ -165,6 +210,7 @@ describe('SubscriptionController', () => {
         status: 'active',
       };
       findAllSubscriptionsUseCase.execute.mockResolvedValue([mockSubscription]);
+      subscriptionRepository.find.mockResolvedValue([]);
 
       await controller.findAll(mockRequest, filters);
 
@@ -175,6 +221,35 @@ describe('SubscriptionController', () => {
           status: 'active',
         }),
       );
+    });
+
+    it('should enrich response with category when entity has category', async () => {
+      const subscriptionWithId = {
+        ...mockSubscription,
+        id: 'subscription-123',
+      } as unknown as Subscription;
+      const mockCategoryEntity = {
+        id: 'cat-1',
+        name: 'Streaming',
+        icon: 'film',
+        isSystem: false,
+        color: '#FF0000',
+        userId: mockUserId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const mockEntity = Object.assign(new SubscriptionEntity(), {
+        id: 'subscription-123',
+        category: mockCategoryEntity,
+      });
+
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([subscriptionWithId]);
+      subscriptionRepository.find.mockResolvedValue([mockEntity]);
+
+      const result = await controller.findAll(mockRequest, {});
+
+      expect(result).toBeDefined();
+      expect(subscriptionRepository.find).toHaveBeenCalled();
     });
   });
 
@@ -200,9 +275,62 @@ describe('SubscriptionController', () => {
       expect(result.id).toBe('subscription-123');
       expect(findSubscriptionUseCase.findById).toHaveBeenCalledWith('subscription-123');
     });
+
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.findById(mockRequest, 'subscription-123')).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
+    });
+
+    it('should enrich response with category when subscription has categoryId', async () => {
+      const subscriptionWithCategory = {
+        ...mockSubscription,
+        categoryId: 'cat-1',
+      } as unknown as Subscription;
+      const mockCategoryEntity = {
+        id: 'cat-1',
+        name: 'Streaming',
+        icon: 'film',
+        isSystem: false,
+        color: '#FF0000',
+        userId: mockUserId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const mockEntity = Object.assign(new SubscriptionEntity(), {
+        id: 'subscription-123',
+        category: mockCategoryEntity,
+      });
+
+      findSubscriptionUseCase.findById.mockResolvedValue(subscriptionWithCategory);
+      subscriptionRepository.findOne.mockResolvedValue(mockEntity);
+
+      const result = await controller.findById(mockRequest, 'subscription-123');
+
+      expect(result).toBeDefined();
+      expect(subscriptionRepository.findOne).toHaveBeenCalled();
+    });
   });
 
   describe('update', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.update(mockRequest, 'subscription-123', {})).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
+    });
+
     it('should update a subscription', async () => {
       const updateDto: UpdateSubscriptionDto = {
         name: 'Netflix Standard',
@@ -241,9 +369,33 @@ describe('SubscriptionController', () => {
 
       expect(deleteSubscriptionUseCase.execute).toHaveBeenCalledWith('subscription-123');
     });
+
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.delete(mockRequest, 'subscription-123')).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
+    });
   });
 
   describe('pause', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.pause(mockRequest, 'subscription-123')).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
+    });
+
     it('should pause a subscription', async () => {
       const pausedSubscription = {
         ...mockSubscription,
@@ -262,6 +414,18 @@ describe('SubscriptionController', () => {
   });
 
   describe('resume', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.resume(mockRequest, 'subscription-123')).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
+    });
+
     it('should resume a subscription', async () => {
       findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
       resumeSubscriptionUseCase.execute.mockResolvedValue(mockSubscription);
@@ -275,6 +439,18 @@ describe('SubscriptionController', () => {
   });
 
   describe('getEvents', () => {
+    it('should throw NotFoundException when subscription belongs to another user', async () => {
+      const otherUserSubscription = {
+        ...mockSubscription,
+        userId: 'other-user',
+      } as unknown as Subscription;
+      findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
+
+      await expect(controller.getEvents(mockRequest, 'subscription-123')).rejects.toThrow(
+        'Subscription with id subscription-123 not found',
+      );
+    });
+
     it('should return subscription events', async () => {
       const mockEvents = [
         {
@@ -289,7 +465,7 @@ describe('SubscriptionController', () => {
         },
       ];
       findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
-      findSubscriptionEventsUseCase.execute.mockResolvedValue(mockEvents as any);
+      findSubscriptionEventsUseCase.execute.mockResolvedValue(mockEvents);
 
       const result = await controller.getEvents(mockRequest, 'subscription-123');
 

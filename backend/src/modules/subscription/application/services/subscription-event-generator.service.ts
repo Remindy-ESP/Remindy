@@ -86,6 +86,12 @@ export class SubscriptionEventGeneratorService {
     count: number,
     endDate?: Date,
   ): Date[] {
+    // Une opération unique ne génère qu'une seule occurrence, quelle que soit la valeur de count
+    if (frequency === 'one-time') {
+      if (endDate && startDate > endDate) return [];
+      return [new Date(startDate)];
+    }
+
     const occurrences: Date[] = [];
     let currentDate = new Date(startDate);
 
@@ -115,6 +121,8 @@ export class SubscriptionEventGeneratorService {
         return addMonthsUTC(date, 3);
       case 'yearly':
         return addYearsUTC(date, 1);
+      case 'one-time':
+        return date;
       default:
         return addMonthsUTC(date, 1);
     }
@@ -127,8 +135,11 @@ export class SubscriptionEventGeneratorService {
     const { subscription, count } = options;
 
     // Récupérer les événements existants pour éviter les doublons
+    // Les événements annulés sont exclus : ils peuvent être recréés si le calendrier est recalculé
     const existingEvents = await this.eventRepository.findBySubscriptionId(subscription.id!);
-    const existingDates = new Set(existingEvents.map(e => toUTCDateString(e.startsAt)));
+    const existingDates = new Set(
+      existingEvents.filter(e => e.status !== 'canceled').map(e => toUTCDateString(e.startsAt)),
+    );
 
     // Calculer les occurrences en respectant la date de fin si elle existe
     const occurrences = this.calculateOccurrences(
@@ -174,6 +185,11 @@ export class SubscriptionEventGeneratorService {
     monthsAhead: number = 12,
     thresholdMonths: number = 3,
   ): Promise<Event[]> {
+    // Une opération unique ne doit jamais être régénérée
+    if (subscription.frequency === 'one-time') {
+      return [];
+    }
+
     // Récupérer les événements existants
     const existingEvents = await this.eventRepository.findBySubscriptionId(subscription.id!);
 

@@ -7,6 +7,7 @@ import { CloudflareR2Service } from '../../infrastructure/services/cloudflare-r2
 import { OcrService } from '../../infrastructure/services/ocr.service';
 import { GeminiParserService } from '../../infrastructure/services/gemini-parser.service';
 import { Document } from '../../domain/document.entity';
+import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 
 describe('ReprocessOcrUseCase', () => {
   let useCase: ReprocessOcrUseCase;
@@ -16,6 +17,7 @@ describe('ReprocessOcrUseCase', () => {
     const mockRepository: Partial<jest.Mocked<IDocumentRepository>> = {
       findById: jest.fn(),
       update: jest.fn(),
+      updateOcrStatus: jest.fn(),
     };
 
     const mockR2Service: Partial<jest.Mocked<CloudflareR2Service>> = {
@@ -41,6 +43,14 @@ describe('ReprocessOcrUseCase', () => {
         { provide: CloudflareR2Service, useValue: mockR2Service },
         { provide: OcrService, useValue: mockOcrService },
         { provide: GeminiParserService, useValue: mockGeminiParser },
+        {
+          provide: InMemoryQueueService,
+          useValue: {
+            add: jest.fn(),
+            getJobStatus: jest.fn(),
+            addDocumentToQueue: jest.fn().mockResolvedValue({ jobId: 'job-123' }),
+          },
+        },
       ],
     }).compile();
 

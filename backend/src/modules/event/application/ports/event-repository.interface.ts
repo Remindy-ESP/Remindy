@@ -9,6 +9,8 @@ export interface IEventRepository {
   findBySubscriptionId(subscriptionId: string): Promise<Event[]>;
   update(id: string, event: Event): Promise<Event | null>;
   updateFutureEventsStatus(subscriptionId: string, newStatus: EventStatus): Promise<number>;
+  cancelEventsAfterDate(subscriptionId: string, afterDate: Date): Promise<number>;
+  cancelScheduledEventOnDate(subscriptionId: string, date: Date): Promise<number>;
   delete(id: string): Promise<boolean>;
   softDelete(id: string): Promise<boolean>;
 }

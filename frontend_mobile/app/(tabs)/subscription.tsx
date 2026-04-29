@@ -299,7 +299,7 @@ export default function SubscriptionScreen() {
       price: subscription.amount || 0,
       billingCycle: frequencyToBillingCycle[subscription.frequency] || 'MONTHLY',
       startDate: subscription.startDate ? subscription.startDate.split('T')[0] : new Date().toISOString().split('T')[0],
-      endDate: subscription.nextDueDate ? subscription.nextDueDate.split('T')[0] : undefined,
+      endDate: subscription.endDate ? subscription.endDate.split('T')[0] : undefined,
       categoryId: subscription.categoryId || '',
       reminderDays: 0,
     });
@@ -345,7 +345,7 @@ export default function SubscriptionScreen() {
       };
 
       if (formData.endDate) {
-        requestData.nextDueDate = formData.endDate;
+        requestData.endDate = formData.endDate;
       }
       if (formData.description) {
         requestData.notes = formData.description;
@@ -614,7 +614,7 @@ export default function SubscriptionScreen() {
             >
               <Picker.Item label="Toutes" value="" />
               {categories.map((cat) => (
-                <Picker.Item key={cat.id} label={`${cat.icon} ${cat.name}`} value={cat.id} />
+                <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
               ))}
             </Picker>
           </View>
@@ -734,7 +734,7 @@ export default function SubscriptionScreen() {
                   >
                     <Picker.Item label="Aucune catégorie" value="" />
                     {categories.map((cat) => (
-                      <Picker.Item key={cat.id} label={`${cat.icon} ${cat.name}`} value={cat.id} />
+                      <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
                     ))}
                   </Picker>
                 </View>

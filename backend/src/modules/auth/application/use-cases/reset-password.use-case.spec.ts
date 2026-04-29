@@ -8,7 +8,7 @@ import { IUserSessionRepository } from '../../domain/repositories/user-session.r
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
-
+import { EventEmitter2 } from '@nestjs/event-emitter';
 jest.mock('jsonwebtoken');
 
 describe('ResetPasswordUseCase', () => {
@@ -60,6 +60,10 @@ describe('ResetPasswordUseCase', () => {
           provide: IUserSessionRepository,
           useValue: mockSessionRepo,
         },
+        {
+          provide: EventEmitter2,
+          useValue: mockEventEmitter,
+        },
       ],
     }).compile();
 
@@ -70,6 +74,11 @@ describe('ResetPasswordUseCase', () => {
 
     process.env.JWT_PASSWORD_RESET_SECRET = 'test-secret-key';
   });
+
+  const mockEventEmitter: Partial<jest.Mocked<EventEmitter2>> = {
+    emit: jest.fn(),
+    emitAsync: jest.fn(),
+  };
 
   afterEach(() => {
     jest.clearAllMocks();

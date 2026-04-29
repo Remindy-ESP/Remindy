@@ -1,31 +1,15 @@
 import {
   BadRequestException,
   Controller,
-  Get,
-  Put,
-  Post,
-  Delete,
   Body,
   Req,
-  HttpStatus,
-  HttpCode,
   UnauthorizedException,
   UseGuards,
   Res,
-  UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-} from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from '../../domain/services/user.service';
 import { UserPreferencesService } from '../../domain/services/user-preferences.service';
 import { UpdateUserProfileDto, UserProfileResponseDto } from '../dto/user-profile.dto';
@@ -47,6 +31,18 @@ import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { RgpdExportService } from '../../../user/application/services/rgpd-export.service';
 import { UserPresenter } from '../mappers/user.presenter';
 import { CloudflareR2Service } from 'src/modules/document/infrastructure/services/cloudflare-r2.service';
+import {
+  ApiUserGetProfile,
+  ApiUserGetMe,
+  ApiUserUpdateMe,
+  ApiUserUploadPhoto,
+  ApiUserDeletePhoto,
+  ApiUserDeleteAccount,
+  ApiUserUpdateProfile,
+  ApiUserGetPreferences,
+  ApiUserUpdatePreferences,
+  ApiUserExportData,
+} from '../../../../swagger/decorators/api-user.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -65,79 +61,30 @@ export class UserController {
     private readonly r2Service: CloudflareR2Service,
   ) {}
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User profile retrieved successfully',
-    type: UserProfileResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiUserGetProfile()
   async getProfile(@Req() req: Request): Promise<UserProfileResponseDto> {
     const userId = this.extractUserIdFromRequest(req);
     return this.userService.getUserProfile(userId);
   }
-  @Get('me')
-  @ApiOperation({ summary: 'Get current user profile (mobile contract)' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Current user profile retrieved successfully',
-    type: UserMeResponseDto,
-  })
+
+  @ApiUserGetMe()
   async getMe(@Req() req: Request): Promise<UserMeResponseDto> {
     const { user } = req as Request & { user: { userId: string; role: string } };
-
     const userId = user.userId;
-
     const profile = await this.getMyProfileUseCase.execute({ userId });
-
     return this.toUserMeResponse(profile);
   }
 
-  @Put('me')
-  @UseGuards(JwtAuthGuard)
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User profile updated successfully',
-    type: UserMeResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiUserUpdateMe()
   async updateMe(@Req() req: Request, @Body() dto: UpdateUserMeRequestDto) {
     const { user } = req as Request & { user: { userId: string; role: string } };
-
     const userId = user.userId;
-
     await this.updateMyProfileUseCase.execute(userId, dto);
-
     const updatedProfile = await this.getMyProfileUseCase.execute({ userId });
-
     return this.toUserMeResponse(updatedProfile);
   }
 
-  @Post('me/photo')
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload or replace current user profile photo' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Profile photo updated successfully',
-    type: UserMeResponseDto,
-  })
+  @ApiUserUploadPhoto()
   async uploadMyPhoto(
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
@@ -170,9 +117,7 @@ export class UserController {
 
     try {
       await this.r2Service.uploadFile(file.buffer, r2Key, file.mimetype);
-
       await this.updateMyProfileUseCase.execute(userId, { photoR2Key: r2Key });
-
       const updatedProfile = await this.getMyProfileUseCase.execute({ userId });
 
       if (previousPhotoKey && previousPhotoKey !== r2Key) {
@@ -186,13 +131,7 @@ export class UserController {
     }
   }
 
-  @Delete('me/photo')
-  @ApiOperation({ summary: 'Remove current user profile photo' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Profile photo removed successfully',
-    type: UserMeResponseDto,
-  })
+  @ApiUserDeletePhoto()
   async deleteMyPhoto(@Req() req: Request): Promise<UserMeResponseDto> {
     const userId = this.extractUserIdFromRequest(req);
     const existingProfile = await this.getMyProfileUseCase.execute({ userId });
@@ -208,22 +147,7 @@ export class UserController {
     return this.toUserMeResponse(updatedProfile);
   }
 
-  @Delete('me')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Throttle({ default: { limit: 1, ttl: 86400000 } }) // 1 request per day
-  @ApiOperation({ summary: 'Delete current user account (RGPD right to deletion)' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'User account deleted successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiUserDeleteAccount()
   async deleteMe(
     @Req() req: RequestWithUser,
     @Res({ passthrough: true }) res: Response,
@@ -241,77 +165,32 @@ export class UserController {
     });
   }
 
-  @Put('profile')
-  @ApiOperation({ summary: 'Update current user profile' })
-  @ApiBody({ type: UpdateUserProfileDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User profile updated successfully',
-    type: UserProfileResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiUserUpdateProfile()
   async updateProfile(
     @Req() req: Request,
     @Body() updateDto: UpdateUserProfileDto,
   ): Promise<UserProfileResponseDto> {
-    // TODO: Implement JWT guard and extract user ID from token
     const userId = this.extractUserIdFromRequest(req);
     return this.userService.updateUserProfile(userId, updateDto);
   }
 
-  @Get('preferences')
+  @ApiUserGetPreferences()
   async getPreferences(@Req() req: RequestWithUser) {
     const userId = req.user.userId;
-
     const prefs = await this.getMyPreferencesUseCase.execute(userId);
-
     return UserPreferencesResponseDto.fromEntity(prefs);
   }
 
-  @Put('preferences')
-  @ApiOperation({ summary: 'Update current user preferences' })
-  @ApiBody({ type: UpdateUserPreferencesDto })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User preferences updated successfully',
-    type: UserPreferencesResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiUserUpdatePreferences()
   async updatePreferences(@Req() req: RequestWithUser, @Body() dto: UpdateUserPreferencesDto) {
     const userId = req.user.userId;
-
     const input = UserPreferencesMapper.toInput(dto);
-
     const updated = await this.updateUserPreferencesUseCase.execute(userId, input);
-
     return UserPreferencesResponseDto.fromEntity(updated);
   }
-  @Post('export-data')
+
+  @ApiUserExportData()
   @Roles(Role.USER_FREEMIUM, Role.USER_PREMIUM, Role.USER_ADMIN, Role.SUPER_ADMIN)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   async exportData(
     @Req() req: RequestWithUser,
     @Body() dto: RequestRgpdExportDto,
@@ -325,12 +204,6 @@ export class UserController {
     );
   }
 
-  /**
-   * Helper method to extract user ID from request
-   * TODO: Replace with JWT token extraction once guard is implemented
-   * @param req Express Request object
-   * @returns User ID from token or throws error
-   */
   private extractUserIdFromRequest(req: Request): string {
     const { user } = req as Request & { user: { userId: string; role: string } };
 

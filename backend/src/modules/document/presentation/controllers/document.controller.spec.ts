@@ -179,6 +179,7 @@ describe('DocumentController', () => {
         {
           userId: 'user-123',
           filename: 'test-document.pdf',
+          folderId: 'freemium',
           fileBuffer: mockFile.buffer,
           fileSize: 1024000,
           mimeType: 'application/pdf',
@@ -222,7 +223,7 @@ describe('DocumentController', () => {
         uploadedAt: mockDocument.uploadedAt,
         updatedAt: mockDocument.updatedAt,
       };
-      const documentWithoutLinks = new Document(documentProps as any);
+      const documentWithoutLinks = new Document(documentProps);
       uploadDocumentUseCase.execute.mockResolvedValue(documentWithoutLinks);
 
       const result = await controller.upload(mockRequest, mockFile, 'user-123');
@@ -231,6 +232,7 @@ describe('DocumentController', () => {
         {
           userId: 'user-123',
           filename: 'test-document.pdf',
+          folderId: undefined,
           fileBuffer: mockFile.buffer,
           fileSize: 1024000,
           mimeType: 'application/pdf',

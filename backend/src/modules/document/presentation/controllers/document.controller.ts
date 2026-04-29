@@ -1,35 +1,19 @@
 import {
   Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
   Param,
   Query,
-  HttpCode,
-  HttpStatus,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
   UseGuards,
   StreamableFile,
   Header,
   NotFoundException,
+  BadRequestException,
+  UploadedFile,
   Req,
+  Inject,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-  ApiConsumes,
-  ApiBody,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -46,10 +30,21 @@ import { DocumentPresentationMapper } from '../mappers/document-presentation.map
 import { UploadDocumentAppDto } from '../../application/dto/upload-document-app.dto';
 import { CloudflareR2Service } from '../../infrastructure/services/cloudflare-r2.service';
 import { DOCUMENT_REPOSITORY } from '../../application/ports/document-repository.interface';
-import { Inject } from '@nestjs/common';
 import type { IDocumentRepository } from '../../application/ports/document-repository.interface';
 import { QuotaService } from '../../application/services/quota.service';
 import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
+import {
+  ApiDocumentUpload,
+  ApiDocumentFindOne,
+  ApiDocumentUpdate,
+  ApiDocumentFindAll,
+  ApiDocumentDelete,
+  ApiDocumentReprocessOcr,
+  ApiDocumentDownload,
+  ApiDocumentGetQuota,
+  ApiDocumentQueueStats,
+  ApiDocumentJobStatus,
+} from '../../../../swagger/decorators/api-document.decorator';
 
 @ApiTags('Documents')
 @ApiBearerAuth()
@@ -69,44 +64,7 @@ export class DocumentController {
     private readonly queueService: InMemoryQueueService,
   ) {}
 
-  @Post('upload')
-  @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file'))
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload un document (PDF ou image, max 10MB)' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'Le fichier à uploader (PDF ou image)',
-        },
-        subscription_id: {
-          type: 'string',
-          format: 'uuid',
-          description: "ID de l'abonnement lié (optionnel)",
-        },
-        contract_id: {
-          type: 'number',
-          description: 'ID du contrat lié (optionnel)',
-        },
-        folder_id: {
-          type: 'string',
-          format: 'uuid',
-          description: 'ID du dossier de destination (optionnel)',
-        },
-      },
-      required: ['file'],
-    },
-  })
-  @ApiResponse({
-    status: 201,
-    description: 'Document uploadé avec succès',
-    type: DocumentResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Fichier invalide ou trop volumineux' })
+  @ApiDocumentUpload()
   async upload(
     @Req() req: Request,
     @UploadedFile()
@@ -135,17 +93,14 @@ export class DocumentController {
       throw new BadRequestException('File is required');
     }
 
-    // Validate file size is not zero
     if (file.size === 0) {
       throw new BadRequestException('File is empty (0 bytes)');
     }
 
-    // Validate filename is not empty or whitespace only
     if (!file.originalname || file.originalname.trim().length === 0) {
       throw new BadRequestException('File must have a valid name');
     }
 
-    // Manual validation
     const allowedMimeTypes = [
       'application/pdf',
       'image/jpeg',
@@ -184,15 +139,7 @@ export class DocumentController {
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: "Récupérer les détails d'un document spécifique" })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({
-    status: 200,
-    description: 'Détails du document',
-    type: DocumentResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Document non trouvé' })
+  @ApiDocumentFindOne()
   async findOne(
     @Param('id') id: string,
     @CurrentUser('id') userId: string,
@@ -203,7 +150,6 @@ export class DocumentController {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
-    // Vérifier que le document appartient à l'utilisateur
     if (document.userId !== userId) {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
@@ -211,18 +157,7 @@ export class DocumentController {
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
-  @Put(':id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Mettre à jour un document (filename, folder)' })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiBody({ type: UpdateDocumentDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Document mis à jour avec succès',
-    type: DocumentResponseDto,
-  })
-  @ApiResponse({ status: 400, description: 'Données invalides' })
-  @ApiResponse({ status: 404, description: 'Document non trouvé' })
+  @ApiDocumentUpdate()
   async update(
     @Param('id') id: string,
     @Body() updateDto: UpdateDocumentDto,
@@ -233,38 +168,7 @@ export class DocumentController {
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Récupérer tous les documents avec filtres optionnels' })
-  @ApiQuery({
-    name: 'subscription_id',
-    required: false,
-    description: "Filtrer par ID d'abonnement",
-  })
-  @ApiQuery({ name: 'contract_id', required: false, description: 'Filtrer par ID de contrat' })
-  @ApiQuery({
-    name: 'ocr_status',
-    required: false,
-    enum: ['pending', 'processing', 'completed', 'failed'],
-    description: 'Filtrer par statut OCR',
-  })
-  @ApiQuery({ name: 'mime_type', required: false, description: 'Filtrer par type MIME' })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    description: 'Nombre maximum de résultats',
-    type: Number,
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    description: 'Tri (uploaded_at:asc|desc)',
-    example: 'uploaded_at:desc',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Liste des documents',
-    type: [DocumentResponseDto],
-  })
+  @ApiDocumentFindAll()
   async findAll(
     @Query() filters: DocumentFilterDto,
     @CurrentUser('id') userId: string,
@@ -274,27 +178,12 @@ export class DocumentController {
     return DocumentPresentationMapper.toResponseDtoArray(documents);
   }
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Supprimer un document (soft delete)' })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({ status: 204, description: 'Document supprimé avec succès' })
-  @ApiResponse({ status: 404, description: 'Document non trouvé' })
+  @ApiDocumentDelete()
   async delete(@Param('id') id: string, @CurrentUser('id') userId: string): Promise<void> {
     await this.deleteDocumentUseCase.execute(id, userId);
   }
 
-  @Post(':id/reprocess-ocr')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Relancer le traitement OCR pour un document' })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({
-    status: 200,
-    description: 'Traitement OCR relancé avec succès',
-    type: DocumentResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Document non trouvé' })
-  @ApiResponse({ status: 400, description: 'OCR déjà complété (utilisez force=true pour forcer)' })
+  @ApiDocumentReprocessOcr()
   async reprocessOcr(
     @Param('id') id: string,
     @Body() reprocessDto: ReprocessOcrDto,
@@ -305,11 +194,7 @@ export class DocumentController {
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
-  @Get(':id/download')
-  @ApiOperation({ summary: 'Télécharger un document' })
-  @ApiParam({ name: 'id', description: 'ID du document' })
-  @ApiResponse({ status: 200, description: 'Fichier téléchargé avec succès' })
-  @ApiResponse({ status: 404, description: 'Document non trouvé' })
+  @ApiDocumentDownload()
   @Header('Content-Disposition', 'attachment')
   async downloadDocument(
     @Param('id') id: string,
@@ -333,25 +218,7 @@ export class DocumentController {
     });
   }
 
-  @Get('quota')
-  @ApiOperation({ summary: "Consulter l'utilisation des quotas utilisateur" })
-  @ApiResponse({
-    status: 200,
-    description: 'Statistiques des quotas',
-    schema: {
-      type: 'object',
-      properties: {
-        documentsCount: { type: 'number', example: 15 },
-        maxDocuments: { type: 'number', example: 50 },
-        storageUsed: { type: 'number', example: 25600000 },
-        maxStorage: { type: 'number', example: 104857600 },
-        storageUsedPercent: { type: 'number', example: 24.41 },
-        documentsUsedPercent: { type: 'number', example: 30 },
-        storageUsedFormatted: { type: 'string', example: '24.41 MB' },
-        maxStorageFormatted: { type: 'string', example: '100.00 MB' },
-      },
-    },
-  })
+  @ApiDocumentGetQuota()
   async getQuota(
     @CurrentUser('id') userId: string,
     @CurrentUser('role') userRole?: string,
@@ -367,44 +234,12 @@ export class DocumentController {
     };
   }
 
-  @Get('queue/stats')
-  @ApiOperation({ summary: 'Obtenir les statistiques de la queue OCR' })
-  @ApiResponse({
-    status: 200,
-    description: 'Statistiques de la queue',
-    schema: {
-      type: 'object',
-      properties: {
-        waiting: { type: 'number', example: 5 },
-        active: { type: 'number', example: 2 },
-        completed: { type: 'number', example: 150 },
-        failed: { type: 'number', example: 3 },
-        delayed: { type: 'number', example: 0 },
-      },
-    },
-  })
+  @ApiDocumentQueueStats()
   async getQueueStats(): Promise<any> {
     return await this.queueService.getQueueStats();
   }
 
-  @Get('job/:jobId/status')
-  @ApiOperation({ summary: "Consulter le statut d'un job OCR spécifique" })
-  @ApiParam({ name: 'jobId', description: 'ID du job OCR' })
-  @ApiResponse({
-    status: 200,
-    description: 'Statut du job',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', example: '123' },
-        status: { type: 'string', example: 'completed' },
-        progress: { type: 'number', example: 100 },
-        attempts: { type: 'number', example: 1 },
-        result: { type: 'object' },
-      },
-    },
-  })
-  @ApiResponse({ status: 404, description: 'Job non trouvé' })
+  @ApiDocumentJobStatus()
   async getJobStatus(@Param('jobId') jobId: string): Promise<any> {
     try {
       return await this.queueService.getJobStatus(jobId);

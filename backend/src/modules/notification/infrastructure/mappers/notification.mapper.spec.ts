@@ -117,6 +117,24 @@ describe('NotificationMapper', () => {
       expect(entity.id).toBeUndefined();
       expect(entity.userId).toBe(domain.userId);
     });
+
+    it('should map Notification domain with deletedAt set (covers deletedAt branch)', () => {
+      const domain = new Notification({
+        id: 'notif-deleted',
+        userId: 'user-789',
+        type: 'reminder',
+        channel: 'email',
+        title: 'Deleted Notification',
+        body: 'This notification was deleted',
+        status: 'sent',
+        createdAt: new Date('2025-01-01T10:00:00.000Z'),
+        deletedAt: new Date('2025-03-01T10:00:00.000Z'),
+      });
+
+      const entity = NotificationMapper.toPersistence(domain);
+
+      expect(entity.deletedAt).toEqual(new Date('2025-03-01T10:00:00.000Z'));
+    });
   });
 
   describe('toDomainArray', () => {
