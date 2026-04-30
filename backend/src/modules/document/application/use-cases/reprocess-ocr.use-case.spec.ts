@@ -9,6 +9,26 @@ import { GeminiParserService } from '../../infrastructure/services/gemini-parser
 import { Document } from '../../domain/document.entity';
 import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 
+// --- Shared test constants ---
+const DEFAULT_DOCUMENT_ID = 'doc-123';
+const DEFAULT_USER_ID = 'user-123';
+
+// --- Factory function to avoid duplicated Document instantiation ---
+function createMockDocument(overrides: Partial<ConstructorParameters<typeof Document>[0]> = {}): Document {
+  return new Document({
+    id: DEFAULT_DOCUMENT_ID,
+    userId: DEFAULT_USER_ID,
+    filename: 'invoice.pdf',
+    r2Key: 'key',
+    r2Bucket: 'bucket',
+    fileHash: 'hash',
+    fileSize: 1024,
+    mimeType: 'application/pdf',
+    ocrStatus: 'failed',
+    ...overrides,
+  });
+}
+
 describe('ReprocessOcrUseCase', () => {
   let useCase: ReprocessOcrUseCase;
   let repository: jest.Mocked<IDocumentRepository>;
@@ -61,161 +81,82 @@ describe('ReprocessOcrUseCase', () => {
   });
 
   it('should reprocess document successfully', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
+    const mockDocument = createMockDocument({
       r2Key: 'users/user-123/documents/invoice.pdf',
       r2Bucket: 'remindy-documents',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'failed',
     });
 
     repository.findById.mockResolvedValue(mockDocument);
     repository.update.mockResolvedValue(mockDocument);
 
-    const result = await useCase.execute(documentId, userId, { force: false });
+    const result = await useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false });
 
     expect(result.ocrStatus).toBe('pending');
-    expect(repository.findById).toHaveBeenCalledWith(documentId);
+    expect(repository.findById).toHaveBeenCalledWith(DEFAULT_DOCUMENT_ID);
     expect(repository.update).toHaveBeenCalled();
   });
 
   it('should throw NotFoundException when document not found', async () => {
-    const documentId = 'non-existent';
-    const userId = 'user-123';
-
     repository.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      useCase.execute('non-existent', DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should throw NotFoundException when document does not belong to user', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-    const otherUserId = 'user-456';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId: otherUserId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'failed',
-    });
+    const mockDocument = createMockDocument({ userId: 'user-456' });
 
     repository.findById.mockResolvedValue(mockDocument);
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should throw BadRequestException when OCR already completed without force', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'completed',
-    });
+    const mockDocument = createMockDocument({ ocrStatus: 'completed' });
 
     repository.findById.mockResolvedValue(mockDocument);
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      'OCR already completed. Use force=true to reprocess.',
-    );
+    await expect(
+      useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow('OCR already completed. Use force=true to reprocess.');
   });
 
   it('should throw BadRequestException when OCR already processing', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'processing',
-    });
+    const mockDocument = createMockDocument({ ocrStatus: 'processing' });
 
     repository.findById.mockResolvedValue(mockDocument);
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      'OCR is already processing for this document',
-    );
+    await expect(
+      useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow('OCR is already processing for this document');
   });
 
   it('should throw NotFoundException when update fails', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'failed',
-    });
+    const mockDocument = createMockDocument();
 
     repository.findById.mockResolvedValue(mockDocument);
     repository.update.mockResolvedValue(null);
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('should reprocess when OCR already completed and force=true', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'completed',
-    });
+    const mockDocument = createMockDocument({ ocrStatus: 'completed' });
 
     repository.findById.mockResolvedValue(mockDocument);
     repository.update.mockResolvedValue(mockDocument);
 
-    const result = await useCase.execute(documentId, userId, { force: true });
+    const result = await useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: true });
 
     expect(result.ocrStatus).toBe('pending');
     expect(queueService.addDocumentToQueue).toHaveBeenCalledWith(
-      documentId,
-      userId,
+      DEFAULT_DOCUMENT_ID,
+      DEFAULT_USER_ID,
       'key',
       'application/pdf',
       'invoice.pdf',
@@ -223,56 +164,19 @@ describe('ReprocessOcrUseCase', () => {
   });
 
   it('should throw NotFoundException when updated document has no id', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'failed',
-    });
-
-    const updatedWithoutId = new Document({
-      id: undefined as any,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'pending',
-    });
+    const mockDocument = createMockDocument();
+    const updatedWithoutId = createMockDocument({ id: undefined as any, ocrStatus: 'pending' });
 
     repository.findById.mockResolvedValue(mockDocument);
     repository.update.mockResolvedValue(updatedWithoutId);
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      'Document ID is missing',
-    );
+    await expect(
+      useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow('Document ID is missing');
   });
 
   it('should mark as failed and throw BadRequestException when queue fails', async () => {
-    const documentId = 'doc-123';
-    const userId = 'user-123';
-
-    const mockDocument = new Document({
-      id: documentId,
-      userId,
-      filename: 'invoice.pdf',
-      r2Key: 'key',
-      r2Bucket: 'bucket',
-      fileHash: 'hash',
-      fileSize: 1024,
-      mimeType: 'application/pdf',
-      ocrStatus: 'failed',
-    });
+    const mockDocument = createMockDocument();
 
     repository.findById.mockResolvedValue(mockDocument);
     repository.update.mockResolvedValue(mockDocument);
@@ -280,12 +184,12 @@ describe('ReprocessOcrUseCase', () => {
       new Error('Queue is full'),
     );
 
-    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
-      BadRequestException,
-    );
+    await expect(
+      useCase.execute(DEFAULT_DOCUMENT_ID, DEFAULT_USER_ID, { force: false }),
+    ).rejects.toThrow(BadRequestException);
 
     expect(repository.updateOcrStatus).toHaveBeenCalledWith(
-      documentId,
+      DEFAULT_DOCUMENT_ID,
       'failed',
       'Failed to queue for reprocessing: Queue is full',
     );

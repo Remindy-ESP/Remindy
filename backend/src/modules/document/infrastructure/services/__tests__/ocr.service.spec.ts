@@ -13,17 +13,20 @@ jest.mock('pdf-parse', () => {
 
 const pdfParse = jest.mocked(pdfParseMock);
 
+// --- Factory for Tesseract mock worker ---
+function createMockWorker() {
+  return {
+    recognize: jest.fn(),
+    terminate: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe('OcrService', () => {
   let service: OcrService;
   let mockWorker: any;
 
   beforeEach(async () => {
-    // Mock Tesseract Worker
-    mockWorker = {
-      recognize: jest.fn(),
-      terminate: jest.fn().mockResolvedValue(undefined),
-    };
-
+    mockWorker = createMockWorker();
     (Tesseract.createWorker as jest.Mock) = jest.fn().mockResolvedValue(mockWorker);
 
     const module: TestingModule = await Test.createTestingModule({
