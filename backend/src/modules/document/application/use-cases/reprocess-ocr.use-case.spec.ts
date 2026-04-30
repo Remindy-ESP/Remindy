@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ReprocessOcrUseCase } from './reprocess-ocr.use-case';
 import type { IDocumentRepository } from '../ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../ports/document-repository.interface';
@@ -12,6 +12,7 @@ import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue
 describe('ReprocessOcrUseCase', () => {
   let useCase: ReprocessOcrUseCase;
   let repository: jest.Mocked<IDocumentRepository>;
+  let queueService: jest.Mocked<InMemoryQueueService>;
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<IDocumentRepository>> = {
@@ -56,6 +57,7 @@ describe('ReprocessOcrUseCase', () => {
 
     useCase = module.get<ReprocessOcrUseCase>(ReprocessOcrUseCase);
     repository = module.get(DOCUMENT_REPOSITORY);
+    queueService = module.get(InMemoryQueueService);
   });
 
   it('should reprocess document successfully', async () => {
@@ -186,6 +188,106 @@ describe('ReprocessOcrUseCase', () => {
 
     await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
       NotFoundException,
+    );
+  });
+
+  it('should reprocess when OCR already completed and force=true', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.update.mockResolvedValue(mockDocument);
+
+    const result = await useCase.execute(documentId, userId, { force: true });
+
+    expect(result.ocrStatus).toBe('pending');
+    expect(queueService.addDocumentToQueue).toHaveBeenCalledWith(
+      documentId,
+      userId,
+      'key',
+      'application/pdf',
+      'invoice.pdf',
+    );
+  });
+
+  it('should throw NotFoundException when updated document has no id', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'failed',
+    });
+
+    const updatedWithoutId = new Document({
+      id: undefined as any,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'pending',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.update.mockResolvedValue(updatedWithoutId);
+
+    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
+      'Document ID is missing',
+    );
+  });
+
+  it('should mark as failed and throw BadRequestException when queue fails', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'invoice.pdf',
+      r2Key: 'key',
+      r2Bucket: 'bucket',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'failed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.update.mockResolvedValue(mockDocument);
+    (queueService.addDocumentToQueue as jest.Mock).mockRejectedValueOnce(
+      new Error('Queue is full'),
+    );
+
+    await expect(useCase.execute(documentId, userId, { force: false })).rejects.toThrow(
+      BadRequestException,
+    );
+
+    expect(repository.updateOcrStatus).toHaveBeenCalledWith(
+      documentId,
+      'failed',
+      'Failed to queue for reprocessing: Queue is full',
     );
   });
 });

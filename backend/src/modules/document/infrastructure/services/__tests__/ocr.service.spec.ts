@@ -161,6 +161,20 @@ describe('OcrService', () => {
       logger({ status: 'recognizing text', progress: 0.5 });
       logger({ status: 'other status', progress: 0.1 });
     });
+
+    it('should not call terminate when createWorker fails (worker null in finally)', async () => {
+      const imageBuffer = Buffer.from('fake image content');
+      const mimeType = 'image/jpeg';
+
+      (Tesseract.createWorker as jest.Mock).mockRejectedValueOnce(
+        new Error('Worker creation failed'),
+      );
+
+      await expect(service.extractText(imageBuffer, mimeType)).rejects.toThrow(
+        'Failed to extract text: Failed to extract text from image: Worker creation failed',
+      );
+      expect(mockWorker.terminate).not.toHaveBeenCalled();
+    });
   });
 
   describe('isSupportedMimeType', () => {
