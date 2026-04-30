@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { eventService, categoryService, type Event, type Category } from '@/services/api';
+import { PERIOD_LABELS, type Period } from '@/types/statistics';
 
-export type TimePeriod = 'day' | 'week' | 'month' | 'year';
+export type TimePeriod = Period;
 
 export interface CategoryBreakdown {
   name: string;
@@ -25,12 +26,9 @@ export function useStatistics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const timePeriods: { key: TimePeriod; label: string }[] = [
-    { key: 'day', label: 'Ce jour' },
-    { key: 'week', label: 'Semaine' },
-    { key: 'month', label: 'Mensuel' },
-    { key: 'year', label: 'Année' },
-  ];
+  const timePeriods: { key: TimePeriod; label: string }[] = (
+    ['day', 'week', 'month', 'year'] as const
+  ).map((key) => ({ key, label: PERIOD_LABELS[key] }));
 
   const fetchData = useCallback(async () => {
     try {

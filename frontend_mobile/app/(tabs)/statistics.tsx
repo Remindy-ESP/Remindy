@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useStatistics, type TimePeriod } from '@/hooks/useStatistics';
+import { useStatistics } from '@/hooks/useStatistics';
+import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
 
 export default function StatisticsScreen() {
   const {
     activePeriod,
     setActivePeriod,
-    timePeriods,
     loading,
     error,
     fetchData,
@@ -51,36 +51,7 @@ export default function StatisticsScreen() {
         </Text>
       </View>
 
-      {/* Period Filter Tabs */}
-      <View style={styles.periodSection}>
-        <View style={styles.periodMenu}>
-          {timePeriods.map((period) => (
-            <TouchableOpacity
-              key={period.key}
-              testID={`period-${period.key}`}
-              style={[
-                styles.periodTab,
-                activePeriod === period.key
-                  ? styles.periodTabActive
-                  : styles.periodTabInactive,
-              ]}
-              onPress={() => setActivePeriod(period.key)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.periodTabText,
-                  activePeriod === period.key
-                    ? styles.periodTabTextActive
-                    : styles.periodTabTextInactive,
-                ]}
-              >
-                {period.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      <PeriodFilterTabs selectedPeriod={activePeriod} onPeriodChange={setActivePeriod} />
 
       {/* Summary Cards */}
       <View style={styles.summaryRow}>
@@ -168,42 +139,6 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: '#e0e7ff',
-  },
-  periodSection: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  periodMenu: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  periodTab: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  periodTabActive: {
-    backgroundColor: '#000',
-  },
-  periodTabInactive: {
-    backgroundColor: 'transparent',
-  },
-  periodTabText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  periodTabTextActive: {
-    color: '#fff',
-  },
-  periodTabTextInactive: {
-    color: '#000',
-    opacity: 0.6,
   },
   summaryRow: {
     flexDirection: 'row',
