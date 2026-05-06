@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useStatistics } from '@/hooks/useStatistics';
+import { useExpenseSummary } from '@/hooks/useExpenseSummary';
 import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
+import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
+import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
 
 export default function StatisticsScreen() {
   const {
@@ -14,9 +17,19 @@ export default function StatisticsScreen() {
     getStatsForPeriod,
   } = useStatistics();
 
+  const {
+    data: summary,
+    loading: summaryLoading,
+    error: summaryError,
+    refetch: refetchSummary,
+  } = useExpenseSummary(activePeriod);
+
+  const [infoVisible, setInfoVisible] = useState(false);
+
   useFocusEffect(
     React.useCallback(() => {
       fetchData();
+      refetchSummary();
     }, [])
   );
 
@@ -53,24 +66,26 @@ export default function StatisticsScreen() {
 
       <PeriodFilterTabs selectedPeriod={activePeriod} onPeriodChange={setActivePeriod} />
 
-      {/* Summary Cards */}
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Total dépenses</Text>
-          <Text style={styles.summaryValue}>{stats.totalExpenses.toFixed(2)}€</Text>
+      {summaryError ? (
+        <View style={styles.summaryErrorCard}>
+          <Text style={styles.summaryErrorText}>
+            Bilan indisponible : {summaryError}
+          </Text>
         </View>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Transactions</Text>
-          <Text style={styles.summaryValue}>{stats.transactionCount}</Text>
+      ) : summaryLoading || !summary ? (
+        <View style={styles.summaryLoadingCard}>
+          <ActivityIndicator size="small" color="#9ca3af" />
         </View>
-      </View>
-
-      <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, styles.summaryCardFull]}>
-          <Text style={styles.summaryLabel}>Moyenne par transaction</Text>
-          <Text style={styles.summaryValue}>{stats.averageTransaction.toFixed(2)}€</Text>
-        </View>
-      </View>
+      ) : (
+        <ExpenseSummaryHeader
+          periodLabel={summary.periodLabel}
+          totalAmount={summary.currentTotal}
+          percentageChange={summary.percentageChange}
+          trend={summary.trend}
+          comparisonLabel={summary.comparisonLabel}
+          onInfoPress={() => setInfoVisible(true)}
+        />
+      )}
 
       {/* Category Breakdown */}
       <View style={styles.breakdownSection}>
@@ -98,6 +113,12 @@ export default function StatisticsScreen() {
           ))
         )}
       </View>
+
+      <ComparisonInfoModal
+        visible={infoVisible}
+        period={activePeriod}
+        onClose={() => setInfoVisible(false)}
+      />
     </ScrollView>
   );
 }
@@ -140,31 +161,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#e0e7ff',
   },
-  summaryRow: {
-    flexDirection: 'row',
+  summaryLoadingCard: {
+    backgroundColor: '#1a1a3e',
+    borderRadius: 12,
+    padding: 32,
     marginHorizontal: 16,
-    marginBottom: 12,
-    gap: 12,
+    marginBottom: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  summaryCard: {
-    flex: 1,
-    backgroundColor: '#2a2a5e',
+  summaryErrorCard: {
+    backgroundColor: '#1a1a3e',
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
-  summaryCardFull: {
-    flex: 1,
-  },
-  summaryLabel: {
+  summaryErrorText: {
+    color: '#ff6b6b',
     fontSize: 13,
-    color: '#9ca3af',
-    marginBottom: 8,
-  },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    textAlign: 'center',
   },
   breakdownSection: {
     marginHorizontal: 16,

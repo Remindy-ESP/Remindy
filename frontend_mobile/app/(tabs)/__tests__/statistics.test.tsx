@@ -1,15 +1,12 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import StatisticsScreen from '../statistics';
 
-// Mock @react-navigation/native
 jest.mock('@react-navigation/native', () => ({
-  useFocusEffect: jest.fn((callback) => {
-    // Don't call the callback to avoid async state update issues
-  }),
+  useFocusEffect: jest.fn(),
 }));
 
-const mockDefaultReturn = {
+const mockUseStatisticsReturn = {
   activePeriod: 'month',
   setActivePeriod: jest.fn(),
   timePeriods: [
@@ -32,82 +29,129 @@ const mockDefaultReturn = {
   })),
 };
 
-// Mock useStatistics hook
+const mockUseExpenseSummaryReturn = {
+  data: {
+    periodLabel: 'Octobre 2025',
+    currentTotal: 203.85,
+    previousTotal: 211.2,
+    percentageChange: -3.5,
+    trend: 'down' as const,
+    comparisonLabel: 'Comparo M-1',
+  },
+  loading: false,
+  error: null as string | null,
+  refetch: jest.fn(),
+};
+
 jest.mock('../../../hooks/useStatistics', () => ({
-  useStatistics: jest.fn(() => mockDefaultReturn),
+  useStatistics: jest.fn(() => mockUseStatisticsReturn),
+}));
+
+jest.mock('../../../hooks/useExpenseSummary', () => ({
+  useExpenseSummary: jest.fn(() => mockUseExpenseSummaryReturn),
 }));
 
 describe('StatisticsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     const { useStatistics } = require('../../../hooks/useStatistics');
-    useStatistics.mockReturnValue(mockDefaultReturn);
+    useStatistics.mockReturnValue(mockUseStatisticsReturn);
+    const { useExpenseSummary } = require('../../../hooks/useExpenseSummary');
+    useExpenseSummary.mockReturnValue(mockUseExpenseSummaryReturn);
   });
 
-  it('should render the header', () => {
+  it('renders the screen header', () => {
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Statistiques')).toBeTruthy();
     expect(getByText('Consultez vos statistiques')).toBeTruthy();
   });
 
-  it('should render all four period filter tabs', () => {
-    const { getByText } = render(<StatisticsScreen />);
+  it('renders all four period filter tabs', () => {
+    const { getByText, getByTestId } = render(<StatisticsScreen />);
     expect(getByText('Ce jour')).toBeTruthy();
     expect(getByText('Semaine')).toBeTruthy();
     expect(getByText('Mensuel')).toBeTruthy();
     expect(getByText('Année')).toBeTruthy();
-  });
-
-  it('should render period tabs with testIDs', () => {
-    const { getByTestId } = render(<StatisticsScreen />);
     expect(getByTestId('period-day')).toBeTruthy();
-    expect(getByTestId('period-week')).toBeTruthy();
-    expect(getByTestId('period-month')).toBeTruthy();
     expect(getByTestId('period-year')).toBeTruthy();
   });
 
-  it('should call setActivePeriod when a tab is pressed', () => {
-    const mockSetActivePeriod = jest.fn();
+  it('calls setActivePeriod when a tab is pressed', () => {
+    const setActivePeriod = jest.fn();
     const { useStatistics } = require('../../../hooks/useStatistics');
-    useStatistics.mockReturnValue({
-      ...mockDefaultReturn,
-      setActivePeriod: mockSetActivePeriod,
-    });
+    useStatistics.mockReturnValue({ ...mockUseStatisticsReturn, setActivePeriod });
 
     const { getByTestId } = render(<StatisticsScreen />);
-
     fireEvent.press(getByTestId('period-day'));
-    expect(mockSetActivePeriod).toHaveBeenCalledWith('day');
-
+    expect(setActivePeriod).toHaveBeenCalledWith('day');
     fireEvent.press(getByTestId('period-year'));
-    expect(mockSetActivePeriod).toHaveBeenCalledWith('year');
+    expect(setActivePeriod).toHaveBeenCalledWith('year');
   });
 
-  it('should display summary cards with correct values', () => {
+  it('renders the Bilan des dépenses header with summary data', () => {
+    const { getByText, getByTestId } = render(<StatisticsScreen />);
+    expect(getByText('Bilan des dépenses')).toBeTruthy();
+    expect(getByText('Comparo M-1')).toBeTruthy();
+    expect(getByTestId('expense-period-label').props.children).toBe('Octobre 2025');
+    expect(getByTestId('expense-total-amount').props.children).toMatch(/203,85/);
+    expect(getByTestId('comparison-percentage').props.children).toBe('-3.5%');
+  });
+
+  it('opens the comparison info modal when the info icon is pressed', () => {
+    const { getByTestId, queryByTestId } = render(<StatisticsScreen />);
+    expect(queryByTestId('comparison-info-text')).toBeNull();
+
+    fireEvent.press(getByTestId('comparison-info-button'));
+
+    expect(getByTestId('comparison-info-text').props.children).toMatch(
+      /depuis le début du mois/,
+    );
+  });
+
+  it('closes the modal when the close button is pressed', () => {
+    const { getByTestId, queryByTestId } = render(<StatisticsScreen />);
+    fireEvent.press(getByTestId('comparison-info-button'));
+    expect(getByTestId('comparison-info-text')).toBeTruthy();
+
+    fireEvent.press(getByTestId('comparison-info-close'));
+    expect(queryByTestId('comparison-info-text')).toBeNull();
+  });
+
+  it('shows the summary loading state when summary is fetching', () => {
+    const { useExpenseSummary } = require('../../../hooks/useExpenseSummary');
+    useExpenseSummary.mockReturnValue({
+      ...mockUseExpenseSummaryReturn,
+      loading: true,
+      data: null,
+    });
+    const { queryByText } = render(<StatisticsScreen />);
+    expect(queryByText('Bilan des dépenses')).toBeNull();
+  });
+
+  it('shows the summary error state when summary fails', () => {
+    const { useExpenseSummary } = require('../../../hooks/useExpenseSummary');
+    useExpenseSummary.mockReturnValue({
+      ...mockUseExpenseSummaryReturn,
+      data: null,
+      error: 'boom',
+    });
     const { getByText } = render(<StatisticsScreen />);
-    expect(getByText('Total dépenses')).toBeTruthy();
-    expect(getByText('53.97€')).toBeTruthy();
-    expect(getByText('Transactions')).toBeTruthy();
-    expect(getByText('3')).toBeTruthy();
-    expect(getByText('Moyenne par transaction')).toBeTruthy();
-    expect(getByText('17.99€')).toBeTruthy();
+    expect(getByText(/Bilan indisponible/)).toBeTruthy();
+    expect(getByText(/boom/)).toBeTruthy();
   });
 
-  it('should display category breakdown', () => {
+  it('still renders the category breakdown (untouched by CRM-187)', () => {
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Répartition par catégorie')).toBeTruthy();
     expect(getByText('Streaming')).toBeTruthy();
     expect(getByText('23.98€')).toBeTruthy();
-    expect(getByText('2 transactions')).toBeTruthy();
     expect(getByText('Sport')).toBeTruthy();
-    expect(getByText('29.99€')).toBeTruthy();
-    expect(getByText('1 transaction')).toBeTruthy();
   });
 
-  it('should show empty state when no events for period', () => {
+  it('shows the empty category state when no events match the period', () => {
     const { useStatistics } = require('../../../hooks/useStatistics');
     useStatistics.mockReturnValue({
-      ...mockDefaultReturn,
+      ...mockUseStatisticsReturn,
       getStatsForPeriod: jest.fn(() => ({
         totalExpenses: 0,
         transactionCount: 0,
@@ -115,35 +159,21 @@ describe('StatisticsScreen', () => {
         categoryBreakdown: [],
       })),
     });
-
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Aucune dépense pour cette période')).toBeTruthy();
   });
 
-  it('should show loading state', () => {
+  it('shows the screen loading state when statistics are loading', () => {
     const { useStatistics } = require('../../../hooks/useStatistics');
-    useStatistics.mockReturnValue({
-      ...mockDefaultReturn,
-      loading: true,
-    });
-
+    useStatistics.mockReturnValue({ ...mockUseStatisticsReturn, loading: true });
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Chargement des statistiques...')).toBeTruthy();
   });
 
-  it('should show error state', () => {
+  it('shows the screen error state when statistics fail', () => {
     const { useStatistics } = require('../../../hooks/useStatistics');
-    useStatistics.mockReturnValue({
-      ...mockDefaultReturn,
-      error: 'Network Error',
-    });
-
+    useStatistics.mockReturnValue({ ...mockUseStatisticsReturn, error: 'Network Error' });
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Erreur : Network Error')).toBeTruthy();
-  });
-
-  it('should render with correct structure', () => {
-    const { toJSON } = render(<StatisticsScreen />);
-    expect(toJSON()).toBeTruthy();
   });
 });

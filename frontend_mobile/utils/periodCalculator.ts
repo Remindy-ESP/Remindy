@@ -52,13 +52,6 @@ function startOfWeek(date: Date): Date {
   return d;
 }
 
-function endOfWeek(date: Date): Date {
-  const start = startOfWeek(date);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  return endOfDay(end);
-}
-
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
