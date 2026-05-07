@@ -191,5 +191,69 @@ describe('UserService', () => {
         firstName: 'UpdatedName',
       });
     });
+
+    it('should throw NotFoundException when user not found after update', async () => {
+      const updateDto = { firstName: 'Jane' };
+
+      // First call: user found; second call (after update): user not found
+      userRepository.findById
+        .mockResolvedValueOnce(mockUser as any)
+        .mockResolvedValueOnce(null);
+
+      await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
+        'User not found after update',
+      );
+    });
+
+    it('should accept empty string phone (falsy) without phone format validation', async () => {
+      const updateDto = { phone: '' };
+
+      const updatedUser = { ...mockUser, phone: '' };
+      userRepository.findById.mockResolvedValueOnce(mockUser as any);
+      userRepository.findById.mockResolvedValueOnce(updatedUser as any);
+
+      const result = await service.updateUserProfile('user-123', updateDto);
+
+      // empty string is falsy → isValidPhoneNumber not called → no exception
+      expect(result.phone).toBe('');
+    });
+  });
+
+  describe('deleteAccount', () => {
+    let userPreferencesRepository: jest.Mocked<{
+      findByUserId: jest.Mock;
+      createDefaultPreferences: jest.Mock;
+      softDelete: jest.Mock;
+    }>;
+
+    beforeEach(() => {
+      // Re-read the mocked instance from the module through service internals
+      // The service was set up in outer beforeEach; we access it via the module.
+      // We access it by calling service methods that invoke the repo.
+      // The mock is already set in the outer beforeEach.
+    });
+
+    it('should delete account successfully', async () => {
+      userRepository.findById.mockResolvedValue(mockUser as any);
+
+      // Access the preferences mock from the module
+      const module = (service as any);
+      const prefsRepo = module['userPreferencesRepository'] as jest.Mocked<any>;
+      prefsRepo.softDelete = jest.fn().mockResolvedValue(undefined);
+      userRepository.softDelete = jest.fn().mockResolvedValue(undefined);
+
+      await service.deleteAccount('user-123');
+
+      expect(userRepository.findById).toHaveBeenCalledWith('user-123');
+      expect(prefsRepo.softDelete).toHaveBeenCalledWith('user-123');
+      expect(userRepository.softDelete).toHaveBeenCalledWith('user-123');
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(service.deleteAccount('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.deleteAccount('nonexistent')).rejects.toThrow('User not found');
+    });
   });
 });
