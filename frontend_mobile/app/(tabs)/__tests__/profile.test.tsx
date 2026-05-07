@@ -43,7 +43,7 @@ const mockUseAuth = jest.fn(() => ({
 }));
 
 jest.mock('@/context/AuthContext', () => ({
-  useAuth: (...args: any[]) => mockUseAuth(...args),
+  useAuth: (...args: any[]) => (mockUseAuth as jest.Mock)(...args),
 }));
 
 describe('ProfileScreen', () => {
@@ -153,7 +153,7 @@ describe('ProfileScreen', () => {
 
   it('shows loading spinner when isLoading is true', () => {
     mockUseAuth.mockReturnValue({
-      user: null,
+      user: null as any,
       logout: mockLogout,
       isLoading: true,
     });
@@ -163,7 +163,7 @@ describe('ProfileScreen', () => {
 
   it('shows fallback username "Utilisateur" when user is null', () => {
     mockUseAuth.mockReturnValue({
-      user: null,
+      user: null as any,
       logout: mockLogout,
       isLoading: false,
     });
@@ -173,7 +173,7 @@ describe('ProfileScreen', () => {
 
   it('shows fallback username "Utilisateur" when firstName and lastName are empty', () => {
     mockUseAuth.mockReturnValue({
-      user: { id: 'u1', email: 'a@b.com', firstName: '', lastName: '' },
+      user: { id: 'u1', email: 'a@b.com', firstName: '', lastName: '' } as any,
       logout: mockLogout,
       isLoading: false,
     });
@@ -183,7 +183,7 @@ describe('ProfileScreen', () => {
 
   it('shows fallback email when user has no email', () => {
     mockUseAuth.mockReturnValue({
-      user: { id: 'u1', email: null, firstName: 'Jane', lastName: 'Doe' },
+      user: { id: 'u1', email: null as any, firstName: 'Jane', lastName: 'Doe' } as any,
       logout: mockLogout,
       isLoading: false,
     });
@@ -193,7 +193,7 @@ describe('ProfileScreen', () => {
 
   it('shows fallback role "user" when user.role is undefined', () => {
     mockUseAuth.mockReturnValue({
-      user: { id: 'u1', email: 'a@b.com', firstName: 'Jane', lastName: 'Doe', role: undefined },
+      user: { id: 'u1', email: 'a@b.com', firstName: 'Jane', lastName: 'Doe', role: undefined as any } as any,
       logout: mockLogout,
       isLoading: false,
     });
@@ -227,8 +227,8 @@ describe('ProfileScreen', () => {
         email: 'a@b.com',
         firstName: 'Jane',
         lastName: 'Doe',
-        photoUrl: null,
-      },
+        photoUrl: null as any,
+      } as any,
       logout: mockLogout,
       isLoading: false,
     });

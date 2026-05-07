@@ -36,7 +36,7 @@ const mockHasSeenOnboarding = jest.fn(() => Promise.resolve(true));
 jest.mock('@/services/local/onboarding.service', () => ({
   __esModule: true,
   default: {
-    hasSeenOnboarding: (...args: any[]) => mockHasSeenOnboarding(...args),
+    hasSeenOnboarding: (...args: any[]) => mockHasSeenOnboarding.apply(undefined, args),
     setHasSeenOnboarding: jest.fn(() => Promise.resolve()),
     resetOnboarding: jest.fn(() => Promise.resolve()),
   },
