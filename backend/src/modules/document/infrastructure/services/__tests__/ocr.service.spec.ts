@@ -13,17 +13,20 @@ jest.mock('pdf-parse', () => {
 
 const pdfParse = jest.mocked(pdfParseMock);
 
+// --- Factory for Tesseract mock worker ---
+function createMockWorker() {
+  return {
+    recognize: jest.fn(),
+    terminate: jest.fn().mockResolvedValue(undefined),
+  };
+}
+
 describe('OcrService', () => {
   let service: OcrService;
   let mockWorker: any;
 
   beforeEach(async () => {
-    // Mock Tesseract Worker
-    mockWorker = {
-      recognize: jest.fn(),
-      terminate: jest.fn().mockResolvedValue(undefined),
-    };
-
+    mockWorker = createMockWorker();
     (Tesseract.createWorker as jest.Mock) = jest.fn().mockResolvedValue(mockWorker);
 
     const module: TestingModule = await Test.createTestingModule({
@@ -160,6 +163,20 @@ describe('OcrService', () => {
       // Call the logger to cover the branch inside
       logger({ status: 'recognizing text', progress: 0.5 });
       logger({ status: 'other status', progress: 0.1 });
+    });
+
+    it('should not call terminate when createWorker fails (worker null in finally)', async () => {
+      const imageBuffer = Buffer.from('fake image content');
+      const mimeType = 'image/jpeg';
+
+      (Tesseract.createWorker as jest.Mock).mockRejectedValueOnce(
+        new Error('Worker creation failed'),
+      );
+
+      await expect(service.extractText(imageBuffer, mimeType)).rejects.toThrow(
+        'Failed to extract text: Failed to extract text from image: Worker creation failed',
+      );
+      expect(mockWorker.terminate).not.toHaveBeenCalled();
     });
   });
 
