@@ -179,6 +179,26 @@ describe('DocumentMapper', () => {
       expect(entity.contractId).toBeUndefined();
       expect(entity.ocrText).toBeUndefined();
     });
+
+    it('should set deletedAt on entity when domain has deletedAt', () => {
+      const deletedAt = new Date('2025-01-01T12:00:00.000Z');
+      const domain = new Document({
+        id: 'doc-deleted',
+        userId: 'user-123',
+        filename: 'deleted.pdf',
+        r2Key: 'documents/deleted.pdf',
+        r2Bucket: 'my-bucket',
+        fileHash: 'hashDel',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        deletedAt,
+      });
+
+      const entity = DocumentMapper.toPersistence(domain);
+
+      expect(entity.deletedAt).toEqual(deletedAt);
+    });
   });
 
   describe('toDomainArray', () => {
