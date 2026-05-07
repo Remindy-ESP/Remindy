@@ -355,6 +355,156 @@ describe('DocumentRepository', () => {
     });
   });
 
+  describe('findByUserId', () => {
+    it('should find documents by user ID', async () => {
+      const mockEntities = [
+        Object.assign(new DocumentEntity(), {
+          id: 'doc-1',
+          userId: 'user-123',
+          filename: 'doc1.pdf',
+          r2Key: 'key1',
+          r2Bucket: 'bucket',
+          fileHash: 'hash1',
+          fileSize: 1000,
+          mimeType: 'application/pdf',
+          ocrStatus: 'completed',
+          uploadedAt: new Date(),
+          updatedAt: new Date(),
+        }),
+      ];
+
+      const mockFind = jest.fn().mockResolvedValue(mockEntities);
+      typeOrmRepository.find = mockFind;
+
+      const result = await repository.findByUserId('user-123');
+
+      expect(result).toHaveLength(1);
+      expect(mockFind).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ userId: 'user-123' }),
+        }),
+      );
+    });
+  });
+
+  describe('save', () => {
+    it('should save a document and return domain entity', async () => {
+      const document = new Document({
+        id: 'doc-123',
+        userId: 'user-123',
+        filename: 'test.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'pending',
+      });
+
+      const savedEntity = Object.assign(new DocumentEntity(), {
+        id: 'doc-123',
+        userId: 'user-123',
+        filename: 'test.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'pending',
+        uploadedAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      typeOrmRepository.save.mockResolvedValue(savedEntity);
+
+      const result = await repository.save(document);
+
+      expect(result).toBeInstanceOf(Document);
+      expect(typeOrmRepository.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateOcrStatus', () => {
+    it('should update OCR status', async () => {
+      const mockUpdate = jest.fn().mockResolvedValue({ affected: 1 });
+      typeOrmRepository.update = mockUpdate;
+
+      await repository.updateOcrStatus('doc-123', 'completed', 'OCR text', undefined);
+
+      expect(mockUpdate).toHaveBeenCalledWith('doc-123', {
+        ocrStatus: 'completed',
+        ocrText: 'OCR text',
+        ocrError: undefined,
+      });
+    });
+
+    it('should update OCR status with error', async () => {
+      const mockUpdate = jest.fn().mockResolvedValue({ affected: 1 });
+      typeOrmRepository.update = mockUpdate;
+
+      await repository.updateOcrStatus('doc-123', 'failed', undefined, 'Some error');
+
+      expect(mockUpdate).toHaveBeenCalledWith('doc-123', {
+        ocrStatus: 'failed',
+        ocrText: undefined,
+        ocrError: 'Some error',
+      });
+    });
+  });
+
+  describe('updateOcrAndParsedData', () => {
+    it('should update OCR and parsed data', async () => {
+      const mockUpdate = jest.fn().mockResolvedValue({ affected: 1 });
+      typeOrmRepository.update = mockUpdate;
+
+      const data = {
+        ocrText: 'Extracted text',
+        ocrStatus: 'completed' as const,
+        parsedProvider: 'Netflix',
+        parsedAmount: 12.99,
+        parsedCurrency: 'EUR',
+        parsedDate: new Date('2025-01-01'),
+        parsedFrequency: 'mensuel',
+        parsedCategory: 'streaming',
+        parsingConfidence: 0.9,
+      };
+
+      await repository.updateOcrAndParsedData('doc-123', data);
+
+      expect(mockUpdate).toHaveBeenCalledWith('doc-123', data);
+    });
+  });
+
+  describe('findAll - mimeType filter', () => {
+    it('should filter by mimeType', async () => {
+      const filters = {
+        userId: 'user-123',
+        mimeType: 'image/png',
+      };
+
+      queryBuilder.getMany.mockResolvedValue([]);
+
+      await repository.findAll(filters);
+
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith('document.mimeType = :mimeType', {
+        mimeType: 'image/png',
+      });
+    });
+
+    it('should use updated_at field when sort field is not uploaded_at', async () => {
+      const filters = {
+        userId: 'user-123',
+        sort: 'updated_at:asc',
+      };
+
+      queryBuilder.getMany.mockResolvedValue([]);
+
+      await repository.findAll(filters);
+
+      expect(queryBuilder.orderBy).toHaveBeenCalledWith('document.updatedAt', 'ASC');
+    });
+  });
+
   describe('findBySubscriptionId', () => {
     it('should find documents by subscription ID excluding soft-deleted', async () => {
       const mockEntities: Partial<DocumentEntity>[] = [

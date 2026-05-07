@@ -70,4 +70,80 @@ describe('DeleteDocumentUseCase', () => {
     await expect(useCase.execute(documentId, userId)).rejects.toThrow(NotFoundException);
     expect(r2Service.deleteFile).not.toHaveBeenCalled();
   });
+
+  it('should throw NotFoundException when document belongs to different user', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId: 'other-user-999',
+      filename: 'test.pdf',
+      r2Key: 'users/other-user/documents/test.pdf',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+
+    await expect(useCase.execute(documentId, userId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(documentId, userId)).rejects.toThrow(
+      `Document with ID ${documentId} not found`,
+    );
+    expect(r2Service.deleteFile).not.toHaveBeenCalled();
+  });
+
+  it('should throw NotFoundException when softDelete returns false', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'test.pdf',
+      r2Key: 'users/user-123/documents/test.pdf',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.softDelete.mockResolvedValue(false);
+
+    await expect(useCase.execute(documentId, userId)).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(documentId, userId)).rejects.toThrow(
+      `Document with ID ${documentId} not found`,
+    );
+    expect(r2Service.deleteFile).not.toHaveBeenCalled();
+  });
+
+  it('should not throw when R2 deletion fails (swallowed error)', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'test.pdf',
+      r2Key: 'users/user-123/documents/test.pdf',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.softDelete.mockResolvedValue(true);
+    r2Service.deleteFile.mockRejectedValue(new Error('R2 unavailable'));
+
+    // Should NOT throw - R2 errors are swallowed
+    await expect(useCase.execute(documentId, userId)).resolves.toBeUndefined();
+    expect(repository.softDelete).toHaveBeenCalledWith(documentId);
+  });
 });

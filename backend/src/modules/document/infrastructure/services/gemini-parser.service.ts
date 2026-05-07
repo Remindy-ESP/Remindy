@@ -124,7 +124,8 @@ RÉPONDS MAINTENANT :`;
           if (isNaN(parsedDate.getTime())) {
             parsedDate = undefined;
           }
-        } catch {
+        } catch /* istanbul ignore next */ {
+          /* istanbul ignore next */
           parsedDate = undefined;
         }
       }
