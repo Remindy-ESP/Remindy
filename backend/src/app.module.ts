@@ -64,7 +64,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     ReminderModule,
     AuditModule,
     SchedulerModule,
-    SeedModule,
+    ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
     SupportModule,
   ],
   controllers: [AppController],
