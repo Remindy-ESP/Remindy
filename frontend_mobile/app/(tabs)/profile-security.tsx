@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -15,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
+import Toast from 'react-native-toast-message';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
@@ -66,15 +66,15 @@ export default function ProfileSecurityScreen() {
     try {
       setLoading(true);
       await authService.changePassword(currentPassword, newPassword);
-      setSuccess('Mot de passe modifie avec succes.');
+      setSuccess('Mot de passe modifié avec succès.');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert('Succes', 'Votre mot de passe a ete modifie.');
+      Toast.show({ type: 'success', text1: 'Mot de passe modifié', text2: 'Votre mot de passe a été mis à jour.' });
     } catch (err) {
       const message = getErrorMessage(err, 'Impossible de modifier le mot de passe.');
       setError(message);
-      Alert.alert('Erreur', message);
+      Toast.show({ type: 'error', text1: 'Erreur', text2: message });
     } finally {
       setLoading(false);
     }

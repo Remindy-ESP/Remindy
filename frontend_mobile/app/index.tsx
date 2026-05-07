@@ -7,13 +7,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { getErrorMessage } from '@/services/api';
 import onboardingService from '@/services/local/onboarding.service';
+import Toast from 'react-native-toast-message';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -140,10 +140,11 @@ export default function AuthScreen() {
       );
 
       setError(errorMessage);
-      Alert.alert(
-        isLogin ? 'Login Failed' : 'Registration Failed',
-        errorMessage
-      );
+      Toast.show({
+        type: 'error',
+        text1: isLogin ? 'Échec de connexion' : 'Échec d\'inscription',
+        text2: errorMessage,
+      });
     } finally {
       setLoading(false);
     }

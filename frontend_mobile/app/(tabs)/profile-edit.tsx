@@ -16,6 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import { userService } from '@/services/api';
 import type { UpdateUserRequest } from '@/services/api';
 import UserAvatar from '@/components/profile/UserAvatar';
+import Toast from 'react-native-toast-message';
 
 type FieldKey = 'firstName' | 'lastName' | 'phone' | 'language' | 'timezone';
 
@@ -103,7 +104,7 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!user) {
-      Alert.alert('Erreur', 'Utilisateur introuvable.');
+      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Utilisateur introuvable.' });
       return;
     }
 
@@ -119,7 +120,7 @@ export default function ProfileEditScreen() {
       setIsSaving(true);
       await userService.updateMe(payload);
       await refreshUser();
-      Alert.alert('Succes', 'Profil mis a jour.');
+      Toast.show({ type: 'success', text1: 'Profil mis à jour', text2: 'Vos informations ont été enregistrées.' });
       router.back();
     } catch (error: any) {
       console.error('Profile update failed:', error);
@@ -127,7 +128,7 @@ export default function ProfileEditScreen() {
         error?.response?.data?.message ||
         error?.message ||
         'Impossible de mettre a jour le profil.';
-      Alert.alert('Erreur', String(message));
+      Toast.show({ type: 'error', text1: 'Erreur', text2: String(message) });
     } finally {
       setIsSaving(false);
     }
@@ -182,7 +183,7 @@ export default function ProfileEditScreen() {
 
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission requise', 'Autorisez l acces a vos photos pour choisir une image.');
+        Toast.show({ type: 'error', text1: 'Permission requise', text2: 'Autorisez l\'accès à vos photos pour choisir une image.' });
         return;
       }
 
@@ -200,20 +201,20 @@ export default function ProfileEditScreen() {
       const asset = result.assets[0];
 
       if (typeof asset.fileSize === 'number' && asset.fileSize <= 0) {
-        Alert.alert('Erreur', 'Le fichier image est vide.');
+        Toast.show({ type: 'error', text1: 'Erreur', text2: 'Le fichier image est vide.' });
         return;
       }
 
       await userService.uploadMyPhoto(buildPhotoFilePayload(asset));
       await refreshUser();
-      Alert.alert('Succes', 'Photo de profil mise a jour.');
+      Toast.show({ type: 'success', text1: 'Photo mise à jour', text2: 'Votre photo de profil a été changée.' });
     } catch (error: any) {
       console.error('Profile photo upload failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
         'Impossible de mettre a jour la photo de profil.';
-      Alert.alert('Erreur', String(message));
+      Toast.show({ type: 'error', text1: 'Erreur', text2: String(message) });
     } finally {
       setIsPhotoUploading(false);
     }
@@ -234,14 +235,14 @@ export default function ProfileEditScreen() {
             setIsPhotoDeleting(true);
             await userService.deleteMyPhoto();
             await refreshUser();
-            Alert.alert('Succes', 'Photo de profil supprimee.');
+            Toast.show({ type: 'success', text1: 'Photo supprimée', text2: 'La photo de profil a été retirée.' });
           } catch (error: any) {
             console.error('Profile photo delete failed:', error);
             const message =
               error?.response?.data?.message ||
               error?.message ||
               'Impossible de supprimer la photo de profil.';
-            Alert.alert('Erreur', String(message));
+            Toast.show({ type: 'error', text1: 'Erreur', text2: String(message) });
           } finally {
             setIsPhotoDeleting(false);
           }

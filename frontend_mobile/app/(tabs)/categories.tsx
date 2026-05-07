@@ -6,12 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Modal,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 import { categoryService } from '@/services/api/category.service';
 import type { Category } from '@/services/api';
 
@@ -65,7 +66,7 @@ export default function CategoriesScreen() {
 
   const handleCreate = async () => {
     if (!newName.trim()) {
-      Alert.alert('Erreur', 'Le nom de la catégorie est requis.');
+      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Le nom de la catégorie est requis.' });
       return;
     }
     try {
@@ -73,9 +74,10 @@ export default function CategoriesScreen() {
       await categoryService.create({ name: newName.trim(), icon: 'folder', color: newColor });
       setCreateModalVisible(false);
       await fetchCategories();
+      Toast.show({ type: 'success', text1: 'Catégorie créée', text2: `"${newName.trim()}" a été ajoutée.` });
     } catch (err) {
       console.error('Error creating category:', err);
-      Alert.alert('Erreur', "Impossible de créer la catégorie.");
+      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible de créer la catégorie.' });
     } finally {
       setCreating(false);
     }
@@ -94,9 +96,10 @@ export default function CategoriesScreen() {
       await categoryService.update(renamingCategory.id, { name: renameValue.trim() });
       setRenameModalVisible(false);
       await fetchCategories();
+      Toast.show({ type: 'success', text1: 'Catégorie renommée', text2: `Renommée en "${renameValue.trim()}".` });
     } catch (err) {
       console.error('Error renaming category:', err);
-      Alert.alert('Erreur', "Impossible de renommer la catégorie.");
+      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible de renommer la catégorie.' });
     } finally {
       setRenaming(false);
     }
@@ -115,8 +118,9 @@ export default function CategoriesScreen() {
             try {
               await categoryService.delete(cat.id);
               await fetchCategories();
+              Toast.show({ type: 'success', text1: 'Catégorie supprimée', text2: `"${cat.name}" a été supprimée.` });
             } catch {
-              Alert.alert('Erreur', "Impossible de supprimer la catégorie.");
+              Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible de supprimer la catégorie.' });
             }
           },
         },
