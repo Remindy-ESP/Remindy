@@ -79,7 +79,7 @@ const baseUseDashboard = {
 const mockUseDashboard = jest.fn(() => ({ ...baseUseDashboard }));
 
 jest.mock('../../../hooks/useDashboard', () => ({
-  useDashboard: (...args: any[]) => mockUseDashboard(...args),
+  useDashboard: (...args: any[]) => (mockUseDashboard as jest.Mock)(...args),
 }));
 
 // ---------------------------------------------------------------------------
@@ -239,17 +239,17 @@ describe('DashboardScreen', () => {
 
   describe('error state', () => {
     it('shows error message when error is set', () => {
-      const { getByText } = renderDashboard({ error: 'Network error', loading: false });
+      const { getByText } = renderDashboard({ error: 'Network error' as any, loading: false });
       expect(getByText('Error: Network error')).toBeTruthy();
     });
 
     it('shows backend hint when in error state', () => {
-      const { getByText } = renderDashboard({ error: 'Timeout', loading: false });
+      const { getByText } = renderDashboard({ error: 'Timeout' as any, loading: false });
       expect(getByText(/Make sure the backend server is running/)).toBeTruthy();
     });
 
     it('does not render calendar when error is set', () => {
-      const { queryByTestId } = renderDashboard({ error: 'err', loading: false });
+      const { queryByTestId } = renderDashboard({ error: 'err' as any, loading: false });
       expect(queryByTestId('calendar')).toBeNull();
     });
   });
@@ -266,7 +266,7 @@ describe('DashboardScreen', () => {
     });
 
     it('renders the selected category name in the button label', () => {
-      const { getByText } = renderDashboard({ selectedCategory: 'Streaming' });
+      const { getByText } = renderDashboard({ selectedCategory: 'Streaming' as any });
       expect(getByText('Streaming')).toBeTruthy();
     });
 
@@ -310,7 +310,7 @@ describe('DashboardScreen', () => {
           subscription: { name: 'Spotify', category: null, amount: 9.99 },
         },
       ];
-      const { getByText, getAllByText } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) });
+      const { getByText, getAllByText } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
       expect(getByText('Netflix')).toBeTruthy();
       expect(getByText('Spotify')).toBeTruthy();
       // category fallback to "Général"
@@ -327,7 +327,7 @@ describe('DashboardScreen', () => {
           subscription: { name: 'Sub', amount: 12.5 },
         },
       ];
-      const { getByText } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) });
+      const { getByText } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
       expect(getByText('12.5€')).toBeTruthy();
     });
 
@@ -341,7 +341,7 @@ describe('DashboardScreen', () => {
           subscription: null,
         },
       ];
-      const { getByText } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) });
+      const { getByText } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
       expect(getByText('Direct Event')).toBeTruthy();
     });
   });
@@ -365,7 +365,7 @@ describe('DashboardScreen', () => {
         { id: 'c1', name: 'Streaming', icon: '🎬', color: '#fff', isSystem: true, createdAt: '', updatedAt: '' },
         { id: 'c2', name: 'Transport', icon: '🚗', color: '#000', isSystem: false, createdAt: '', updatedAt: '' },
       ];
-      const { getByText } = renderDashboard({ categoriesOpen: true, categories });
+      const { getByText } = renderDashboard({ categoriesOpen: true, categories: categories as any });
       expect(getByText('Toutes les catégories')).toBeTruthy();
       expect(getByText('Streaming')).toBeTruthy();
       expect(getByText('Transport')).toBeTruthy();
@@ -406,7 +406,7 @@ describe('DashboardScreen', () => {
         categoriesOpen: true,
         setCategoriesOpen,
         setSelectedCategory,
-        categories,
+        categories: categories as any,
       });
       const { getByText } = render(<DashboardScreen />);
       fireEvent.press(getByText('Toutes les catégories'));
@@ -425,7 +425,7 @@ describe('DashboardScreen', () => {
         categoriesOpen: true,
         setCategoriesOpen,
         setSelectedCategory,
-        categories,
+        categories: categories as any,
       });
       const { getByText } = render(<DashboardScreen />);
       fireEvent.press(getByText('Streaming'));

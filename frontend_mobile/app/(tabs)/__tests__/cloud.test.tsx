@@ -60,15 +60,15 @@ const mockAsyncStorageGetItem = jest.fn(() => Promise.resolve(null));
 const mockAsyncStorageSetItem = jest.fn(() => Promise.resolve());
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
-  getItem: (...a: any[]) => mockAsyncStorageGetItem(...a),
-  setItem: (...a: any[]) => mockAsyncStorageSetItem(...a),
+  getItem: (...a: any[]) => mockAsyncStorageGetItem.apply(undefined, a),
+  setItem: (...a: any[]) => mockAsyncStorageSetItem.apply(undefined, a),
   removeItem: jest.fn(() => Promise.resolve()),
   clear: jest.fn(() => Promise.resolve()),
   getAllKeys: jest.fn(() => Promise.resolve([])),
   multiGet: jest.fn(() => Promise.resolve([])),
   multiSet: jest.fn(() => Promise.resolve()),
   multiRemove: jest.fn(() => Promise.resolve()),
-  default: { getItem: (...a: any[]) => mockAsyncStorageGetItem(...a), setItem: (...a: any[]) => mockAsyncStorageSetItem(...a) },
+  default: { getItem: (...a: any[]) => mockAsyncStorageGetItem.apply(undefined, a), setItem: (...a: any[]) => mockAsyncStorageSetItem.apply(undefined, a) },
 }));
 
 // ---------------------------------------------------------------------------
@@ -135,11 +135,11 @@ const mockGetDownloadUrl = jest.fn((id: string) => `http://api/documents/${id}/d
 const mockGetBaseURL = jest.fn(() => 'http://api');
 
 jest.mock('@/services/api', () => ({
-  subscriptionService: { getAll: (...a: any[]) => mockGetAll(...a) },
-  documentService: { getDownloadUrl: (...a: any[]) => mockGetDownloadUrl(...a) },
+  subscriptionService: { getAll: (...a: any[]) => mockGetAll.apply(undefined, a) },
+  documentService: { getDownloadUrl: (...a: any[]) => mockGetDownloadUrl.apply(undefined, a) },
   apiClient: {
-    getAccessToken: (...a: any[]) => mockGetAccessToken(...a),
-    getBaseURL: (...a: any[]) => mockGetBaseURL(...a),
+    getAccessToken: (...a: any[]) => mockGetAccessToken.apply(undefined, a),
+    getBaseURL: (...a: any[]) => mockGetBaseURL.apply(undefined, a),
   },
 }));
 
@@ -500,7 +500,7 @@ describe('CloudScreen', () => {
   });
 
   it('skips folder initialisation when flag already exists in AsyncStorage', async () => {
-    mockAsyncStorageGetItem.mockResolvedValue('true');
+    mockAsyncStorageGetItem.mockResolvedValue('true' as any);
     render(<CloudScreen />);
     await waitFor(() => expect(mockAsyncStorageGetItem).toHaveBeenCalled());
     await new Promise(r => setTimeout(r, 50));
@@ -960,7 +960,7 @@ describe('CloudScreen', () => {
   });
 
   it('shows subscription-linked message in delete modal when doc has subscription_id', async () => {
-    mockGetAll.mockResolvedValue([{ id: 'sub-1', name: 'Netflix' }]);
+    mockGetAll.mockResolvedValue([{ id: 'sub-1', name: 'Netflix' }] as any);
     hookState.documents = [makeDoc({ subscription_id: 'sub-1' })];
 
     const { getByTestId } = render(<CloudScreen />);
@@ -1031,7 +1031,7 @@ describe('CloudScreen', () => {
 
   it('shows auth error alert when getAccessToken returns null on view', async () => {
     hookState.documents = [makeDoc()];
-    mockGetAccessToken.mockResolvedValue(null);
+    mockGetAccessToken.mockResolvedValue(null as any);
     const { getByTestId } = render(<CloudScreen />);
     await waitFor(() => getByTestId('doc-press-doc-1'));
 
@@ -1105,7 +1105,7 @@ describe('CloudScreen', () => {
 
   it('shows auth error alert when getAccessToken returns null on download', async () => {
     hookState.documents = [makeDoc()];
-    mockGetAccessToken.mockResolvedValue(null);
+    mockGetAccessToken.mockResolvedValue(null as any);
     const { getByTestId } = render(<CloudScreen />);
     await waitFor(() => getByTestId('doc-press-doc-1'));
 
