@@ -298,6 +298,53 @@ describe('Document Entity', () => {
     });
   });
 
+  describe('moveToFolder', () => {
+    it('should move document to a specified folder', () => {
+      const document = new Document(validDocumentProps);
+
+      document.moveToFolder('folder-42');
+
+      expect(document.folderId).toBe('folder-42');
+      expect(document.updatedAt).toBeInstanceOf(Date);
+    });
+
+    it('should remove document from folder when called with undefined', () => {
+      const documentInFolder = new Document({
+        ...validDocumentProps,
+        folderId: 'folder-42',
+      });
+
+      documentInFolder.moveToFolder(undefined);
+
+      expect(documentInFolder.folderId).toBeUndefined();
+    });
+  });
+
+  describe('constructor - parsed fields', () => {
+    it('should accept and store parsed Gemini fields', () => {
+      const props = {
+        ...validDocumentProps,
+        parsedProvider: ' Netflix ',
+        parsedAmount: 12.99,
+        parsedCurrency: ' EUR ',
+        parsedDate: new Date('2025-01-01'),
+        parsedFrequency: ' mensuel ',
+        parsedCategory: ' streaming ',
+        parsingConfidence: 0.9,
+      };
+
+      const document = new Document(props);
+
+      expect(document.parsedProvider).toBe('Netflix');
+      expect(document.parsedAmount).toBe(12.99);
+      expect(document.parsedCurrency).toBe('EUR');
+      expect(document.parsedDate).toEqual(new Date('2025-01-01'));
+      expect(document.parsedFrequency).toBe('mensuel');
+      expect(document.parsedCategory).toBe('streaming');
+      expect(document.parsingConfidence).toBe(0.9);
+    });
+  });
+
   describe('isImage', () => {
     it('should return true for image documents', () => {
       const imageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
