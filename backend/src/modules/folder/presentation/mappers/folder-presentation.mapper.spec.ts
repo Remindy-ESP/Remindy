@@ -2,18 +2,20 @@ import { FolderPresentationMapper } from './folder-presentation.mapper';
 import { Folder } from '../../domain/folder.entity';
 import { FolderFilterDto } from '../dto/folder.dto';
 
-const makeFolder = (overrides: Partial<{
-  id: string;
-  userId: string;
-  name: string;
-  parentId: string;
-  color: string;
-  icon: string;
-  isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
-}> = {}): Folder =>
+const makeFolder = (
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    name: string;
+    parentId: string;
+    color: string;
+    icon: string;
+    isDefault: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date;
+  }> = {},
+): Folder =>
   new Folder({
     id: overrides.id ?? 'folder-1',
     userId: overrides.userId ?? 'user-1',

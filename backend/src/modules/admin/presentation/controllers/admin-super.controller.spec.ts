@@ -14,10 +14,14 @@ describe('AdminSuperController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminSuperController],
     })
-      .overrideGuard(JwtAuthGuard).useValue(alwaysAllow)
-      .overrideGuard(SuperAdminGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminMfaGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminCsrfGuard).useValue(alwaysAllow)
+      .overrideGuard(JwtAuthGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(SuperAdminGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminMfaGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminCsrfGuard)
+      .useValue(alwaysAllow)
       .compile();
 
     controller = module.get(AdminSuperController);

@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  INestApplication,
-  ValidationPipe,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { Reflector } from '@nestjs/core';
@@ -354,10 +349,7 @@ describe('Auth Module (e2e)', () => {
     });
 
     it('succeeds with no refreshToken (graceful no-op)', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/auth/logout')
-        .send({})
-        .expect(201);
+      const response = await request(app.getHttpServer()).post('/auth/logout').send({}).expect(201);
 
       expect(logoutUseCase.execute).not.toHaveBeenCalled();
       expect(response.body.success).toBe(true);

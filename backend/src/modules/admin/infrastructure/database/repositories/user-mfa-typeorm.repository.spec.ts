@@ -13,8 +13,7 @@ const mockCrypto: jest.Mocked<Partial<CryptoService>> = {
   isEncrypted: jest.fn(),
 };
 
-const makeRepo = () =>
-  new UserMfaTypeOrmRepository(mockUsers as any, mockCrypto as any);
+const makeRepo = () => new UserMfaTypeOrmRepository(mockUsers as any, mockCrypto as any);
 
 const makeUser = (overrides: any = {}) => ({
   id: 'user-1',
@@ -59,7 +58,10 @@ describe('UserMfaTypeOrmRepository.setSecret()', () => {
     await makeRepo().setSecret('user-1', 'raw-secret');
 
     expect(mockCrypto.encrypt).toHaveBeenCalledWith('raw-secret');
-    expect(mockUsers.update).toHaveBeenCalledWith({ id: 'user-1' }, { mfaSecret: 'encrypted-secret' });
+    expect(mockUsers.update).toHaveBeenCalledWith(
+      { id: 'user-1' },
+      { mfaSecret: 'encrypted-secret' },
+    );
   });
 });
 

@@ -32,7 +32,7 @@ const makeCategory = (overrides: Partial<Record<string, unknown>> = {}): Categor
     isSystem: false,
     createdAt: new Date('2025-01-01T00:00:00.000Z'),
     updatedAt: new Date('2025-06-01T00:00:00.000Z'),
-    ...(overrides as Parameters<typeof Category['prototype']['constructor']>[0]),
+    ...(overrides as Parameters<(typeof Category)['prototype']['constructor']>[0]),
   });
 
 describe('Category Module (e2e)', () => {

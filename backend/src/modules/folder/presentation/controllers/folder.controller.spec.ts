@@ -11,11 +11,13 @@ import { Folder } from '../../domain/folder.entity';
 import { CreateFolderDto, UpdateFolderDto, FolderFilterDto } from '../dto/folder.dto';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 
-const makeFolder = (overrides: Partial<{
-  id: string;
-  userId: string;
-  name: string;
-}> = {}): Folder =>
+const makeFolder = (
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    name: string;
+  }> = {},
+): Folder =>
   new Folder({
     id: overrides.id ?? 'folder-1',
     userId: overrides.userId ?? 'user-1',
@@ -93,9 +95,7 @@ describe('FolderController', () => {
       const folder1 = makeFolder({ id: 'f-1' });
       const folder2 = makeFolder({ id: 'f-2', name: 'Contrats' });
       (findAllFoldersUseCase.execute as jest.Mock).mockResolvedValue([folder1, folder2]);
-      mockFolderRepository.countDocumentsInFolder
-        .mockResolvedValueOnce(3)
-        .mockResolvedValueOnce(0);
+      mockFolderRepository.countDocumentsInFolder.mockResolvedValueOnce(3).mockResolvedValueOnce(0);
 
       const result = await controller.findAll(filters, userId);
 

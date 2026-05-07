@@ -598,7 +598,9 @@ describe('AdminTicketsService', () => {
         sortDir: 'DESC',
       } as any);
 
-      expect(qb.andWhere).toHaveBeenCalledWith('ticket.category = :category', { category: 'billing' });
+      expect(qb.andWhere).toHaveBeenCalledWith('ticket.category = :category', {
+        category: 'billing',
+      });
     });
   });
 });

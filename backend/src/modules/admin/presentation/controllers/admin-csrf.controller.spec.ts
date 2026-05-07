@@ -11,7 +11,8 @@ describe('AdminCsrfController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminCsrfController],
     })
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
       .compile();
 
     controller = module.get(AdminCsrfController);

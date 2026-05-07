@@ -196,9 +196,7 @@ describe('UserService', () => {
       const updateDto = { firstName: 'Jane' };
 
       // First call: user found; second call (after update): user not found
-      userRepository.findById
-        .mockResolvedValueOnce(mockUser as any)
-        .mockResolvedValueOnce(null);
+      userRepository.findById.mockResolvedValueOnce(mockUser as any).mockResolvedValueOnce(null);
 
       await expect(service.updateUserProfile('user-123', updateDto)).rejects.toThrow(
         'User not found after update',
@@ -237,8 +235,8 @@ describe('UserService', () => {
       userRepository.findById.mockResolvedValue(mockUser as any);
 
       // Access the preferences mock from the module
-      const module = (service as any);
-      const prefsRepo = module['userPreferencesRepository'] as jest.Mocked<any>;
+      const module = service as any;
+      const prefsRepo = module['userPreferencesRepository'];
       prefsRepo.softDelete = jest.fn().mockResolvedValue(undefined);
       userRepository.softDelete = jest.fn().mockResolvedValue(undefined);
 

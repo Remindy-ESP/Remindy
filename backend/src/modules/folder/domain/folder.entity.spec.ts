@@ -44,9 +44,7 @@ describe('Folder (domain entity)', () => {
     });
 
     it('should throw when name is empty string', () => {
-      expect(() => new Folder({ userId: 'user-1', name: '' })).toThrow(
-        'Folder name is required',
-      );
+      expect(() => new Folder({ userId: 'user-1', name: '' })).toThrow('Folder name is required');
     });
 
     it('should throw when name is whitespace only', () => {

@@ -21,15 +21,17 @@ const makeEntity = (overrides: Partial<ReminderEntity> = {}): ReminderEntity => 
   return e;
 };
 
-const makeReminder = (overrides: Partial<{
-  id: string;
-  userId: string;
-  subscriptionId: string;
-  type: Reminder['type'];
-  daysBefore: number;
-  enabled: boolean;
-  channel: Reminder['channel'];
-}> = {}): Reminder =>
+const makeReminder = (
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    subscriptionId: string;
+    type: Reminder['type'];
+    daysBefore: number;
+    enabled: boolean;
+    channel: Reminder['channel'];
+  }> = {},
+): Reminder =>
   new Reminder({
     id: overrides.id ?? 'rem-1',
     userId: overrides.userId ?? 'user-1',
@@ -115,10 +117,9 @@ describe('ReminderRepository', () => {
 
       await repo.findAll(filters);
 
-      expect(qb.andWhere).toHaveBeenCalledWith(
-        'reminder.subscriptionId = :subscriptionId',
-        { subscriptionId: 'sub-1' },
-      );
+      expect(qb.andWhere).toHaveBeenCalledWith('reminder.subscriptionId = :subscriptionId', {
+        subscriptionId: 'sub-1',
+      });
     });
 
     it('should apply type filter when provided', async () => {
@@ -225,7 +226,7 @@ describe('ReminderRepository', () => {
     });
 
     it('should set entity id before saving during update', async () => {
-      const reminder = makeReminder({ id: undefined as any });
+      const reminder = makeReminder({ id: undefined });
       const existingEntity = makeEntity();
       const updatedEntity = makeEntity();
 

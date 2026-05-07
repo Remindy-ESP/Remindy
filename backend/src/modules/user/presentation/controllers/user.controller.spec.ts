@@ -215,10 +215,7 @@ describe('UserController', () => {
       const req = makeRequest('user-123');
       const result = await controller.getMe(req);
 
-      expect(r2Service.getSignedUrl).toHaveBeenCalledWith(
-        'users/user-123/photo.jpg',
-        86400,
-      );
+      expect(r2Service.getSignedUrl).toHaveBeenCalledWith('users/user-123/photo.jpg', 86400);
       expect(result.photoUrl).toBe('https://cdn.example.com/signed-url');
     });
 
@@ -250,7 +247,7 @@ describe('UserController', () => {
       const req = makeRequest('user-123');
       const dto = { firstName: 'Jane' };
 
-      const result = await controller.updateMe(req, dto as any);
+      const result = await controller.updateMe(req, dto);
 
       expect(updateMyProfileUseCase.execute).toHaveBeenCalledWith('user-123', dto);
       expect(getMyProfileUseCase.execute).toHaveBeenCalledWith({ userId: 'user-123' });
@@ -264,7 +261,7 @@ describe('UserController', () => {
       r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/signed-url');
 
       const req = makeRequest('user-123');
-      const result = await controller.updateMe(req, {} as any);
+      const result = await controller.updateMe(req, {});
 
       expect(result.photoUrl).toBe('https://cdn.example.com/signed-url');
     });
@@ -341,7 +338,7 @@ describe('UserController', () => {
 
       r2Service.uploadFile.mockResolvedValue(undefined as any);
       updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.deleteFile.mockResolvedValue(undefined as any);
+      r2Service.deleteFile.mockResolvedValue(undefined);
       r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/new-url');
 
       const req = makeRequest('user-123');
@@ -379,7 +376,7 @@ describe('UserController', () => {
       const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
       getMyProfileUseCase.execute.mockResolvedValue(userWithNoPhoto as any);
       r2Service.uploadFile.mockRejectedValue(new Error('Upload failed'));
-      r2Service.deleteFile.mockResolvedValue(undefined as any);
+      r2Service.deleteFile.mockResolvedValue(undefined);
 
       const req = makeRequest('user-123');
 
@@ -500,7 +497,7 @@ describe('UserController', () => {
         .mockResolvedValueOnce(userWithNoPhoto as any);
 
       updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.deleteFile.mockResolvedValue(undefined as any);
+      r2Service.deleteFile.mockResolvedValue(undefined);
 
       const req = makeRequest('user-123');
       const result = await controller.deleteMyPhoto(req);
@@ -582,7 +579,7 @@ describe('UserController', () => {
       const req = makeRequest('user-123');
       const dto = { firstName: 'Jane', lastName: 'Smith' };
 
-      const result = await controller.updateProfile(req, dto as any);
+      const result = await controller.updateProfile(req, dto);
 
       expect(userService.updateUserProfile).toHaveBeenCalledWith('user-123', dto);
       expect(result).toBe(mockUserProfile);
@@ -614,7 +611,7 @@ describe('UserController', () => {
       const req = makeRequest('user-123') as any;
       const dto = { theme: 'light' as const, notificationEmail: true };
 
-      const result = await controller.updatePreferences(req, dto as any);
+      const result = await controller.updatePreferences(req, dto);
 
       expect(updateUserPreferencesUseCase.execute).toHaveBeenCalledWith('user-123', {
         theme: 'light',
@@ -633,7 +630,7 @@ describe('UserController', () => {
 
   describe('exportData', () => {
     it('should create export request with req.ip', async () => {
-      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse as any);
+      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse);
 
       const req = { ...makeRequest('user-123'), ip: '10.0.0.1' } as any;
       const dto = { format: 'json' as const };
@@ -649,7 +646,7 @@ describe('UserController', () => {
     });
 
     it('should create export request using socket.remoteAddress when ip is missing', async () => {
-      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse as any);
+      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse);
 
       const req = {
         user: { userId: 'user-123', role: Role.USER_PREMIUM },
@@ -669,7 +666,7 @@ describe('UserController', () => {
     });
 
     it('should fallback to unknown when no ip and no socket address', async () => {
-      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse as any);
+      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse);
 
       const req = {
         user: { userId: 'user-123' },
@@ -695,9 +692,7 @@ describe('UserController', () => {
       const req = {} as Request;
 
       await expect(controller.getProfile(req)).rejects.toThrow(UnauthorizedException);
-      await expect(controller.getProfile(req)).rejects.toThrow(
-        'Invalid or missing JWT token',
-      );
+      await expect(controller.getProfile(req)).rejects.toThrow('Invalid or missing JWT token');
     });
 
     it('should throw UnauthorizedException when userId is empty', async () => {
@@ -768,7 +763,7 @@ describe('UserController', () => {
       await controller.uploadMyPhoto(req, fileWithSpecialName);
 
       const uploadCall = r2Service.uploadFile.mock.calls[0];
-      const r2Key = uploadCall[1] as string;
+      const r2Key = uploadCall[1];
       // The key should be sanitized (no special chars)
       expect(r2Key).toMatch(/^users\/user-123\/profile-photo\//);
     });
@@ -805,7 +800,7 @@ describe('UserController', () => {
       await controller.uploadMyPhoto(req, fileWithNoName);
 
       const uploadCall = r2Service.uploadFile.mock.calls[0];
-      const r2Key = uploadCall[1] as string;
+      const r2Key = uploadCall[1];
       expect(r2Key).toContain('profile-photo');
     });
   });

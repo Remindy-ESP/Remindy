@@ -404,9 +404,7 @@ describe('EventController (e2e)', () => {
   });
 
   it('DELETE /calendar/event/:id — 401 with no token', async () => {
-    await request(app.getHttpServer())
-      .delete(`/calendar/event/${validEventId}`)
-      .expect(401);
+    await request(app.getHttpServer()).delete(`/calendar/event/${validEventId}`).expect(401);
 
     expect(deleteEventUseCase.execute).not.toHaveBeenCalled();
   });

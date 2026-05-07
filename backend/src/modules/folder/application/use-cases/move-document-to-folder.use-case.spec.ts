@@ -1,9 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { MoveDocumentToFolderUseCase } from './move-document-to-folder.use-case';
 import type { IFolderRepository } from '../ports/folder-repository.interface';
 import { FOLDER_REPOSITORY } from '../ports/folder-repository.interface';
@@ -13,7 +9,9 @@ import { Folder } from '../../domain/folder.entity';
 import { Document } from '../../../document/domain/document.entity';
 import { MoveDocumentToFolderAppDto } from '../dto/folder-app.dto';
 
-const makeDocument = (overrides: Partial<{ userId: string; folderId: string; deletedAt: Date }> = {}) => {
+const makeDocument = (
+  overrides: Partial<{ userId: string; folderId: string; deletedAt: Date }> = {},
+) => {
   const doc = new Document({
     id: 'doc-1',
     userId: overrides.userId ?? 'user-1',

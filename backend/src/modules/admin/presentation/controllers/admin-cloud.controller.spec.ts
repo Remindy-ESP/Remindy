@@ -29,11 +29,16 @@ describe('AdminCloudController', () => {
       controllers: [AdminCloudController],
       providers: [{ provide: AdminCloudService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminMfaGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminCsrfGuard).useValue(alwaysAllow)
-      .overrideInterceptor(AuditInterceptor).useValue({ intercept: (_: any, next: any) => next.handle() })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminMfaGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminCsrfGuard)
+      .useValue(alwaysAllow)
+      .overrideInterceptor(AuditInterceptor)
+      .useValue({ intercept: (_: any, next: any) => next.handle() })
       .compile();
 
     controller = module.get(AdminCloudController);
@@ -90,7 +95,11 @@ describe('AdminCloudController', () => {
       const body = { force: true } as any;
       const result = await controller.reprocessOcr(makeReq() as any, 'doc-1', body);
 
-      expect(mockService.reprocessOcr).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'doc-1', true);
+      expect(mockService.reprocessOcr).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'doc-1',
+        true,
+      );
       expect(result).toEqual(data);
     });
 
@@ -100,7 +109,11 @@ describe('AdminCloudController', () => {
       const body = {} as any;
       await controller.reprocessOcr(makeReq() as any, 'doc-1', body);
 
-      expect(mockService.reprocessOcr).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'doc-1', false);
+      expect(mockService.reprocessOcr).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'doc-1',
+        false,
+      );
     });
   });
 });

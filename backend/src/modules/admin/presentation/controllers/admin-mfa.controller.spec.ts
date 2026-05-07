@@ -59,8 +59,10 @@ describe('AdminMfaController', () => {
         { provide: ITokenService, useValue: mockTokenService },
       ],
     })
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
-      .overrideGuard(UserThrottlerGuard).useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(UserThrottlerGuard)
+      .useValue(alwaysAllow)
       .compile();
 
     controller = module.get(AdminMfaController);

@@ -187,9 +187,7 @@ describe('ReminderController (e2e)', () => {
   });
 
   it('GET /reminders/:id — 401 when no token provided', async () => {
-    await request(app.getHttpServer())
-      .get(`/reminders/${validReminderId}`)
-      .expect(401);
+    await request(app.getHttpServer()).get(`/reminders/${validReminderId}`).expect(401);
   });
 
   // ─── POST /reminders ─────────────────────────────────────────────────────────
@@ -407,9 +405,7 @@ describe('ReminderController (e2e)', () => {
   });
 
   it('DELETE /reminders/:id — 401 when no token provided', async () => {
-    await request(app.getHttpServer())
-      .delete(`/reminders/${validReminderId}`)
-      .expect(401);
+    await request(app.getHttpServer()).delete(`/reminders/${validReminderId}`).expect(401);
 
     expect(deleteReminderUseCase.execute).not.toHaveBeenCalled();
   });

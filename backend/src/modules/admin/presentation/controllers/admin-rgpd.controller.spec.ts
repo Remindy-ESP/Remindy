@@ -32,11 +32,16 @@ describe('AdminRgpdController', () => {
       controllers: [AdminRgpdController],
       providers: [{ provide: AdminRgpdService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminMfaGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminCsrfGuard).useValue(alwaysAllow)
-      .overrideInterceptor(AuditInterceptor).useValue({ intercept: (_: any, next: any) => next.handle() })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminMfaGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminCsrfGuard)
+      .useValue(alwaysAllow)
+      .overrideInterceptor(AuditInterceptor)
+      .useValue({ intercept: (_: any, next: any) => next.handle() })
       .compile();
 
     controller = module.get(AdminRgpdController);
@@ -48,7 +53,7 @@ describe('AdminRgpdController', () => {
       mockService.requestExport.mockResolvedValue(exportEntry);
 
       const req = makeReq();
-      const result = await controller.requestExport(req as any, 'user-target-1');
+      const result = await controller.requestExport(req, 'user-target-1');
 
       expect(mockService.requestExport).toHaveBeenCalledWith(
         { id: 'actor-1', role: Role.SUPER_ADMIN },
@@ -66,7 +71,7 @@ describe('AdminRgpdController', () => {
 
       const req = makeReq();
       const query = { page: 1, limit: 20 } as any;
-      const result = await controller.listExports(req as any, query);
+      const result = await controller.listExports(req, query);
 
       expect(mockService.listExports).toHaveBeenCalledWith(
         { id: 'actor-1', role: Role.SUPER_ADMIN },
@@ -82,7 +87,7 @@ describe('AdminRgpdController', () => {
       mockService.deleteUserData.mockResolvedValue(data);
 
       const req = makeReq();
-      const result = await controller.deleteUserData(req as any, 'user-target-1');
+      const result = await controller.deleteUserData(req, 'user-target-1');
 
       expect(mockService.deleteUserData).toHaveBeenCalledWith(
         { id: 'actor-1', role: Role.SUPER_ADMIN },

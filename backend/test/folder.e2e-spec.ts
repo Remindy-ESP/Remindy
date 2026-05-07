@@ -47,7 +47,9 @@ const DOC_ID = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 
 const now = new Date('2026-01-01T12:00:00.000Z');
 
-const makeDomainFolder = (overrides: { id?: string; name?: string; parentId?: string; isDefault?: boolean } = {}): Folder =>
+const makeDomainFolder = (
+  overrides: { id?: string; name?: string; parentId?: string; isDefault?: boolean } = {},
+): Folder =>
   new Folder({
     id: overrides.id ?? FOLDER_ID,
     userId: USER_ID,

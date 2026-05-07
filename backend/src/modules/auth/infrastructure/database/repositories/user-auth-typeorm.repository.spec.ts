@@ -252,10 +252,7 @@ describe('UserAuthTypeOrmRepository', () => {
 
       await repository.updateLastLoginAt(userId, date);
 
-      expect(typeOrmRepository.update).toHaveBeenCalledWith(
-        { id: userId },
-        { lastLoginAt: date },
-      );
+      expect(typeOrmRepository.update).toHaveBeenCalledWith({ id: userId }, { lastLoginAt: date });
     });
 
     it('should resolve without returning a value', async () => {

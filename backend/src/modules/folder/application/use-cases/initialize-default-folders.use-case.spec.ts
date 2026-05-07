@@ -64,8 +64,8 @@ describe('InitializeDefaultFoldersUseCase', () => {
     repository.findDefaultFoldersByUserId.mockResolvedValue([]);
     repository.findByNameAndUserId
       .mockResolvedValueOnce(existingFactures) // 'Factures' already exists
-      .mockResolvedValueOnce(null)             // 'Contrats' does not exist
-      .mockResolvedValueOnce(null);            // 'Documents administratifs' does not exist
+      .mockResolvedValueOnce(null) // 'Contrats' does not exist
+      .mockResolvedValueOnce(null); // 'Documents administratifs' does not exist
 
     repository.save
       .mockResolvedValueOnce(makeFolder('Contrats'))

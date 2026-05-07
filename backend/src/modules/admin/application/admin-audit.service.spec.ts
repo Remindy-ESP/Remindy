@@ -74,8 +74,8 @@ describe('AdminAuditService.list()', () => {
       search: 'test',
       from: '2024-01-01',
       to: '2024-12-31',
-      sortBy: 'createdAt' as any,
-      sortOrder: 'DESC' as any,
+      sortBy: 'createdAt',
+      sortOrder: 'DESC',
       page: 2,
       limit: 50,
     };

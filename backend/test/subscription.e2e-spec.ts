@@ -40,7 +40,7 @@ const makeSubscription = (overrides: Partial<Record<string, unknown>> = {}): Sub
     status: 'active',
     createdAt: new Date('2025-01-01T00:00:00.000Z'),
     updatedAt: new Date('2025-06-01T00:00:00.000Z'),
-    ...(overrides as Parameters<typeof Subscription['prototype']['constructor']>[0]),
+    ...(overrides as Parameters<(typeof Subscription)['prototype']['constructor']>[0]),
   });
 
 describe('Subscription Module (e2e)', () => {
@@ -485,8 +485,6 @@ describe('Subscription Module (e2e)', () => {
   });
 
   it('GET /subscriptions/:id/events - returns 401 when not authenticated', async () => {
-    await request(app.getHttpServer())
-      .get(`/subscriptions/${SUB_ID}/events`)
-      .expect(401);
+    await request(app.getHttpServer()).get(`/subscriptions/${SUB_ID}/events`).expect(401);
   });
 });

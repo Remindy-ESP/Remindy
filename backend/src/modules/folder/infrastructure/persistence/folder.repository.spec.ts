@@ -20,12 +20,14 @@ const makeEntity = (overrides: Partial<FolderEntity> = {}): FolderEntity => {
   return e;
 };
 
-const makeFolder = (overrides: Partial<{
-  id: string;
-  userId: string;
-  name: string;
-  parentId: string;
-}> = {}): Folder =>
+const makeFolder = (
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    name: string;
+    parentId: string;
+  }> = {},
+): Folder =>
   new Folder({
     id: overrides.id ?? 'f-1',
     userId: overrides.userId ?? 'user-1',
@@ -382,10 +384,7 @@ describe('FolderRepository', () => {
       (mockOrmRepo.manager.query as jest.Mock).mockResolvedValue(undefined);
 
       await expect(repo.moveDocumentsToFolder('from-1', null)).resolves.toBeUndefined();
-      expect(mockOrmRepo.manager.query).toHaveBeenCalledWith(
-        expect.any(String),
-        [null, 'from-1'],
-      );
+      expect(mockOrmRepo.manager.query).toHaveBeenCalledWith(expect.any(String), [null, 'from-1']);
     });
 
     it('should propagate errors', async () => {

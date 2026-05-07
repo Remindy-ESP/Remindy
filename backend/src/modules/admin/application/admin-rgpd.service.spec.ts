@@ -37,8 +37,7 @@ const mockExportsRepo = {
   createQueryBuilder: jest.fn(() => mockExportQb),
 };
 
-const makeService = () =>
-  new AdminRgpdService(mockUsersRepo as any, mockExportsRepo as any);
+const makeService = () => new AdminRgpdService(mockUsersRepo as any, mockExportsRepo as any);
 
 const superAdmin = { id: 'actor-super', role: Role.SUPER_ADMIN };
 const userAdmin = { id: 'actor-admin', role: Role.USER_ADMIN };
@@ -84,26 +83,34 @@ describe('AdminRgpdService.requestExport()', () => {
     mockExportsRepo.create.mockReturnValue(created);
     mockExportsRepo.save.mockResolvedValue(created);
 
-    const result = await makeService().requestExport(superAdmin, 'user-1', { ipAddress: '1.2.3.4' });
+    const result = await makeService().requestExport(superAdmin, 'user-1', {
+      ipAddress: '1.2.3.4',
+    });
     expect(result).toMatchObject({ id: 'export-1', status: 'pending' });
     expect(mockExportsRepo.save).toHaveBeenCalled();
   });
 
   it('throws ForbiddenException for USER_ADMIN (no RGPD_EXPORT permission)', async () => {
-    await expect(makeService().requestExport(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+    await expect(makeService().requestExport(userAdmin, 'user-1')).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(mockUsersRepo.findOne).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when user not found', async () => {
     mockUsersRepo.findOne.mockResolvedValue(null);
-    await expect(makeService().requestExport(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
+    await expect(makeService().requestExport(superAdmin, 'ghost')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('throws ConflictException when pending export exists', async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser());
     mockExportsRepo.findOne.mockResolvedValue(makeExport({ status: 'pending' }));
 
-    await expect(makeService().requestExport(superAdmin, 'user-1')).rejects.toThrow(ConflictException);
+    await expect(makeService().requestExport(superAdmin, 'user-1')).rejects.toThrow(
+      ConflictException,
+    );
     expect(mockExportsRepo.save).not.toHaveBeenCalled();
   });
 
@@ -111,7 +118,9 @@ describe('AdminRgpdService.requestExport()', () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser());
     mockExportsRepo.findOne.mockResolvedValue(makeExport({ status: 'processing' }));
 
-    await expect(makeService().requestExport(superAdmin, 'user-1')).rejects.toThrow(ConflictException);
+    await expect(makeService().requestExport(superAdmin, 'user-1')).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('throws ConflictException when recent export within cooldown', async () => {
@@ -119,7 +128,9 @@ describe('AdminRgpdService.requestExport()', () => {
     mockExportsRepo.findOne.mockResolvedValue(null);
     mockExportQb.getOne.mockResolvedValue(makeExport());
 
-    await expect(makeService().requestExport(superAdmin, 'user-1')).rejects.toThrow(ConflictException);
+    await expect(makeService().requestExport(superAdmin, 'user-1')).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('throws ForbiddenException when USER_ADMIN targets a SUPER_ADMIN (policy)', async () => {
@@ -161,30 +172,36 @@ describe('AdminRgpdService.listExports()', () => {
   });
 
   it('throws ForbiddenException for USER_ADMIN', async () => {
-    await expect(
-      makeService().listExports(userAdmin, { page: 1, limit: 20 } as RgpdExportsQueryDto),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(makeService().listExports(userAdmin, { page: 1, limit: 20 })).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 
   it('applies userId filter', async () => {
     mockExportQb.getManyAndCount.mockResolvedValue([[], 0]);
     const query = { userId: 'user-abc', page: 1, limit: 20 } as RgpdExportsQueryDto;
     await makeService().listExports(superAdmin, query);
-    expect(mockExportQb.andWhere).toHaveBeenCalledWith('e.userId = :userId', { userId: 'user-abc' });
+    expect(mockExportQb.andWhere).toHaveBeenCalledWith('e.userId = :userId', {
+      userId: 'user-abc',
+    });
   });
 
   it('applies status filter', async () => {
     mockExportQb.getManyAndCount.mockResolvedValue([[], 0]);
-    const query = { status: 'completed' as any, page: 1, limit: 20 } as RgpdExportsQueryDto;
+    const query = { status: 'completed', page: 1, limit: 20 } as RgpdExportsQueryDto;
     await makeService().listExports(superAdmin, query);
-    expect(mockExportQb.andWhere).toHaveBeenCalledWith('e.status = :status', { status: 'completed' });
+    expect(mockExportQb.andWhere).toHaveBeenCalledWith('e.status = :status', {
+      status: 'completed',
+    });
   });
 
   it('applies requestedBy filter', async () => {
     mockExportQb.getManyAndCount.mockResolvedValue([[], 0]);
-    const query = { requestedBy: 'admin' as any, page: 1, limit: 20 } as RgpdExportsQueryDto;
+    const query = { requestedBy: 'admin', page: 1, limit: 20 } as RgpdExportsQueryDto;
     await makeService().listExports(superAdmin, query);
-    expect(mockExportQb.andWhere).toHaveBeenCalledWith('e.requestedBy = :requestedBy', { requestedBy: 'admin' });
+    expect(mockExportQb.andWhere).toHaveBeenCalledWith('e.requestedBy = :requestedBy', {
+      requestedBy: 'admin',
+    });
   });
 
   it('uses default page/limit when not provided', async () => {
@@ -199,7 +216,10 @@ describe('AdminRgpdService.listExports()', () => {
     const exports = [makeExport({ fileSize: null, user: null })];
     mockExportQb.getManyAndCount.mockResolvedValue([exports, 1]);
 
-    const result = await makeService().listExports(superAdmin, { page: 1, limit: 20 } as RgpdExportsQueryDto);
+    const result = await makeService().listExports(superAdmin, {
+      page: 1,
+      limit: 20,
+    });
     expect(result.items[0].fileSize).toBeNull();
     expect(result.items[0].userEmail).toBeNull();
   });
@@ -208,7 +228,10 @@ describe('AdminRgpdService.listExports()', () => {
     const exports = [makeExport({ fileSize: '1024' })];
     mockExportQb.getManyAndCount.mockResolvedValue([exports, 1]);
 
-    const result = await makeService().listExports(superAdmin, { page: 1, limit: 20 } as RgpdExportsQueryDto);
+    const result = await makeService().listExports(superAdmin, {
+      page: 1,
+      limit: 20,
+    });
     expect(result.items[0].fileSize).toBe(1024);
   });
 });
@@ -226,13 +249,17 @@ describe('AdminRgpdService.deleteUserData()', () => {
   });
 
   it('throws ForbiddenException for USER_ADMIN (no RGPD_DELETE permission)', async () => {
-    await expect(makeService().deleteUserData(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+    await expect(makeService().deleteUserData(userAdmin, 'user-1')).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(mockUsersRepo.findOne).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when user does not exist', async () => {
     mockUsersRepo.findOne.mockResolvedValue(null);
-    await expect(makeService().deleteUserData(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
+    await expect(makeService().deleteUserData(superAdmin, 'ghost')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('calls update query builder when deleting user data', async () => {
