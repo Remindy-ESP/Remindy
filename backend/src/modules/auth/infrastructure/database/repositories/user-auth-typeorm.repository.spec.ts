@@ -17,6 +17,7 @@ describe('UserAuthTypeOrmRepository', () => {
       findOne: jest.fn(),
       save: jest.fn(),
       update: jest.fn(),
+      increment: jest.fn(),
     };
 
     const mockMapper = {
@@ -195,6 +196,74 @@ describe('UserAuthTypeOrmRepository', () => {
 
       expect(result).toBeNull();
       expect(mapper.toDomain).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('incrementFailedLoginCount', () => {
+    it('should increment the failedLoginCount by 1', async () => {
+      const userId = 'user-123';
+      (typeOrmRepository.increment as jest.Mock).mockResolvedValue(undefined);
+
+      await repository.incrementFailedLoginCount(userId);
+
+      expect(typeOrmRepository.increment).toHaveBeenCalledWith(
+        { id: userId },
+        'failedLoginCount',
+        1,
+      );
+    });
+
+    it('should resolve without returning a value', async () => {
+      (typeOrmRepository.increment as jest.Mock).mockResolvedValue(undefined);
+
+      const result = await repository.incrementFailedLoginCount('user-456');
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('resetFailedLoginCount', () => {
+    it('should reset failedLoginCount to 0', async () => {
+      const userId = 'user-123';
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.resetFailedLoginCount(userId);
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: userId },
+        { failedLoginCount: 0 },
+      );
+    });
+
+    it('should resolve without returning a value', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      const result = await repository.resetFailedLoginCount('user-789');
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('updateLastLoginAt', () => {
+    it('should update the lastLoginAt field with the provided date', async () => {
+      const userId = 'user-123';
+      const date = new Date('2024-01-15T10:30:00Z');
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.updateLastLoginAt(userId, date);
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: userId },
+        { lastLoginAt: date },
+      );
+    });
+
+    it('should resolve without returning a value', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      const result = await repository.updateLastLoginAt('user-456', new Date());
+
+      expect(result).toBeUndefined();
     });
   });
 
