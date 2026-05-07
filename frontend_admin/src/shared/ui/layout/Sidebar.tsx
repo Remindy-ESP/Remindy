@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -17,153 +18,153 @@ import { AdminPermission } from '@/shared/domain/types';
 export const DRAWER_WIDTH = 260;
 
 interface NavItem {
-    label: string;
-    path: string;
-    icon: React.ReactNode;
-    permission?: AdminPermission;
+  label: string;
+  path: string;
+  icon: ReactNode;
+  permission?: AdminPermission;
 }
 
 const NAV_ITEMS: NavItem[] = [
-    {
-        label: 'Dashboard',
-        path: '/dashboard',
-        icon: <DashboardIcon />,
-        permission: AdminPermission.DASHBOARD_READ,
-    },
-    {
-        label: 'Utilisateurs',
-        path: '/users',
-        icon: <PeopleIcon />,
-        permission: AdminPermission.USERS_READ,
-    },
-    {
-        label: 'Audit',
-        path: '/audit',
-        icon: <ReceiptLongIcon />,
-        permission: AdminPermission.AUDIT_READ,
-    },
-    {
-        label: 'Sécurité',
-        path: '/security',
-        icon: <SecurityIcon />,
-        permission: AdminPermission.SECURITY_READ,
-    },
+  {
+    label: 'Dashboard',
+    path: '/dashboard',
+    icon: <DashboardIcon />,
+    permission: AdminPermission.DASHBOARD_READ,
+  },
+  {
+    label: 'Utilisateurs',
+    path: '/users',
+    icon: <PeopleIcon />,
+    permission: AdminPermission.USERS_READ,
+  },
+  {
+    label: 'Audit',
+    path: '/audit',
+    icon: <ReceiptLongIcon />,
+    permission: AdminPermission.AUDIT_READ,
+  },
+  {
+    label: 'Sécurité',
+    path: '/security',
+    icon: <SecurityIcon />,
+    permission: AdminPermission.SECURITY_READ,
+  },
 ];
 
 interface Props {
-    mobileOpen: boolean;
-    onClose: () => void;
+  mobileOpen: boolean;
+  onClose: () => void;
 }
 
 export function Sidebar({ mobileOpen, onClose }: Props) {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { hasPermission } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
-    const filteredItems = NAV_ITEMS.filter(
-        (item) => !item.permission || hasPermission(item.permission),
-    );
+  const filteredItems = NAV_ITEMS.filter(
+    item => !item.permission || hasPermission(item.permission)
+  );
 
-    const drawer = (
+  const drawer = (
+    <Box
+      sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+      role='navigation'
+      aria-label='Menu principal'
+    >
+      <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <Box
-            sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-            role="navigation"
-            aria-label="Menu principal"
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: 2,
+            bgcolor: 'primary.main',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: 16,
+          }}
         >
-            <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box
-                    sx={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 2,
-                        bgcolor: 'primary.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        fontWeight: 800,
-                        fontSize: 16,
-                    }}
-                >
-                    R
-                </Box>
-                <Box>
-                    <Typography variant="subtitle1" fontWeight={700}>
-                        Remindy
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        Administration
-                    </Typography>
-                </Box>
-            </Box>
-
-            <Divider />
-
-            <List sx={{ flex: 1, py: 1, px: 1 }}>
-                {filteredItems.map((item) => {
-                    const active = location.pathname.startsWith(item.path);
-                    return (
-                        <ListItemButton
-                            key={item.path}
-                            selected={active}
-                            onClick={() => {
-                                navigate(item.path);
-                                onClose();
-                            }}
-                            aria-current={active ? 'page' : undefined}
-                            sx={{
-                                borderRadius: 2,
-                                mb: 0.5,
-                                '&.Mui-selected': {
-                                    bgcolor: 'primary.main',
-                                    color: '#fff',
-                                    '&:hover': { bgcolor: 'primary.dark' },
-                                    '& .MuiListItemIcon-root': { color: '#fff' },
-                                },
-                            }}
-                        >
-                            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-                            <ListItemText primary={item.label} />
-                        </ListItemButton>
-                    );
-                })}
-            </List>
+          R
         </Box>
-    );
-
-    return (
-        <Box
-            component="nav"
-            sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
-        >
-            {/* Mobile */}
-            <Drawer
-                variant="temporary"
-                open={mobileOpen}
-                onClose={onClose}
-                ModalProps={{ keepMounted: true }}
-                sx={{
-                    display: { xs: 'block', md: 'none' },
-                    '& .MuiDrawer-paper': { width: DRAWER_WIDTH },
-                }}
-            >
-                {drawer}
-            </Drawer>
-            {/* Desktop */}
-            <Drawer
-                variant="permanent"
-                sx={{
-                    display: { xs: 'none', md: 'block' },
-                    '& .MuiDrawer-paper': {
-                        width: DRAWER_WIDTH,
-                        borderRight: '1px solid',
-                        borderColor: 'divider',
-                    },
-                }}
-                open
-            >
-                {drawer}
-            </Drawer>
+        <Box>
+          <Typography variant='subtitle1' fontWeight={700}>
+            Remindy
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            Administration
+          </Typography>
         </Box>
-    );
+      </Box>
+
+      <Divider />
+
+      <List sx={{ flex: 1, py: 1, px: 1 }}>
+        {filteredItems.map(item => {
+          const active = location.pathname.startsWith(item.path);
+          return (
+            <ListItemButton
+              key={item.path}
+              selected={active}
+              onClick={() => {
+                navigate(item.path);
+                onClose();
+              }}
+              aria-current={active ? 'page' : undefined}
+              sx={{
+                borderRadius: 2,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: '#fff',
+                  '&:hover': { bgcolor: 'primary.dark' },
+                  '& .MuiListItemIcon-root': { color: '#fff' },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          );
+        })}
+      </List>
+    </Box>
+  );
+
+  return (
+    <Box
+      component='nav'
+      sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+    >
+      {/* Mobile */}
+      <Drawer
+        variant='temporary'
+        open={mobileOpen}
+        onClose={onClose}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { width: DRAWER_WIDTH },
+        }}
+      >
+        {drawer}
+      </Drawer>
+      {/* Desktop */}
+      <Drawer
+        variant='permanent'
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            borderRight: '1px solid',
+            borderColor: 'divider',
+          },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </Box>
+  );
 }
