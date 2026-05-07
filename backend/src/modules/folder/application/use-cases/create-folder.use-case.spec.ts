@@ -20,10 +20,7 @@ describe('CreateFolderUseCase', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CreateFolderUseCase,
-        { provide: FOLDER_REPOSITORY, useValue: mockRepository },
-      ],
+      providers: [CreateFolderUseCase, { provide: FOLDER_REPOSITORY, useValue: mockRepository }],
     }).compile();
 
     useCase = module.get<CreateFolderUseCase>(CreateFolderUseCase);

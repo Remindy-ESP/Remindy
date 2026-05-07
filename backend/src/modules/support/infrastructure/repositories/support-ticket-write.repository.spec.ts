@@ -99,9 +99,7 @@ describe('SupportTicketWriteRepository', () => {
         category,
       });
 
-      expect(ticketsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ category }),
-      );
+      expect(ticketsRepo.create).toHaveBeenCalledWith(expect.objectContaining({ category }));
       expect(result.category).toBe(category);
     });
 
@@ -118,9 +116,7 @@ describe('SupportTicketWriteRepository', () => {
 
       await sut.createTicket({ userId: 'user-1', subject: 'No category' });
 
-      expect(ticketsRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ category: null }),
-      );
+      expect(ticketsRepo.create).toHaveBeenCalledWith(expect.objectContaining({ category: null }));
     });
   });
 

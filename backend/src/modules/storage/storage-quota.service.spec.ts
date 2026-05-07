@@ -7,7 +7,7 @@ import { Role } from '../auth/domain/value-objects/role.enum';
 
 // ── Helper ─────────────────────────────────────────────────────────────────
 
-const makeDocument = (fileSize: number): Partial<Document> => ({ fileSize } as Document);
+const makeDocument = (fileSize: number): Partial<Document> => ({ fileSize });
 
 // ── Tests ──────────────────────────────────────────────────────────────────
 

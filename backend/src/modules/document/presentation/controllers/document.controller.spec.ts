@@ -511,11 +511,7 @@ describe('DocumentController', () => {
 
       updateDocumentUseCase.execute.mockResolvedValue(updatedDocument);
 
-      const result = await controller.update(
-        'doc-123',
-        { filename: 'updated.pdf' },
-        'user-123',
-      );
+      const result = await controller.update('doc-123', { filename: 'updated.pdf' }, 'user-123');
 
       expect(updateDocumentUseCase.execute).toHaveBeenCalledWith(
         'doc-123',
@@ -534,11 +530,11 @@ describe('DocumentController', () => {
         'user-123',
       );
 
-      expect(updateDocumentUseCase.execute).toHaveBeenCalledWith(
-        'doc-123',
-        'user-123',
-        { filename: 'test.pdf', folderId: 'folder-1', subscriptionId: 'sub-999' },
-      );
+      expect(updateDocumentUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
+        filename: 'test.pdf',
+        folderId: 'folder-1',
+        subscriptionId: 'sub-999',
+      });
     });
   });
 

@@ -78,7 +78,11 @@ describe('admin-user.policy — assertCanActOnUser', () => {
 
   it('SUPER_ADMIN peut agir sur un USER', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.SUPER_ADMIN, targetRole: Role.USER_FREEMIUM, action: 'ban' }),
+      assertCanActOnUser({
+        actorRole: Role.SUPER_ADMIN,
+        targetRole: Role.USER_FREEMIUM,
+        action: 'ban',
+      }),
     ).not.toThrow();
   });
 
@@ -94,7 +98,11 @@ describe('admin-user.policy — assertCanActOnUser', () => {
 
   it('USER_ADMIN peut agir sur un USER classique', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.USER_ADMIN, targetRole: Role.USER_FREEMIUM, action: 'ban' }),
+      assertCanActOnUser({
+        actorRole: Role.USER_ADMIN,
+        targetRole: Role.USER_FREEMIUM,
+        action: 'ban',
+      }),
     ).not.toThrow();
   });
 
@@ -170,7 +178,9 @@ describe('AdminUsersService.list()', () => {
       sortBy: 'createdAt',
       sortDir: 'DESC',
     } as any);
-    expect(mockQb.andWhere).toHaveBeenCalledWith('u.role_key = :role', { role: Role.USER_FREEMIUM });
+    expect(mockQb.andWhere).toHaveBeenCalledWith('u.role_key = :role', {
+      role: Role.USER_FREEMIUM,
+    });
   });
 
   it('applies status filter', async () => {
@@ -182,7 +192,9 @@ describe('AdminUsersService.list()', () => {
       sortBy: 'createdAt',
       sortDir: 'DESC',
     } as any);
-    expect(mockQb.andWhere).toHaveBeenCalledWith('u.status = :status', { status: UserStatus.BANNED });
+    expect(mockQb.andWhere).toHaveBeenCalledWith('u.status = :status', {
+      status: UserStatus.BANNED,
+    });
   });
 
   it('applies emailVerified filter', async () => {
@@ -411,7 +423,9 @@ describe('AdminUsersService.resetPassword()', () => {
 
   it('throws NotFoundException when user not found', async () => {
     mockUsersRepo.findOne.mockResolvedValue(null);
-    await expect(makeService().resetPassword(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
+    await expect(makeService().resetPassword(superAdmin, 'ghost')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 });
 

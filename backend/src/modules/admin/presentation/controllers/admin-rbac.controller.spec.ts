@@ -31,11 +31,16 @@ describe('AdminRbacController', () => {
       controllers: [AdminRbacController],
       providers: [{ provide: AdminRbacService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminMfaGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminCsrfGuard).useValue(alwaysAllow)
-      .overrideInterceptor(AuditInterceptor).useValue({ intercept: (_: any, next: any) => next.handle() })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminMfaGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminCsrfGuard)
+      .useValue(alwaysAllow)
+      .overrideInterceptor(AuditInterceptor)
+      .useValue({ intercept: (_: any, next: any) => next.handle() })
       .compile();
 
     controller = module.get(AdminRbacController);
@@ -58,7 +63,7 @@ describe('AdminRbacController', () => {
       mockService.createRole.mockResolvedValue(created);
 
       const body = { key: 'custom', label: 'Custom' };
-      const result = await controller.createRole(makeReq() as any, body as any);
+      const result = await controller.createRole(makeReq() as any, body);
 
       expect(mockService.createRole).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, body);
       expect(result).toEqual(created);
@@ -71,9 +76,13 @@ describe('AdminRbacController', () => {
       mockService.updateRole.mockResolvedValue(updated);
 
       const body = { label: 'Updated' };
-      const result = await controller.updateRole(makeReq() as any, 'custom', body as any);
+      const result = await controller.updateRole(makeReq() as any, 'custom', body);
 
-      expect(mockService.updateRole).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'custom', body);
+      expect(mockService.updateRole).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'custom',
+        body,
+      );
       expect(result).toEqual(updated);
     });
   });
@@ -90,10 +99,13 @@ describe('AdminRbacController', () => {
 
   describe('addPermission()', () => {
     it('delegates to service.addPermission', async () => {
-      mockService.addPermission.mockResolvedValue({ key: 'custom', permissions: ['admin.users.read'] });
+      mockService.addPermission.mockResolvedValue({
+        key: 'custom',
+        permissions: ['admin.users.read'],
+      });
 
       const body = { permission: 'admin.users.read' };
-      const result = await controller.addPermission(makeReq() as any, 'custom', body as any);
+      const result = await controller.addPermission(makeReq() as any, 'custom', body);
 
       expect(mockService.addPermission).toHaveBeenCalledWith(
         { role: Role.SUPER_ADMIN },
@@ -109,7 +121,7 @@ describe('AdminRbacController', () => {
       mockService.removePermission.mockResolvedValue({ key: 'custom', permissions: [] });
 
       const body = { permission: 'admin.users.read' };
-      const result = await controller.removePermission(makeReq() as any, 'custom', body as any);
+      const result = await controller.removePermission(makeReq() as any, 'custom', body);
 
       expect(mockService.removePermission).toHaveBeenCalledWith(
         { role: Role.SUPER_ADMIN },

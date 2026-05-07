@@ -39,11 +39,16 @@ describe('AdminUsersController', () => {
       controllers: [AdminUsersController],
       providers: [{ provide: AdminUsersService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminMfaGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminCsrfGuard).useValue(alwaysAllow)
-      .overrideInterceptor(AuditInterceptor).useValue({ intercept: (_: any, next: any) => next.handle() })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminMfaGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminCsrfGuard)
+      .useValue(alwaysAllow)
+      .overrideInterceptor(AuditInterceptor)
+      .useValue({ intercept: (_: any, next: any) => next.handle() })
       .compile();
 
     controller = module.get(AdminUsersController);

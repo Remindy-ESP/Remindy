@@ -23,10 +23,14 @@ describe('AdminAuditController', () => {
       controllers: [AdminAuditController],
       providers: [{ provide: AdminAuditService, useValue: mockService }],
     })
-      .overrideGuard(JwtAuthGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminRolesGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminMfaGuard).useValue(alwaysAllow)
-      .overrideGuard(AdminCsrfGuard).useValue(alwaysAllow)
+      .overrideGuard(JwtAuthGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminRolesGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminMfaGuard)
+      .useValue(alwaysAllow)
+      .overrideGuard(AdminCsrfGuard)
+      .useValue(alwaysAllow)
       .compile();
 
     controller = module.get(AdminAuditController);
@@ -49,7 +53,7 @@ describe('AdminAuditController', () => {
       mockService.list.mockResolvedValue({ items: [], total: 0 });
 
       const req = { user: { id: 'actor-2', role: Role.USER_ADMIN } } as any;
-      await controller.list(req, { page: 1, limit: 20 } as any);
+      await controller.list(req, { page: 1, limit: 20 });
 
       expect(mockService.list).toHaveBeenCalledWith({ role: Role.USER_ADMIN }, expect.any(Object));
     });

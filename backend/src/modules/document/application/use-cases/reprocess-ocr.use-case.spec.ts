@@ -296,7 +296,7 @@ describe('ReprocessOcrUseCase', () => {
     repository.updateOcrStatus.mockResolvedValue(undefined);
 
     // Get the queueService from the module and make it throw
-    const module: any = (useCase as any);
+    const module: any = useCase as any;
     // Access private queueService via bracket notation
     const origQueue = (useCase as any).queueService;
     origQueue.addDocumentToQueue = jest.fn().mockRejectedValue(new Error('queue error'));

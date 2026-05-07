@@ -479,9 +479,11 @@ describe('AdminDashboardService', () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          makeSubscription({ amount: 50, frequency: 'bi-annual', status: 'active' }),
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([
+            makeSubscription({ amount: 50, frequency: 'bi-annual', status: 'active' }),
+          ]),
       });
 
     mockTicketsRepo.count.mockResolvedValue(0);
@@ -491,7 +493,15 @@ describe('AdminDashboardService', () => {
       .mockReturnValueOnce(makeCountQb(0));
 
     mockDocumentsRepo.createQueryBuilder.mockReturnValueOnce(
-      makeCloudQb({ total: '0', storage: '0', pending: '0', processing: '0', completed: '0', failed: '0', uploaded24h: '0' }),
+      makeCloudQb({
+        total: '0',
+        storage: '0',
+        pending: '0',
+        processing: '0',
+        completed: '0',
+        failed: '0',
+        uploaded24h: '0',
+      }),
     );
 
     mockSecurityLogsRepo.createQueryBuilder
@@ -501,7 +511,13 @@ describe('AdminDashboardService', () => {
       .mockReturnValueOnce(makeCountQb(0));
 
     mockBlockedIpRepo.createQueryBuilder.mockReturnValueOnce(makeCountQb(0));
-    mockQueueService.getQueueStats.mockResolvedValue({ waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 });
+    mockQueueService.getQueueStats.mockResolvedValue({
+      waiting: 0,
+      active: 0,
+      completed: 0,
+      failed: 0,
+      delayed: 0,
+    });
 
     const result = await service.getOverview(allowedActor);
     // Unknown frequency contributes 0 to MRR (default branch)

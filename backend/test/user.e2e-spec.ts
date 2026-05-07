@@ -205,10 +205,7 @@ describe('User Module (e2e)', () => {
   });
 
   it('returns 401 when an invalid token is provided on GET /users/me', async () => {
-    await request(app.getHttpServer())
-      .get('/users/me')
-      .set(authHeaderFor('bad-token'))
-      .expect(401);
+    await request(app.getHttpServer()).get('/users/me').set(authHeaderFor('bad-token')).expect(401);
   });
 
   // ---- GET /users/profile ----
@@ -280,10 +277,7 @@ describe('User Module (e2e)', () => {
   });
 
   it('PUT /users/me - returns 401 when not authenticated', async () => {
-    await request(app.getHttpServer())
-      .put('/users/me')
-      .send({ firstName: 'Marie' })
-      .expect(401);
+    await request(app.getHttpServer()).put('/users/me').send({ firstName: 'Marie' }).expect(401);
   });
 
   it('PUT /users/me - returns 400 when non-whitelisted fields are sent', async () => {

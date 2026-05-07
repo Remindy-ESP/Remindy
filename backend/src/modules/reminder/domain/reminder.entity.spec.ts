@@ -41,33 +41,31 @@ describe('Reminder Entity', () => {
     });
 
     it('should throw when userId is empty', () => {
-      expect(
-        () => new Reminder({ ...validProps, userId: '' }),
-      ).toThrow('User ID cannot be empty');
+      expect(() => new Reminder({ ...validProps, userId: '' })).toThrow('User ID cannot be empty');
     });
 
     it('should throw when userId is only whitespace', () => {
-      expect(
-        () => new Reminder({ ...validProps, userId: '   ' }),
-      ).toThrow('User ID cannot be empty');
+      expect(() => new Reminder({ ...validProps, userId: '   ' })).toThrow(
+        'User ID cannot be empty',
+      );
     });
 
     it('should throw when daysBefore is 0', () => {
-      expect(
-        () => new Reminder({ ...validProps, daysBefore: 0 }),
-      ).toThrow('Days before must be greater than 0');
+      expect(() => new Reminder({ ...validProps, daysBefore: 0 })).toThrow(
+        'Days before must be greater than 0',
+      );
     });
 
     it('should throw when daysBefore is negative', () => {
-      expect(
-        () => new Reminder({ ...validProps, daysBefore: -1 }),
-      ).toThrow('Days before must be greater than 0');
+      expect(() => new Reminder({ ...validProps, daysBefore: -1 })).toThrow(
+        'Days before must be greater than 0',
+      );
     });
 
     it('should throw when daysBefore exceeds 365', () => {
-      expect(
-        () => new Reminder({ ...validProps, daysBefore: 366 }),
-      ).toThrow('Days before cannot exceed 365 days');
+      expect(() => new Reminder({ ...validProps, daysBefore: 366 })).toThrow(
+        'Days before cannot exceed 365 days',
+      );
     });
 
     it('should accept daysBefore = 365 (max)', () => {
@@ -76,9 +74,9 @@ describe('Reminder Entity', () => {
     });
 
     it('should throw for invalid reminder type', () => {
-      expect(
-        () => new Reminder({ ...validProps, type: 'invalid_type' as any }),
-      ).toThrow('Invalid reminder type');
+      expect(() => new Reminder({ ...validProps, type: 'invalid_type' as any })).toThrow(
+        'Invalid reminder type',
+      );
     });
 
     it('should accept all valid types', () => {
@@ -96,9 +94,9 @@ describe('Reminder Entity', () => {
     });
 
     it('should throw for invalid channel', () => {
-      expect(
-        () => new Reminder({ ...validProps, channel: 'invalid_channel' as any }),
-      ).toThrow('Invalid reminder channel');
+      expect(() => new Reminder({ ...validProps, channel: 'invalid_channel' as any })).toThrow(
+        'Invalid reminder channel',
+      );
     });
 
     it('should accept all valid channels', () => {
@@ -144,9 +142,7 @@ describe('Reminder Entity', () => {
 
     it('should throw when new daysBefore exceeds 365', () => {
       const reminder = new Reminder(validProps);
-      expect(() => reminder.updateDaysBefore(400)).toThrow(
-        'Days before cannot exceed 365 days',
-      );
+      expect(() => reminder.updateDaysBefore(400)).toThrow('Days before cannot exceed 365 days');
     });
   });
 

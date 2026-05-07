@@ -238,7 +238,9 @@ describe('UserSessionRepository', () => {
       expect(typeOrmRepository.createQueryBuilder).toHaveBeenCalled();
       expect(mockQueryBuilder.update).toHaveBeenCalledWith(UserSessionEntity);
       expect(mockQueryBuilder.set).toHaveBeenCalledWith({ isRevoked: true });
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('userId = :userId', { userId: 'user-123' });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('userId = :userId', {
+        userId: 'user-123',
+      });
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('isRevoked = :isRevoked', {
         isRevoked: false,
       });
@@ -300,7 +302,11 @@ describe('UserSessionRepository', () => {
     });
 
     it('should return 0 when affected is undefined', async () => {
-      typeOrmRepository.softDelete.mockResolvedValue({ affected: undefined, raw: {}, generatedMaps: [] });
+      typeOrmRepository.softDelete.mockResolvedValue({
+        affected: undefined,
+        raw: {},
+        generatedMaps: [],
+      });
 
       const result = await repository.cleanupExpiredSessions();
 
@@ -330,7 +336,11 @@ describe('UserSessionRepository', () => {
     });
 
     it('should return 0 when affected is undefined', async () => {
-      typeOrmRepository.softDelete.mockResolvedValue({ affected: undefined, raw: {}, generatedMaps: [] });
+      typeOrmRepository.softDelete.mockResolvedValue({
+        affected: undefined,
+        raw: {},
+        generatedMaps: [],
+      });
 
       const result = await repository.cleanupRevokedSessions();
 

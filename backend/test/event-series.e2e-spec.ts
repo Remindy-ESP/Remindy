@@ -295,9 +295,7 @@ describe('EventSeriesController (e2e)', () => {
   });
 
   it('GET /event-series/subscription/:subscriptionId — 401 with no token', async () => {
-    await request(app.getHttpServer())
-      .get(`/event-series/subscription/${validSubId}`)
-      .expect(401);
+    await request(app.getHttpServer()).get(`/event-series/subscription/${validSubId}`).expect(401);
   });
 
   // ─── GET /event-series/:id/generate ─────────────────────────────────────────
@@ -363,8 +361,6 @@ describe('EventSeriesController (e2e)', () => {
   });
 
   it('GET /event-series/:id/generate — 401 with no token', async () => {
-    await request(app.getHttpServer())
-      .get(`/event-series/${validSeriesId}/generate`)
-      .expect(401);
+    await request(app.getHttpServer()).get(`/event-series/${validSeriesId}/generate`).expect(401);
   });
 });

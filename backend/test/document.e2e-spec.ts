@@ -112,7 +112,11 @@ describe('Document Module (e2e)', () => {
     app = moduleFixture.createNestApplication();
     // Register multer as global middleware so @UploadedFile() works in the upload endpoint.
     // Use .single('file') to populate req.file (expected by @UploadedFile()).
-    app.use(multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }).single('file'));
+    app.use(
+      multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }).single(
+        'file',
+      ),
+    );
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
     );
@@ -326,10 +330,7 @@ describe('Document Module (e2e)', () => {
 
   it('GET /documents/quota responds 200 (routes to findOne in test context)', async () => {
     // documentRepository.findById is called with id='quota', returns mock doc → 200
-    await request(app.getHttpServer())
-      .get('/documents/quota')
-      .set(authHeader())
-      .expect(200);
+    await request(app.getHttpServer()).get('/documents/quota').set(authHeader()).expect(200);
 
     expect(documentRepository.findById).toHaveBeenCalledWith('quota');
   });
@@ -481,10 +482,7 @@ describe('Document Module (e2e)', () => {
   // ─── DELETE /documents/:id ────────────────────────────────────────────────
 
   it('deletes a document and returns 204', async () => {
-    await request(app.getHttpServer())
-      .delete(`/documents/${DOC_ID}`)
-      .set(authHeader())
-      .expect(204);
+    await request(app.getHttpServer()).delete(`/documents/${DOC_ID}`).set(authHeader()).expect(204);
 
     expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith(DOC_ID, USER_ID);
   });
@@ -494,10 +492,7 @@ describe('Document Module (e2e)', () => {
       new NotFoundException(`Document with ID ${DOC_ID} not found`),
     );
 
-    await request(app.getHttpServer())
-      .delete(`/documents/${DOC_ID}`)
-      .set(authHeader())
-      .expect(404);
+    await request(app.getHttpServer()).delete(`/documents/${DOC_ID}`).set(authHeader()).expect(404);
   });
 
   // ─── POST /documents/:id/reprocess-ocr ───────────────────────────────────

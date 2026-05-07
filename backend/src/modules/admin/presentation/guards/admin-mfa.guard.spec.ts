@@ -25,27 +25,27 @@ describe('AdminMfaGuard', () => {
   });
 
   it('throws ForbiddenException when mfaEnabled is false', () => {
-    expect(() =>
-      guard.canActivate(makeCtx({ mfaEnabled: false, mfaVerified: false })),
-    ).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(makeCtx({ mfaEnabled: false, mfaVerified: false }))).toThrow(
+      ForbiddenException,
+    );
   });
 
   it('throws ForbiddenException with correct message when mfaEnabled is false', () => {
-    expect(() =>
-      guard.canActivate(makeCtx({ mfaEnabled: false, mfaVerified: false })),
-    ).toThrow('MFA enrollment required for admin access');
+    expect(() => guard.canActivate(makeCtx({ mfaEnabled: false, mfaVerified: false }))).toThrow(
+      'MFA enrollment required for admin access',
+    );
   });
 
   it('throws ForbiddenException when mfaEnabled is true but mfaVerified is false', () => {
-    expect(() =>
-      guard.canActivate(makeCtx({ mfaEnabled: true, mfaVerified: false })),
-    ).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(makeCtx({ mfaEnabled: true, mfaVerified: false }))).toThrow(
+      ForbiddenException,
+    );
   });
 
   it('throws ForbiddenException with correct message when mfaVerified is false', () => {
-    expect(() =>
-      guard.canActivate(makeCtx({ mfaEnabled: true, mfaVerified: false })),
-    ).toThrow('MFA verification required');
+    expect(() => guard.canActivate(makeCtx({ mfaEnabled: true, mfaVerified: false }))).toThrow(
+      'MFA verification required',
+    );
   });
 
   it('returns true when user has mfaEnabled and mfaVerified', () => {

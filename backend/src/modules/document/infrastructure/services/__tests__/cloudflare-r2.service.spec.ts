@@ -264,10 +264,9 @@ describe('CloudflareR2Service', () => {
         }),
       };
 
-      expect(
-        () =>
-          new CloudflareR2Service(mockConfigServiceMissing as any),
-      ).toThrow('Cloudflare R2 credentials are not configured in .env');
+      expect(() => new CloudflareR2Service(mockConfigServiceMissing as any)).toThrow(
+        'Cloudflare R2 credentials are not configured in .env',
+      );
     });
   });
 });

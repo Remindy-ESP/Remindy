@@ -17,18 +17,20 @@ const makeEntity = (overrides: Partial<FolderEntity> = {}): FolderEntity => {
   return e;
 };
 
-const makeFolder = (overrides: Partial<{
-  id: string;
-  userId: string;
-  name: string;
-  parentId: string;
-  color: string;
-  icon: string;
-  isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
-}> = {}): Folder =>
+const makeFolder = (
+  overrides: Partial<{
+    id: string;
+    userId: string;
+    name: string;
+    parentId: string;
+    color: string;
+    icon: string;
+    isDefault: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date;
+  }> = {},
+): Folder =>
   new Folder({
     id: overrides.id ?? 'folder-1',
     userId: overrides.userId ?? 'user-1',

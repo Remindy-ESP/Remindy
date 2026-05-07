@@ -135,11 +135,7 @@ describe('RgpdExportService (domain)', () => {
       rgpdExportRepository.findByUserId.mockResolvedValue([]);
       rgpdExportRepository.create.mockResolvedValue(mockExport as any);
 
-      const result = await service.createExportRequest(
-        'user-123',
-        { format: 'json' },
-        '192.0.2.1',
-      );
+      const result = await service.createExportRequest('user-123', { format: 'json' }, '192.0.2.1');
 
       expect(result).toEqual({
         id: mockExport.id,
