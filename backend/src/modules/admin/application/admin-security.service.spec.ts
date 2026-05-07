@@ -602,3 +602,49 @@ describe('AdminSecurityService.getIpActivity()', () => {
     expect(result.recentLogs).toHaveLength(0);
   });
 });
+
+describe('AdminSecurityService.getBlockedIps()', () => {
+  it('queries only active blocked IPs by default', async () => {
+    const qb = makeQb([makeBlockedIp()]);
+    mockBlockedIpRepo.createQueryBuilder.mockReturnValue(qb);
+
+    const result = await makeService().getBlockedIps(true);
+
+    expect(qb.where).toHaveBeenCalledWith('ip.isActive = true');
+    expect(qb.andWhere).toHaveBeenCalled();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it('returns all blocked IPs when onlyActive is false', async () => {
+    const allIps = [makeBlockedIp(), makeBlockedIp({ id: 'ip-2', isActive: false })];
+    const qb = makeQb(allIps);
+    mockBlockedIpRepo.createQueryBuilder.mockReturnValue(qb);
+
+    await makeService().getBlockedIps(false);
+
+    expect(qb.where).not.toHaveBeenCalled();
+    expect(qb.andWhere).not.toHaveBeenCalled();
+  });
+});
+
+describe('AdminSecurityService.getLogs() — ipAddress and userId filters', () => {
+  it('applies the ipAddress filter', async () => {
+    const qb = makeQb([], 0);
+    mockLogsRepo.createQueryBuilder.mockReturnValue(qb);
+
+    await makeService().getLogs({ ipAddress: '1.2.3.4' });
+
+    expect(qb.andWhere).toHaveBeenCalledWith('log.ipAddress = :ipAddress', {
+      ipAddress: '1.2.3.4',
+    });
+  });
+
+  it('applies the userId filter', async () => {
+    const qb = makeQb([], 0);
+    mockLogsRepo.createQueryBuilder.mockReturnValue(qb);
+
+    await makeService().getLogs({ userId: 'user-xyz' });
+
+    expect(qb.andWhere).toHaveBeenCalledWith('log.userId = :userId', { userId: 'user-xyz' });
+  });
+});

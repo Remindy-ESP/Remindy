@@ -8,10 +8,34 @@ const mockEventEmitter = {
   emitAsync: jest.fn(),
 };
 
+// Inner Brackets builder mock - simulates the TypeORM Brackets callback
+const mockBracketsQb = {
+  where: jest.fn().mockReturnThis(),
+  orWhere: jest.fn().mockReturnThis(),
+  andWhere: jest.fn().mockReturnThis(),
+};
+
+const mockQb = {
+  andWhere: jest.fn().mockImplementation(function (this: any, arg: any) {
+    // If it's a Brackets instance, invoke the callback so it gets coverage
+    if (arg && typeof arg === 'object' && arg.constructor && arg.constructor.name === 'Brackets') {
+      arg.whereFactory(mockBracketsQb);
+    }
+    return this;
+  }),
+  where: jest.fn().mockReturnThis(),
+  orWhere: jest.fn().mockReturnThis(),
+  orderBy: jest.fn().mockReturnThis(),
+  skip: jest.fn().mockReturnThis(),
+  take: jest.fn().mockReturnThis(),
+  getManyAndCount: jest.fn(),
+};
+
 const mockUsersRepo = {
-  createQueryBuilder: jest.fn(),
+  createQueryBuilder: jest.fn(() => mockQb),
   findOne: jest.fn(),
   update: jest.fn(),
+  increment: jest.fn(),
 };
 
 const mockSessionsRepo = {
@@ -26,18 +50,27 @@ const userAdmin = { id: 'actor-2', role: Role.USER_ADMIN };
 
 const makeUser = (overrides: Partial<any> = {}) => ({
   id: 'user-1',
-  role_key: Role.USER,
+  role_key: Role.USER_FREEMIUM,
   status: UserStatus.ACTIVE,
   emailVerified: false,
   mfaEnabled: false,
   passwordChangedAt: null,
+  email: 'user@test.com',
+  firstName: 'John',
+  lastName: 'Doe',
+  lastLoginAt: null,
+  failedLoginCount: 0,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+  sessions: [],
   ...overrides,
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockEventEmitter.emit.mockClear();
-  mockEventEmitter.emitAsync.mockClear();
+  mockUsersRepo.createQueryBuilder.mockReturnValue(mockQb);
+  mockQb.getManyAndCount.mockResolvedValue([[], 0]);
 });
 
 describe('admin-user.policy — assertCanActOnUser', () => {
@@ -45,7 +78,7 @@ describe('admin-user.policy — assertCanActOnUser', () => {
 
   it('SUPER_ADMIN peut agir sur un USER', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.SUPER_ADMIN, targetRole: Role.USER, action: 'ban' }),
+      assertCanActOnUser({ actorRole: Role.SUPER_ADMIN, targetRole: Role.USER_FREEMIUM, action: 'ban' }),
     ).not.toThrow();
   });
 
@@ -61,7 +94,7 @@ describe('admin-user.policy — assertCanActOnUser', () => {
 
   it('USER_ADMIN peut agir sur un USER classique', () => {
     expect(() =>
-      assertCanActOnUser({ actorRole: Role.USER_ADMIN, targetRole: Role.USER, action: 'ban' }),
+      assertCanActOnUser({ actorRole: Role.USER_ADMIN, targetRole: Role.USER_FREEMIUM, action: 'ban' }),
     ).not.toThrow();
   });
 
@@ -83,6 +116,154 @@ describe('admin-user.policy — assertCanActOnUser', () => {
         action: 'ban',
       }),
     ).toThrow(ForbiddenException);
+  });
+});
+
+describe('AdminUsersService.list()', () => {
+  it('returns paginated user list', async () => {
+    const users = [makeUser(), makeUser({ id: 'user-2' })];
+    mockQb.getManyAndCount.mockResolvedValue([users, 2]);
+
+    const result = await makeService().list(superAdmin, {
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+
+    expect(result.total).toBe(2);
+    expect(result.items).toHaveLength(2);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(20);
+  });
+
+  it('applies q filter with single word', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      q: 'john',
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.andWhere).toHaveBeenCalled();
+  });
+
+  it('applies q filter with two words (firstName + lastName)', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      q: 'John Doe',
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.andWhere).toHaveBeenCalled();
+  });
+
+  it('applies role filter', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      role: Role.USER_FREEMIUM,
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.andWhere).toHaveBeenCalledWith('u.role_key = :role', { role: Role.USER_FREEMIUM });
+  });
+
+  it('applies status filter', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      status: UserStatus.BANNED,
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.andWhere).toHaveBeenCalledWith('u.status = :status', { status: UserStatus.BANNED });
+  });
+
+  it('applies emailVerified filter', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      emailVerified: true,
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.andWhere).toHaveBeenCalledWith('u.emailVerified = :ev', { ev: true });
+  });
+
+  it('applies mfaEnabled filter', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      mfaEnabled: false,
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.andWhere).toHaveBeenCalledWith('u.mfaEnabled = :mfa', { mfa: false });
+  });
+
+  it('applies pagination with skip and take', async () => {
+    mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    await makeService().list(superAdmin, {
+      page: 3,
+      limit: 10,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+    expect(mockQb.skip).toHaveBeenCalledWith(20);
+    expect(mockQb.take).toHaveBeenCalledWith(10);
+  });
+
+  it('maps user fields in items correctly', async () => {
+    const user = makeUser();
+    mockQb.getManyAndCount.mockResolvedValue([[user], 1]);
+
+    const result = await makeService().list(superAdmin, {
+      page: 1,
+      limit: 20,
+      sortBy: 'createdAt',
+      sortDir: 'DESC',
+    } as any);
+
+    expect(result.items[0]).toMatchObject({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role_key,
+      status: user.status,
+    });
+  });
+});
+
+describe('AdminUsersService.getById()', () => {
+  it('returns user with sessions count', async () => {
+    const user = makeUser({ sessions: [{ id: 's1' }, { id: 's2' }] });
+    mockUsersRepo.findOne.mockResolvedValue(user);
+
+    const result = await makeService().getById(superAdmin, 'user-1');
+    expect(result.id).toBe('user-1');
+    expect(result.sessionsCount).toBe(2);
+  });
+
+  it('returns sessionsCount of 0 when sessions is undefined', async () => {
+    const user = makeUser({ sessions: undefined });
+    mockUsersRepo.findOne.mockResolvedValue(user);
+
+    const result = await makeService().getById(superAdmin, 'user-1');
+    expect(result.sessionsCount).toBe(0);
+  });
+
+  it('throws NotFoundException when user not found', async () => {
+    mockUsersRepo.findOne.mockResolvedValue(null);
+    await expect(makeService().getById(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -124,6 +305,14 @@ describe('AdminUsersService.ban()', () => {
     await expect(makeService().ban(superAdmin, 'unknown')).rejects.toThrow(NotFoundException);
     expect(mockEventEmitter.emit).not.toHaveBeenCalled();
   });
+
+  it('bans without reason when reason is undefined', async () => {
+    mockUsersRepo.findOne.mockResolvedValue(makeUser());
+    mockUsersRepo.update.mockResolvedValue({});
+
+    const result = await makeService().ban(superAdmin, 'user-1');
+    expect(result.reason).toBeUndefined();
+  });
 });
 
 describe('AdminUsersService.unban()', () => {
@@ -146,6 +335,11 @@ describe('AdminUsersService.unban()', () => {
 
     await expect(makeService().unban(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
     expect(mockEventEmitter.emit).not.toHaveBeenCalled();
+  });
+
+  it('throws NotFoundException when user not found', async () => {
+    mockUsersRepo.findOne.mockResolvedValue(null);
+    await expect(makeService().unban(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -214,6 +408,11 @@ describe('AdminUsersService.resetPassword()', () => {
     );
     expect(mockUsersRepo.update).not.toHaveBeenCalled();
   });
+
+  it('throws NotFoundException when user not found', async () => {
+    mockUsersRepo.findOne.mockResolvedValue(null);
+    await expect(makeService().resetPassword(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
+  });
 });
 
 describe('AdminUsersService.verifyEmail()', () => {
@@ -234,6 +433,11 @@ describe('AdminUsersService.verifyEmail()', () => {
       ForbiddenException,
     );
   });
+
+  it('throws NotFoundException when user not found', async () => {
+    mockUsersRepo.findOne.mockResolvedValue(null);
+    await expect(makeService().verifyEmail(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
+  });
 });
 
 describe('AdminUsersService.forceMfa()', () => {
@@ -251,5 +455,10 @@ describe('AdminUsersService.forceMfa()', () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser({ role_key: Role.SUPER_ADMIN }));
 
     await expect(makeService().forceMfa(userAdmin, 'user-1')).rejects.toThrow(ForbiddenException);
+  });
+
+  it('throws NotFoundException when user not found', async () => {
+    mockUsersRepo.findOne.mockResolvedValue(null);
+    await expect(makeService().forceMfa(superAdmin, 'ghost')).rejects.toThrow(NotFoundException);
   });
 });
