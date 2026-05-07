@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module';
 import { CategoryController } from './presentation/controllers/category.controller';
 import { CategoryEntity } from './infrastructure/persistence/category.entity';
 import { CategoryRepository } from './infrastructure/repositories/category.repository';
@@ -11,7 +12,7 @@ import { FindCategoryByIdUseCase } from './application/use-cases/find-category-b
 import { FindAllCategoriesUseCase } from './application/use-cases/find-all-categories.use-case';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CategoryEntity])],
+  imports: [TypeOrmModule.forFeature([CategoryEntity]), AuthModule],
   controllers: [CategoryController],
   providers: [
     {
