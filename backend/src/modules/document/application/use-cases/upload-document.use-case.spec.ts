@@ -259,4 +259,190 @@ describe('UploadDocumentUseCase', () => {
 
     expect(quotaService.checkUserQuota).toHaveBeenCalledTimes(2);
   });
+
+  it('should handle queue failure gracefully (mark doc as failed, not throw)', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+    };
+
+    const mockDocument = new Document({
+      id: 'doc-123',
+      userId: dto.userId,
+      filename: dto.filename,
+      r2Key: 'test-key',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      ocrStatus: 'pending',
+    });
+
+    repository.create.mockResolvedValue(mockDocument);
+
+    // Simulate queue failure
+    const mockQueueService = (useCase as any).queueService;
+    mockQueueService.addDocumentToQueue = jest.fn().mockRejectedValue(new Error('queue down'));
+
+    // Should NOT re-throw the queue error - just marks doc as failed
+    const result = await useCase.execute(dto);
+    expect(result).toBe(mockDocument);
+    expect(repository.updateOcrStatus).toHaveBeenCalledWith(
+      'doc-123',
+      'failed',
+      expect.stringContaining('Failed to queue for processing'),
+    );
+  });
+
+  it('should handle cleanup failure when R2 delete fails after DB error', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+    };
+
+    r2Service.uploadFile.mockResolvedValue('https://r2.example.com/test.pdf');
+    repository.create.mockRejectedValue(new Error('DB error'));
+    r2Service.deleteFile.mockRejectedValue(new Error('R2 delete also failed'));
+
+    // Should still throw the original DB error
+    await expect(useCase.execute(dto)).rejects.toThrow('DB error');
+    expect(r2Service.deleteFile).toHaveBeenCalled();
+  });
+
+  it('should emit ocr.started event after successful queue add', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+    };
+
+    const mockDocument = new Document({
+      id: 'doc-123',
+      userId: dto.userId,
+      filename: dto.filename,
+      r2Key: 'test-key',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      ocrStatus: 'pending',
+    });
+
+    repository.create.mockResolvedValue(mockDocument);
+
+    const mockQueueService = (useCase as any).queueService;
+    mockQueueService.addDocumentToQueue = jest.fn().mockResolvedValue('job-456');
+
+    const mockEventEmitter = (useCase as any).eventEmitter;
+
+    await useCase.execute(dto);
+
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'ocr.started',
+      expect.objectContaining({
+        documentId: 'doc-123',
+        userId: 'user-123',
+        filename: 'test.pdf',
+      }),
+    );
+  });
+
+  it('should strip empty string contractId (0) to undefined', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+      contractId: 0, // Invalid -> undefined
+    };
+
+    const mockDocument = new Document({
+      userId: dto.userId,
+      filename: dto.filename,
+      r2Key: 'test-key',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      ocrStatus: 'pending',
+    });
+
+    repository.create.mockResolvedValue(mockDocument);
+
+    await useCase.execute(dto);
+
+    const created = repository.create.mock.calls[0][0];
+    expect(created.contractId).toBeUndefined();
+  });
+
+  it('should strip empty folderId to undefined', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+      folderId: '  ', // whitespace only -> empty -> undefined
+    };
+
+    const mockDocument = new Document({
+      userId: dto.userId,
+      filename: dto.filename,
+      r2Key: 'test-key',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      ocrStatus: 'pending',
+    });
+
+    repository.create.mockResolvedValue(mockDocument);
+
+    await useCase.execute(dto);
+
+    const created = repository.create.mock.calls[0][0];
+    expect(created.folderId).toBeUndefined();
+  });
+
+  it('should use premium role when userRole is premium', async () => {
+    const fileBuffer = Buffer.from('test content');
+    const dto: UploadDocumentAppDto = {
+      userId: 'user-123',
+      filename: 'test.pdf',
+      fileBuffer,
+      fileSize: fileBuffer.length,
+      mimeType: 'application/pdf',
+    };
+
+    const mockDocument = new Document({
+      userId: dto.userId,
+      filename: dto.filename,
+      r2Key: 'test-key',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: dto.fileSize,
+      mimeType: dto.mimeType,
+      ocrStatus: 'pending',
+    });
+
+    repository.create.mockResolvedValue(mockDocument);
+
+    await useCase.execute(dto, 'premium');
+
+    expect(quotaService.checkUserQuota).toHaveBeenCalledWith('user-123', 'premium', dto.fileSize);
+  });
 });
