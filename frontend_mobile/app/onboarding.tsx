@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import onboardingService from '@/services/local/onboarding.service';
+import Toast from 'react-native-toast-message';
 
 type OnboardingStep = {
   key: string;
@@ -120,7 +120,7 @@ export default function OnboardingScreen() {
 
       router.replace('/');
     } catch {
-      Alert.alert('Erreur', 'Impossible d enregistrer l etat du guide. Veuillez reessayer.');
+      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible d\'enregistrer l\'état du guide.' });
     } finally {
       setSaving(false);
     }

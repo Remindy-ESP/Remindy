@@ -1,7 +1,12 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import Toast from 'react-native-toast-message';
 import ResetPasswordScreen from '../reset-password';
+
+jest.mock('react-native-toast-message', () => ({
+  __esModule: true,
+  default: { show: jest.fn() },
+}));
 
 jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
@@ -28,19 +33,17 @@ jest.mock('@/services/api', () => ({
   getErrorMessage: jest.fn((err: any, fallback: string) => err?.message || fallback),
 }));
 
-jest.spyOn(Alert, 'alert');
-
 describe('ResetPasswordScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   it('submits reset password request with token from params', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (buttons && buttons[0] && buttons[0].onPress) {
-        buttons[0].onPress();
-      }
-    });
     mockResetPassword.mockResolvedValue(undefined);
 
     const { getByTestId } = render(<ResetPasswordScreen />);
@@ -50,8 +53,16 @@ describe('ResetPasswordScreen', () => {
 
     await waitFor(() => {
       expect(mockResetPassword).toHaveBeenCalledWith('reset-token-from-link', 'Password123');
-      expect(mockReplace).toHaveBeenCalledWith('/');
+      expect(Toast.show).toHaveBeenCalledWith({
+        type: 'success',
+        text1: 'Mot de passe réinitialisé',
+        text2: 'Vous pouvez maintenant vous connecter.',
+      });
     });
+
+    // Advance timers to trigger the setTimeout navigation
+    jest.advanceTimersByTime(1500);
+
+    expect(mockReplace).toHaveBeenCalledWith('/');
   });
 });
-

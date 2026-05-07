@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
+import Toast from 'react-native-toast-message';
 LocaleConfig.locales['fr'] = {
   monthNames: [
     'Janvier',
@@ -190,11 +191,11 @@ export default function DashboardScreen() {
       // Check file size (max 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (selectedFile.size && selectedFile.size > maxSize) {
-        Alert.alert(
-          'Fichier trop volumineux',
-          'Le fichier ne peut pas dépasser 10 MB. Veuillez choisir un fichier plus petit.',
-          [{ text: 'OK' }]
-        );
+        Toast.show({
+          type: 'error',
+          text1: 'Fichier trop volumineux',
+          text2: 'Le fichier ne peut pas dépasser 10 MB.',
+        });
         return;
       }
 
@@ -242,11 +243,11 @@ export default function DashboardScreen() {
       }
 
       if (documentWithParsedData.ocr_status === 'failed') {
-        Alert.alert(
-          'Analyse échouée',
-          'L\'analyse automatique du document a échoué. Vous pouvez saisir les informations manuellement.',
-          [{ text: 'OK' }]
-        );
+        Toast.show({
+          type: 'info',
+          text1: 'Analyse échouée',
+          text2: 'L\'analyse automatique a échoué. Saisie manuelle requise.',
+        });
       }
 
       // Navigate to subscription page with parsed data
@@ -276,11 +277,11 @@ export default function DashboardScreen() {
         errorMessage = error.response.data.message;
       }
 
-      Alert.alert(
-        'Erreur',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Erreur',
+        text2: errorMessage,
+      });
     } finally {
       setUploadingDocument(false);
     }

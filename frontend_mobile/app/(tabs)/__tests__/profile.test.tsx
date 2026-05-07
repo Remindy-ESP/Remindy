@@ -22,6 +22,12 @@ jest.mock('expo-router', () => ({
 
 jest.spyOn(Alert, 'alert');
 
+// Mock Toast
+jest.mock('react-native-toast-message', () => ({
+  __esModule: true,
+  default: { show: jest.fn() },
+}));
+
 const mockLogout = jest.fn();
 jest.mock('@/context/AuthContext', () => ({
   useAuth: jest.fn(() => ({
