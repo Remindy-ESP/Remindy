@@ -239,12 +239,35 @@ describe('GeminiParserService', () => {
       expect(resAssurance.category).toBe('assurance');
     });
 
+    it('should extract internet and streaming categories in fallback parsing', async () => {
+      mockModel.generateContent.mockRejectedValue(new Error('error'));
+
+      const resInternet = await service.parseDocument('Facture Orange internet');
+      expect(resInternet.category).toBe('internet');
+
+      const resStreaming = await service.parseDocument('Abonnement Netflix mensuel');
+      expect(resStreaming.category).toBe('streaming');
+    });
+
     it('should handle invalid date in fallback parsing', async () => {
       const ocrText = 'Date: abc/def/ghij'; // Definitely non-matching
       mockModel.generateContent.mockRejectedValue(new Error('error'));
 
       const result = await service.parseDocument(ocrText);
       expect(result.date).toBeUndefined();
+    });
+
+    it('should extract date from text with date pattern in fallback parsing (lines 248-252)', async () => {
+      // Text with a valid date pattern: dd/mm/yyyy - matches the regex
+      const ocrText = 'Facture du 15/01/2025 montant 29.99 EUR';
+      mockModel.generateContent.mockRejectedValue(new Error('Gemini error'));
+
+      const result = await service.parseDocument(ocrText);
+      // Lines 248-252: try block parses the date
+      expect(result.date).toBeInstanceOf(Date);
+      // amount should also be extracted
+      expect(result.amount).toBe(29.99);
+      expect(result.confidence).toBe(0.3);
     });
   });
 

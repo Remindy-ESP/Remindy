@@ -266,6 +266,106 @@ describe('DocumentPresentationMapper', () => {
     });
   });
 
+  describe('toUpdateAppDto', () => {
+    it('should map all update fields', () => {
+      const dto = {
+        filename: 'new-name.pdf',
+        folder_id: 'folder-123',
+        subscription_id: 'sub-456',
+      };
+
+      const result = DocumentPresentationMapper.toUpdateAppDto(dto);
+
+      expect(result).toEqual({
+        filename: 'new-name.pdf',
+        folderId: 'folder-123',
+        subscriptionId: 'sub-456',
+      });
+    });
+
+    it('should handle empty update dto', () => {
+      const result = DocumentPresentationMapper.toUpdateAppDto({});
+
+      expect(result).toEqual({
+        filename: undefined,
+        folderId: undefined,
+        subscriptionId: undefined,
+      });
+    });
+
+    it('should map with only filename', () => {
+      const result = DocumentPresentationMapper.toUpdateAppDto({ filename: 'renamed.pdf' });
+
+      expect(result.filename).toBe('renamed.pdf');
+      expect(result.folderId).toBeUndefined();
+      expect(result.subscriptionId).toBeUndefined();
+    });
+  });
+
+  describe('toResponseDto - parsed fields', () => {
+    it('should map parsed Gemini fields', () => {
+      const documentWithParsed = new Document({
+        id: 'doc-parsed',
+        userId: 'user-123',
+        filename: 'invoice.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        uploadedAt: new Date('2025-01-15T10:00:00Z'),
+        updatedAt: new Date('2025-01-15T10:00:00Z'),
+        parsedProvider: 'Netflix',
+        parsedAmount: 12.99,
+        parsedCurrency: 'EUR',
+        parsedDate: new Date('2025-01-01'),
+        parsedFrequency: 'mensuel',
+        parsedCategory: 'streaming',
+        parsingConfidence: 0.95,
+      });
+
+      const result = DocumentPresentationMapper.toResponseDto(documentWithParsed);
+
+      expect(result.parsed_provider).toBe('Netflix');
+      expect(result.parsed_amount).toBe(12.99);
+      expect(result.parsed_currency).toBe('EUR');
+      expect(result.parsed_date).toBe('2025-01-01');
+      expect(result.parsed_frequency).toBe('mensuel');
+      expect(result.parsed_category).toBe('streaming');
+      expect(result.parsing_confidence).toBe(0.95);
+    });
+
+    it('should return undefined for parsed fields when not set', () => {
+      const result = DocumentPresentationMapper.toResponseDto(mockDocument);
+
+      expect(result.parsed_provider).toBeUndefined();
+      expect(result.parsed_amount).toBeUndefined();
+      expect(result.parsed_currency).toBeUndefined();
+      expect(result.parsed_date).toBeUndefined();
+    });
+
+    it('should handle undefined uploadedAt and updatedAt', () => {
+      const docWithoutDates = new Document({
+        id: 'doc-nodates',
+        userId: 'user-123',
+        filename: 'test.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'pending',
+      });
+
+      const result = DocumentPresentationMapper.toResponseDto(docWithoutDates);
+
+      // Should not throw and dates should be undefined
+      expect(result.uploaded_at).toBeUndefined();
+      expect(result.updated_at).toBeUndefined();
+    });
+  });
+
   describe('toReprocessOcrAppDto', () => {
     it('should map reprocess DTO with force flag', () => {
       const presentationDto: ReprocessOcrDto = {

@@ -462,4 +462,66 @@ describe('AdminDashboardService', () => {
       expect.objectContaining({ now: expect.any(Date) }),
     );
   });
+
+  it("n'inclut pas un abonnement actif avec une fréquence inconnue dans le MRR", async () => {
+    mockUsersRepo.count.mockResolvedValue(0);
+    mockUsersRepo.createQueryBuilder
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0));
+
+    mockSubscriptionsRepo.createQueryBuilder
+      .mockReturnValueOnce(makeCountQb(1))
+      .mockReturnValueOnce(makeCountQb(1))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([
+            makeSubscription({ amount: 50, frequency: 'bi-annual', status: 'active' }),
+          ]),
+      });
+
+    mockTicketsRepo.count.mockResolvedValue(0);
+    mockTicketsRepo.createQueryBuilder
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0));
+
+    mockDocumentsRepo.createQueryBuilder.mockReturnValueOnce(
+      makeCloudQb({
+        total: '0',
+        storage: '0',
+        pending: '0',
+        processing: '0',
+        completed: '0',
+        failed: '0',
+        uploaded24h: '0',
+      }),
+    );
+
+    mockSecurityLogsRepo.createQueryBuilder
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0))
+      .mockReturnValueOnce(makeCountQb(0));
+
+    mockBlockedIpRepo.createQueryBuilder.mockReturnValueOnce(makeCountQb(0));
+    mockQueueService.getQueueStats.mockResolvedValue({
+      waiting: 0,
+      active: 0,
+      completed: 0,
+      failed: 0,
+      delayed: 0,
+    });
+
+    const result = await service.getOverview(allowedActor);
+    // Unknown frequency contributes 0 to MRR (default branch)
+    expect(result.subscriptions.estimatedMrr).toBe(0);
+    expect(result.subscriptions.byFrequency).toEqual({ 'bi-annual': 1 });
+  });
 });
