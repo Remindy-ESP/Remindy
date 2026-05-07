@@ -295,6 +295,73 @@ describe('EventRepository', () => {
     });
   });
 
+  describe('cancelScheduledEventOnDate', () => {
+    it('cancels the event scheduled on given date', async () => {
+      const qb = createQBMock();
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+      qb.execute.mockResolvedValue({ affected: 1 });
+
+      const date = new Date('2025-06-15T12:00:00.000Z');
+      const result = await sut.cancelScheduledEventOnDate('sub-1', date);
+
+      expect(qb.update).toHaveBeenCalledWith(EventEntity);
+      expect(qb.set).toHaveBeenCalledWith({ status: 'canceled' });
+      expect(qb.where).toHaveBeenCalledWith('subscriptionId = :subscriptionId', {
+        subscriptionId: 'sub-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('startsAt >= :startOfDay', {
+        startOfDay: expect.any(Date),
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('startsAt <= :endOfDay', {
+        endOfDay: expect.any(Date),
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :scheduledStatus', {
+        scheduledStatus: 'scheduled',
+      });
+      expect(result).toBe(1);
+    });
+
+    it('returns 0 when affected is undefined', async () => {
+      const qb = createQBMock();
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+      qb.execute.mockResolvedValue({ affected: undefined });
+
+      const result = await sut.cancelScheduledEventOnDate('sub-1', new Date());
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('cancelEventsAfterDate', () => {
+    it('cancels all scheduled events after given date', async () => {
+      const qb = createQBMock();
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+      qb.execute.mockResolvedValue({ affected: 5 });
+
+      const afterDate = new Date('2025-06-01T00:00:00.000Z');
+      const result = await sut.cancelEventsAfterDate('sub-1', afterDate);
+
+      expect(qb.update).toHaveBeenCalledWith(EventEntity);
+      expect(qb.set).toHaveBeenCalledWith({ status: 'canceled' });
+      expect(qb.where).toHaveBeenCalledWith('subscriptionId = :subscriptionId', {
+        subscriptionId: 'sub-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('startsAt > :afterDate', { afterDate });
+      expect(qb.andWhere).toHaveBeenCalledWith('status = :scheduledStatus', {
+        scheduledStatus: 'scheduled',
+      });
+      expect(result).toBe(5);
+    });
+
+    it('returns 0 when affected is undefined', async () => {
+      const qb = createQBMock();
+      (repo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+      qb.execute.mockResolvedValue({ affected: undefined });
+
+      const result = await sut.cancelEventsAfterDate('sub-1', new Date());
+      expect(result).toBe(0);
+    });
+  });
+
   describe('updateFutureEventsStatus', () => {
     it('returns count of affected rows', async () => {
       const qb = createQBMock();

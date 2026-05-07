@@ -264,4 +264,20 @@ describe('CreateReminderUseCase', () => {
 
     expect(result.daysBefore).toBe(1);
   });
+
+  it('should re-throw non-Error exceptions from repository', async () => {
+    const dto: CreateReminderAppDto = {
+      userId: 'user-999',
+      subscriptionId: 'sub-999',
+      type: 'payment_due',
+      daysBefore: 3,
+      enabled: true,
+      channel: 'email',
+    };
+
+    const nonError = { code: 'DB_ERROR', message: 'raw db error' };
+    repository.save.mockRejectedValue(nonError);
+
+    await expect(useCase.execute(dto)).rejects.toBe(nonError);
+  });
 });
