@@ -126,7 +126,13 @@ describe('InMemoryQueueService', () => {
     it('should find job in completedJobs (line 337)', async () => {
       const fakeCompletedJob = {
         id: 'completed-job-1',
-        data: { documentId: 'doc-c1', userId: 'u1', r2Key: 'k1', mimeType: 'application/pdf', filename: 'f.pdf' },
+        data: {
+          documentId: 'doc-c1',
+          userId: 'u1',
+          r2Key: 'k1',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
         status: 'completed' as const,
         attempts: 1,
         maxAttempts: 3,
@@ -145,7 +151,13 @@ describe('InMemoryQueueService', () => {
     it('should find job in failedJobs (line 338)', async () => {
       const fakeFailedJob = {
         id: 'failed-job-1',
-        data: { documentId: 'doc-f1', userId: 'u1', r2Key: 'k1', mimeType: 'application/pdf', filename: 'f.pdf' },
+        data: {
+          documentId: 'doc-f1',
+          userId: 'u1',
+          r2Key: 'k1',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
         status: 'failed' as const,
         attempts: 3,
         maxAttempts: 3,
@@ -294,7 +306,13 @@ describe('InMemoryQueueService', () => {
       // Fill completedJobs with 100 fake entries
       const fakeCompletedJobs = Array.from({ length: 100 }, (_, i) => ({
         id: `old-completed-${i}`,
-        data: { documentId: `doc-${i}`, userId: 'u1', r2Key: 'k', mimeType: 'application/pdf', filename: 'f.pdf' },
+        data: {
+          documentId: `doc-${i}`,
+          userId: 'u1',
+          r2Key: 'k',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
         status: 'completed' as const,
         attempts: 1,
         maxAttempts: 3,
@@ -315,7 +333,13 @@ describe('InMemoryQueueService', () => {
         confidence: 0.9,
       });
 
-      await service.addDocumentToQueue('doc-new', 'user-1', 'key-new', 'application/pdf', 'new.pdf');
+      await service.addDocumentToQueue(
+        'doc-new',
+        'user-1',
+        'key-new',
+        'application/pdf',
+        'new.pdf',
+      );
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // After trim, completedJobs should be back to 100
@@ -326,7 +350,13 @@ describe('InMemoryQueueService', () => {
       // Fill failedJobs with 200 fake entries
       const fakeFailedJobs = Array.from({ length: 200 }, (_, i) => ({
         id: `old-failed-${i}`,
-        data: { documentId: `doc-f${i}`, userId: 'u1', r2Key: 'k', mimeType: 'application/pdf', filename: 'f.pdf' },
+        data: {
+          documentId: `doc-f${i}`,
+          userId: 'u1',
+          r2Key: 'k',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
         status: 'failed' as const,
         attempts: 3,
         maxAttempts: 3,
@@ -346,7 +376,13 @@ describe('InMemoryQueueService', () => {
       const jobId = `ocr-job-trim-test-${Date.now()}`;
       const failJob = {
         id: jobId,
-        data: { documentId: 'doc-fail-trim', userId: 'user-1', r2Key: 'key-fail', mimeType: 'application/pdf', filename: 'fail.pdf' },
+        data: {
+          documentId: 'doc-fail-trim',
+          userId: 'user-1',
+          r2Key: 'key-fail',
+          mimeType: 'application/pdf',
+          filename: 'fail.pdf',
+        },
         status: 'waiting' as const,
         attempts: 2, // already at maxAttempts-1=2, so next failure exhausts all
         maxAttempts: 3,

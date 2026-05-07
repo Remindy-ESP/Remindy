@@ -192,7 +192,7 @@ describe('JwtRefreshStrategy', () => {
       // Access the internal extractor by inspecting passport-jwt options via the
       // _jwtFromRequest property set by passport-jwt on the Strategy instance.
       // The extractor array is stored on the instance as (Strategy as any)._jwtFromRequest.
-      const extractJwt: Function = (strategy as any)._jwtFromRequest;
+      const extractJwt: (req: unknown) => string | null = (strategy as any)._jwtFromRequest;
       if (typeof extractJwt === 'function') {
         const mockReq = { cookies: { refreshToken: 'my-cookie-token' } };
         const token = extractJwt(mockReq);
@@ -204,7 +204,7 @@ describe('JwtRefreshStrategy', () => {
     });
 
     it('should return null when refreshToken cookie is absent', () => {
-      const extractJwt: Function = (strategy as any)._jwtFromRequest;
+      const extractJwt: (req: unknown) => string | null = (strategy as any)._jwtFromRequest;
       if (typeof extractJwt === 'function') {
         const mockReq = { cookies: {} };
         const token = extractJwt(mockReq);
@@ -215,7 +215,7 @@ describe('JwtRefreshStrategy', () => {
     });
 
     it('should return null when cookies is undefined', () => {
-      const extractJwt: Function = (strategy as any)._jwtFromRequest;
+      const extractJwt: (req: unknown) => string | null = (strategy as any)._jwtFromRequest;
       if (typeof extractJwt === 'function') {
         const mockReq = {};
         const token = extractJwt(mockReq);
@@ -226,7 +226,7 @@ describe('JwtRefreshStrategy', () => {
     });
 
     it('should return null when refreshToken is not a string', () => {
-      const extractJwt: Function = (strategy as any)._jwtFromRequest;
+      const extractJwt: (req: unknown) => string | null = (strategy as any)._jwtFromRequest;
       if (typeof extractJwt === 'function') {
         const mockReq = { cookies: { refreshToken: 12345 } };
         const token = extractJwt(mockReq);

@@ -240,9 +240,7 @@ describe('UpdateFolderUseCase', () => {
       parentId: 'non-existent-parent',
     };
 
-    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(useCase.execute('folder-123', 'user-123', dto)).rejects.toThrow(NotFoundException);
     expect(repository.save).not.toHaveBeenCalled();
   });
 
@@ -262,7 +260,7 @@ describe('UpdateFolderUseCase', () => {
     });
 
     repository.findById
-      .mockResolvedValueOnce(folder)        // folder itself
+      .mockResolvedValueOnce(folder) // folder itself
       .mockResolvedValueOnce(otherUserParent); // parent
 
     const dto: UpdateFolderAppDto = {
@@ -325,10 +323,10 @@ describe('UpdateFolderUseCase', () => {
     });
 
     repository.findById
-      .mockResolvedValueOnce(folderB)    // fetch the folder being updated
-      .mockResolvedValueOnce(folderA)    // fetch new parent (folder-a)
+      .mockResolvedValueOnce(folderB) // fetch the folder being updated
+      .mockResolvedValueOnce(folderA) // fetch new parent (folder-a)
       .mockResolvedValueOnce(folderBAgain) // walk: folder-a's parent → folder-b (again, loop!)
-      .mockResolvedValueOnce(folderA);   // walk: folder-b's parent → folder-a (already visited)
+      .mockResolvedValueOnce(folderA); // walk: folder-b's parent → folder-a (already visited)
 
     const dto: UpdateFolderAppDto = { parentId: 'folder-a' };
 
@@ -350,7 +348,7 @@ describe('UpdateFolderUseCase', () => {
     // without ever hitting folder-target, so depth >= maxDepth throws
     let callCount = 0;
 
-    repository.findById.mockImplementation(async (id: string) => {
+    repository.findById.mockImplementation((id: string) => {
       if (callCount === 0) {
         callCount++;
         return targetFolder; // fetch the folder itself
@@ -358,7 +356,13 @@ describe('UpdateFolderUseCase', () => {
       if (callCount === 1) {
         callCount++;
         // fetch the proposed parent
-        return new Folder({ id: 'folder-0', userId: 'user-123', name: 'Chain 0', isDefault: false, parentId: 'folder-1' });
+        return new Folder({
+          id: 'folder-0',
+          userId: 'user-123',
+          name: 'Chain 0',
+          isDefault: false,
+          parentId: 'folder-1',
+        });
       }
       // Walk up: each folder's parent is folder-{callCount}
       const depth = callCount;

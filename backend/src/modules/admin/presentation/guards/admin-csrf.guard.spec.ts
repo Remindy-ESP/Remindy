@@ -38,7 +38,7 @@ describe('AdminCsrfGuard', () => {
   });
 
   describe('safe methods (bypass)', () => {
-    it.each(['GET', 'HEAD', 'OPTIONS'])('returns true for %s method', (method) => {
+    it.each(['GET', 'HEAD', 'OPTIONS'])('returns true for %s method', method => {
       const result = guard.canActivate(makeCtx({ method }));
       expect(result).toBe(true);
       expect(mockEmitter.emit).not.toHaveBeenCalled();
@@ -46,13 +46,16 @@ describe('AdminCsrfGuard', () => {
   });
 
   describe('unsafe methods with valid CSRF', () => {
-    it.each(['POST', 'PUT', 'PATCH', 'DELETE'])('returns true for %s with matching tokens', (method) => {
-      const token = 'valid-csrf-token';
-      const result = guard.canActivate(
-        makeCtx({ method, cookieToken: token, headerToken: token }),
-      );
-      expect(result).toBe(true);
-    });
+    it.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
+      'returns true for %s with matching tokens',
+      method => {
+        const token = 'valid-csrf-token';
+        const result = guard.canActivate(
+          makeCtx({ method, cookieToken: token, headerToken: token }),
+        );
+        expect(result).toBe(true);
+      },
+    );
   });
 
   describe('unsafe methods with invalid CSRF', () => {
@@ -78,8 +81,12 @@ describe('AdminCsrfGuard', () => {
 
     it('emits security.csrf.violation event on failure', () => {
       try {
-        guard.canActivate(makeCtx({ method: 'POST', cookieToken: 'a', headerToken: 'b', userId: 'user-1' }));
-      } catch (_) {}
+        guard.canActivate(
+          makeCtx({ method: 'POST', cookieToken: 'a', headerToken: 'b', userId: 'user-1' }),
+        );
+      } catch (_) {
+        /* guard throws on mismatch — we only assert the emitted event */
+      }
       expect(mockEmitter.emit).toHaveBeenCalledWith('security.csrf.violation', {
         userId: 'user-1',
         ipAddress: '1.2.3.4',
@@ -90,7 +97,9 @@ describe('AdminCsrfGuard', () => {
     it('emits event with undefined userId when user is not set', () => {
       try {
         guard.canActivate(makeCtx({ method: 'POST', cookieToken: 'a', headerToken: 'b' }));
-      } catch (_) {}
+      } catch (_) {
+        /* guard throws on mismatch — we only assert the emitted event */
+      }
       expect(mockEmitter.emit).toHaveBeenCalledWith(
         'security.csrf.violation',
         expect.objectContaining({ userId: undefined }),
