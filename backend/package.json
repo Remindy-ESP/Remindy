@@ -107,7 +107,23 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.ts",
+      "!**/*.spec.ts",
+      "!**/*.module.ts",
+      "!main.ts",
+      "!app.service.ts",
+      "!**/infrastructure/config/**",
+      "!**/database/migrations/**",
+      "!**/database/seeds/**",
+      "!**/database/entities/**",
+      "!**/infrastructure/persistence/*.entity.ts",
+      "!**/swagger/**",
+      "!**/index.ts",
+      "!**/*.dto.ts",
+      "!**/*.request.ts",
+      "!**/*.enum.ts",
+      "!**/*.events.ts",
+      "!**/constants/**"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
