@@ -530,4 +530,75 @@ describe('AdminTicketsService', () => {
       expect(usersRepo.findOne).not.toHaveBeenCalled();
     });
   });
+
+  describe('listTickets — Brackets callback coverage', () => {
+    const makeBracketsAwareQb = (rows: any[], total: number) => {
+      const innerQb = {
+        where: jest.fn().mockReturnThis(),
+        orWhere: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+      };
+      return {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockImplementation(function (this: any, arg: any) {
+          if (arg && typeof arg === 'object' && typeof arg.whereFactory === 'function') {
+            arg.whereFactory(innerQb);
+          }
+          return this;
+        }),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([rows, total]),
+        innerQb,
+      };
+    };
+
+    it('invokes single-word bracket path (firstName/lastName ILIKE :q)', async () => {
+      const qb = makeBracketsAwareQb([], 0);
+      (ticketsRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.listTickets({
+        q: 'john',
+        page: 1,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortDir: 'DESC',
+      } as any);
+
+      expect(qb.innerQb.where).toHaveBeenCalled();
+      expect(qb.innerQb.orWhere).toHaveBeenCalled();
+    });
+
+    it('invokes two-word bracket path (firstName + lastName)', async () => {
+      const qb = makeBracketsAwareQb([], 0);
+      (ticketsRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.listTickets({
+        q: 'John Doe',
+        page: 1,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortDir: 'DESC',
+      } as any);
+
+      expect(qb.innerQb.where).toHaveBeenCalled();
+      expect(qb.innerQb.orWhere).toHaveBeenCalled();
+    });
+
+    it('applies category filter when provided', async () => {
+      const qb = makeBracketsAwareQb([], 0);
+      (ticketsRepo.createQueryBuilder as jest.Mock).mockReturnValue(qb);
+
+      await service.listTickets({
+        category: 'billing' as any,
+        page: 1,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortDir: 'DESC',
+      } as any);
+
+      expect(qb.andWhere).toHaveBeenCalledWith('ticket.category = :category', { category: 'billing' });
+    });
+  });
 });
