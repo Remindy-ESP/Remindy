@@ -23,7 +23,9 @@ async function bootstrap(): Promise<void> {
             callback(new Error(`CORS: origin ${origin} not allowed`));
           }
         }
-      : true,
+      : process.env.NODE_ENV === 'production'
+        ? false
+        : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
