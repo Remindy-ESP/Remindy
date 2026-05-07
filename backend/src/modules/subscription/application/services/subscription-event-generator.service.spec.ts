@@ -17,6 +17,22 @@ describe('SubscriptionEventGeneratorService', () => {
     sut = new SubscriptionEventGeneratorService(eventRepository as any);
   });
 
+  describe('addFrequencyInterval (private, tested via calculateOccurrences)', () => {
+    it('covers one-time branch by calling private method directly', () => {
+      const date = new Date('2025-01-01');
+      // Access the private method directly to hit the one-time and default branches
+      const result = (sut as any).addFrequencyInterval(date, 'one-time');
+      expect(result).toBe(date);
+    });
+
+    it('covers default branch by passing unknown frequency to private method', () => {
+      const date = new Date('2025-01-01');
+      const result = (sut as any).addFrequencyInterval(date, 'unknown-freq');
+      // Default falls through to addMonthsUTC(date, 1)
+      expect(result.getUTCMonth()).toBe(1); // February (month index 1)
+    });
+  });
+
   describe('generateRruleFromFrequency', () => {
     it('returns WEEKLY for weekly', () => {
       expect(sut.generateRruleFromFrequency('weekly')).toBe('FREQ=WEEKLY;INTERVAL=1');
@@ -198,6 +214,15 @@ describe('SubscriptionEventGeneratorService', () => {
       const calledWith = eventRepository.createMany.mock.calls[0][0] as Event[];
       // Should only include Jan 1 and Feb 1 (on or before endDate)
       expect(calledWith.length).toBeLessThanOrEqual(2);
+    });
+  });
+
+  describe('regenerateEventsIfNeeded - one-time returns empty immediately', () => {
+    it('returns empty array for one-time frequency', async () => {
+      const subscription = makeSubscription({ frequency: 'one-time' });
+      const result = await sut.regenerateEventsIfNeeded(subscription);
+      expect(result).toEqual([]);
+      expect(eventRepository.findBySubscriptionId).not.toHaveBeenCalled();
     });
   });
 

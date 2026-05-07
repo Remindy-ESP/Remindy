@@ -244,6 +244,187 @@ describe('AuditController', () => {
     });
   });
 
+  describe('create - IP extraction edge cases', () => {
+    it('should use x-real-ip when x-forwarded-for is absent', async () => {
+      const createDto: CreateAuditLogRequestDto = {
+        action: 'user.view',
+        resourceType: 'user',
+      };
+
+      const requestWithRealIp = {
+        user: mockUser,
+        headers: {
+          'user-agent': 'TestAgent',
+          'x-real-ip': '10.20.30.40',
+        },
+        socket: { remoteAddress: '127.0.0.1' },
+        ip: '127.0.0.2',
+      } as any;
+
+      createAuditLogUseCase.execute.mockResolvedValue(mockAuditLogResponse);
+
+      await controller.create(requestWithRealIp, createDto);
+
+      expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ipAddress: '10.20.30.40' }),
+      );
+    });
+
+    it('should use socket.remoteAddress when no forwarded headers', async () => {
+      const createDto: CreateAuditLogRequestDto = {
+        action: 'user.view',
+        resourceType: 'user',
+      };
+
+      const requestNoHeaders = {
+        user: mockUser,
+        headers: {},
+        socket: { remoteAddress: '192.168.1.1' },
+        ip: '192.168.1.2',
+      } as any;
+
+      createAuditLogUseCase.execute.mockResolvedValue(mockAuditLogResponse);
+
+      await controller.create(requestNoHeaders, createDto);
+
+      expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ipAddress: '192.168.1.1' }),
+      );
+    });
+
+    it('should handle array x-forwarded-for header', async () => {
+      const createDto: CreateAuditLogRequestDto = {
+        action: 'user.view',
+        resourceType: 'user',
+      };
+
+      const requestArrayHeader = {
+        user: mockUser,
+        headers: {
+          'x-forwarded-for': ['203.0.113.1', '10.0.0.1'],
+        },
+        socket: { remoteAddress: '127.0.0.1' },
+        ip: '127.0.0.1',
+      } as any;
+
+      createAuditLogUseCase.execute.mockResolvedValue(mockAuditLogResponse);
+
+      await controller.create(requestArrayHeader, createDto);
+
+      expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ipAddress: '203.0.113.1' }),
+      );
+    });
+
+    it('should handle array x-real-ip header', async () => {
+      const createDto: CreateAuditLogRequestDto = {
+        action: 'user.view',
+        resourceType: 'user',
+      };
+
+      const requestArrayRealIp = {
+        user: mockUser,
+        headers: {
+          'x-real-ip': ['172.16.0.1', '10.0.0.1'],
+        },
+        socket: { remoteAddress: '127.0.0.1' },
+        ip: '127.0.0.1',
+      } as any;
+
+      createAuditLogUseCase.execute.mockResolvedValue(mockAuditLogResponse);
+
+      await controller.create(requestArrayRealIp, createDto);
+
+      expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ipAddress: '172.16.0.1' }),
+      );
+    });
+
+    it('should use null when no IP can be determined', async () => {
+      const createDto: CreateAuditLogRequestDto = {
+        action: 'user.view',
+        resourceType: 'user',
+      };
+
+      const requestNoIp = {
+        user: mockUser,
+        headers: {},
+        socket: {},
+        ip: undefined,
+      } as any;
+
+      createAuditLogUseCase.execute.mockResolvedValue(mockAuditLogResponse);
+
+      await controller.create(requestNoIp, createDto);
+
+      expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ipAddress: null }),
+      );
+    });
+
+    it('should handle missing user in request', async () => {
+      const createDto: CreateAuditLogRequestDto = {
+        action: 'system.action',
+        resourceType: 'system',
+      };
+
+      const requestNoUser = {
+        headers: { 'x-forwarded-for': '1.2.3.4' },
+        socket: { remoteAddress: '127.0.0.1' },
+      } as any;
+
+      createAuditLogUseCase.execute.mockResolvedValue(mockAuditLogResponse);
+
+      await controller.create(requestNoUser, createDto);
+
+      expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ actorUserId: null }),
+      );
+    });
+  });
+
+  describe('getStats - with custom dates', () => {
+    it('should pass custom dateFrom and dateTo', async () => {
+      getAuditStatsUseCase.execute.mockResolvedValue({
+        totalLogs: 0,
+        logsPerDay: [],
+        topActions: [],
+        failureRate: 0,
+        bySeverity: [],
+        byResourceType: [],
+      });
+
+      await controller.getStats({ dateFrom: '2025-01-01', dateTo: '2025-01-31' });
+
+      expect(getAuditStatsUseCase.execute).toHaveBeenCalledWith({
+        dateFrom: new Date('2025-01-01'),
+        dateTo: new Date('2025-01-31'),
+      });
+    });
+  });
+
+  describe('findAll - without dates', () => {
+    it('should call use case without dateFrom and dateTo when not provided', async () => {
+      findAllAuditLogsUseCase.execute.mockResolvedValue({
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0,
+      });
+
+      const filter: AuditLogFilterRequestDto = { page: 1, limit: 10 };
+      await controller.findAll(filter);
+
+      expect(findAllAuditLogsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          dateFrom: undefined,
+          dateTo: undefined,
+        }),
+      );
+    });
+  });
+
   describe('export', () => {
     it('should export audit logs as JSON', async () => {
       const mockResponse = {
