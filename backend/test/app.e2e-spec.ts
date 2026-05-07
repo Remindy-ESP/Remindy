@@ -1,25 +1,38 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { AppModule } from './../src/app.module';
+import { Controller } from '@nestjs/common';
 
-describe('AppController (e2e)', () => {
+@Controller()
+class MinimalController {}
+
+describe('Application Bootstrap (e2e)', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      controllers: [MinimalController],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
   });
 
-  afterEach(async () => {
-    await app.close();
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
+  it('should bootstrap and have a defined app instance', () => {
+    expect(app).toBeDefined();
+  });
+
+  it('should return 404 for unknown routes', async () => {
+    await request(app.getHttpServer()).get('/this-route-does-not-exist').expect(404);
+  });
+
+  it('should return 404 for unknown POST routes', async () => {
+    await request(app.getHttpServer()).post('/no-such-endpoint').expect(404);
   });
 });

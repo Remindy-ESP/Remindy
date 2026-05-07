@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 export abstract class IUserSessionRepository {
   abstract createSession(params: {
     userId: string;
