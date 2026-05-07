@@ -6,10 +6,8 @@ import CategoriesScreen from '../categories';
 // useFocusEffect: call the callback once using React.useEffect semantics
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn((callback: () => void) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     require('react').useEffect(() => {
       callback();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
   }),
 }));

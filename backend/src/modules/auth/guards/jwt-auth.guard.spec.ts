@@ -85,21 +85,10 @@ describe('JwtAuthGuard (guards/jwt-auth.guard.ts)', () => {
 
     it('should call super.canActivate for non-public routes', () => {
       const ctx = createMockContext();
-      reflector.getAllAndOverride.mockReturnValue(false);
-
-      // super.canActivate is the mocked AuthGuard's canActivate which returns mock
-      const { AuthGuard } = require('@nestjs/passport');
-      const MockGuardClass = AuthGuard('jwt');
-      const mockInstance = new MockGuardClass();
-      MockGuardClass.canActivateMock = jest.fn().mockReturnValue(true);
-
-      // The guard under test calls super.canActivate which in the mock returns canActivateMock result
-      // Since the guard extends the mock, calling guard.canActivate on non-public goes to super
       reflector.getAllAndOverride.mockReturnValue(null);
 
       // Just verify it doesn't throw and returns something (the super mock returns undefined/false)
-      const result = guard.canActivate(ctx);
-      // result is falsy since mock returns undefined by default, that's fine
+      void guard.canActivate(ctx);
       expect(reflector.getAllAndOverride).toHaveBeenCalled();
     });
 
@@ -107,7 +96,7 @@ describe('JwtAuthGuard (guards/jwt-auth.guard.ts)', () => {
       const ctx = createMockContext();
       reflector.getAllAndOverride.mockReturnValue(false);
 
-      guard.canActivate(ctx);
+      void guard.canActivate(ctx);
 
       expect(reflector.getAllAndOverride).toHaveBeenCalledWith('isPublic', [
         ctx.getHandler(),

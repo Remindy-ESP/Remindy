@@ -20,7 +20,7 @@ jest.mock('@react-navigation/native', () => {
   return {
     ...actual,
     useFocusEffect: (cb: () => void | (() => void)) => {
-      React.useEffect(() => { return cb(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      React.useEffect(() => { return cb(); }, []);
     },
     useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() }),
   };
