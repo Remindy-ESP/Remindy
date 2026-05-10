@@ -166,6 +166,45 @@ describe('ForgotPasswordUseCase', () => {
       });
     });
 
+    it('should emit reset event after sending email', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('reset-token-123');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.password.reset', {
+        userEmail: mockUser.getEmail(),
+      });
+    });
+
+    it('should use explicit FRONTEND_PASSWORD_RESET_URL when provided', async () => {
+      process.env.FRONTEND_PASSWORD_RESET_URL = 'https://app.example.com/custom-reset';
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('reset-token-123');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: mockUser.getEmail(),
+        resetLink: 'https://app.example.com/custom-reset?token=reset-token-123',
+      });
+    });
+
+    it('should append token with ampersand when explicit reset url already has query params', async () => {
+      process.env.FRONTEND_PASSWORD_RESET_URL = 'https://app.example.com/custom-reset?lang=fr';
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('reset-token-xyz');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: mockUser.getEmail(),
+        resetLink: 'https://app.example.com/custom-reset?lang=fr&token=reset-token-xyz',
+      });
+    });
     it('should use user email from entity, not input parameter', async () => {
       const inputEmail = 'test@example.com';
       const userEmail = 'actual@example.com';
@@ -257,5 +296,69 @@ describe('ForgotPasswordUseCase', () => {
         resetLink: `https://example.com/reset-password?source=email&token=${resetToken}`,
       });
     });
+    it('should emit password reset event when user exists', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('reset-token');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.password.reset', {
+        userEmail: 'test@example.com',
+      });
+    });
+
+    it('should fallback to localhost when FRONTEND_URL is missing', async () => {
+      delete process.env.FRONTEND_URL;
+      delete process.env.FRONTEND_PASSWORD_RESET_URL;
+
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('fallback-token');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        resetLink: 'http://localhost:3000/reset-password?token=fallback-token',
+      });
+    });
+
+    it('should trim FRONTEND_PASSWORD_RESET_URL before appending token', async () => {
+      process.env.FRONTEND_PASSWORD_RESET_URL = '  https://example.com/reset-password  ';
+
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('trimmed-token');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        resetLink: 'https://example.com/reset-password?token=trimmed-token',
+      });
+    });
+    it('should fallback to FRONTEND_URL when FRONTEND_PASSWORD_RESET_URL is only whitespace', async () => {
+      process.env.FRONTEND_URL = 'https://frontend.example.com';
+      process.env.FRONTEND_PASSWORD_RESET_URL = '   ';
+
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('blank-explicit-url-token');
+      emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
+
+      await useCase.execute(email);
+
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        resetLink: 'https://frontend.example.com/reset-password?token=blank-explicit-url-token',
+      });
+    });
+  });
+});
+
+describe('ForgotPasswordUseCase constructor branch coverage', () => {
+  it('should instantiate with all dependencies as null to cover constructor parameter branches', () => {
+    const instance = new ForgotPasswordUseCase(null as any, null as any, null as any, null as any);
+    expect(instance).toBeDefined();
   });
 });

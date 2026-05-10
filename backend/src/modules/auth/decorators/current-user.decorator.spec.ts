@@ -1,10 +1,7 @@
-import { ExecutionContext } from '@nestjs/common';
-import { CurrentUser } from './current-user.decorator';
-
 describe('CurrentUser decorator', () => {
   let factory: (data: string | undefined, ctx: any) => unknown;
 
-  const mockCreateParamDecorator = jest.fn((fn) => {
+  const mockCreateParamDecorator = jest.fn(fn => {
     factory = fn;
     return fn;
   });
@@ -14,12 +11,14 @@ describe('CurrentUser decorator', () => {
 
     jest.doMock('@nestjs/common', () => {
       const actual = jest.requireActual('@nestjs/common');
+
       return {
         ...actual,
         createParamDecorator: mockCreateParamDecorator,
       };
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require('./current-user.decorator');
   });
 
@@ -39,11 +38,16 @@ describe('CurrentUser decorator', () => {
 
   it('returns null when request has no user', () => {
     const result = factory(undefined, mockContext(undefined));
+
     expect(result).toBeNull();
   });
 
   it('returns the full user when no field is requested', () => {
-    const user = { id: 'user-1', email: 'john@example.com', role: 'USER' };
+    const user = {
+      id: 'user-1',
+      email: 'john@example.com',
+      role: 'USER',
+    };
 
     const result = factory(undefined, mockContext(user));
 
@@ -51,7 +55,11 @@ describe('CurrentUser decorator', () => {
   });
 
   it('returns a specific field when requested', () => {
-    const user = { id: 'user-1', email: 'john@example.com', role: 'USER' };
+    const user = {
+      id: 'user-1',
+      email: 'john@example.com',
+      role: 'USER',
+    };
 
     const result = factory('id', mockContext(user));
 
@@ -59,7 +67,10 @@ describe('CurrentUser decorator', () => {
   });
 
   it('returns undefined when requested field does not exist', () => {
-    const user = { id: 'user-1', email: 'john@example.com' };
+    const user = {
+      id: 'user-1',
+      email: 'john@example.com',
+    };
 
     const result = factory('missing', mockContext(user));
 

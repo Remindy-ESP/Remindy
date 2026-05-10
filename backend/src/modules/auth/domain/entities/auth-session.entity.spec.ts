@@ -3,8 +3,8 @@ import { IUserSessionRepository } from './auth-session.entity';
 describe('IUserSessionRepository', () => {
   it('can be extended by a concrete implementation', async () => {
     class TestRepository extends IUserSessionRepository {
-      async createSession() {
-        return { id: 'session-123' };
+      createSession() {
+        return Promise.resolve({ id: 'session-123' });
       }
     }
 

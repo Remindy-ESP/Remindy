@@ -213,9 +213,9 @@ describe('UserService', () => {
       userRepository.findById.mockResolvedValueOnce(mockUser as any);
       userRepository.findById.mockResolvedValueOnce(null);
 
-      await expect(
-        service.updateUserProfile('user-123', { firstName: 'Updated' }),
-      ).rejects.toThrow(new NotFoundException('User not found after update'));
+      await expect(service.updateUserProfile('user-123', { firstName: 'Updated' })).rejects.toThrow(
+        new NotFoundException('User not found after update'),
+      );
     });
   });
 

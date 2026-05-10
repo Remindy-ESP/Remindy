@@ -60,7 +60,7 @@ describe('UpdateMyProfileUseCase', () => {
       });
     });
 
-    it('should update profile with partial data', async () => {
+    it('should update profile with partial data (undefined fields)', async () => {
       const userId = 'user-456';
       const dto: UpdateUserMeRequestDto = {
         firstName: 'Jane',
@@ -72,6 +72,52 @@ describe('UpdateMyProfileUseCase', () => {
 
       expect(userRepo.updateProfile).toHaveBeenCalledWith(userId, {
         firstName: 'Jane',
+        lastName: undefined,
+        phone: undefined,
+        language: undefined,
+        timezone: undefined,
+        photoR2Key: undefined,
+      });
+    });
+
+    // Branch: normalizeNullableText — empty string → null
+    it('should normalize empty string nullable fields to null', async () => {
+      const userId = 'user-nullable';
+      const dto: UpdateUserMeRequestDto = {
+        firstName: '',
+        lastName: '',
+        phone: '',
+        photoR2Key: '',
+      };
+
+      userRepo.updateProfile.mockResolvedValue(undefined);
+
+      await useCase.execute(userId, dto);
+
+      expect(userRepo.updateProfile).toHaveBeenCalledWith(userId, {
+        firstName: null,
+        lastName: null,
+        phone: null,
+        language: undefined,
+        timezone: undefined,
+        photoR2Key: null,
+      });
+    });
+
+    // Branch: normalizeRequiredText — empty string → undefined
+    it('should normalize empty string required fields (language, timezone) to undefined', async () => {
+      const userId = 'user-required';
+      const dto: UpdateUserMeRequestDto = {
+        language: '',
+        timezone: '',
+      };
+
+      userRepo.updateProfile.mockResolvedValue(undefined);
+
+      await useCase.execute(userId, dto);
+
+      expect(userRepo.updateProfile).toHaveBeenCalledWith(userId, {
+        firstName: undefined,
         lastName: undefined,
         phone: undefined,
         language: undefined,
@@ -124,74 +170,22 @@ describe('UpdateMyProfileUseCase', () => {
       );
     });
 
-    it('should handle updating only last name', async () => {
-      const userId = 'user-abc';
-      const dto: UpdateUserMeRequestDto = { lastName: 'NewLastName' };
+    it('should handle updating language and timezone with non-empty values', async () => {
+      const userId = 'user-lang';
+      const dto: UpdateUserMeRequestDto = { language: 'en', timezone: 'America/New_York' };
 
       userRepo.updateProfile.mockResolvedValue(undefined);
 
       await useCase.execute(userId, dto);
 
-      expect(userRepo.updateProfile).toHaveBeenCalledWith(
-        userId,
-        expect.objectContaining({ lastName: 'NewLastName' }),
-      );
-    });
-
-    it('should handle updating phone number', async () => {
-      const userId = 'user-def';
-      const dto: UpdateUserMeRequestDto = { phone: '+33699887766' };
-
-      userRepo.updateProfile.mockResolvedValue(undefined);
-
-      await useCase.execute(userId, dto);
-
-      expect(userRepo.updateProfile).toHaveBeenCalledWith(
-        userId,
-        expect.objectContaining({ phone: '+33699887766' }),
-      );
-    });
-
-    it('should handle updating language', async () => {
-      const userId = 'user-ghi';
-      const dto: UpdateUserMeRequestDto = { language: 'en' };
-
-      userRepo.updateProfile.mockResolvedValue(undefined);
-
-      await useCase.execute(userId, dto);
-
-      expect(userRepo.updateProfile).toHaveBeenCalledWith(
-        userId,
-        expect.objectContaining({ language: 'en' }),
-      );
-    });
-
-    it('should handle updating timezone', async () => {
-      const userId = 'user-jkl';
-      const dto: UpdateUserMeRequestDto = { timezone: 'America/New_York' };
-
-      userRepo.updateProfile.mockResolvedValue(undefined);
-
-      await useCase.execute(userId, dto);
-
-      expect(userRepo.updateProfile).toHaveBeenCalledWith(
-        userId,
-        expect.objectContaining({ timezone: 'America/New_York' }),
-      );
-    });
-
-    it('should handle updating photo', async () => {
-      const userId = 'user-mno';
-      const dto: UpdateUserMeRequestDto = { photoR2Key: 'photos/new-photo.jpg' };
-
-      userRepo.updateProfile.mockResolvedValue(undefined);
-
-      await useCase.execute(userId, dto);
-
-      expect(userRepo.updateProfile).toHaveBeenCalledWith(
-        userId,
-        expect.objectContaining({ photoR2Key: 'photos/new-photo.jpg' }),
-      );
+      expect(userRepo.updateProfile).toHaveBeenCalledWith(userId, {
+        firstName: undefined,
+        lastName: undefined,
+        phone: undefined,
+        language: 'en',
+        timezone: 'America/New_York',
+        photoR2Key: undefined,
+      });
     });
   });
 });

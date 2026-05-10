@@ -94,6 +94,14 @@ describe('UserAuthTypeOrmRepository', () => {
       expect(result).toBeNull();
       expect(mapper.toDomain).not.toHaveBeenCalled();
     });
+    it('should return null when user is not found by email', async () => {
+      typeOrmRepository.findOne.mockResolvedValue(null);
+
+      const result = await repository.findByEmail('missing@example.com');
+
+      expect(result).toBeNull();
+      expect(mapper.toDomain).not.toHaveBeenCalled();
+    });
   });
 
   describe('save', () => {
@@ -275,5 +283,11 @@ describe('UserAuthTypeOrmRepository', () => {
         { lastLoginAt: date },
       );
     });
+  });
+});
+describe('UserAuthTypeOrmRepository constructor branch coverage', () => {
+  it('should instantiate with null dependencies to cover constructor parameter branches', () => {
+    const instance = new UserAuthTypeOrmRepository(null as any, null as any);
+    expect(instance).toBeDefined();
   });
 });

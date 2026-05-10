@@ -131,10 +131,7 @@ describe('AuthController (e2e)', () => {
       refreshToken: 'refresh-token-123',
     });
 
-    const res = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send(payload)
-      .expect(201);
+    const res = await request(app.getHttpServer()).post('/auth/register').send(payload).expect(201);
 
     expect(registerUserUseCase.execute).toHaveBeenCalledWith(payload);
 
@@ -167,10 +164,7 @@ describe('AuthController (e2e)', () => {
       refreshToken: 'refresh-token-123',
     });
 
-    const res = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send(payload)
-      .expect(201);
+    const res = await request(app.getHttpServer()).post('/auth/login').send(payload).expect(201);
 
     expect(loginUseCase.execute).toHaveBeenCalledWith({
       email: payload.email,

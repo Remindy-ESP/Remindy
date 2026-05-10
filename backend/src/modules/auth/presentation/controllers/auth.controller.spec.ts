@@ -440,6 +440,48 @@ describe('AuthController', () => {
         controller.refreshToken(mockRequest as Request, mockResponse as Response, body),
       ).rejects.toThrow(UnauthorizedException);
     });
+    it('should prioritize cookie refresh token even when cookie value is not a string', async () => {
+      const reqWithInvalidCookie = {
+        ...mockRequest,
+        cookies: { refreshToken: 12345 },
+      };
+
+      refreshTokenUseCase.execute.mockResolvedValue({
+        accessToken: 'new_access_token',
+        refreshToken: 'new_refresh_token',
+      });
+
+      await controller.refreshToken(reqWithInvalidCookie as Request, mockResponse as Response, {
+        refreshToken: 'body_token',
+      });
+
+      expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
+        refreshToken: 12345,
+        ipAddress: '192.168.1.1',
+        userAgent: 'Mozilla/5.0',
+      });
+    });
+
+    it('should pass undefined userAgent to refresh use case when header is missing', async () => {
+      const reqWithoutUserAgent = {
+        ...mockRequest,
+        headers: {},
+        cookies: { refreshToken: 'cookie_token' },
+      };
+
+      refreshTokenUseCase.execute.mockResolvedValue({
+        accessToken: 'new_access_token',
+        refreshToken: 'new_refresh_token',
+      });
+
+      await controller.refreshToken(reqWithoutUserAgent as Request, mockResponse as Response);
+
+      expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
+        refreshToken: 'cookie_token',
+        ipAddress: '192.168.1.1',
+        userAgent: undefined,
+      });
+    });
   });
 
   describe('logout', () => {
@@ -488,6 +530,21 @@ describe('AuthController', () => {
 
       expect(logoutUseCase.execute).toHaveBeenCalledWith('refresh_token_456');
     });
+    it('should not call logout use case when refreshToken cookie is not a string', async () => {
+      const reqWithInvalidCookie = {
+        ...mockRequest,
+        cookies: { refreshToken: 12345 },
+      };
+
+      const result = await controller.logout(
+        reqWithInvalidCookie as Request,
+        mockResponse as Response,
+      );
+
+      expect(logoutUseCase.execute).not.toHaveBeenCalled();
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+      expect(result).toEqual({ success: true });
+    });
   });
 
   describe('forgotPassword', () => {
@@ -516,6 +573,117 @@ describe('AuthController', () => {
         success: true,
         message: 'If the email exists, a reset link has been sent',
       });
+    });
+  });
+
+  describe('register fallback values', () => {
+    it('should use unknown fallback for missing ip and user-agent during registration auto-login', async () => {
+      const registerDto = { email: 'fallback@example.com', password: 'SecurePass123!' };
+      const user = { getId: jest.fn().mockReturnValue('user-fallback') } as any;
+      registerUserUseCase.execute.mockResolvedValue(user);
+      loginUseCase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        userId: 'user-fallback',
+      });
+
+      const request = { headers: {} } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      await controller.register(request, registerDto as any, response);
+
+      expect(loginUseCase.execute).toHaveBeenCalledWith({
+        email: registerDto.email,
+        password: registerDto.password,
+        ipAddress: 'unknown',
+        userAgent: 'unknown',
+        deviceName: 'web',
+      });
+    });
+  });
+
+  describe('login fallback values', () => {
+    it('should use unknown fallback for missing ip and user-agent during login', async () => {
+      loginUseCase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        userId: 'user-123',
+      });
+
+      const request = { headers: {} } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      await controller.login(
+        request,
+        { email: 'test@example.com', password: 'SecurePass123!' } as any,
+        response,
+      );
+
+      expect(loginUseCase.execute).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        ipAddress: 'unknown',
+        userAgent: 'unknown',
+        deviceName: 'web',
+      });
+    });
+  });
+
+  describe('refreshToken branches', () => {
+    it('should use refresh token from request body when cookie is missing', async () => {
+      process.env.NODE_ENV = 'production';
+      refreshTokenUseCase.execute.mockResolvedValue({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
+
+      const request = {
+        ip: '10.0.0.1',
+        headers: {},
+        cookies: {},
+      } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      const result = await controller.refreshToken(request, response, {
+        refreshToken: 'body-refresh-token',
+      });
+
+      expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
+        refreshToken: 'body-refresh-token',
+        ipAddress: '10.0.0.1',
+        userAgent: undefined,
+      });
+      expect(response.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        'new-refresh-token',
+        expect.objectContaining({ secure: true, sameSite: 'strict', path: '/' }),
+      );
+      expect(result).toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
+    });
+
+    it('should throw when no refresh token is provided in cookie or body', async () => {
+      const request = { cookies: {}, headers: {} } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      await expect(controller.refreshToken(request, response, {})).rejects.toThrow(
+        new UnauthorizedException('Refresh token missing'),
+      );
+    });
+  });
+
+  describe('logout branches', () => {
+    it('should not call logout use case when refresh token cookie is not a string', async () => {
+      const request = { cookies: { refreshToken: 12345 } } as any;
+      const response = { clearCookie: jest.fn() } as any;
+
+      const result = await controller.logout(request, response);
+
+      expect(logoutUseCase.execute).not.toHaveBeenCalled();
+      expect(response.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+      expect(result).toEqual({ success: true });
     });
   });
 
@@ -558,5 +726,19 @@ describe('AuthController', () => {
         newPassword: 'Password2!',
       });
     });
+  });
+});
+
+describe('AuthController constructor branch coverage', () => {
+  it('should instantiate with null dependencies to cover constructor parameter branches', () => {
+    const instance = new AuthController(
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+    );
+    expect(instance).toBeDefined();
   });
 });

@@ -283,9 +283,9 @@ describe('UserController', () => {
 
     getMyPreferencesUseCase.execute.mockResolvedValue(prefs);
 
-    await expect(
-      controller.getPreferences({ user: { userId: 'user-1' } } as any),
-    ).resolves.toEqual(expect.objectContaining({ userId: 'user-1' }));
+    await expect(controller.getPreferences({ user: { userId: 'user-1' } } as any)).resolves.toEqual(
+      expect.objectContaining({ userId: 'user-1' }),
+    );
 
     expect(getMyPreferencesUseCase.execute).toHaveBeenCalledWith('user-1');
   });

@@ -94,13 +94,9 @@ describe('RgpdExportService (application)', () => {
 
     it('throws when there is already a pending export', async () => {
       userRepository.findById.mockResolvedValue({ id: 'user-1' });
-      rgpdExportRepository.findByUserId.mockResolvedValue([
-        { ...exportEntity, status: 'pending' },
-      ]);
+      rgpdExportRepository.findByUserId.mockResolvedValue([{ ...exportEntity, status: 'pending' }]);
 
-      await expect(
-        service.createExportRequest('user-1', {} as any, '127.0.0.1'),
-      ).rejects.toThrow(
+      await expect(service.createExportRequest('user-1', {} as any, '127.0.0.1')).rejects.toThrow(
         new BadRequestException(
           'You already have a pending export request. Please wait for it to complete.',
         ),
@@ -113,9 +109,7 @@ describe('RgpdExportService (application)', () => {
         { ...exportEntity, status: 'processing' },
       ]);
 
-      await expect(
-        service.createExportRequest('user-1', {} as any, '127.0.0.1'),
-      ).rejects.toThrow(
+      await expect(service.createExportRequest('user-1', {} as any, '127.0.0.1')).rejects.toThrow(
         new BadRequestException(
           'You already have a pending export request. Please wait for it to complete.',
         ),

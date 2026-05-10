@@ -145,5 +145,196 @@ describe('LoginUseCase', () => {
       expect(userRepo.incrementFailedLoginCount).toHaveBeenCalledWith('user-123');
       expect(tokenService.generateAccessToken).not.toHaveBeenCalled();
     });
+
+    it('should throw UnauthorizedException and emit failure when user is not found', async () => {
+      userRepo.findByEmail.mockResolvedValue(null);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.failure', {
+        userEmail: loginParams.email,
+        ipAddress: loginParams.ipAddress,
+        userAgent: loginParams.userAgent,
+        metadata: { reason: 'user_not_found' },
+      });
+      expect(userRepo.incrementFailedLoginCount).not.toHaveBeenCalled();
+    });
+
+    it('should emit failure event with attempts when invalid password stays below threshold', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      passwordService.compare.mockResolvedValue(false);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.failure', {
+        userEmail: loginParams.email,
+        ipAddress: loginParams.ipAddress,
+        userAgent: loginParams.userAgent,
+        metadata: { reason: 'invalid_password', attempts: 1 },
+      });
+    });
+
+    it('should emit brute force event when invalid password reaches threshold', async () => {
+      const bruteForceUser = new AuthUser({
+        id: 'user-999',
+        email: 'bf@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 4,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+
+      userRepo.findByEmail.mockResolvedValue(bruteForceUser);
+      passwordService.compare.mockResolvedValue(false);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.brute_force', {
+        userEmail: loginParams.email,
+        ipAddress: loginParams.ipAddress,
+        metadata: { attempts: 5 },
+      });
+    });
+
+    it('should default deviceName to web when it is not provided', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      passwordService.compare.mockResolvedValue(true);
+      passwordService.hash.mockResolvedValue('hashedRefreshToken');
+      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
+      tokenService.generateAccessToken.mockReturnValue('accessToken123');
+      sessionRepo.createSession.mockResolvedValue(undefined);
+
+      await useCase.execute({ ...loginParams, deviceName: undefined });
+
+      expect(sessionRepo.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ deviceName: 'web' }),
+      );
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.success', {
+        userId: 'user-123',
+        userEmail: loginParams.email,
+        ipAddress: loginParams.ipAddress,
+        userAgent: loginParams.userAgent,
+      });
+    });
+    it('should throw UnauthorizedException when user is not found and emit failure event', async () => {
+      userRepo.findByEmail.mockResolvedValue(null);
+
+      await expect(
+        useCase.execute({
+          email: 'missing@example.com',
+          password: 'password123',
+          ipAddress: '10.0.0.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.failure', {
+        userEmail: 'missing@example.com',
+        ipAddress: '10.0.0.1',
+        userAgent: 'Mozilla/5.0',
+        metadata: { reason: 'user_not_found' },
+      });
+    });
+
+    it('should emit brute force event when failed count reaches threshold', async () => {
+      const userAtThreshold = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 4,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+
+      userRepo.findByEmail.mockResolvedValue(userAtThreshold);
+      passwordService.compare.mockResolvedValue(false);
+      userRepo.incrementFailedLoginCount.mockResolvedValue(undefined);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.brute_force', {
+        userEmail: loginParams.email,
+        ipAddress: loginParams.ipAddress,
+        metadata: { attempts: 5 },
+      });
+    });
+
+    it('should use "web" as default device name when deviceName is not provided', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      passwordService.compare.mockResolvedValue(true);
+      passwordService.hash.mockResolvedValue('hashedRefreshToken');
+      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
+      tokenService.generateAccessToken.mockReturnValue('accessToken123');
+      sessionRepo.createSession.mockResolvedValue(undefined);
+      userRepo.resetFailedLoginCount.mockResolvedValue(undefined);
+      userRepo.updateLastLoginAt.mockResolvedValue(undefined);
+
+      await useCase.execute({
+        email: 'test@example.com',
+        password: 'password123',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+      });
+
+      expect(sessionRepo.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          deviceName: 'web',
+        }),
+      );
+    });
+    it('should fallback to 0 when getFailedLoginCount method is missing', async () => {
+      const userWithoutFailedCountMethod = {
+        getId: jest.fn().mockReturnValue('user-123'),
+        getEmail: jest.fn().mockReturnValue('test@example.com'),
+        getPasswordHash: jest.fn().mockReturnValue('hashedPassword123'),
+      } as any;
+
+      userRepo.findByEmail.mockResolvedValue(userWithoutFailedCountMethod);
+      passwordService.compare.mockResolvedValue(false);
+      userRepo.incrementFailedLoginCount.mockResolvedValue(undefined);
+
+      await expect(
+        useCase.execute({
+          email: 'test@example.com',
+          password: 'wrong-password',
+          ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.login.failure', {
+        userEmail: 'test@example.com',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+        metadata: { reason: 'invalid_password', attempts: 1 },
+      });
+    });
+  });
+});
+
+describe('LoginUseCase constructor branch coverage', () => {
+  it('should instantiate with all dependencies as null to cover constructor parameter branches', () => {
+    const instance = new LoginUseCase(
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+    );
+    expect(instance).toBeDefined();
   });
 });

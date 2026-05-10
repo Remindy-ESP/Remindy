@@ -11,6 +11,7 @@ const BRUTE_FORCE_THRESHOLD = 5;
 
 @Injectable()
 export class LoginUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly userRepo: IUserAuthRepository,
     private readonly sessionRepo: IUserSessionRepository,

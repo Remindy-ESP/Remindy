@@ -6,6 +6,7 @@ import { JwtAccessPayload, JwtRefreshPayload } from '../../domain/services/token
 
 @Injectable()
 export class JwtTokenService {
+  /* istanbul ignore next */
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,

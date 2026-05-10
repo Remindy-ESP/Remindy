@@ -270,5 +270,110 @@ describe('RegisterUserUseCase', () => {
       expect(result.getLastName()).toBe(registerDto.lastName);
       expect(result.getPhone()).toBe(registerDto.phone);
     });
+    it('should use empty strings when firstName, lastName and phone are undefined', async () => {
+      const dto: RegisterRequestDto = {
+        email: 'empty-fields@example.com',
+        password: 'password123',
+        firstName: undefined as any,
+        lastName: undefined as any,
+        phone: undefined as any,
+      };
+
+      const savedUser = new AuthUser({
+        id: 'user-empty-fields',
+        email: dto.email,
+        passwordHash: 'hashedPassword',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 0,
+        emailVerified: false,
+        mfaEnabled: false,
+        createdAt: new Date(),
+      });
+
+      userRepo.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashedPassword');
+      userRepo.save.mockResolvedValue(savedUser);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+
+      const result = await useCase.execute(dto);
+
+      expect(result.getFirstName()).toBe('');
+      expect(result.getLastName()).toBe('');
+      expect(result.getPhone()).toBe('');
+    });
+    it('should keep provided firstName, lastName and phone values when they are non-empty', async () => {
+      const dto: RegisterRequestDto = {
+        email: 'provided-fields@example.com',
+        password: 'password123',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '+33123456789',
+      };
+
+      const savedUser = new AuthUser({
+        id: 'user-provided-fields',
+        email: dto.email,
+        passwordHash: 'hashedPassword',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '+33123456789',
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 0,
+        emailVerified: false,
+        mfaEnabled: false,
+        createdAt: new Date(),
+      });
+
+      userRepo.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashedPassword');
+      userRepo.save.mockResolvedValue(savedUser);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+
+      const result = await useCase.execute(dto);
+
+      expect(result.getFirstName()).toBe('Jane');
+      expect(result.getLastName()).toBe('Smith');
+      expect(result.getPhone()).toBe('+33123456789');
+    });
+    it('should keep provided firstName, lastName and phone values when they are non-empty', async () => {
+      const dto: RegisterRequestDto = {
+        email: 'provided-fields@example.com',
+        password: 'password123',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '+33123456789',
+      };
+
+      const savedUser = new AuthUser({
+        id: 'user-provided-fields',
+        email: dto.email,
+        passwordHash: 'hashedPassword',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '+33123456789',
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 0,
+        emailVerified: false,
+        mfaEnabled: false,
+        createdAt: new Date(),
+      });
+
+      userRepo.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashedPassword');
+      userRepo.save.mockResolvedValue(savedUser);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+
+      const result = await useCase.execute(dto);
+
+      expect(result.getFirstName()).toBe('Jane');
+      expect(result.getLastName()).toBe('Smith');
+      expect(result.getPhone()).toBe('+33123456789');
+    });
   });
 });

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  ExecutionContext,
   Get,
   INestApplication,
   Param,
@@ -32,7 +33,7 @@ import { JwtTokenService } from '../src/modules/auth/infrastructure/services/jwt
 import { EUser } from '../src/infrastructure/database/entities/user.entity';
 
 type UserRecord = {
-  id: string;
+  userId: string;
   role: Role;
   mfaEnabled: boolean;
 };
@@ -81,33 +82,26 @@ class TestAuditAutoController {
 describe('Audit Module (e2e)', () => {
   let app: INestApplication;
 
+  // req.user shape must be { userId, role } — this is what the real JWT strategy
+  // produces (JwtStrategy maps sub → userId) and what AuditController +
+  // MfaRequiredGuard both read via user.userId.
   const users: Record<string, UserRecord> = {
-    'admin-1': { id: 'admin-1', role: Role.USER_ADMIN, mfaEnabled: true },
-    'admin-no-mfa': { id: 'admin-no-mfa', role: Role.USER_ADMIN, mfaEnabled: false },
-    'user-1': { id: 'user-1', role: Role.USER_PREMIUM, mfaEnabled: true },
+    'admin-1': { userId: 'admin-1', role: Role.USER_ADMIN, mfaEnabled: true },
+    'admin-no-mfa': { userId: 'admin-no-mfa', role: Role.USER_ADMIN, mfaEnabled: false },
+    'user-1': { userId: 'user-1', role: Role.USER_PREMIUM, mfaEnabled: true },
   };
 
-  const createAuditLogUseCase = {
-    execute: jest.fn(),
-  };
-  const findAllAuditLogsUseCase = {
-    execute: jest.fn(),
-  };
-  const findAuditLogByIdUseCase = {
-    execute: jest.fn(),
-  };
-  const getAuditStatsUseCase = {
-    execute: jest.fn(),
-  };
-  const exportAuditLogsUseCase = {
-    execute: jest.fn(),
-  };
-  const jwtTokenService = {
-    verifyAccessToken: jest.fn(),
-  };
-  const userRepository = {
-    findOne: jest.fn(),
-  };
+  const createAuditLogUseCase = { execute: jest.fn() };
+  const findAllAuditLogsUseCase = { execute: jest.fn() };
+  const findAuditLogByIdUseCase = { execute: jest.fn() };
+  const getAuditStatsUseCase = { execute: jest.fn() };
+  const exportAuditLogsUseCase = { execute: jest.fn() };
+  const jwtTokenService = { verifyAccessToken: jest.fn() };
+  const userRepository = { findOne: jest.fn() };
+
+  // Declared at describe scope so restoreMocks() can re-implement canActivate
+  // after jest.clearAllMocks() wipes the jest.fn() implementation each test.
+  const mockJwtAuthGuard = { canActivate: jest.fn() };
 
   const validAuditId = '11111111-1111-1111-1111-111111111111';
   const validActorId = '22222222-2222-2222-2222-222222222222';
@@ -130,7 +124,16 @@ describe('Audit Module (e2e)', () => {
 
   const authHeaderFor = (token: string) => ({ Authorization: `Bearer ${token}` });
 
-  beforeAll(async () => {
+  /**
+   * Restores all mock implementations wiped by jest.clearAllMocks().
+   * Called in both beforeAll and beforeEach.
+   *
+   * Critical shape: req.user = { userId, role }
+   *  - AuditController reads req.user.userId for actorUserId
+   *  - MfaRequiredGuard reads user.userId to look up DB user
+   *  - RolesGuard reads user.role for RBAC
+   */
+  const restoreMocks = () => {
     jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
       switch (token) {
         case 'admin-token':
@@ -145,23 +148,36 @@ describe('Audit Module (e2e)', () => {
     });
 
     userRepository.findOne.mockImplementation(({ where }: { where: { id: string } }) => {
-      const user = users[where.id];
-      if (!user) {
-        return null;
-      }
-
-      return Promise.resolve({
-        id: user.id,
-        mfaEnabled: user.mfaEnabled,
-      });
+      const user = Object.values(users).find(u => u.userId === where.id);
+      if (!user) return Promise.resolve(null);
+      return Promise.resolve({ id: user.userId, mfaEnabled: user.mfaEnabled });
     });
+
+    // Bypass Passport entirely. Maps sub → userId to match the shape the real
+    // JWT strategy produces, used by AuditController and MfaRequiredGuard.
+    mockJwtAuthGuard.canActivate.mockImplementation((ctx: ExecutionContext) => {
+      const req = ctx.switchToHttp().getRequest();
+      const authHeader: string | undefined = req.headers?.authorization;
+      if (!authHeader?.startsWith('Bearer ')) return false;
+      const token = authHeader.slice(7);
+      try {
+        const payload = jwtTokenService.verifyAccessToken(token);
+        req.user = { userId: payload.sub, role: payload.role };
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  };
+
+  beforeAll(async () => {
+    restoreMocks();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [AuditController, TestAuditAutoController],
       providers: [
         Reflector,
         AuditInterceptor,
-        JwtAuthGuard,
         RolesGuard,
         MfaRequiredGuard,
         { provide: CreateAuditLogUseCase, useValue: createAuditLogUseCase },
@@ -172,7 +188,10 @@ describe('Audit Module (e2e)', () => {
         { provide: JwtTokenService, useValue: jwtTokenService },
         { provide: getRepositoryToken(EUser), useValue: userRepository },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(mockJwtAuthGuard)
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -186,13 +205,14 @@ describe('Audit Module (e2e)', () => {
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
+    if (app) await app.close();
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Must restore after clearAllMocks() resets jest.fn() implementations,
+    // including mockJwtAuthGuard.canActivate which guards every request.
+    restoreMocks();
 
     createAuditLogUseCase.execute.mockResolvedValue(sampleAuditLog);
     findAllAuditLogsUseCase.execute.mockResolvedValue({
@@ -369,9 +389,7 @@ describe('Audit Module (e2e)', () => {
       .expect(200);
 
     expect(exportAuditLogsUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        format: 'csv',
-      }),
+      expect.objectContaining({ format: 'csv' }),
     );
     expect(response.headers['content-disposition']).toContain('.csv"');
     expect(response.headers['content-type']).toContain('text/csv');
@@ -406,11 +424,7 @@ describe('Audit Module (e2e)', () => {
           id: 'abc-123',
           email: 'user@example.com',
           password: '[REDACTED]',
-          nested: {
-            refreshToken: '[REDACTED]',
-            ok: true,
-            password: '[REDACTED]',
-          },
+          nested: { refreshToken: '[REDACTED]', ok: true, password: '[REDACTED]' },
           token: '[REDACTED]',
         },
       }),

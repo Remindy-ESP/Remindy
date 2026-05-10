@@ -114,9 +114,7 @@ describe('user/domain/services/RgpdExportService', () => {
 
     it('throws when a pending export already exists', async () => {
       userRepository.findById.mockResolvedValue(mockUser);
-      rgpdExportRepository.findByUserId.mockResolvedValue([
-        { ...mockExport, status: 'pending' },
-      ]);
+      rgpdExportRepository.findByUserId.mockResolvedValue([{ ...mockExport, status: 'pending' }]);
 
       await expect(
         service.createExportRequest('user-123', { format: 'json' }, '10.0.0.1'),

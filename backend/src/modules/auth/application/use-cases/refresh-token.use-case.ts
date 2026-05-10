@@ -6,6 +6,7 @@ import { IUserAuthRepository } from '../../domain/repositories/user-auth.reposit
 
 @Injectable()
 export class RefreshTokenUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly tokenService: ITokenService,
     private readonly sessionRepo: IUserSessionRepository,

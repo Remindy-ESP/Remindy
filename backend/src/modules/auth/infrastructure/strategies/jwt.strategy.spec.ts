@@ -195,6 +195,18 @@ describe('JwtStrategy', () => {
       });
     });
 
+    it('should coerce truthy MFA flags to true', () => {
+      const result = strategy.validate({
+        sub: 'user-true',
+        role: 'USER_PREMIUM',
+        mfaEnabled: 1,
+        mfaVerified: 'yes',
+      } as any);
+
+      expect(result.mfaEnabled).toBe(true);
+      expect(result.mfaVerified).toBe(true);
+    });
+
     it('should not include email or other fields in result', () => {
       const payload = {
         sub: 'user-123',
@@ -209,5 +221,31 @@ describe('JwtStrategy', () => {
       expect(result).not.toHaveProperty('name');
       expect(Object.keys(result)).toEqual(['id', 'userId', 'role', 'mfaEnabled', 'mfaVerified']);
     });
+  });
+  it('should coerce truthy MFA fields to true', () => {
+    const payload = {
+      sub: 'user-123',
+      role: 'USER_FREEMIUM',
+      mfaEnabled: 1,
+      mfaVerified: 'yes',
+    };
+
+    const result = strategy.validate(payload);
+
+    expect(result).toEqual({
+      id: 'user-123',
+      userId: 'user-123',
+      role: 'USER_FREEMIUM',
+      mfaEnabled: true,
+      mfaVerified: true,
+    });
+  });
+});
+
+describe('JwtStrategy constructor branch coverage', () => {
+  it('should instantiate with a mock config to cover constructor parameter branches', () => {
+    const mockConfig = { get: jest.fn().mockReturnValue('test-secret') };
+    const instance = new JwtStrategy(mockConfig as any);
+    expect(instance).toBeDefined();
   });
 });
