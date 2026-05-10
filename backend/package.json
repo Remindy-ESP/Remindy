@@ -54,6 +54,7 @@
     "cookie-parser": "^1.4.7",
     "csrf-csrf": "^4.0.3",
     "dotenv": "^17.3.1",
+    "expo-server-sdk": "^6.1.0",
     "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -128,7 +129,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
+      "^src/(.*)$": "<rootDir>/$1",
+      "^expo-server-sdk$": "<rootDir>/__mocks__/expo-server-sdk.ts"
     }
   }
 }

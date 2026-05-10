@@ -5,13 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
-import Toast from 'react-native-toast-message';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -59,12 +59,16 @@ export default function ResetPasswordScreen() {
       setLoading(true);
       await authService.resetPassword(token.trim(), newPassword);
       setSuccess('Mot de passe reinitialise avec succes.');
-      Toast.show({ type: 'success', text1: 'Mot de passe réinitialisé', text2: 'Vous pouvez maintenant vous connecter.' });
-      setTimeout(() => router.replace('/'), 1500);
+      Alert.alert('Succes', 'Mot de passe reinitialise.', [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/'),
+        },
+      ]);
     } catch (err) {
       const message = getErrorMessage(err, 'Echec de la reinitialisation du mot de passe.');
       setError(message);
-      Toast.show({ type: 'error', text1: 'Erreur', text2: message });
+      Alert.alert('Erreur', message);
     } finally {
       setLoading(false);
     }

@@ -225,3 +225,44 @@ export interface StorageQuota {
   usedFormatted: string;
   availableFormatted: string;
 }
+
+export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewal' | 'document_expiry' | 'system';
+export type NotificationChannel = 'email' | 'push' | 'sms';
+export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'snoozed';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  eventId?: string;
+  reminderId?: string;
+  type: NotificationType;
+  channel: NotificationChannel;
+  title: string;
+  body: string;
+  sentAt?: string;
+  readAt?: string;
+  status: NotificationStatus;
+  snoozedUntil?: string;
+  errorMessage?: string;
+  metadata?: any;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface NotificationFilter {
+  type?: NotificationType;
+  channel?: NotificationChannel;
+  status?: NotificationStatus;
+  isRead?: boolean;
+  limit?: number;
+  sort?: string;
+}
+
+export interface NotificationResponse {
+  data: Notification[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+}

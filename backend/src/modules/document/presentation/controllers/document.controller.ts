@@ -214,7 +214,7 @@ export class DocumentController {
 
     return new StreamableFile(fileBuffer, {
       type: document.mimeType,
-      disposition: `attachment; filename*=UTF-8''${encodeURIComponent(document.filename)}`,
+      disposition: `attachment; filename="${document.filename}"`,
     });
   }
 

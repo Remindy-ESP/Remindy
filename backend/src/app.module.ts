@@ -30,7 +30,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env`,
+      envFilePath: ['.env.develop', '.env.develop'],
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ThrottlerModule.forRoot([
@@ -64,7 +64,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     ReminderModule,
     AuditModule,
     SchedulerModule,
-    ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
+    SeedModule,
     SupportModule,
   ],
   controllers: [AppController],
