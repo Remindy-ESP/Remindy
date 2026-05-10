@@ -220,5 +220,50 @@ describe('UserPreferencesService', () => {
       );
       expect(result.currency).toBe('USD');
     });
+
+    it('should throw NotFoundException when updated preferences is null after update', async () => {
+      const updateDto = { theme: 'dark' as const };
+
+      userRepository.findById.mockResolvedValue(mockUser as any);
+      userPreferencesRepository.findByUserId.mockResolvedValue(mockPreferences as any);
+      userPreferencesRepository.update.mockResolvedValue(null as any);
+
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.updateUserPreferences('user-123', updateDto)).rejects.toThrow(
+        'Preferences not found after update',
+      );
+    });
+
+    it('should accept undefined currency without validation', async () => {
+      const updateDto = { theme: 'dark' as const, currency: undefined };
+
+      userRepository.findById.mockResolvedValue(mockUser as any);
+      userPreferencesRepository.findByUserId.mockResolvedValue(mockPreferences as any);
+      userPreferencesRepository.update.mockResolvedValue({
+        ...mockPreferences,
+        theme: 'dark' as const,
+      } as any);
+
+      const result = await service.updateUserPreferences('user-123', updateDto);
+
+      expect(result.theme).toBe('dark');
+    });
+
+    it('should accept empty string currency without validation error', async () => {
+      // currency = '' is falsy, so !isValidCurrency is skipped
+      const updateDto = { currency: '' };
+
+      userRepository.findById.mockResolvedValue(mockUser as any);
+      userPreferencesRepository.findByUserId.mockResolvedValue(mockPreferences as any);
+      userPreferencesRepository.update.mockResolvedValue({
+        ...mockPreferences,
+        currency: '',
+      } as any);
+
+      const result = await service.updateUserPreferences('user-123', updateDto);
+      expect(result).toBeDefined();
+    });
   });
 });

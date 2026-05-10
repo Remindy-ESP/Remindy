@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
@@ -112,7 +113,7 @@ export default function CloudScreen() {
   const handleUpload = async () => {
     try {
       if (quota && quota.availableBytes <= 0) {
-        Alert.alert('Quota dépassé', 'Vous avez atteint la limite de stockage. Supprimez des documents pour en ajouter de nouveaux.');
+        Toast.show({ type: 'error', text1: 'Quota dépassé', text2: 'Supprimez des documents pour en ajouter de nouveaux.' });
         return;
       }
 
@@ -128,12 +129,12 @@ export default function CloudScreen() {
       const maxSize = 10 * 1024 * 1024;
 
       if (file.size && file.size > maxSize) {
-        Alert.alert('Fichier trop volumineux', 'Le fichier ne peut pas dépasser 10 MB.');
+        Toast.show({ type: 'error', text1: 'Fichier trop volumineux', text2: 'Le fichier ne peut pas dépasser 10 MB.' });
         return;
       }
 
       if (quota && file.size && file.size > quota.availableBytes) {
-        Alert.alert('Espace insuffisant', 'Il n\'y a pas assez d\'espace de stockage pour ce fichier.');
+        Toast.show({ type: 'error', text1: 'Espace insuffisant', text2: 'Pas assez d\'espace pour ce fichier.' });
         return;
       }
 
@@ -148,11 +149,11 @@ export default function CloudScreen() {
         folderId: currentFolderId || undefined,
       });
       await Promise.all([fetchDocuments(), fetchQuota()]);
-      Alert.alert('Succès', 'Document ajouté avec succès');
+      Toast.show({ type: 'success', text1: 'Document ajouté', text2: 'Le document a été uploadé avec succès.' });
     } catch (error: any) {
       console.error('Upload error:', error);
       const errorMessage = error?.response?.data?.message || error?.message || "Impossible d'ajouter le document";
-      Alert.alert('Erreur', errorMessage);
+      Toast.show({ type: 'error', text1: 'Erreur d\'upload', text2: errorMessage });
     } finally {
       setUploading(false);
     }
@@ -263,7 +264,7 @@ export default function CloudScreen() {
       if (subscriptionId) {
         const linkedDocs = documents.filter((d) => d.subscription_id === subscriptionId);
         if (linkedDocs.length >= 5) {
-          Alert.alert('Limite atteinte', 'Maximum 5 documents par transaction.');
+          Toast.show({ type: 'error', text1: 'Limite atteinte', text2: 'Maximum 5 documents par transaction.' });
           return;
         }
       }
@@ -276,7 +277,7 @@ export default function CloudScreen() {
     try {
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert('Erreur', 'Non authentifié');
+        Toast.show({ type: 'error', text1: 'Erreur', text2: 'Non authentifié' });
         return;
       }
 
@@ -292,7 +293,7 @@ export default function CloudScreen() {
     } catch (error: any) {
       console.error('View document error:', error);
       const errorMessage = error?.message || 'Impossible de visualiser le document';
-      Alert.alert('Erreur', errorMessage);
+      Toast.show({ type: 'error', text1: 'Erreur', text2: errorMessage });
     }
   };
 
@@ -302,7 +303,7 @@ export default function CloudScreen() {
       setDownloading(true);
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert('Erreur', 'Non authentifié');
+        Toast.show({ type: 'error', text1: 'Erreur', text2: 'Non authentifié' });
         setDownloading(false);
         return;
       }
@@ -354,29 +355,23 @@ export default function CloudScreen() {
               console.log('[CloudScreen] Share result:', JSON.stringify(result));
 
               // Show success message after sharing
-              Alert.alert(
-                'Téléchargement réussi',
-                `${document.filename} a été téléchargé.`
-              );
+              Toast.show({ type: 'success', text1: 'Téléchargement réussi', text2: `${document.filename} a été téléchargé.` });
             } catch (shareError: any) {
               console.error('[CloudScreen] Share error:', shareError);
-              Alert.alert(
-                'Document téléchargé',
-                `${document.filename} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur "Visualiser".`
-              );
+              Toast.show({ type: 'info', text1: 'Document téléchargé', text2: `${document.filename} est dans le cache. Visualisez-le avec "Visualiser".` });
             }
           }, 100);
         } else {
-          Alert.alert('Erreur', 'Le téléchargement n\'est pas disponible sur cet appareil');
+          Toast.show({ type: 'error', text1: 'Erreur', text2: 'Le téléchargement n\'est pas disponible sur cet appareil.' });
         }
       } else {
         console.error('[CloudScreen] Download failed with status:', downloadResult.status);
-        Alert.alert('Erreur', 'Impossible de télécharger le document');
+        Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible de télécharger le document.' });
       }
     } catch (error: any) {
       console.error('[CloudScreen] Download document error:', error);
       const errorMessage = error?.message || 'Impossible de télécharger le document';
-      Alert.alert('Erreur', errorMessage);
+      Toast.show({ type: 'error', text1: 'Erreur', text2: errorMessage });
       setDownloading(false);
     }
   };

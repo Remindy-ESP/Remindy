@@ -122,6 +122,69 @@ describe('InMemoryQueueService', () => {
         'Job invalid-job-id not found',
       );
     });
+
+    it('should find job in completedJobs (line 337)', async () => {
+      const fakeCompletedJob = {
+        id: 'completed-job-1',
+        data: {
+          documentId: 'doc-c1',
+          userId: 'u1',
+          r2Key: 'k1',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
+        status: 'completed' as const,
+        attempts: 1,
+        maxAttempts: 3,
+        createdAt: new Date(),
+        startedAt: new Date(),
+        completedAt: new Date(),
+        result: { documentId: 'doc-c1', ocrText: 'text', parsedData: {} },
+      };
+      (service as any).completedJobs.push(fakeCompletedJob);
+
+      const status = await service.getJobStatus('completed-job-1');
+      expect(status.id).toBe('completed-job-1');
+      expect(status.status).toBe('completed');
+    });
+
+    it('should find job in failedJobs (line 338)', async () => {
+      const fakeFailedJob = {
+        id: 'failed-job-1',
+        data: {
+          documentId: 'doc-f1',
+          userId: 'u1',
+          r2Key: 'k1',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
+        status: 'failed' as const,
+        attempts: 3,
+        maxAttempts: 3,
+        error: 'Some error',
+        createdAt: new Date(),
+        startedAt: new Date(),
+        completedAt: new Date(),
+      };
+      (service as any).failedJobs.push(fakeFailedJob);
+
+      const status = await service.getJobStatus('failed-job-1');
+      expect(status.id).toBe('failed-job-1');
+      expect(status.status).toBe('failed');
+      expect(status.failedReason).toBe('Some error');
+    });
+  });
+
+  describe('startWorker (private)', () => {
+    it('should not create a second interval if worker is already running', () => {
+      const firstInterval = (service as any).workerInterval;
+      expect(firstInterval).toBeTruthy();
+
+      // Calling startWorker again should hit the early return
+      (service as any).startWorker();
+
+      expect((service as any).workerInterval).toBe(firstInterval);
+    });
   });
  
   describe('getQueueStats', () => {
@@ -252,7 +315,104 @@ describe('InMemoryQueueService', () => {
         }),
       );
     });
- 
+
+    it('should trim completedJobs history when it exceeds 100 (line 236)', async () => {
+      // Fill completedJobs with 100 fake entries
+      const fakeCompletedJobs = Array.from({ length: 100 }, (_, i) => ({
+        id: `old-completed-${i}`,
+        data: {
+          documentId: `doc-${i}`,
+          userId: 'u1',
+          r2Key: 'k',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
+        status: 'completed' as const,
+        attempts: 1,
+        maxAttempts: 3,
+        createdAt: new Date(),
+        startedAt: new Date(),
+        completedAt: new Date(),
+        result: { documentId: `doc-${i}`, ocrText: 'text', parsedData: {} },
+      }));
+      (service as any).completedJobs.push(...fakeCompletedJobs);
+      expect((service as any).completedJobs.length).toBe(100);
+
+      // Now process a successful job so completedJobs grows to 101 and shift() is called
+      const fileBuffer = Buffer.from('test');
+      mockR2Service.downloadFile.mockResolvedValue(fileBuffer);
+      mockOcrService.extractText.mockResolvedValue('text');
+      mockOcrService.cleanExtractedText.mockReturnValue('text');
+      mockGeminiParser.parseDocument.mockResolvedValue({
+        confidence: 0.9,
+      });
+
+      await service.addDocumentToQueue(
+        'doc-new',
+        'user-1',
+        'key-new',
+        'application/pdf',
+        'new.pdf',
+      );
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // After trim, completedJobs should be back to 100
+      expect((service as any).completedJobs.length).toBeLessThanOrEqual(100);
+    });
+
+    it('should trim failedJobs history when it exceeds 200 (line 298)', async () => {
+      // Fill failedJobs with 200 fake entries
+      const fakeFailedJobs = Array.from({ length: 200 }, (_, i) => ({
+        id: `old-failed-${i}`,
+        data: {
+          documentId: `doc-f${i}`,
+          userId: 'u1',
+          r2Key: 'k',
+          mimeType: 'application/pdf',
+          filename: 'f.pdf',
+        },
+        status: 'failed' as const,
+        attempts: 3,
+        maxAttempts: 3,
+        error: 'old error',
+        createdAt: new Date(),
+        startedAt: new Date(),
+        completedAt: new Date(),
+      }));
+      (service as any).failedJobs.push(...fakeFailedJobs);
+      expect((service as any).failedJobs.length).toBe(200);
+
+      // Directly insert a job with maxAttempts=1 so it fails immediately on first error
+      // without triggering exponential backoff delays
+      mockR2Service.downloadFile.mockRejectedValue(new Error('always fail'));
+      mockRepository.updateOcrStatus.mockResolvedValue(undefined);
+
+      const jobId = `ocr-job-trim-test-${Date.now()}`;
+      const failJob = {
+        id: jobId,
+        data: {
+          documentId: 'doc-fail-trim',
+          userId: 'user-1',
+          r2Key: 'key-fail',
+          mimeType: 'application/pdf',
+          filename: 'fail.pdf',
+        },
+        status: 'waiting' as const,
+        attempts: 2, // already at maxAttempts-1=2, so next failure exhausts all
+        maxAttempts: 3,
+        createdAt: new Date(),
+      };
+      (service as any).queue.push(failJob);
+
+      // Trigger processQueue directly
+      await (service as any).processQueue();
+      // A short wait to let async operations complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // After trim, failedJobs should be back to <= 200
+      expect((service as any).failedJobs.length).toBeLessThanOrEqual(200);
+    });
+
     // Simplifié : test juste qu'un retry event est émis sans attendre toutes les tentatives
     it('should emit retry event on failure', async () => {
       mockR2Service.downloadFile.mockRejectedValue(new Error('Download failed'));

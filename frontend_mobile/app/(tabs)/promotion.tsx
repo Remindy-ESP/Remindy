@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Alert,
   Clipboard,
   Image,
   Linking,
@@ -14,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
+import Toast from 'react-native-toast-message';
 
 type PromoItem = {
   id: string;
@@ -67,20 +67,20 @@ const PROMOS: PromoItem[] = [
 export default function PromotionScreen() {
   const handleCopyPromoCode = (promo: PromoItem) => {
     Clipboard.setString(promo.promoCode);
-    Alert.alert('Code promo copie', `${promo.brand} : ${promo.promoCode}`);
+    Toast.show({ type: 'success', text1: 'Code promo copié', text2: `${promo.brand} : ${promo.promoCode}` });
   };
 
   const handleOpenPartnerWebsite = async (promo: PromoItem) => {
     try {
       const supported = await Linking.canOpenURL(promo.partnerUrl);
       if (!supported) {
-        Alert.alert('Lien indisponible', `Impossible d'ouvrir ${promo.partnerUrl}`);
+        Toast.show({ type: 'error', text1: 'Lien indisponible', text2: `Impossible d'ouvrir ${promo.partnerUrl}` });
         return;
       }
 
       await Linking.openURL(promo.partnerUrl);
     } catch {
-      Alert.alert('Erreur', 'Impossible d ouvrir le site partenaire pour le moment.');
+      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible d\'ouvrir le site partenaire.' });
     }
   };
 

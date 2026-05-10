@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { IUserSessionRepository } from '../../domain/repositories/user-session.repository';
 import { IPasswordService } from '../../domain/services/password.service';
@@ -39,28 +40,48 @@ export class LoginUseCase {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Block locked accounts before checking the password (avoids extra DB writes)
+    if (user.getFailedLoginCount() >= BRUTE_FORCE_THRESHOLD) {
+      this.eventEmitter.emit('security.login.brute_force', {
+        userEmail: params.email,
+        ipAddress: params.ipAddress,
+        metadata: { attempts: user.getFailedLoginCount() },
+      });
+      throw new UnauthorizedException('Account temporarily locked due to too many failed attempts');
+    }
+
+    // Reject suspended or soft-deleted accounts
+    if (user.getStatus() !== UserStatus.ACTIVE) {
+      this.eventEmitter.emit('security.login.failure', {
+        userEmail: params.email,
+        ipAddress: params.ipAddress,
+        userAgent: params.userAgent,
+        metadata: { reason: 'account_inactive', status: user.getStatus() },
+      });
+      throw new UnauthorizedException('Account is inactive');
+    }
+
     const isPasswordValid = await this.passwordService.compare(
       params.password,
       user.getPasswordHash(),
     );
 
     if (!isPasswordValid) {
-      // Incrémenter le compteur d'échecs
       await this.userRepo.incrementFailedLoginCount(user.getId());
-      const failedCount = (user.getFailedLoginCount?.() ?? 0) + 1;
+      const newFailedCount = user.getFailedLoginCount() + 1;
 
-      if (failedCount >= BRUTE_FORCE_THRESHOLD) {
+      if (newFailedCount >= BRUTE_FORCE_THRESHOLD) {
         this.eventEmitter.emit('security.login.brute_force', {
           userEmail: params.email,
           ipAddress: params.ipAddress,
-          metadata: { attempts: failedCount },
+          metadata: { attempts: newFailedCount },
         });
       } else {
         this.eventEmitter.emit('security.login.failure', {
           userEmail: params.email,
           ipAddress: params.ipAddress,
           userAgent: params.userAgent,
-          metadata: { reason: 'invalid_password', attempts: failedCount },
+          metadata: { reason: 'invalid_password', attempts: newFailedCount },
         });
       }
 

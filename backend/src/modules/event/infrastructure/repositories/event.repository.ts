@@ -132,4 +132,37 @@ export class EventRepository implements IEventRepository {
 
     return result.affected ?? 0;
   }
+
+  async cancelScheduledEventOnDate(subscriptionId: string, date: Date): Promise<number> {
+    // Annule l'événement planifié exactement à cette date (à la journée près, indépendamment de l'heure)
+    const startOfDay = new Date(date);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(EventEntity)
+      .set({ status: 'canceled' })
+      .where('subscriptionId = :subscriptionId', { subscriptionId })
+      .andWhere('startsAt >= :startOfDay', { startOfDay })
+      .andWhere('startsAt <= :endOfDay', { endOfDay })
+      .andWhere('status = :scheduledStatus', { scheduledStatus: 'scheduled' })
+      .execute();
+
+    return result.affected ?? 0;
+  }
+
+  async cancelEventsAfterDate(subscriptionId: string, afterDate: Date): Promise<number> {
+    const result = await this.repository
+      .createQueryBuilder()
+      .update(EventEntity)
+      .set({ status: 'canceled' })
+      .where('subscriptionId = :subscriptionId', { subscriptionId })
+      .andWhere('startsAt > :afterDate', { afterDate })
+      .andWhere('status = :scheduledStatus', { scheduledStatus: 'scheduled' })
+      .execute();
+
+    return result.affected ?? 0;
+  }
 }

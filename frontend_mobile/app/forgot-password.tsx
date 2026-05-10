@@ -5,13 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
+import Toast from 'react-native-toast-message';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -33,10 +33,11 @@ export default function ForgotPasswordScreen() {
       setLoading(true);
       await authService.forgotPassword(email.trim());
       setSuccess('Si cet email existe, un lien de reinitialisation a ete envoye.');
+      Toast.show({ type: 'success', text1: 'Email envoyé', text2: 'Vérifiez votre boîte de réception.' });
     } catch (err) {
       const message = getErrorMessage(err, "Impossible d'envoyer la demande.");
       setError(message);
-      Alert.alert('Erreur', message);
+      Toast.show({ type: 'error', text1: 'Erreur', text2: message });
     } finally {
       setLoading(false);
     }

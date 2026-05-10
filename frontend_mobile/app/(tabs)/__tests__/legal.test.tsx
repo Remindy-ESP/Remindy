@@ -70,4 +70,59 @@ describe('LegalScreen', () => {
     const tree = toJSON();
     expect(tree).toBeTruthy();
   });
+
+  it('should render alert-type paragraphs when alerts section is expanded', () => {
+    const { getByTestId, queryByText } = render(<LegalScreen />);
+
+    // Expand the 'alerts' section which contains alert-type paragraphs (line 236)
+    const alertsSection = getByTestId('section-alerts');
+    fireEvent.press(alertsSection);
+
+    // One of the alert paragraphs in that section
+    expect(queryByText(/Absence de base claire/)).toBeTruthy();
+  });
+
+  it('should render text-type paragraphs when a section is expanded', () => {
+    const { getByTestId, queryByText } = render(<LegalScreen />);
+
+    // Expand the 'aspects' section which contains text-type paragraphs (line 248 default branch)
+    fireEvent.press(getByTestId('section-aspects'));
+
+    expect(
+      queryByText(/RGPD \(principes, bases légales/)
+    ).toBeTruthy();
+  });
+
+  it('should render bold-type paragraphs when actions section is expanded', () => {
+    const { getByTestId, queryByText } = render(<LegalScreen />);
+
+    fireEvent.press(getByTestId('section-actions'));
+
+    expect(queryByText(/Procédure d'exercice des droits/)).toBeTruthy();
+  });
+
+  it('should render heading-type paragraphs when alerts section is expanded', () => {
+    const { getByTestId, queryByText } = render(<LegalScreen />);
+
+    fireEvent.press(getByTestId('section-alerts'));
+
+    expect(queryByText('Bases légales & info RGPD')).toBeTruthy();
+  });
+
+  it('should show chevron up when section is expanded', () => {
+    const { getByTestId, queryByText } = render(<LegalScreen />);
+
+    fireEvent.press(getByTestId('section-aspects'));
+
+    // After expanding, the chevron should be '▲'
+    expect(queryByText('▲')).toBeTruthy();
+  });
+
+  it('should show chevron down when section is collapsed', () => {
+    const { getAllByText } = render(<LegalScreen />);
+
+    // All sections start collapsed — all chevrons should be '▼'
+    const downChevrons = getAllByText('▼');
+    expect(downChevrons.length).toBe(5); // 5 sections
+  });
 });

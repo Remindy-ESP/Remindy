@@ -1,7 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
+
+interface JwtAccessTokenPayload {
+  sub?: string;
+  role?: string;
+  mfaEnabled?: boolean;
+  mfaVerified?: boolean;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -13,7 +20,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  validate(payload: any) {
+  validate(payload: JwtAccessTokenPayload) {
+    if (!payload?.sub || !payload?.role) {
+      throw new UnauthorizedException('Token payload missing required claims');
+    }
+
     return {
       id: payload.sub,
       userId: payload.sub,

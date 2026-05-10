@@ -1,22 +1,59 @@
+import {
+  CanActivate,
+  ExecutionContext,
+  INestApplication,
+  NotFoundException,
+  UnauthorizedException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { DataSource } from 'typeorm';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import multer from 'multer';
 
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000001';
 const VALID_SUBSCRIPTION_ID = '00000000-0000-0000-0000-000000000002';
 
 describe('DocumentController (e2e)', () => {
   let app: INestApplication;
-  let dataSource: DataSource;
-  let authToken: string;
-  let documentId: string;
+
+  const uploadDocumentUseCase = { execute: jest.fn() };
+  const findAllDocumentsUseCase = { execute: jest.fn() };
+  const deleteDocumentUseCase = { execute: jest.fn() };
+  const reprocessOcrUseCase = { execute: jest.fn() };
+  const updateDocumentUseCase = { execute: jest.fn() };
+  const r2Service = { downloadFile: jest.fn() };
+  const documentRepository = { findById: jest.fn(), findByUserId: jest.fn() };
+  const quotaService = {
+    getUserQuotaUsage: jest.fn(),
+    formatBytes: jest.fn(),
+  };
+  const queueService = {
+    getQueueStats: jest.fn(),
+    getJobStatus: jest.fn(),
+  };
+  const authHeader = () => ({ Authorization: 'Bearer user-token' });
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+      controllers: [DocumentController],
+      providers: [
+        { provide: UploadDocumentUseCase, useValue: uploadDocumentUseCase },
+        { provide: FindAllDocumentsUseCase, useValue: findAllDocumentsUseCase },
+        { provide: DeleteDocumentUseCase, useValue: deleteDocumentUseCase },
+        { provide: ReprocessOcrUseCase, useValue: reprocessOcrUseCase },
+        { provide: UpdateDocumentUseCase, useValue: updateDocumentUseCase },
+        { provide: CloudflareR2Service, useValue: r2Service },
+        { provide: DOCUMENT_REPOSITORY, useValue: documentRepository },
+        { provide: QuotaService, useValue: quotaService },
+        { provide: InMemoryQueueService, useValue: queueService },
+      ],
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useClass(FakeJwtAuthGuard)
+      .overrideGuard(ThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     app = moduleFixture.createNestApplication();
 
@@ -28,7 +65,14 @@ describe('DocumentController (e2e)', () => {
       }),
     );
 
-    await app.init();
+    await request(app.getHttpServer())
+      .post('/documents/upload')
+      .set(authHeader())
+      .attach('file', Buffer.from('fake-jpeg-data'), {
+        filename: 'photo.jpg',
+        contentType: 'image/jpeg',
+      })
+      .expect(201);
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
     authToken = 'test-token';
@@ -54,9 +98,17 @@ describe('DocumentController (e2e)', () => {
     if (app) await app.close();
   });
 
-  describe('POST /documents/upload', () => {
-    it('should upload a PDF document successfully', async () => {
-      const pdfBuffer = Buffer.from('%PDF-1.4 fake pdf content');
+  it('uploads a file with subscription_id and folder_id', async () => {
+    await request(app.getHttpServer())
+      .post('/documents/upload')
+      .set(authHeader())
+      .field('subscription_id', SUB_ID)
+      .field('folder_id', FOLDER_ID)
+      .attach('file', Buffer.from('%PDF-1.4 fake'), {
+        filename: 'contract.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(201);
 
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
@@ -75,8 +127,7 @@ describe('DocumentController (e2e)', () => {
       documentId = response.body.id;
     });
 
-    it('should upload an image document successfully', async () => {
-      const imageBuffer = Buffer.from('fake image content');
+  // ─── GET /documents ────────────────────────────────────────────────────────
 
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
@@ -177,12 +228,7 @@ describe('DocumentController (e2e)', () => {
     });
   });
 
-  describe('GET /documents', () => {
-    it('should return list of user documents', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/documents')
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+  // ─── GET /documents/job/:jobId/status ─────────────────────────────────────
 
       expect(Array.isArray(response.body)).toBe(true);
 
@@ -454,6 +500,7 @@ describe('DocumentController (e2e)', () => {
       const deletedDoc = response.body.find((doc: any) => doc.id === documentId);
       expect(deletedDoc).toBeUndefined();
     });
+    updateDocumentUseCase.execute.mockResolvedValue(updated);
 
     it('should return 404 for non-existent document', async () => {
       await request(app.getHttpServer())

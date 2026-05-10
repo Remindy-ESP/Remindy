@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import UserAvatar from '@/components/profile/UserAvatar';
+import Toast from 'react-native-toast-message';
 
 type MenuItemProps = {
   testID: string;
@@ -74,7 +75,7 @@ export default function ProfileScreen() {
             router.replace('/');
           } catch (error) {
             console.error('Logout error:', error);
-            Alert.alert('Erreur', 'Echec de la deconnexion. Veuillez reessayer.');
+            Toast.show({ type: 'error', text1: 'Erreur', text2: 'Échec de la déconnexion. Veuillez réessayer.' });
           } finally {
             setLoggingOut(false);
           }

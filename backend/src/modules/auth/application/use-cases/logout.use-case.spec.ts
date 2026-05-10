@@ -56,9 +56,6 @@ describe('LogoutUseCase', () => {
     }).compile();
 
     useCase = module.get<LogoutUseCase>(LogoutUseCase);
-    sessionRepo = module.get(IUserSessionRepository);
-    passwordService = module.get(IPasswordService);
-    tokenService = module.get(ITokenService);
   });
 
   it('should be defined', () => {

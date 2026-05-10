@@ -32,6 +32,10 @@ export class RefreshTokenUseCase {
       throw new UnauthorizedException('Session expired or revoked');
     }
 
+    if (session.userId !== userId) {
+      throw new UnauthorizedException('Session does not belong to this user');
+    }
+
     const isValid = await this.passwordService.compare(
       params.refreshToken,
       session.refreshTokenHash,
