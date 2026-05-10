@@ -1,12 +1,26 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { RegenerateEventsTask } from './tasks/regenerate-events.task';
+import { ProcessRenewalNotificationsTask } from './tasks/process-renewal-notifications.task';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { AuditModule } from '../audit/audit.module';
+import { ReminderModule } from '../reminder/reminder.module';
+import { NotificationModule } from '../notification/notification.module';
 import { AuditPurgeTask } from './tasks/audit-purge.task';
+import { SubscriptionEntity } from '../subscription/infrastructure/persistence/subscription.entity';
+import { ReminderEntity } from '../reminder/infrastructure/persistence/reminder.entity';
+import { NotificationEntity } from '../notification/infrastructure/persistence/notification.entity';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), SubscriptionModule, AuditModule],
-  providers: [RegenerateEventsTask, AuditPurgeTask],
+  imports: [
+    ScheduleModule.forRoot(),
+    TypeOrmModule.forFeature([SubscriptionEntity, ReminderEntity, NotificationEntity]),
+    SubscriptionModule,
+    AuditModule,
+    ReminderModule,
+    NotificationModule,
+  ],
+  providers: [RegenerateEventsTask, AuditPurgeTask, ProcessRenewalNotificationsTask],
 })
 export class SchedulerModule {}

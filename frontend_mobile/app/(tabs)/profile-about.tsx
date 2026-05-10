@@ -1,8 +1,7 @@
 import React from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import Toast from 'react-native-toast-message';
 
 const APP_VERSION = '1.0.0';
 const SUPPORT_EMAIL = 'support@remindy.com';
@@ -16,13 +15,13 @@ export default function ProfileAboutScreen() {
     try {
       const canOpen = await Linking.canOpenURL(emailUrl);
       if (!canOpen) {
-        Toast.show({ type: 'info', text1: 'Email', text2: `Contactez-nous à ${SUPPORT_EMAIL}` });
+        Alert.alert('Email indisponible', `Contactez-nous a ${SUPPORT_EMAIL}`);
         return;
       }
 
       await Linking.openURL(emailUrl);
     } catch {
-      Toast.show({ type: 'error', text1: 'Erreur', text2: `Impossible d'ouvrir l'application email. \n${SUPPORT_EMAIL}` });
+      Alert.alert('Erreur', `Impossible d'ouvrir votre application email.\n${SUPPORT_EMAIL}`);
     }
   };
 

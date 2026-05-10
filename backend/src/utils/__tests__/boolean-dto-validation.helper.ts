@@ -18,9 +18,7 @@ export async function validateForceField<T extends object>(
  * Registers shared "force" boolean validation tests for a given DTO class.
  * Each DTO spec can call this and only add its own specific tests.
  */
-export function describeForceBooleanValidation<T extends object>(
-  DtoClass: new () => T,
-): void {
+export function describeForceBooleanValidation<T extends object>(DtoClass: new () => T): void {
   it('should accept force as true', async () => {
     const { dto, errors } = await validateForceField(DtoClass, true);
     expect(errors).toHaveLength(0);
@@ -35,7 +33,7 @@ export function describeForceBooleanValidation<T extends object>(
 
   it('should reject non-boolean force value', async () => {
     const { errors } = await validateForceField(DtoClass, 'not-a-boolean');
-    const forceError = errors.find((e) => e.property === 'force');
+    const forceError = errors.find(e => e.property === 'force');
     expect(forceError).toBeDefined();
     expect(forceError?.constraints).toHaveProperty('isBoolean');
   });

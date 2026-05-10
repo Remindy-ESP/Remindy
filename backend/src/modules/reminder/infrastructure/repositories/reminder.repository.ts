@@ -65,6 +65,13 @@ export class ReminderRepository implements IReminderRepository {
     return ReminderMapper.toDomainArray(entities);
   }
 
+  async findByUserIdAndType(userId: string, type: string): Promise<Reminder[]> {
+    const entities = await this.repository.find({
+      where: { userId, type: type as any, enabled: true, deletedAt: IsNull() },
+    });
+    return ReminderMapper.toDomainArray(entities);
+  }
+
   async save(reminder: Reminder): Promise<Reminder> {
     const entity = ReminderMapper.toPersistence(reminder);
     const saved = await this.repository.save(entity);

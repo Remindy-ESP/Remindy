@@ -3,7 +3,7 @@ import { config } from 'dotenv';
 
 const env = process.env.NODE_ENV || 'development';
 const envFile: string =
-  env === 'production' ? '.env.production' : env === 'staging' ? '.env.staging' : '.env';
+  env === 'production' ? '.env.production' : env === 'staging' ? '.env.staging' : '.env.develop';
 config({ path: envFile });
 const databaseUrl =
   process.env.DATABASE_URL ||

@@ -37,12 +37,6 @@ jest.mock('@/services/api', () => ({
 
 jest.spyOn(Alert, 'alert');
 
-// Mock Toast
-jest.mock('react-native-toast-message', () => ({
-  __esModule: true,
-  default: { show: jest.fn() },
-}));
-
 describe('ProfilePrivacyScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
