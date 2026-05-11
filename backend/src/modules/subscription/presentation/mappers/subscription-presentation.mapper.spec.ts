@@ -140,7 +140,7 @@ describe('SubscriptionPresentationMapper', () => {
         amount: 10,
         frequency: 'monthly',
         startDate: '2025-01-01T00:00:00.000Z',
-      } as CreateSubscriptionDto;
+      };
 
       expect(() => SubscriptionPresentationMapper.toCreateAppDto(createDto)).toThrow(
         'userId is required for creating subscriptions',

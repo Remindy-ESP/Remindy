@@ -151,6 +151,7 @@ export class UpdateSubscriptionUseCase {
         // Note: On ne réactive pas automatiquement les événements annulés
         // car ils ont pu être annulés individuellement
         return;
+      /* istanbul ignore next */
       default:
         return;
     }

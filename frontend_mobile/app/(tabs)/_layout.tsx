@@ -7,10 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import GlobalHeader from '@/components/GlobalHeader';
 import { useAuth } from '@/context/AuthContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 export default function TabLayout() {
     const router = useRouter();
     const { isAuthenticated, isLoading } = useAuth();
+
+    // Initialize push notifications (registers token with backend)
+    usePushNotifications();
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {

@@ -219,6 +219,151 @@ describe('AuditInterceptor', () => {
     );
   });
 
+  it('should handle non-Error thrown in catchError', async () => {
+    reflector.get.mockReturnValue({
+      action: 'user.fail',
+      resourceType: 'user',
+    } satisfies AuditConfig);
+
+    const context = createContext({ method: 'POST', body: { data: 'test' } });
+    const next = createHandler(() => throwError(() => 'string error'));
+
+    await expect(lastValueFrom(interceptor.intercept(context, next))).rejects.toBe('string error');
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        errorMessage: 'string error',
+      }),
+    );
+  });
+
+  it('should handle PATCH request body capture', async () => {
+    reflector.get.mockReturnValue({
+      action: 'user.patch',
+      resourceType: 'user',
+    } satisfies AuditConfig);
+
+    const context = createContext({
+      method: 'PATCH',
+      body: { name: 'newName' },
+    });
+
+    const next = createHandler(() => of({ ok: true }));
+
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        before: { name: 'newName' },
+      }),
+    );
+  });
+
+  it('should capture DELETE params as before state', async () => {
+    reflector.get.mockReturnValue({
+      action: 'resource.delete',
+      resourceType: 'resource',
+    } satisfies AuditConfig);
+
+    const context = createContext({
+      method: 'DELETE',
+      params: { id: 'res-1' },
+    });
+
+    const next = createHandler(() => of(undefined));
+
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        before: { params: { id: 'res-1' } },
+      }),
+    );
+  });
+
+  it('should return null before for GET with no body', async () => {
+    reflector.get.mockReturnValue({
+      action: 'resource.get',
+      resourceType: 'resource',
+    } satisfies AuditConfig);
+
+    const context = createContext({
+      method: 'GET',
+      params: {},
+      body: undefined,
+    });
+
+    const next = createHandler(() => of({ data: 'result' }));
+
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        before: null,
+      }),
+    );
+  });
+
+  it('should handle primitive response (non-object)', async () => {
+    reflector.get.mockReturnValue({
+      action: 'audit.count',
+      resourceType: 'audit',
+    } satisfies AuditConfig);
+
+    const context = createContext({ method: 'GET' });
+    const next = createHandler(() => of(42));
+
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        after: { result: 42 },
+      }),
+    );
+  });
+
+  it('should handle null/undefined response', async () => {
+    reflector.get.mockReturnValue({
+      action: 'resource.delete',
+      resourceType: 'resource',
+    } satisfies AuditConfig);
+
+    const context = createContext({ method: 'GET' });
+    const next = createHandler(() => of(null));
+
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        after: null,
+      }),
+    );
+  });
+
+  it('should use resourceId from params when param is not a string but has value', async () => {
+    reflector.get.mockReturnValue({
+      action: 'resource.get',
+      resourceType: 'resource',
+      resourceIdParam: 'id',
+    } satisfies AuditConfig);
+
+    const context = createContext({
+      method: 'GET',
+      params: { id: 123 }, // number, not string
+    });
+
+    const next = createHandler(() => of({ ok: true }));
+
+    await lastValueFrom(interceptor.intercept(context, next));
+
+    expect(createAuditLogUseCase.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resourceId: '123',
+      }),
+    );
+  });
+
   it('should not break request flow if audit log creation fails asynchronously', async () => {
     reflector.get.mockReturnValue({
       action: 'user.read',

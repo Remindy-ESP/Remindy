@@ -1,11 +1,8 @@
 import {
   Body,
   Controller,
-  Get,
   Param,
   ParseUUIDPipe,
-  Post,
-  Put,
   Query,
   Req,
   UseInterceptors,
@@ -22,6 +19,12 @@ import { AdminReprocessOcrDto } from '../dto/admin-reprocess-ocr.dto';
 import { AuditInterceptor } from 'src/modules/audit/presentation/interceptors/audit.interceptor';
 import { Audit } from 'src/modules/audit/presentation/decorators/audit.decorator';
 import { Severity } from 'src/modules/audit/domain/enums/severity.enum';
+import {
+  ApiAdminCloudListSubscriptions,
+  ApiAdminCloudUpdateSharedSubscription,
+  ApiAdminCloudListDocuments,
+  ApiAdminCloudReprocessOcr,
+} from '../../../../swagger/decorators/api-admin.decorator';
 
 type AuthReq = Request & { user: { id: string; role: Role } };
 
@@ -33,12 +36,12 @@ type AuthReq = Request & { user: { id: string; role: Role } };
 export class AdminCloudController {
   constructor(private readonly service: AdminCloudService) {}
 
-  @Get('subscriptions')
+  @ApiAdminCloudListSubscriptions()
   listSubscriptions(@Req() req: AuthReq, @Query() query: AdminSubscriptionsQueryDto) {
     return this.service.listSubscriptions({ role: req.user.role }, query);
   }
 
-  @Put('shared-subscriptions/:id')
+  @ApiAdminCloudUpdateSharedSubscription()
   @Audit({
     action: 'subscription.update-shared',
     resourceType: 'subscription',
@@ -52,12 +55,12 @@ export class AdminCloudController {
     return this.service.updateSharedSubscription({ role: req.user.role }, id, body);
   }
 
-  @Get('documents')
+  @ApiAdminCloudListDocuments()
   listDocuments(@Req() req: AuthReq, @Query() query: AdminDocumentsQueryDto) {
     return this.service.listDocuments({ role: req.user.role }, query);
   }
 
-  @Post('documents/:id/reprocess-ocr')
+  @ApiAdminCloudReprocessOcr()
   @Audit({
     action: 'document.reprocess-ocr',
     resourceType: 'document',

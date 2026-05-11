@@ -135,6 +135,134 @@ describe('LoginUseCase', () => {
       expect(sessionRepo.createSession).toHaveBeenCalled();
     });
 
+    it('should throw UnauthorizedException when user is not found', async () => {
+      userRepo.findByEmail.mockResolvedValue(null);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
+      expect(tokenService.generateAccessToken).not.toHaveBeenCalled();
+    });
+
+    it('should emit security.login.failure event when user is not found', async () => {
+      userRepo.findByEmail.mockResolvedValue(null);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'security.login.failure',
+        expect.objectContaining({
+          userEmail: loginParams.email,
+          ipAddress: loginParams.ipAddress,
+          userAgent: loginParams.userAgent,
+          metadata: { reason: 'user_not_found' },
+        }),
+      );
+    });
+
+    it('should emit security.login.failure event when account is inactive', async () => {
+      const suspendedUser = new AuthUser({
+        id: 'user-suspended',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.INACTIVE,
+        failedLoginCount: 0,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(suspendedUser);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Account is inactive');
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'security.login.failure',
+        expect.objectContaining({
+          metadata: expect.objectContaining({ reason: 'account_inactive' }),
+        }),
+      );
+    });
+
+    it('should emit security.login.failure (not brute_force) when failed count is below threshold after invalid password', async () => {
+      const userWith2Failures = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 2,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(userWith2Failures);
+      passwordService.compare.mockResolvedValue(false);
+      userRepo.incrementFailedLoginCount.mockResolvedValue(undefined);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
+
+      // newFailedCount = 2 + 1 = 3 which is < 5 (BRUTE_FORCE_THRESHOLD)
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'security.login.failure',
+        expect.objectContaining({
+          metadata: expect.objectContaining({ reason: 'invalid_password' }),
+        }),
+      );
+    });
+
+    it('should emit security.login.success event on successful login', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      passwordService.compare.mockResolvedValue(true);
+      passwordService.hash.mockResolvedValue('hashedRefreshToken');
+      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
+      tokenService.generateAccessToken.mockReturnValue('accessToken123');
+      sessionRepo.createSession.mockResolvedValue(undefined);
+      userRepo.resetFailedLoginCount.mockResolvedValue(undefined);
+
+      await useCase.execute(loginParams);
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'security.login.success',
+        expect.objectContaining({
+          userId: 'user-123',
+          userEmail: loginParams.email,
+          ipAddress: loginParams.ipAddress,
+          userAgent: loginParams.userAgent,
+        }),
+      );
+    });
+
+    it('should use default deviceName "web" when deviceName is not provided', async () => {
+      const paramsWithoutDevice = {
+        email: 'test@example.com',
+        password: 'password123',
+        ipAddress: '127.0.0.1',
+        userAgent: 'Mozilla/5.0',
+      };
+
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      passwordService.compare.mockResolvedValue(true);
+      passwordService.hash.mockResolvedValue('hashedRefreshToken');
+      tokenService.generateRefreshToken.mockReturnValue('refreshToken123');
+      tokenService.generateAccessToken.mockReturnValue('accessToken123');
+      sessionRepo.createSession.mockResolvedValue(undefined);
+      userRepo.resetFailedLoginCount.mockResolvedValue(undefined);
+
+      await useCase.execute(paramsWithoutDevice);
+
+      expect(sessionRepo.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ deviceName: 'web' }),
+      );
+    });
+
     it('should throw UnauthorizedException when password is invalid', async () => {
       userRepo.findByEmail.mockResolvedValue(mockUser);
       passwordService.compare.mockResolvedValue(false);
@@ -144,6 +272,81 @@ describe('LoginUseCase', () => {
       await expect(useCase.execute(loginParams)).rejects.toThrow('Invalid credentials');
       expect(userRepo.incrementFailedLoginCount).toHaveBeenCalledWith('user-123');
       expect(tokenService.generateAccessToken).not.toHaveBeenCalled();
+    });
+
+    it('should throw when account is locked due to too many failed attempts', async () => {
+      const lockedUser = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 5,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(lockedUser);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(loginParams)).rejects.toThrow(
+        'Account temporarily locked due to too many failed attempts',
+      );
+      expect(passwordService.compare).not.toHaveBeenCalled();
+    });
+
+    it('should throw when account is not active', async () => {
+      const bannedUser = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.BANNED,
+        failedLoginCount: 0,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(bannedUser);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(loginParams)).rejects.toThrow('Account is inactive');
+      expect(passwordService.compare).not.toHaveBeenCalled();
+    });
+
+    it('should emit brute_force event when failed attempts reach threshold', async () => {
+      const nearLockUser = new AuthUser({
+        id: 'user-123',
+        email: 'test@example.com',
+        passwordHash: 'hashedPassword123',
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+1234567890',
+        mfaEnabled: false,
+        mfaVerified: false,
+        role_key: Role.USER_FREEMIUM,
+        status: UserStatus.ACTIVE,
+        failedLoginCount: 4,
+        emailVerified: true,
+        createdAt: new Date(),
+      });
+      userRepo.findByEmail.mockResolvedValue(nearLockUser);
+      passwordService.compare.mockResolvedValue(false);
+      userRepo.incrementFailedLoginCount.mockResolvedValue(undefined);
+
+      await expect(useCase.execute(loginParams)).rejects.toThrow(UnauthorizedException);
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+        'security.login.brute_force',
+        expect.objectContaining({ userEmail: loginParams.email }),
+      );
     });
   });
 });

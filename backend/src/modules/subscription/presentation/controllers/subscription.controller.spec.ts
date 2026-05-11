@@ -465,7 +465,7 @@ describe('SubscriptionController', () => {
         },
       ];
       findSubscriptionUseCase.findById.mockResolvedValue(mockSubscription);
-      findSubscriptionEventsUseCase.execute.mockResolvedValue(mockEvents as any);
+      findSubscriptionEventsUseCase.execute.mockResolvedValue(mockEvents);
 
       const result = await controller.getEvents(mockRequest, 'subscription-123');
 
