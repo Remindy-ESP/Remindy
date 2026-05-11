@@ -364,4 +364,28 @@ describe('UpdateReminderUseCase', () => {
 
     expect(result.daysBefore).toBe(1);
   });
+
+  it('should re-throw non-Error exceptions from repository', async () => {
+    const reminderId = 'reminder-777';
+    const userId = 'user-777';
+    const existingReminder = new Reminder({
+      id: reminderId,
+      userId: userId,
+      subscriptionId: 'sub-777',
+      type: 'payment_due',
+      daysBefore: 3,
+      enabled: true,
+      channel: 'email',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const dto: UpdateReminderAppDto = { daysBefore: 5 };
+
+    repository.findById.mockResolvedValue(existingReminder);
+    const nonError = { code: 'DB_ERROR', message: 'raw db error' };
+    repository.update.mockRejectedValue(nonError);
+
+    await expect(useCase.execute(reminderId, userId, dto)).rejects.toBe(nonError);
+  });
 });

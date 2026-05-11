@@ -108,6 +108,177 @@ describe('QuotaService', () => {
       expect(usage.storageUsed).toBe(25 * 1024 * 1024); // 25MB
       expect(usage.storageUsedPercent).toBe(25); // 25%
     });
+
+    it('should return 0 percent for admin (unlimited documents)', async () => {
+      const userId = 'admin-user';
+      const userRole: UserRole = 'admin';
+
+      repository.findByUserId.mockResolvedValue([
+        createMockDocument('doc-1', userId, 5 * 1024 * 1024), // 5MB, valid
+      ]);
+
+      const usage = await service.getUserQuotaUsage(userId, userRole);
+
+      // Admin has -1 for maxDocuments, so documentsUsedPercent = 0
+      expect(usage.documentsUsedPercent).toBe(0);
+      expect(usage.maxDocuments).toBe(-1);
+    });
+  });
+
+  describe('checkUserQuota - document count limit', () => {
+    it('should throw ForbiddenException when document count reaches limit', async () => {
+      const userId = 'user-123';
+      const userRole: UserRole = 'freemium';
+      const fileSize = 1024; // small file
+
+      // 50 documents = at the limit
+      const mockDocuments = Array(50)
+        .fill(null)
+        .map((_, i) => createMockDocument(`doc-${i}`, userId, 1024));
+
+      repository.findByUserId.mockResolvedValue(mockDocuments);
+
+      await expect(service.checkUserQuota(userId, userRole, fileSize)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('should not check document count for admin (unlimited)', async () => {
+      const userId = 'admin-user';
+      const userRole: UserRole = 'admin';
+      const fileSize = 1024;
+
+      // Even with 1000 docs, admin should not be blocked by count
+      const mockDocuments = Array(1000)
+        .fill(null)
+        .map((_, i) => createMockDocument(`doc-${i}`, userId, 100));
+
+      repository.findByUserId.mockResolvedValue(mockDocuments);
+
+      // Should not throw (admin has no count limit, and storage is well within 50GB)
+      await expect(service.checkUserQuota(userId, userRole, fileSize)).resolves.not.toThrow();
+    });
+  });
+
+  describe('checkUserQuota - unknown role defaults to freemium', () => {
+    it('should default to freemium limits for unknown role', async () => {
+      const userId = 'user-123';
+      const fileSize = 5 * 1024 * 1024;
+
+      repository.findByUserId.mockResolvedValue([]);
+
+      // Passing an unknown role should default to freemium
+      await expect(
+        service.checkUserQuota(userId, 'unknown-role' as any, fileSize),
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe('getMaxFileSize / getMaxTotalStorage / getMaxDocumentsCount', () => {
+    it('should return correct maxFileSize for each role', () => {
+      expect(service.getMaxFileSize('freemium')).toBe(10 * 1024 * 1024);
+      expect(service.getMaxFileSize('premium')).toBe(50 * 1024 * 1024);
+      expect(service.getMaxFileSize('admin')).toBe(100 * 1024 * 1024);
+    });
+
+    it('should return correct maxTotalStorage for each role', () => {
+      expect(service.getMaxTotalStorage('freemium')).toBe(100 * 1024 * 1024);
+      expect(service.getMaxTotalStorage('premium')).toBe(10 * 1024 * 1024 * 1024);
+      expect(service.getMaxTotalStorage('admin')).toBe(50 * 1024 * 1024 * 1024);
+    });
+
+    it('should return correct maxDocumentsCount for each role', () => {
+      expect(service.getMaxDocumentsCount('freemium')).toBe(50);
+      expect(service.getMaxDocumentsCount('premium')).toBe(1000);
+      expect(service.getMaxDocumentsCount('admin')).toBe(-1);
+    });
+  });
+
+  describe('canUserUpload', () => {
+    it('should return canUpload=true when quota is OK', async () => {
+      repository.findByUserId.mockResolvedValue([]);
+
+      const result = await service.canUserUpload('user-123', 'freemium', 1024);
+
+      expect(result.canUpload).toBe(true);
+      expect(result.reason).toBeUndefined();
+    });
+
+    it('should return canUpload=false with reason when quota exceeded', async () => {
+      const fileSize = 15 * 1024 * 1024; // exceeds freemium 10MB limit
+      repository.findByUserId.mockResolvedValue([]);
+
+      const result = await service.canUserUpload('user-123', 'freemium', fileSize);
+
+      expect(result.canUpload).toBe(false);
+      expect(result.reason).toBeDefined();
+      expect(typeof result.reason).toBe('string');
+    });
+
+    it('should rethrow non-ForbiddenException errors', async () => {
+      repository.findByUserId.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.canUserUpload('user-123', 'freemium', 1024)).rejects.toThrow(
+        'Database error',
+      );
+    });
+  });
+
+  describe('formatBytes', () => {
+    it('should format 0 bytes', () => {
+      expect(service.formatBytes(0)).toBe('0 B');
+    });
+
+    it('should format bytes (< 1024)', () => {
+      expect(service.formatBytes(512)).toBe('512 B');
+    });
+
+    it('should format kilobytes', () => {
+      expect(service.formatBytes(1024)).toBe('1.00 KB');
+      expect(service.formatBytes(2048)).toBe('2.00 KB');
+    });
+
+    it('should format megabytes', () => {
+      expect(service.formatBytes(1024 * 1024)).toBe('1.00 MB');
+      expect(service.formatBytes(5 * 1024 * 1024)).toBe('5.00 MB');
+    });
+
+    it('should format gigabytes', () => {
+      expect(service.formatBytes(1024 * 1024 * 1024)).toBe('1.00 GB');
+    });
+  });
+
+  describe('getUserStorageUsed', () => {
+    it('should sum file sizes of all user documents', async () => {
+      const userId = 'user-123';
+      const docs = [
+        createMockDocument('doc-1', userId, 100),
+        createMockDocument('doc-2', userId, 200),
+        createMockDocument('doc-3', userId, 300),
+      ];
+      repository.findByUserId.mockResolvedValue(docs);
+
+      const result = await service.getUserStorageUsed(userId);
+      expect(result).toBe(600);
+    });
+
+    it('should return 0 when user has no documents', async () => {
+      repository.findByUserId.mockResolvedValue([]);
+      const result = await service.getUserStorageUsed('user-empty');
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('getUserDocumentsCount', () => {
+    it('should return the count of documents', async () => {
+      repository.findByUserId.mockResolvedValue([
+        createMockDocument('doc-1', 'user-123', 1024),
+        createMockDocument('doc-2', 'user-123', 2048),
+      ]);
+
+      const result = await service.getUserDocumentsCount('user-123');
+      expect(result).toBe(2);
+    });
   });
 });
 

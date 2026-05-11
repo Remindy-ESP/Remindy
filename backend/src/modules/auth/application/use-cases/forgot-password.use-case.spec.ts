@@ -66,7 +66,6 @@ describe('ForgotPasswordUseCase', () => {
     userRepo = module.get(IUserAuthRepository);
     tokenService = module.get(ITokenService);
     emailService = module.get(IEmailService);
-    eventEmitter = module.get(EventEmitter2);
   });
   const mockEventEmitter: Partial<jest.Mocked<EventEmitter2>> = {
     emit: jest.fn(),

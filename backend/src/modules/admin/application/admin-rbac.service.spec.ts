@@ -129,6 +129,20 @@ describe('AdminRbacService.updateRole()', () => {
     expect(result.label).toBe('New label');
   });
 
+  it('met à jour description et retourne les permissions dans la liste', async () => {
+    const role = makeRole();
+    mockRolesRepo.findOne.mockResolvedValue(role);
+    mockPermissionsRepo.find.mockResolvedValue([makePermRow('user_freemium', 'admin.rbac.read')]);
+    mockRolesRepo.save.mockResolvedValue({ ...role, description: 'Updated desc' });
+
+    const result = await makeService().updateRole(superAdmin, 'user_freemium', {
+      description: 'Updated desc',
+    });
+
+    expect(result.description).toBe('Updated desc');
+    expect(result.permissions).toEqual(['admin.rbac.read']);
+  });
+
   it('lève BadRequestException si on tente de modifier un rôle système', async () => {
     await expect(
       makeService().updateRole(superAdmin, 'super_admin', { label: 'X' }),
@@ -233,6 +247,21 @@ describe('AdminRbacService.removePermission()', () => {
 
     expect(mockPermissionsRepo.remove).toHaveBeenCalled();
     expect(result.permissions).toEqual([]);
+  });
+
+  it('retourne les permissions restantes après suppression (liste non vide)', async () => {
+    mockRolesRepo.findOne.mockResolvedValue(makeRole());
+    mockPermissionsRepo.findOne.mockResolvedValue(makePermRow('user_freemium', 'admin.users.read'));
+    mockPermissionsRepo.remove.mockResolvedValue({});
+    mockPermissionsRepo.find.mockResolvedValue([makePermRow('user_freemium', 'admin.rbac.read')]);
+
+    const result = await makeService().removePermission(
+      superAdmin,
+      'user_freemium',
+      'admin.users.read',
+    );
+
+    expect(result.permissions).toEqual(['admin.rbac.read']);
   });
 
   it("lève NotFoundException si la permission n'est pas assignée", async () => {

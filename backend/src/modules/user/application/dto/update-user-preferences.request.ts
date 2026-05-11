@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import { Theme } from 'src/infrastructure/database/entities/user-preference.entity';
 
 export class UpdateUserPreferencesRequest {

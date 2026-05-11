@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Req } from '@nestjs/common';
+import { Controller, Req } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 import { Admin } from '../decorators/admin.decorator';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import { permissionsForRole } from '../permissions/admin-permissions.map';
+import { ApiAdminMe, ApiAdminPing } from '../../../../swagger/decorators/api-admin.decorator';
 
 type AuthenticatedRequest = Request & {
   user: {
@@ -13,10 +15,12 @@ type AuthenticatedRequest = Request & {
   };
 };
 
+@ApiTags('Admin / Me')
+@ApiBearerAuth('access-token')
 @Controller('admin')
 @Admin()
 export class AdminMeController {
-  @Get('me')
+  @ApiAdminMe()
   me(@Req() req: AuthenticatedRequest) {
     const role = req.user.role;
 
@@ -28,7 +32,8 @@ export class AdminMeController {
       permissions: permissionsForRole(role),
     };
   }
-  @Post('ping')
+
+  @ApiAdminPing()
   ping() {
     return { ok: true };
   }

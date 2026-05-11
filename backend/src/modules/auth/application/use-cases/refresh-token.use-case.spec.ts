@@ -180,6 +180,24 @@ describe('RefreshTokenUseCase', () => {
       await expect(useCase.execute(refreshParams)).rejects.toThrow('Session expired or revoked');
     });
 
+    it('should throw UnauthorizedException when session userId does not match token sub', async () => {
+      const sessionBelongingToOtherUser = {
+        ...mockSession,
+        userId: 'other-user-456',
+      };
+
+      tokenService.verifyRefreshToken.mockReturnValue({
+        sub: 'user-123',
+        sessionId: 'session-123',
+      });
+      sessionRepo.findActiveSessionById.mockResolvedValue(sessionBelongingToOtherUser);
+
+      await expect(useCase.execute(refreshParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(refreshParams)).rejects.toThrow(
+        'Session does not belong to this user',
+      );
+    });
+
     it('should throw UnauthorizedException when refresh token hash does not match', async () => {
       tokenService.verifyRefreshToken.mockReturnValue({
         sub: 'user-123',
