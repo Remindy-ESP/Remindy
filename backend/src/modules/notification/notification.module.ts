@@ -7,10 +7,12 @@ import { NOTIFICATION_REPOSITORY } from './application/ports/notification-reposi
 import { FindAllNotificationsUseCase } from './application/use-cases/find-all-notifications.use-case';
 import { SnoozeNotificationUseCase } from './application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from './application/use-cases/mark-notification-as-read.use-case';
+import { ExpoPushService } from './application/services/expo-push.service';
+import { EUser } from '../../infrastructure/database/entities/user.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([NotificationEntity]), forwardRef(() => AuthModule)],
+  imports: [TypeOrmModule.forFeature([NotificationEntity, EUser]), forwardRef(() => AuthModule)],
   controllers: [NotificationController],
   providers: [
     {
@@ -20,7 +22,8 @@ import { AuthModule } from '../auth/auth.module';
     FindAllNotificationsUseCase,
     SnoozeNotificationUseCase,
     MarkNotificationAsReadUseCase,
+    ExpoPushService,
   ],
-  exports: [NOTIFICATION_REPOSITORY],
+  exports: [NOTIFICATION_REPOSITORY, ExpoPushService],
 })
 export class NotificationModule {}

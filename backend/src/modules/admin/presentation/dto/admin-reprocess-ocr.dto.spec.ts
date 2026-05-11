@@ -1,8 +1,6 @@
 import { validate } from 'class-validator';
 import { AdminReprocessOcrDto } from './admin-reprocess-ocr.dto';
-import {
-  describeForceBooleanValidation,
-} from 'src/utils/__tests__/boolean-dto-validation.helper';
+import { describeForceBooleanValidation } from 'src/utils/__tests__/boolean-dto-validation.helper';
 
 describe('AdminReprocessOcrDto', () => {
   it('should accept empty dto with default force=false', async () => {

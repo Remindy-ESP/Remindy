@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
-import Toast from 'react-native-toast-message';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -92,7 +91,7 @@ export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, o
     } catch (err: any) {
       console.error('[PDFViewer] Error:', err);
       setError(err.message || 'Impossible de charger le PDF');
-      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible de charger le PDF' });
+      Alert.alert('Erreur', 'Impossible de charger le PDF');
     } finally {
       setLoading(false);
     }

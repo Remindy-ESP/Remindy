@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { userService } from '@/services/api';
-import Toast from 'react-native-toast-message';
 
 export default function ProfilePrivacyScreen() {
   const router = useRouter();
@@ -24,14 +23,18 @@ export default function ProfilePrivacyScreen() {
     try {
       setIsExporting(true);
       const result = await userService.exportData({ format: 'json' });
-      Toast.show({ type: 'success', text1: 'Export demandé', text2: `Statut: ${result.status} \u2014 Format: ${result.format}` });
+
+      Alert.alert(
+        'Export demande',
+        `Statut: ${result.status}\nFormat: ${result.format}\nId: ${result.id}`
+      );
     } catch (error: any) {
       console.error('RGPD export request failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
         "Impossible de demander l'export des donnees.";
-      Toast.show({ type: 'error', text1: 'Erreur', text2: String(message) });
+      Alert.alert('Erreur', String(message));
     } finally {
       setIsExporting(false);
     }
@@ -42,7 +45,7 @@ export default function ProfilePrivacyScreen() {
       setIsDeleting(true);
       await userService.deleteMe();
       await logout();
-      Toast.show({ type: 'success', text1: 'Compte supprimé', text2: 'Votre compte a été supprimé.' });
+      Alert.alert('Compte supprime', 'Votre compte a ete supprime.');
       router.replace('/');
     } catch (error: any) {
       console.error('Delete account failed:', error);
@@ -50,7 +53,7 @@ export default function ProfilePrivacyScreen() {
         error?.response?.data?.message ||
         error?.message ||
         'Impossible de supprimer le compte.';
-      Toast.show({ type: 'error', text1: 'Erreur', text2: String(message) });
+      Alert.alert('Erreur', String(message));
     } finally {
       setIsDeleting(false);
     }

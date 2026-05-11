@@ -21,7 +21,6 @@ import { categoryService } from '../../services/api/category.service';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import Toast from 'react-native-toast-message';
 
 interface SubscriptionFormData {
   name: string;
@@ -59,6 +58,9 @@ export default function SubscriptionScreen() {
   const [filterFrequency, setFilterFrequency] = useState<string>('');
   const [filterCategoryId, setFilterCategoryId] = useState<string>('');
 
+  // Success overlay state
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
 
   // Date picker state
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
@@ -77,6 +79,14 @@ export default function SubscriptionScreen() {
 
   const [priceInput, setPriceInput] = useState<string>('');
 
+  // Helper to show success message
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setShowSuccessOverlay(true);
+    setTimeout(() => {
+      setShowSuccessOverlay(false);
+    }, 2000);
+  };
 
   // Helper to format date from YYYY-MM-DD to DD/MM/YYYY
   const formatDateForDisplay = (dateString: string): string => {
@@ -319,7 +329,7 @@ export default function SubscriptionScreen() {
     // Parse price safely (handles both comma and dot)
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
-      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Format du prix invalide' });
+      Alert.alert('Error', 'Invalid price format');
       return;
     }
 
@@ -339,6 +349,7 @@ export default function SubscriptionScreen() {
       }
       if (formData.description) {
         requestData.notes = formData.description;
+        requestData.notes = formData.description;
       }
       if (formData.reminderDays && requestData.notes) {
         requestData.notes = `${requestData.notes}\nRappel ${formData.reminderDays} jour(s) avant`;
@@ -353,16 +364,16 @@ export default function SubscriptionScreen() {
 
       if (editingSubscription) {
         await subscriptionService.update(editingSubscription.id, requestData);
-        Toast.show({ type: 'success', text1: 'Opération modifiée', text2: 'L\'opération a été mise à jour avec succès.' });
+        showSuccess('Opération modifiée avec succès');
       } else {
         await subscriptionService.create(requestData);
-        Toast.show({ type: 'success', text1: 'Opération créée', text2: 'Votre opération a été ajoutée.' });
+        showSuccess('Opération créée avec succès');
       }
       setModalVisible(false);
       await fetchData();
     } catch (err: any) {
       const errorMessage = getErrorMessage(err, 'Échec de l\'enregistrement de l\'opération');
-      Toast.show({ type: 'error', text1: 'Erreur', text2: errorMessage });
+      Alert.alert('Erreur', errorMessage);
     }
   };
 
@@ -378,10 +389,10 @@ export default function SubscriptionScreen() {
           onPress: async () => {
             try {
               await subscriptionService.delete(subscription.id);
-              Toast.show({ type: 'success', text1: 'Opération supprimée', text2: `"${subscription.name}" a été supprimée.` });
+              showSuccess('Opération supprimée avec succès');
               await fetchData();
             } catch (err: any) {
-              Toast.show({ type: 'error', text1: 'Erreur', text2: getErrorMessage(err, 'Échec de la suppression de l\'opération') });
+              Alert.alert('Erreur', getErrorMessage(err, 'Échec de la suppression de l\'opération'));
             }
           },
         },
@@ -393,14 +404,14 @@ export default function SubscriptionScreen() {
     try {
       if (subscription.status === 'active') {
         await subscriptionService.pause(subscription.id);
-        Toast.show({ type: 'success', text1: 'Mise en pause', text2: `"${subscription.name}" a été mise en pause.` });
+        showSuccess('Opération mise en pause avec succès');
       } else {
         await subscriptionService.resume(subscription.id);
-        Toast.show({ type: 'success', text1: 'Opération reprise', text2: `"${subscription.name}" est de nouveau active.` });
+        showSuccess('Opération reprise avec succès');
       }
       await fetchData();
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Erreur', text2: getErrorMessage(err, 'Échec de la mise à jour de l\'opération') });
+      Alert.alert('Erreur', getErrorMessage(err, 'Échec de la mise à jour de l\'opération'));
     }
   };
 
@@ -819,6 +830,15 @@ export default function SubscriptionScreen() {
         </View>
       </Modal>
 
+      {/* Success Overlay */}
+      {showSuccessOverlay && (
+        <View style={styles.successOverlay}>
+          <View style={styles.successContainer}>
+            <Text style={styles.successIcon}>✓</Text>
+            <Text style={styles.successText}>{successMessage}</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -1138,7 +1158,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
+  successOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  successContainer: {
+    backgroundColor: '#2a2a5e',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  successIcon: {
+    fontSize: 48,
+    color: '#4ade80',
+    marginBottom: 12,
+    fontWeight: 'bold',
+  },
+  successText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   dateButton: {
     backgroundColor: '#3d3d6f',
     borderRadius: 8,

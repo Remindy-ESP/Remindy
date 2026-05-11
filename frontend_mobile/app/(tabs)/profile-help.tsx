@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import onboardingService from '@/services/local/onboarding.service';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
-import Toast from 'react-native-toast-message';
 
 export default function ProfileHelpScreen() {
   const router = useRouter();
@@ -31,9 +31,9 @@ export default function ProfileHelpScreen() {
     try {
       setResettingGuide(true);
       await onboardingService.resetOnboarding();
-      Toast.show({ type: 'success', text1: 'Guide réinitialisé', text2: 'Il sera proposé à nouveau à la prochaine ouverture.' });
+      Alert.alert('Guide reinitialise', 'Le guide sera propose a nouveau a l ouverture de l application.');
     } catch {
-      Toast.show({ type: 'error', text1: 'Erreur', text2: 'Impossible de réinitialiser le guide.' });
+      Alert.alert('Erreur', 'Impossible de reinitialiser le guide pour le moment.');
     } finally {
       setResettingGuide(false);
     }
@@ -47,62 +47,51 @@ export default function ProfileHelpScreen() {
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
           <Text style={styles.headerTitle}>Aide</Text>
-          <Text style={styles.headerSubtitle}>Comment utiliser l application</Text>
+          <Text style={styles.headerSubtitle}>Guide utilisateur et assistance rapide</Text>
         </View>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Guide interactif</Text>
-        <Text style={styles.cardDescription}>
-          Lancez le guide pour decouvrir les principales fonctionnalites de Remindy.
+        <Text style={styles.cardTitle}>Guide de prise en main</Text>
+        <Text style={styles.cardBody}>
+          Retrouvez les principales fonctionnalites de Remindy : dashboard, abonnements, cloud,
+          promotions et securite, avec surbrillance des zones importantes directement dans l app.
         </Text>
+
         <TouchableOpacity
+          testID="open-onboarding-guide-button"
           style={styles.primaryButton}
           onPress={handleOpenGuide}
-          activeOpacity={0.8}
-          testID="open-guide-button"
+          activeOpacity={0.85}
         >
-          <Ionicons name="map-outline" size={18} color="#fff" />
-          <Text style={styles.primaryButtonText}>Lancer le guide</Text>
+          <Ionicons name="compass-outline" size={18} color="#fff" />
+          <Text style={styles.primaryButtonText}>Voir le guide interactif</Text>
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Reinitialisation</Text>
-        <Text style={styles.cardDescription}>
-          Si vous souhaitez revoir le guide d introduction qui s affiche au premier lancement.
-        </Text>
         <TouchableOpacity
+          testID="reset-onboarding-guide-button"
           style={[styles.secondaryButton, resettingGuide && styles.buttonDisabled]}
           onPress={() => void handleResetGuide()}
           disabled={resettingGuide}
-          activeOpacity={0.8}
-          testID="reset-guide-button"
+          activeOpacity={0.85}
         >
           {resettingGuide ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color="#DDE1FF" />
           ) : (
             <>
-              <Ionicons name="refresh-outline" size={18} color="#fff" />
-              <Text style={styles.secondaryButtonText}>Reinitialiser le guide</Text>
+              <Ionicons name="refresh-outline" size={18} color="#DDE1FF" />
+              <Text style={styles.secondaryButtonText}>Reinitialiser le guide de bienvenue</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
-      <View style={styles.helpCard}>
-        <Text style={styles.helpTitle}>Besoin d aide ?</Text>
-        <Text style={styles.helpDescription}>
-          Consultez notre site web ou contactez notre support technique.
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Support</Text>
+        <Text style={styles.cardBody}>
+          En cas de probleme, consultez la page A propos pour contacter le support ou reessayez
+          depuis les actions de l application.
         </Text>
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => router.push('/(tabs)/profile-about' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.linkButtonText}>Nous contacter</Text>
-          <Ionicons name="arrow-forward" size={16} color="#AEB7FF" />
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -115,12 +104,12 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 28,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   iconButton: {
     width: 36,
@@ -148,7 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#373848',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   cardTitle: {
     color: '#fff',
@@ -156,20 +145,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
   },
-  cardDescription: {
+  cardBody: {
     color: '#D3D6E8',
     fontSize: 13,
     lineHeight: 19,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   primaryButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#4B4FC9',
     borderRadius: 12,
     paddingVertical: 12,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
     gap: 8,
+    marginBottom: 10,
   },
   primaryButtonText: {
     color: '#fff',
@@ -177,49 +167,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   secondaryButton: {
-    backgroundColor: '#4E5498',
+    backgroundColor: '#1F2140',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4E5498',
     paddingVertical: 12,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
   secondaryButtonText: {
-    color: '#fff',
-    fontSize: 14,
+    color: '#DDE1FF',
+    fontSize: 13,
     fontWeight: '700',
   },
   buttonDisabled: {
-    opacity: 0.6,
-  },
-  helpCard: {
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 16,
-    marginTop: 8,
-  },
-  helpTitle: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  helpDescription: {
-    color: '#B8BBD6',
-    fontSize: 13,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  linkButtonText: {
-    color: '#AEB7FF',
-    fontSize: 14,
-    fontWeight: '700',
+    opacity: 0.65,
   },
 });

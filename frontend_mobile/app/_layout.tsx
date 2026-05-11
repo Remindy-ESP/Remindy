@@ -5,8 +5,6 @@ import { View, Platform } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
-import Toast from 'react-native-toast-message';
-import { toastConfig } from '@/components/ui/ToastConfig';
 import AppStatusScreen from '@/components/system/AppStatusScreen';
 import { CoachMarksProvider } from '@/features/coach-marks/CoachMarksContext';
 import CoachMarksOverlay from '@/components/system/CoachMarksOverlay';
@@ -89,7 +87,6 @@ export default function RootLayout() {
             />
           </Stack>
           <CoachMarksOverlay />
-          <Toast config={toastConfig} position="bottom" bottomOffset={60} visibilityTime={3000} />
         </View>
       </CoachMarksProvider>
     </AuthProvider>

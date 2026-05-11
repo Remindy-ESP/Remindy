@@ -14,7 +14,9 @@ const DEFAULT_DOCUMENT_ID = 'doc-123';
 const DEFAULT_USER_ID = 'user-123';
 
 // --- Factory function to avoid duplicated Document instantiation ---
-function createMockDocument(overrides: Partial<ConstructorParameters<typeof Document>[0]> = {}): Document {
+function createMockDocument(
+  overrides: Partial<ConstructorParameters<typeof Document>[0]> = {},
+): Document {
   return new Document({
     id: DEFAULT_DOCUMENT_ID,
     userId: DEFAULT_USER_ID,

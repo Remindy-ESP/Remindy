@@ -2,7 +2,6 @@ import { Controller, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard';
 import { CreateCategoryDto } from '../dto/create-category.dto';
 import { UpdateCategoryDto } from '../dto/update-category.dto';
 import { CategoryFilterDto } from '../dto/category-filter.dto';
@@ -24,7 +23,7 @@ import {
 @ApiTags('Categories')
 @ApiBearerAuth('access-token')
 @Controller('categories')
-@UseGuards(JwtAuthGuard, ThrottlerGuard)
+@UseGuards(ThrottlerGuard)
 export class CategoryController {
   constructor(
     private readonly createCategoryUseCase: CreateCategoryUseCase,

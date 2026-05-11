@@ -4,9 +4,11 @@ import { NotificationController } from './notification.controller';
 import { FindAllNotificationsUseCase } from '../../application/use-cases/find-all-notifications.use-case';
 import { SnoozeNotificationUseCase } from '../../application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from '../../application/use-cases/mark-notification-as-read.use-case';
+import { ExpoPushService } from '../../application/services/expo-push.service';
 import { Notification } from '../../domain/notification.entity';
 import { NotificationFilterDto } from '../dto/notification-filter.dto';
 import { SnoozeNotificationDto } from '../dto/snooze-notification.dto';
+import { RegisterPushTokenDto } from '../dto/register-push-token.dto';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 
 describe('NotificationController', () => {
@@ -14,6 +16,7 @@ describe('NotificationController', () => {
   let findAllNotificationsUseCase: jest.Mocked<FindAllNotificationsUseCase>;
   let snoozeNotificationUseCase: jest.Mocked<SnoozeNotificationUseCase>;
   let markNotificationAsReadUseCase: jest.Mocked<MarkNotificationAsReadUseCase>;
+  let expoPushService: jest.Mocked<ExpoPushService>;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockRequest = {
@@ -57,6 +60,13 @@ describe('NotificationController', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: ExpoPushService,
+          useValue: {
+            registerToken: jest.fn(),
+            unregisterToken: jest.fn(),
+          },
+        },
       ],
     })
       .overrideGuard(ThrottlerGuard)
@@ -69,6 +79,7 @@ describe('NotificationController', () => {
     findAllNotificationsUseCase = module.get(FindAllNotificationsUseCase);
     snoozeNotificationUseCase = module.get(SnoozeNotificationUseCase);
     markNotificationAsReadUseCase = module.get(MarkNotificationAsReadUseCase);
+    expoPushService = module.get(ExpoPushService);
   });
 
   describe('findAll', () => {
@@ -155,6 +166,30 @@ describe('NotificationController', () => {
         'notification-123',
         mockUserId,
       );
+    });
+  });
+
+  describe('push token', () => {
+    it('should register a push token', async () => {
+      const dto: RegisterPushTokenDto = { token: 'ExponentPushToken[123]' };
+      expoPushService.registerToken.mockResolvedValue(undefined);
+
+      const result = await controller.registerPushToken(mockRequest, dto);
+
+      expect(result).toEqual({ message: 'Push token registered successfully' });
+      expect(expoPushService.registerToken).toHaveBeenCalledWith(
+        mockUserId,
+        'ExponentPushToken[123]',
+      );
+    });
+
+    it('should unregister a push token', async () => {
+      expoPushService.unregisterToken.mockResolvedValue(undefined);
+
+      const result = await controller.unregisterPushToken(mockRequest);
+
+      expect(result).toEqual({ message: 'Push token unregistered successfully' });
+      expect(expoPushService.unregisterToken).toHaveBeenCalledWith(mockUserId);
     });
   });
 });
