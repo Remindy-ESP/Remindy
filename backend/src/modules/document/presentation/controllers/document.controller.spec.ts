@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, StreamableFile } from '@nestjs/common';
+import { NotFoundException, StreamableFile } from '@nestjs/common';
 import { DocumentController } from './document.controller';
 import { UploadDocumentUseCase } from '../../application/use-cases/upload-document.use-case';
 import { FindAllDocumentsUseCase } from '../../application/use-cases/find-all-documents.use-case';
@@ -99,7 +99,6 @@ describe('DocumentController', () => {
     expect(controller).toBeDefined();
   });
 
-  // ─── upload ──────────────────────────────────────────────────────────────────
 
   describe('upload', () => {
     // Signature: upload(req, file, userId, subscriptionId?, contractId?, folderId?, userRole?)
@@ -229,7 +228,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── findAll ─────────────────────────────────────────────────────────────────
 
   describe('findAll', () => {
     it('should find all documents with default filters', async () => {
@@ -292,7 +290,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── findOne ─────────────────────────────────────────────────────────────────
 
   describe('findOne', () => {
     it('should return document when found and belongs to user', async () => {
@@ -320,7 +317,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── update ──────────────────────────────────────────────────────────────────
 
   describe('update', () => {
     it('should update document and return response', async () => {
@@ -358,7 +354,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── delete ──────────────────────────────────────────────────────────────────
 
   describe('delete', () => {
     it('should delete a document successfully', async () => {
@@ -374,7 +369,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── reprocessOcr ────────────────────────────────────────────────────────────
 
   describe('reprocessOcr', () => {
     it('should reprocess OCR without force flag', async () => {
@@ -412,7 +406,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── downloadDocument ────────────────────────────────────────────────────────
 
   describe('downloadDocument', () => {
     it('should download document and return StreamableFile', async () => {
@@ -443,7 +436,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── getQuota ────────────────────────────────────────────────────────────────
 
   describe('getQuota', () => {
     it('should return quota usage with formatted values', async () => {
@@ -475,7 +467,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── getQueueStats ───────────────────────────────────────────────────────────
 
   describe('getQueueStats', () => {
     it('should return queue statistics', async () => {
@@ -489,7 +480,6 @@ describe('DocumentController', () => {
     });
   });
 
-  // ─── getJobStatus ────────────────────────────────────────────────────────────
 
   describe('getJobStatus', () => {
     it('should return job status for valid job', async () => {

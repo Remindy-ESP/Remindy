@@ -180,7 +180,7 @@ export class DocumentController {
   async findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const document = await this.documentRepository.findById(id);
 
-    if (!document || document.userId !== userId) {
+    if (document?.userId !== userId) {
       throw new NotFoundException(`Document with ID ${id} not found`);
     }
 
@@ -193,7 +193,7 @@ export class DocumentController {
   async downloadDocument(@Param('id') id: string, @CurrentUser('id') userId: string) {
     const document = await this.documentRepository.findById(id);
 
-    if (!document || document.userId !== userId) {
+    if (document?.userId !== userId) {
       throw new NotFoundException();
     }
 
