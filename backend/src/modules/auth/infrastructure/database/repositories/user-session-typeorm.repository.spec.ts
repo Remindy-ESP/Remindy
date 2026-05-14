@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserSessionTypeOrmRepository } from './user-session-typeorm.repository';
 import { UserSessionEntity } from '../../../../../infrastructure/database/entities/user-session.entity';
+const TEST_IP = '192.168.1.1';
 
 describe('UserSessionTypeOrmRepository', () => {
   let repository: UserSessionTypeOrmRepository;
@@ -40,7 +41,7 @@ describe('UserSessionTypeOrmRepository', () => {
         id: 'session-123',
         userId: 'user-123',
         refreshTokenHash: 'token_hash',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
         deviceName: 'Chrome on Windows',
         expiresAt: new Date('2024-12-31'),
@@ -120,7 +121,7 @@ describe('UserSessionTypeOrmRepository', () => {
         id: 'session-nullables',
         userId: 'user-123',
         refreshTokenHash: 'token_hash',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         expiresAt: new Date('2026-12-31'),
       };
 
@@ -155,7 +156,7 @@ describe('UserSessionTypeOrmRepository', () => {
         refreshTokenHash: 'token_hash',
         expiresAt: new Date('2024-12-31'),
         isRevoked: false,
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         lastActivity: new Date(),
       };
 

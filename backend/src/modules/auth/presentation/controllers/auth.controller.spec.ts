@@ -11,7 +11,8 @@ import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import type { Request, Response } from 'express';
-
+const TEST_IP = '192.168.1.1'
+const TEST_IP_2 = '10.0.0.1'
 describe('AuthController', () => {
   let controller: AuthController;
   let registerUserUseCase: jest.Mocked<RegisterUserUseCase>;
@@ -88,7 +89,7 @@ describe('AuthController', () => {
     resetPasswordUseCase = module.get(ResetPasswordUseCase);
 
     mockRequest = {
-      ip: '192.168.1.1',
+      ip: TEST_IP,
       headers: {
         'user-agent': 'Mozilla/5.0',
       },
@@ -149,7 +150,7 @@ describe('AuthController', () => {
       expect(loginUseCase.execute).toHaveBeenCalledWith({
         email: registerDto.email,
         password: registerDto.password,
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
         deviceName: 'web',
       });
@@ -273,7 +274,7 @@ describe('AuthController', () => {
       expect(loginUseCase.execute).toHaveBeenCalledWith({
         email: loginDto.email,
         password: loginDto.password,
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
         deviceName: 'web',
       });
@@ -358,7 +359,7 @@ describe('AuthController', () => {
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'old_refresh_token',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
       });
       expect(mockResponse.cookie).toHaveBeenCalledWith('refreshToken', newTokens.refreshToken, {
@@ -392,7 +393,7 @@ describe('AuthController', () => {
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'mobile_refresh_token',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
       });
       expect(result).toEqual({
@@ -452,13 +453,15 @@ describe('AuthController', () => {
         refreshToken: 'new_refresh_token',
       });
 
-      await controller.refreshToken(reqWithInvalidCookie as Request, mockResponse as Response, {
-        refreshToken: 'body_token',
-      });
+      await controller.refreshToken(
+        reqWithInvalidCookie as Request,
+        mockResponse,
+        { refreshToken: 'body_token' }
+      );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 12345,
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
       });
     });
@@ -475,11 +478,14 @@ describe('AuthController', () => {
         refreshToken: 'new_refresh_token',
       });
 
-      await controller.refreshToken(reqWithoutUserAgent as Request, mockResponse as Response);
+      await controller.refreshToken(
+  reqWithoutUserAgent as Request,
+  mockResponse
+);
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'cookie_token',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: undefined,
       });
     });
@@ -639,7 +645,7 @@ describe('AuthController', () => {
       });
 
       const request = {
-        ip: '10.0.0.1',
+        ip: TEST_IP_2,
         headers: {},
         cookies: {},
       } as any;
@@ -651,7 +657,7 @@ describe('AuthController', () => {
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'body-refresh-token',
-        ipAddress: '10.0.0.1',
+        ipAddress: TEST_IP_2,
         userAgent: undefined,
       });
       expect(response.cookie).toHaveBeenCalledWith(
