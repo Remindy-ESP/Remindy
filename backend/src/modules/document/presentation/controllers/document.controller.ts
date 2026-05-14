@@ -56,7 +56,7 @@ import {
   ApiDocumentGetQuota,
   ApiDocumentQueueStats,
   ApiDocumentJobStatus,
-} from 'src/swagger/decorators/api-document.decorator';
+} from '../../../../swagger/decorators/api-document.decorator';
 
 type UserRole = 'freemium' | 'premium' | 'admin';
 

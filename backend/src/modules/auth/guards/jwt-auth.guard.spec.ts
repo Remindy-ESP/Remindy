@@ -7,12 +7,16 @@ describe('domain JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let reflector: { getAllAndOverride: jest.Mock };
 
-  const makeContext = (authHeader?: string) =>
+  const buildRequest = (authHeader?: string) => ({
+    headers: authHeader ? { authorization: authHeader } : {},
+  });
+
+  const buildContext = (authHeader?: string): ExecutionContext =>
     ({
       getHandler: jest.fn(),
       getClass: jest.fn(),
       switchToHttp: jest.fn().mockReturnValue({
-        getRequest: () => ({ headers: { authorization: authHeader } }),
+        getRequest: () => buildRequest(authHeader),
       }),
     }) as unknown as ExecutionContext;
 
@@ -23,11 +27,13 @@ describe('domain JwtAuthGuard', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    delete process.env.NODE_ENV;
   });
 
   it('returns true for public routes', () => {
     reflector.getAllAndOverride.mockReturnValue(true);
-    const context = makeContext();
+
+    const context = buildContext();
 
     expect(guard.canActivate(context)).toBe(true);
     expect(reflector.getAllAndOverride).toHaveBeenCalledWith('isPublic', [
@@ -38,33 +44,25 @@ describe('domain JwtAuthGuard', () => {
 
   it('delegates to passport auth guard for protected routes (non-test env)', () => {
     reflector.getAllAndOverride.mockReturnValue(false);
-    const context = makeContext('Bearer some-token');
+
+    const context = buildContext('Bearer some-token');
     const parentPrototype = Object.getPrototypeOf(JwtAuthGuard.prototype);
     const superSpy = jest.spyOn(parentPrototype, 'canActivate').mockReturnValue(true);
 
-    const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
     expect(guard.canActivate(context)).toBe(true);
     expect(superSpy).toHaveBeenCalledWith(context);
-
-    process.env.NODE_ENV = originalEnv;
   });
 
   describe('test environment bypass (NODE_ENV === test)', () => {
-    const originalEnv = process.env.NODE_ENV;
-
     beforeEach(() => {
       process.env.NODE_ENV = 'test';
       reflector.getAllAndOverride.mockReturnValue(false);
     });
 
-    afterEach(() => {
-      process.env.NODE_ENV = originalEnv;
-    });
-
     it('accepts a known Bearer token and populates req.user', () => {
-      const req = { headers: { authorization: 'Bearer user-token' } } as any;
+      const req = buildRequest('Bearer user-token');
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -82,53 +80,50 @@ describe('domain JwtAuthGuard', () => {
     });
 
     it('throws UnauthorizedException for an unknown Bearer token', () => {
-      const context = makeContext('Bearer unknown-bad-token');
-      expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
+      expect(() => guard.canActivate(buildContext('Bearer unknown-bad-token'))).toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('throws UnauthorizedException when no Authorization header is present', () => {
-      const context = makeContext();
-      expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
+      expect(() => guard.canActivate(buildContext())).toThrow(UnauthorizedException);
     });
 
     it('throws UnauthorizedException when Authorization header is not Bearer', () => {
-      const context = makeContext('Basic dXNlcjpwYXNz');
-      expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
+      expect(() => guard.canActivate(buildContext('Basic dXNlcjpwYXNz'))).toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
-  it('returns the authenticated user from handleRequest', () => {
-    const context = makeContext();
-    const user = { id: 'user-1' };
-    expect(guard.handleRequest(null, user, null, context)).toBe(user);
-  });
+  describe('handleRequest', () => {
+    it('returns the authenticated user', () => {
+      const user = { id: 'user-1' };
+      expect(guard.handleRequest(null, user, null, buildContext())).toBe(user);
+    });
 
-  it('throws UnauthorizedException when user is missing', () => {
-    const context = makeContext();
-    expect(() => guard.handleRequest(null, null, { message: 'missing' }, context)).toThrow(
-      UnauthorizedException,
-    );
-  });
+    it('throws UnauthorizedException when user is missing', () => {
+      expect(() =>
+        guard.handleRequest(null, null, { message: 'missing' }, buildContext()),
+      ).toThrow(UnauthorizedException);
+    });
 
-  it('rethrows the original error when passport provides one', () => {
-    const context = makeContext();
-    const error = new Error('boom');
-    expect(() => guard.handleRequest(error, null, null, context)).toThrow(error);
-  });
+    it('rethrows original error when provided', () => {
+      const error = new Error('boom');
+      expect(() => guard.handleRequest(error, null, null, buildContext())).toThrow(error);
+    });
 
-  it('throws UnauthorizedException with default message when info is missing and user is null', () => {
-    const context = makeContext();
-    expect(() => guard.handleRequest(null, null, null, context)).toThrow(UnauthorizedException);
-    expect(() => guard.handleRequest(null, null, null, context)).toThrow(
-      'Invalid or missing authentication token',
-    );
+    it('throws default UnauthorizedException when info and user are missing', () => {
+      expect(() => guard.handleRequest(null, null, null, buildContext())).toThrow(
+        'Invalid or missing authentication token',
+      );
+    });
   });
 });
 
 describe('domain JwtAuthGuard constructor branch coverage', () => {
-  it('should instantiate with a mock reflector to cover constructor parameter branches', () => {
+  it('should instantiate with a mock reflector', () => {
     const mockReflector = { getAllAndOverride: jest.fn() };
-    const instance = new JwtAuthGuard(mockReflector as any);
-    expect(instance).toBeDefined();
+    expect(new JwtAuthGuard(mockReflector as any)).toBeDefined();
   });
 });
