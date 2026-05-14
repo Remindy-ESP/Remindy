@@ -10,17 +10,15 @@ import { ForgotPasswordUseCase } from '../src/modules/auth/application/use-cases
 import { ResetPasswordUseCase } from '../src/modules/auth/application/use-cases/reset-password.use-case';
 import { JwtRefreshGuard } from '../src/modules/auth/presentation/guards/jwt-refresh.guard';
 
-const TEST_PASSWORD = 'StrongPass123!';
+const TEST_PASSWORD = 'fake-password-for-tests';
 
 class TestJwtRefreshGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
 
-    req.cookies = {
-      ...(req.cookies ?? {}),
-      refreshToken: req.cookies?.refreshToken ?? 'refresh-token-123',
-    };
-
+    req.cookies ??= {};
+    req.cookies.refreshToken =
+      req.cookies.refreshToken ?? 'refresh-token-123';
     return true;
   }
 }

@@ -63,8 +63,8 @@ describe('domain JwtAuthGuard', () => {
       process.env.NODE_ENV = originalEnv;
     });
 
-    it('accepts a valid Bearer token and populates req.user', () => {
-      const req = { headers: { authorization: 'Bearer test-token' } } as any;
+    it('accepts a known Bearer token and populates req.user', () => {
+      const req = { headers: { authorization: 'Bearer user-token' } } as any;
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
@@ -75,10 +75,15 @@ describe('domain JwtAuthGuard', () => {
 
       expect(result).toBe(true);
       expect(req.user).toEqual({
-        id: 'test-user-id',
-        userId: 'test-user-id',
+        id: '00000000-0000-0000-0000-000000000001',
+        userId: '00000000-0000-0000-0000-000000000001',
         role: 'USER_PREMIUM',
       });
+    });
+
+    it('throws UnauthorizedException for an unknown Bearer token', () => {
+      const context = makeContext('Bearer unknown-bad-token');
+      expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
     });
 
     it('throws UnauthorizedException when no Authorization header is present', () => {
