@@ -82,7 +82,7 @@ describe('domain JwtAuthGuard', () => {
     });
 
     it('throws UnauthorizedException when no Authorization header is present', () => {
-      const context = makeContext(undefined);
+      const context = makeContext();
 
       expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
     });

@@ -37,7 +37,7 @@ describe('CurrentUser decorator', () => {
     }) as any;
 
   it('returns null when request has no user', () => {
-    const result = factory(undefined, mockContext(undefined));
+    const result = factory(undefined, mockContext());
 
     expect(result).toBeNull();
   });
