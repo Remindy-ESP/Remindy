@@ -10,6 +10,8 @@ import { ForgotPasswordUseCase } from '../src/modules/auth/application/use-cases
 import { ResetPasswordUseCase } from '../src/modules/auth/application/use-cases/reset-password.use-case';
 import { JwtRefreshGuard } from '../src/modules/auth/presentation/guards/jwt-refresh.guard';
 
+const TEST_PASSWORD = 'StrongPass123!';
+
 class TestJwtRefreshGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
@@ -117,7 +119,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/register', async () => {
     const payload = {
       email: 'user@example.com',
-      password: 'StrongPass123!',
+      password: TEST_PASSWORD,
       firstName: 'John',
       lastName: 'Doe',
     };
@@ -156,7 +158,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/login', async () => {
     const payload = {
       email: 'user@example.com',
-      password: 'StrongPass123!',
+      password: TEST_PASSWORD,
     };
 
     loginUseCase.execute.mockResolvedValue({
@@ -243,7 +245,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/reset-password', async () => {
     const payload = {
       token: 'reset-token-123',
-      newPassword: 'NewStrongPass123!',
+      newPassword: TEST_PASSWORD,
     };
 
     resetPasswordUseCase.execute.mockResolvedValue(undefined);

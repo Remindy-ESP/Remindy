@@ -27,7 +27,7 @@ const TEST_USER_ID = '00000000-0000-0000-0000-000000000001';
 const VALID_DOC_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const VALID_JOB_ID = 'job-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 const VALID_SUB_ID = '00000000-0000-4000-8000-000000000002';
-
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const TOKEN_MAP: Record<string, { id: string; role: string }> = {
   'user-token': { id: TEST_USER_ID, role: 'user_premium' },
 };
@@ -124,7 +124,14 @@ describe('DocumentController (e2e)', () => {
         forbidNonWhitelisted: false,
       }),
     );
-    app.use('/documents/upload', multer().single('file'));
+    app.use(
+      '/documents/upload',
+      multer({
+        limits: {
+          fileSize: MAX_FILE_SIZE,
+        },
+      }).single('file'),
+    );
     await app.init();
   });
 
