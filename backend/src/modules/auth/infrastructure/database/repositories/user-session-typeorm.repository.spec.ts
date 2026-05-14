@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserSessionTypeOrmRepository } from './user-session-typeorm.repository';
 import { UserSessionEntity } from '../../../../../infrastructure/database/entities/user-session.entity';
-const TEST_IP = '192.168.1.1';
+const TEST_IP = 'another-test-ip'; 
 
 describe('UserSessionTypeOrmRepository', () => {
   let repository: UserSessionTypeOrmRepository;

@@ -1,6 +1,7 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { UserController } from './user.controller';
+const TEST_IP = 'test-ip-address' 
 
 describe('UserController', () => {
   let controller: UserController;
@@ -256,7 +257,7 @@ describe('UserController', () => {
 
     const req = {
       user: { userId: 'user-1' },
-      socket: { remoteAddress: '10.0.0.1' },
+      socket: { remoteAddress: TEST_IP },
     } as any;
 
     await expect(controller.exportData(req, { format: 'csv' } as any)).resolves.toEqual({
@@ -265,7 +266,7 @@ describe('UserController', () => {
     expect(rgpdExportService.createExportRequest).toHaveBeenCalledWith(
       'user-1',
       { format: 'csv' },
-      '10.0.0.1',
+      TEST_IP,
     );
   });
 
@@ -334,7 +335,7 @@ describe('UserController', () => {
 
     const req = {
       ip: '203.0.113.10',
-      socket: { remoteAddress: '10.0.0.1' },
+      socket: { remoteAddress: TEST_IP },
       user: { userId: 'user-1' },
     } as any;
 

@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { RgpdExportService } from '../rgpd-export.service';
 import { RgpdExportRepository } from '../../../infrastructure/repositories/rgpd-export.repository';
 import { UserTypeOrmRepository } from '../../../infrastructure/repositories/user-typeorm.repository';
-
+const TEST_IP = 'test-ip-address' 
 describe('user/domain/services/RgpdExportService', () => {
   let service: RgpdExportService;
   let rgpdExportRepository: jest.Mocked<RgpdExportRepository>;
@@ -54,14 +54,14 @@ describe('user/domain/services/RgpdExportService', () => {
       rgpdExportRepository.findByUserId.mockResolvedValue([]);
       rgpdExportRepository.create.mockResolvedValue(mockExport);
 
-      const result = await service.createExportRequest('user-123', {}, '10.0.0.1');
+      const result = await service.createExportRequest('user-123', {}, TEST_IP);
 
       expect(rgpdExportRepository.create).toHaveBeenCalledWith({
         userId: 'user-123',
         status: 'pending',
         format: 'json',
         requestedBy: 'user',
-        ipAddress: '10.0.0.1',
+        ipAddress: TEST_IP,
       });
 
       expect(result).toEqual({
@@ -88,7 +88,7 @@ describe('user/domain/services/RgpdExportService', () => {
         format: 'csv',
       });
 
-      await service.createExportRequest('user-123', { format: 'csv' }, '10.0.0.1');
+      await service.createExportRequest('user-123', { format: 'csv' }, TEST_IP);
 
       expect(rgpdExportRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({ format: 'csv' }),
@@ -99,7 +99,7 @@ describe('user/domain/services/RgpdExportService', () => {
       userRepository.findById.mockResolvedValue(null);
 
       await expect(
-        service.createExportRequest('missing-user', { format: 'json' }, '10.0.0.1'),
+        service.createExportRequest('missing-user', { format: 'json' }, TEST_IP),
       ).rejects.toThrow(new NotFoundException('User not found'));
     });
 
@@ -108,7 +108,7 @@ describe('user/domain/services/RgpdExportService', () => {
       rgpdExportRepository.findByUserId.mockResolvedValue([]);
 
       await expect(
-        service.createExportRequest('user-123', { format: 'xml' as any }, '10.0.0.1'),
+        service.createExportRequest('user-123', { format: 'xml' as any }, TEST_IP),
       ).rejects.toThrow(new BadRequestException('Invalid format. Must be json or csv'));
     });
 
@@ -117,7 +117,7 @@ describe('user/domain/services/RgpdExportService', () => {
       rgpdExportRepository.findByUserId.mockResolvedValue([{ ...mockExport, status: 'pending' }]);
 
       await expect(
-        service.createExportRequest('user-123', { format: 'json' }, '10.0.0.1'),
+        service.createExportRequest('user-123', { format: 'json' }, TEST_IP),
       ).rejects.toThrow(new BadRequestException('You already have a pending export request'));
     });
 
@@ -128,7 +128,7 @@ describe('user/domain/services/RgpdExportService', () => {
       ]);
 
       await expect(
-        service.createExportRequest('user-123', { format: 'json' }, '10.0.0.1'),
+        service.createExportRequest('user-123', { format: 'json' }, TEST_IP),
       ).rejects.toThrow(new BadRequestException('You already have a pending export request'));
     });
   });

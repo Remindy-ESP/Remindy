@@ -11,8 +11,8 @@ import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import type { Request, Response } from 'express';
-const TEST_IP = '192.168.1.1'
-const TEST_IP_2 = '10.0.0.1'
+const TEST_IP = 'test-ip-address' 
+const TEST_IP_2 = 'another-test-ip'
 describe('AuthController', () => {
   let controller: AuthController;
   let registerUserUseCase: jest.Mocked<RegisterUserUseCase>;
