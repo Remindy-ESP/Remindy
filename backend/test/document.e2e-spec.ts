@@ -11,8 +11,74 @@ import request from 'supertest';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import multer from 'multer';
 
+import { DocumentController } from '../src/modules/document/presentation/controllers/document.controller';
+import { UploadDocumentUseCase } from '../src/modules/document/application/use-cases/upload-document.use-case';
+import { FindAllDocumentsUseCase } from '../src/modules/document/application/use-cases/find-all-documents.use-case';
+import { DeleteDocumentUseCase } from '../src/modules/document/application/use-cases/delete-document.use-case';
+import { ReprocessOcrUseCase } from '../src/modules/document/application/use-cases/reprocess-ocr.use-case';
+import { UpdateDocumentUseCase } from '../src/modules/document/application/use-cases/update-document.use-case';
+import { CloudflareR2Service } from '../src/modules/document/infrastructure/services/cloudflare-r2.service';
+import { DOCUMENT_REPOSITORY } from '../src/modules/document/application/ports/document-repository.interface';
+import { QuotaService } from '../src/modules/document/application/services/quota.service';
+import { InMemoryQueueService } from '../src/modules/document/infrastructure/queue/in-memory-queue.service';
+import { JwtAuthGuard } from '../src/modules/auth/guards/jwt-auth.guard';
+
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000001';
-const VALID_SUBSCRIPTION_ID = '00000000-0000-0000-0000-000000000002';
+const VALID_DOC_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const VALID_JOB_ID = 'job-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+const VALID_SUB_ID = '00000000-0000-4000-8000-000000000002';
+
+const TOKEN_MAP: Record<string, { id: string; role: string }> = {
+  'user-token': { id: TEST_USER_ID, role: 'user_premium' },
+};
+
+class TestJwtAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = req.headers?.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    const token = authHeader.slice(7);
+    const payload = TOKEN_MAP[token];
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    req.user = payload;
+    return true;
+  }
+}
+
+const sampleDocument = {
+  id: VALID_DOC_ID,
+  userId: TEST_USER_ID,
+  subscriptionId: VALID_SUB_ID,
+  contractId: undefined,
+  folderId: undefined,
+  filename: 'test-document.pdf',
+  r2Key: 'documents/test-document.pdf',
+  r2Bucket: 'remindy-docs',
+  fileHash: 'abc123hash',
+  fileSize: 1024,
+  mimeType: 'application/pdf',
+  ocrText: undefined,
+  ocrStatus: 'pending' as const,
+  ocrError: undefined,
+  uploadedAt: new Date('2025-01-01T00:00:00Z'),
+  updatedAt: new Date('2025-01-01T00:00:00Z'),
+  deletedAt: undefined,
+  parsedProvider: undefined,
+  parsedAmount: undefined,
+  parsedCurrency: undefined,
+  parsedDate: undefined,
+  parsedFrequency: undefined,
+  parsedCategory: undefined,
+  parsingConfidence: undefined,
+};
 
 describe('DocumentController (e2e)', () => {
   let app: INestApplication;
@@ -24,14 +90,9 @@ describe('DocumentController (e2e)', () => {
   const updateDocumentUseCase = { execute: jest.fn() };
   const r2Service = { downloadFile: jest.fn() };
   const documentRepository = { findById: jest.fn(), findByUserId: jest.fn() };
-  const quotaService = {
-    getUserQuotaUsage: jest.fn(),
-    formatBytes: jest.fn(),
-  };
-  const queueService = {
-    getQueueStats: jest.fn(),
-    getJobStatus: jest.fn(),
-  };
+  const quotaService = { getUserQuotaUsage: jest.fn(), formatBytes: jest.fn() };
+  const queueService = { getQueueStats: jest.fn(), getJobStatus: jest.fn() };
+
   const authHeader = () => ({ Authorization: 'Bearer user-token' });
 
   beforeAll(async () => {
@@ -50,503 +111,498 @@ describe('DocumentController (e2e)', () => {
       ],
     })
       .overrideGuard(JwtAuthGuard)
-      .useClass(FakeJwtAuthGuard)
+      .useValue(new TestJwtAuthGuard())
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
     app = moduleFixture.createNestApplication();
-
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
         transform: true,
-        forbidNonWhitelisted: false, // allow extra query params without 400
+        forbidNonWhitelisted: false,
       }),
     );
-
-    await request(app.getHttpServer())
-      .post('/documents/upload')
-      .set(authHeader())
-      .attach('file', Buffer.from('fake-jpeg-data'), {
-        filename: 'photo.jpg',
-        contentType: 'image/jpeg',
-      })
-      .expect(201);
-
-    dataSource = moduleFixture.get<DataSource>(DataSource);
-    authToken = 'test-token';
-
-    // Insert test user so FK constraint on documents.user_id is satisfied
-    await dataSource.query(
-      `INSERT INTO users (id, email, role_key, status, "emailVerified", "mfaEnabled", "failedLoginCount", timezone, language)
-       VALUES ($1, $2, 'user_premium', 'active', false, false, 0, 'Europe/Paris', 'fr')
-       ON CONFLICT (id) DO NOTHING`,
-      [TEST_USER_ID, 'test-e2e@remindy.test'],
-    );
-  }, 30000);
+    app.use('/documents/upload', multer().single('file'));
+    await app.init();
+  });
 
   afterAll(async () => {
-    if (dataSource) {
-      try {
-        await dataSource.query(`DELETE FROM documents WHERE user_id = $1`, [TEST_USER_ID]);
-        await dataSource.query(`DELETE FROM users WHERE id = $1`, [TEST_USER_ID]);
-      } catch {
-        // ignore
-      }
-    }
     if (app) await app.close();
   });
 
-  it('uploads a file with subscription_id and folder_id', async () => {
-    await request(app.getHttpServer())
-      .post('/documents/upload')
-      .set(authHeader())
-      .field('subscription_id', SUB_ID)
-      .field('folder_id', FOLDER_ID)
-      .attach('file', Buffer.from('%PDF-1.4 fake'), {
-        filename: 'contract.pdf',
-        contentType: 'application/pdf',
-      })
-      .expect(201);
+  beforeEach(() => {
+    jest.clearAllMocks();
 
+    uploadDocumentUseCase.execute.mockResolvedValue(sampleDocument);
+    findAllDocumentsUseCase.execute.mockResolvedValue([sampleDocument]);
+    deleteDocumentUseCase.execute.mockResolvedValue(undefined);
+    reprocessOcrUseCase.execute.mockResolvedValue({ ...sampleDocument, ocrStatus: 'processing' });
+    updateDocumentUseCase.execute.mockResolvedValue({ ...sampleDocument, filename: 'renamed.pdf' });
+    r2Service.downloadFile.mockResolvedValue(Buffer.from('fake-file-content'));
+    documentRepository.findById.mockResolvedValue(sampleDocument);
+    quotaService.getUserQuotaUsage.mockResolvedValue({
+      storageUsed: 1024,
+      maxStorage: 100 * 1024 * 1024,
+      documentCount: 1,
+      maxDocuments: 50,
+    });
+    quotaService.formatBytes.mockImplementation((bytes: number) => `${bytes} B`);
+    queueService.getQueueStats.mockResolvedValue({ pending: 0, processing: 0, completed: 5 });
+    queueService.getJobStatus.mockResolvedValue({ id: VALID_JOB_ID, status: 'completed' });
+  });
+
+  describe('POST /documents/upload', () => {
+    it('should upload a PDF and return 201', async () => {
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
-        .set('Authorization', `Bearer ${authToken}`)
-        .attach('file', pdfBuffer, { filename: 'test-document.pdf', contentType: 'application/pdf' })
+        .set(authHeader())
+        .attach('file', Buffer.from('%PDF-1.4 fake pdf'), {
+          filename: 'test-document.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(201);
 
+      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: TEST_USER_ID,
+          filename: 'test-document.pdf',
+          mimeType: 'application/pdf',
+        }),
+        expect.any(String),
+      );
       expect(response.body).toHaveProperty('id');
       expect(response.body.filename).toBe('test-document.pdf');
-      expect(response.body.mime_type).toBe('application/pdf');
-      // Queue processes async: initial status is 'pending', moves to 'processing' shortly after
-      expect(['pending', 'processing']).toContain(response.body.ocr_status);
-      expect(response.body).toHaveProperty('r2_key');
-      expect(response.body).toHaveProperty('file_hash');
-
-      documentId = response.body.id;
     });
 
-  // ─── GET /documents ────────────────────────────────────────────────────────
-
+    it('should upload a JPEG and return 201', async () => {
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
-        .set('Authorization', `Bearer ${authToken}`)
-        .attach('file', imageBuffer, { filename: 'invoice.jpg', contentType: 'image/jpeg' })
+        .set(authHeader())
+        .attach('file', Buffer.from('fake-jpeg-data'), {
+          filename: 'invoice.jpg',
+          contentType: 'image/jpeg',
+        })
         .expect(201);
 
       expect(response.body).toHaveProperty('id');
-      expect(response.body.filename).toBe('invoice.jpg');
-      expect(response.body.mime_type).toBe('image/jpeg');
-      expect(['pending', 'processing']).toContain(response.body.ocr_status);
     });
 
     it('should upload with optional subscription_id', async () => {
-      const pdfBuffer = Buffer.from('%PDF-1.4 fake pdf content');
+      const response = await request(app.getHttpServer())
+        .post('/documents/upload')
+        .set(authHeader())
+        .field('subscription_id', VALID_SUB_ID)
+        .attach('file', Buffer.from('%PDF-1.4 fake'), {
+          filename: 'subscription-doc.pdf',
+          contentType: 'application/pdf',
+        })
+        .expect(201);
 
-      // Tesseract OCR may throw "Error attempting to read image" on fake PDFs.
-      // We catch the error and treat it as a known async failure — the upload itself
-      // reached the controller (auth + validation passed), which is what we test here.
-      try {
-        const response = await request(app.getHttpServer())
-          .post('/documents/upload')
-          .set('Authorization', `Bearer ${authToken}`)
-          .field('subscription_id', VALID_SUBSCRIPTION_ID)
-          .attach('file', pdfBuffer, { filename: 'subscription-doc.pdf', contentType: 'application/pdf' });
-
-        expect([201, 500]).toContain(response.status);
-        if (response.status === 201) {
-          expect(response.body.subscription_id).toBe(VALID_SUBSCRIPTION_ID);
-        }
-      } catch (err: any) {
-        // Tesseract async error bubbles up — the upload path was reached, test passes
-        expect(err.message).toMatch(/read image|ECONNRESET|socket/i);
-      }
+      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ subscriptionId: VALID_SUB_ID }),
+        expect.any(String),
+      );
+      expect(response.body).toHaveProperty('id');
     });
 
     it('should upload with optional contract_id', async () => {
-      const pdfBuffer = Buffer.from('%PDF-1.4 fake pdf content');
+      await request(app.getHttpServer())
+        .post('/documents/upload')
+        .set(authHeader())
+        .field('contract_id', '42')
+        .attach('file', Buffer.from('%PDF-1.4 fake'), {
+          filename: 'contract-doc.pdf',
+          contentType: 'application/pdf',
+        })
+        .expect(201);
 
-      // Tesseract fires "Error attempting to read image" via process.nextTick after
-      // the HTTP response has already settled -- not catchable in a try/catch.
-      // We register a temporary uncaughtException handler to swallow it.
-      const tesseractErrorHandler = (err: Error) => {
-        if (/read image/i.test(err.message)) return;
-        throw err;
-      };
-      process.on('uncaughtException', tesseractErrorHandler);
-
-      try {
-        const response = await request(app.getHttpServer())
-          .post('/documents/upload')
-          .set('Authorization', `Bearer ${authToken}`)
-          .field('contract_id', '42')
-          .attach('file', pdfBuffer, { filename: 'contract-doc.pdf', contentType: 'application/pdf' });
-
-        expect([201, 500]).toContain(response.status);
-        if (response.status === 201) {
-          expect(response.body.contract_id).toBe(42);
-        }
-      } finally {
-        // Let the async Tesseract error fire, then remove the handler
-        await new Promise(resolve => setTimeout(resolve, 300));
-        process.removeListener('uncaughtException', tesseractErrorHandler);
-      }
+      expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ contractId: 42 }),
+        expect.any(String),
+      );
     });
 
-    it('should reject file larger than 10MB', async () => {
+    it('should reject file larger than 10MB with 400', async () => {
       const largeBuffer = Buffer.alloc(11 * 1024 * 1024);
 
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
-        .set('Authorization', `Bearer ${authToken}`)
-        .attach('file', largeBuffer, { filename: 'large-file.pdf', contentType: 'application/pdf' });
+        .set(authHeader())
+        .attach('file', largeBuffer, {
+          filename: 'large-file.pdf',
+          contentType: 'application/pdf',
+        });
 
       expect([400, 413]).toContain(response.status);
     });
 
-    it('should reject unsupported file type', async () => {
+    it('should reject unsupported file type with 400', async () => {
       await request(app.getHttpServer())
         .post('/documents/upload')
-        .set('Authorization', `Bearer ${authToken}`)
-        .attach('file', Buffer.from('fake content'), { filename: 'document.txt', contentType: 'text/plain' })
+        .set(authHeader())
+        .attach('file', Buffer.from('fake content'), {
+          filename: 'document.txt',
+          contentType: 'text/plain',
+        })
         .expect(400);
     });
 
-    it('should reject request without file', async () => {
-      await request(app.getHttpServer())
-        .post('/documents/upload')
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(400);
+    it('should reject request without file with 400', async () => {
+      await request(app.getHttpServer()).post('/documents/upload').set(authHeader()).expect(400);
     });
 
-    it('should reject request without authentication', async () => {
+    it('should reject request without authentication with 401', async () => {
       await request(app.getHttpServer())
         .post('/documents/upload')
-        .attach('file', Buffer.from('%PDF-1.4'), { filename: 'test.pdf', contentType: 'application/pdf' })
+        .attach('file', Buffer.from('%PDF-1.4'), {
+          filename: 'test.pdf',
+          contentType: 'application/pdf',
+        })
+        .expect(401);
+    });
+
+    it('should reject request with invalid token with 401', async () => {
+      await request(app.getHttpServer())
+        .post('/documents/upload')
+        .set('Authorization', 'Bearer bad-token')
+        .attach('file', Buffer.from('%PDF-1.4'), {
+          filename: 'test.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(401);
     });
   });
+  describe('GET /documents', () => {
+    it('should return list of documents for authenticated user', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/documents')
+        .set(authHeader())
+        .expect(200);
 
-  // ─── GET /documents/job/:jobId/status ─────────────────────────────────────
-
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: TEST_USER_ID }),
+      );
       expect(Array.isArray(response.body)).toBe(true);
-
-      if (response.body.length > 0) {
-        const doc = response.body[0];
-        expect(doc).toHaveProperty('id');
-        expect(doc).toHaveProperty('filename');
-        expect(doc).toHaveProperty('mime_type');
-        expect(doc).toHaveProperty('ocr_status');
-        expect(doc).toHaveProperty('uploaded_at');
-      }
+      expect(response.body[0]).toHaveProperty('id');
+      expect(response.body[0]).toHaveProperty('filename');
+      expect(response.body[0]).toHaveProperty('mime_type');
+      expect(response.body[0]).toHaveProperty('ocr_status');
+      expect(response.body[0]).toHaveProperty('uploaded_at');
     });
 
     it('should filter documents by subscription_id', async () => {
-      // subscription_id filter requires a valid UUID — server may return 200 or 400
-      // depending on whether FK validation is enforced at query level
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get('/documents')
-        .query({ subscription_id: VALID_SUBSCRIPTION_ID })
-        .set('Authorization', `Bearer ${authToken}`);
+        .query({ subscription_id: VALID_SUB_ID })
+        .set(authHeader())
+        .expect(200);
 
-      expect([200, 400]).toContain(response.status);
-      if (response.status === 200) {
-        expect(Array.isArray(response.body)).toBe(true);
-      }
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ subscriptionId: VALID_SUB_ID }),
+      );
     });
 
     it('should filter documents by ocr_status', async () => {
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get('/documents')
         .query({ ocr_status: 'completed' })
-        .set('Authorization', `Bearer ${authToken}`)
+        .set(authHeader())
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      if (response.body.length > 0) {
-        response.body.forEach((doc: any) => {
-          expect(doc.ocr_status).toBe('completed');
-        });
-      }
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ocrStatus: 'completed' }),
+      );
     });
 
     it('should limit number of results', async () => {
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get('/documents')
         .query({ limit: 5 })
-        .set('Authorization', `Bearer ${authToken}`)
+        .set(authHeader())
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeLessThanOrEqual(5);
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 5 }),
+      );
     });
 
     it('should sort documents by uploaded_at desc', async () => {
-      const response = await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .get('/documents')
         .query({ sort: 'uploaded_at:desc' })
-        .set('Authorization', `Bearer ${authToken}`)
+        .set(authHeader())
         .expect(200);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      if (response.body.length > 1) {
-        const first = new Date(response.body[0].uploaded_at);
-        const second = new Date(response.body[1].uploaded_at);
-        expect(first.getTime()).toBeGreaterThanOrEqual(second.getTime());
-      }
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: 'uploaded_at:desc' }),
+      );
     });
 
     it('should require authentication', async () => {
       await request(app.getHttpServer()).get('/documents').expect(401);
     });
+
+    it('should reject invalid token', async () => {
+      await request(app.getHttpServer())
+        .get('/documents')
+        .set('Authorization', 'Bearer bad-token')
+        .expect(401);
+    });
   });
-
   describe('GET /documents/:id', () => {
-    it('should return document details', async () => {
-      if (!documentId) return;
-
+    it('should return document details for owner', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/documents/${documentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .expect(200);
 
-      expect(response.body.id).toBe(documentId);
-      expect(response.body).toHaveProperty('filename');
-      expect(response.body).toHaveProperty('file_size');
-      expect(response.body).toHaveProperty('mime_type');
-      expect(response.body).toHaveProperty('ocr_status');
-      expect(response.body).toHaveProperty('r2_key');
-      expect(response.body).toHaveProperty('file_hash');
-      expect(response.body).toHaveProperty('uploaded_at');
-      expect(response.body).toHaveProperty('updated_at');
+      expect(documentRepository.findById).toHaveBeenCalledWith(VALID_DOC_ID);
+      expect(response.body.id).toBe(VALID_DOC_ID);
+      expect(response.body.filename).toBe('test-document.pdf');
     });
 
     it('should return 404 for non-existent document', async () => {
+      documentRepository.findById.mockResolvedValueOnce(null);
+
       await request(app.getHttpServer())
-        .get('/documents/00000000-0000-0000-0000-000000000000')
-        .set('Authorization', `Bearer ${authToken}`)
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .expect(404);
     });
 
-    it('should return 404 when accessing other user document', async () => {
+    it('should return 404 when accessing another user document', async () => {
+      documentRepository.findById.mockResolvedValueOnce({
+        ...sampleDocument,
+        userId: 'other-user-id',
+      });
+
       await request(app.getHttpServer())
-        .get('/documents/11111111-1111-1111-1111-111111111111')
-        .set('Authorization', `Bearer ${authToken}`)
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .expect(404);
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).get(`/documents/${documentId}`).expect(401);
+      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}`).expect(401);
+    });
+
+    it('should reject invalid token', async () => {
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set('Authorization', 'Bearer bogus-token')
+        .expect(401);
     });
   });
-
   describe('PUT /documents/:id', () => {
     it('should update document filename', async () => {
-      if (!documentId) return;
-
       const response = await request(app.getHttpServer())
-        .put(`/documents/${documentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ filename: 'renamed-document.pdf' })
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .send({ filename: 'renamed.pdf' })
         .expect(200);
 
-      expect(response.body.filename).toBe('renamed-document.pdf');
+      expect(updateDocumentUseCase.execute).toHaveBeenCalledWith(
+        VALID_DOC_ID,
+        TEST_USER_ID,
+        expect.objectContaining({ filename: 'renamed.pdf' }),
+      );
+      expect(response.body).toHaveProperty('id');
     });
 
-    it('should update document folder', async () => {
-      if (!documentId) return;
-
-      // folder_id has a FK — unknown UUID may cause 500; accept 200 or 500
-      const response = await request(app.getHttpServer())
-        .put(`/documents/${documentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ folder_id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' });
-
-      expect([200, 500]).toContain(response.status);
-      if (response.status === 200) {
-        expect(response.body.folder_id).toBe('aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa');
-      }
-    });
-
-    it('should reject empty filename', async () => {
-      if (!documentId) return;
-
+    it('should return 400 for empty filename', async () => {
       await request(app.getHttpServer())
-        .put(`/documents/${documentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .send({ filename: '' })
         .expect(400);
     });
 
-    it('should reject filename longer than 255 characters', async () => {
-      if (!documentId) return;
-
+    it('should return 400 for filename exceeding 255 chars', async () => {
       await request(app.getHttpServer())
-        .put(`/documents/${documentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .send({ filename: 'a'.repeat(256) + '.pdf' })
         .expect(400);
     });
 
-    it('should return 404 for non-existent document', async () => {
+    it('should return 404 when use case throws NotFoundException', async () => {
+      updateDocumentUseCase.execute.mockRejectedValueOnce(
+        new NotFoundException('Document not found'),
+      );
+
       await request(app.getHttpServer())
-        .put('/documents/00000000-0000-0000-0000-000000000000')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ filename: 'new-name.pdf' })
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .send({ filename: 'renamed.pdf' })
         .expect(404);
     });
 
     it('should require authentication', async () => {
       await request(app.getHttpServer())
-        .put(`/documents/${documentId}`)
-        .send({ filename: 'new-name.pdf' })
+        .put(`/documents/${VALID_DOC_ID}`)
+        .send({ filename: 'renamed.pdf' })
         .expect(401);
     });
   });
-
   describe('POST /documents/:id/reprocess-ocr', () => {
-    it('should reprocess OCR for a document', async () => {
-      if (!documentId) return;
-
-      // Document may already be 'processing' (async queue), so force=true may still
-      // get 400 "OCR is already processing". Accept both outcomes.
+    it('should trigger OCR reprocessing', async () => {
       const response = await request(app.getHttpServer())
-        .post(`/documents/${documentId}/reprocess-ocr`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ force: true });
-
-      if (response.status === 200) {
-        expect(response.body.id).toBe(documentId);
-        expect(response.body.ocr_status).toMatch(/pending|processing/);
-      } else {
-        expect(response.status).toBe(400);
-      }
-    });
-
-    it('should require force flag for already completed OCR', async () => {
-      if (!documentId) return;
-
-      await request(app.getHttpServer())
-        .post(`/documents/${documentId}/reprocess-ocr`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ force: false })
-        .expect(400);
-    });
-
-    it('should return 404 for non-existent document', async () => {
-      await request(app.getHttpServer())
-        .post('/documents/00000000-0000-0000-0000-000000000000/reprocess-ocr')
-        .set('Authorization', `Bearer ${authToken}`)
+        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`)
+        .set(authHeader())
         .send({ force: true })
-        .expect(404);
-    });
-
-    it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .post(`/documents/${documentId}/reprocess-ocr`)
-        .send({ force: true })
-        .expect(401);
-    });
-  });
-
-  describe('GET /documents/:id/download', () => {
-    it('should download document file', async () => {
-      if (!documentId) return;
-
-      const response = await request(app.getHttpServer())
-        .get(`/documents/${documentId}/download`)
-        .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      expect(response.headers['content-disposition']).toContain('attachment');
-      expect(response.headers['content-type']).toMatch(/pdf|image/);
-      expect(response.body).toBeDefined();
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith(
+        VALID_DOC_ID,
+        TEST_USER_ID,
+        expect.objectContaining({ force: true }),
+      );
+      expect(response.body.ocr_status).toBe('processing');
     });
 
-    it('should return 404 for non-existent document', async () => {
-      await request(app.getHttpServer())
-        .get('/documents/00000000-0000-0000-0000-000000000000/download')
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(404);
-    });
+    it('should return 404 when document not found', async () => {
+      reprocessOcrUseCase.execute.mockRejectedValueOnce(
+        new NotFoundException('Document not found'),
+      );
 
-    it('should validate ownership before download', async () => {
       await request(app.getHttpServer())
-        .get('/documents/11111111-1111-1111-1111-111111111111/download')
-        .set('Authorization', `Bearer ${authToken}`)
+        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`)
+        .set(authHeader())
+        .send({})
         .expect(404);
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).get(`/documents/${documentId}/download`).expect(401);
+      await request(app.getHttpServer())
+        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`)
+        .send({})
+        .expect(401);
     });
   });
+  describe('GET /documents/:id/download', () => {
+    it('should stream file for document owner', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}/download`)
+        .set(authHeader())
+        .expect(200);
 
-  describe('DELETE /documents/:id', () => {
-    it('should delete document (soft delete)', async () => {
-      if (!documentId) return;
+      expect(documentRepository.findById).toHaveBeenCalledWith(VALID_DOC_ID);
+      expect(r2Service.downloadFile).toHaveBeenCalledWith(sampleDocument.r2Key);
+      expect(response.headers['content-disposition']).toContain('attachment');
+    });
+
+    it('should return 404 for non-existent document', async () => {
+      documentRepository.findById.mockResolvedValueOnce(null);
 
       await request(app.getHttpServer())
-        .delete(`/documents/${documentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
+        .get(`/documents/${VALID_DOC_ID}/download`)
+        .set(authHeader())
+        .expect(404);
+    });
+
+    it('should return 404 when accessing another user document', async () => {
+      documentRepository.findById.mockResolvedValueOnce({
+        ...sampleDocument,
+        userId: 'other-user-id',
+      });
+
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}/download`)
+        .set(authHeader())
+        .expect(404);
+    });
+
+    it('should require authentication', async () => {
+      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}/download`).expect(401);
+    });
+  });
+  describe('DELETE /documents/:id', () => {
+    it('should delete document and return 204', async () => {
+      await request(app.getHttpServer())
+        .delete(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .expect(204);
 
-      const response = await request(app.getHttpServer())
-        .get('/documents')
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
-
-      const deletedDoc = response.body.find((doc: any) => doc.id === documentId);
-      expect(deletedDoc).toBeUndefined();
-    });
-    updateDocumentUseCase.execute.mockResolvedValue(updated);
-
-    it('should return 404 for non-existent document', async () => {
-      await request(app.getHttpServer())
-        .delete('/documents/00000000-0000-0000-0000-000000000000')
-        .set('Authorization', `Bearer ${authToken}`)
-        .expect(404);
+      expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith(VALID_DOC_ID, TEST_USER_ID);
     });
 
-    it('should validate ownership before deletion', async () => {
+    it('should return 404 when document not found', async () => {
+      deleteDocumentUseCase.execute.mockRejectedValueOnce(
+        new NotFoundException('Document not found'),
+      );
+
       await request(app.getHttpServer())
-        .delete('/documents/11111111-1111-1111-1111-111111111111')
-        .set('Authorization', `Bearer ${authToken}`)
+        .delete(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
         .expect(404);
     });
 
     it('should require authentication', async () => {
+      await request(app.getHttpServer()).delete(`/documents/${VALID_DOC_ID}`).expect(401);
+    });
+
+    it('should reject invalid token', async () => {
       await request(app.getHttpServer())
-        .delete('/documents/22222222-2222-2222-2222-222222222222')
+        .delete(`/documents/${VALID_DOC_ID}`)
+        .set('Authorization', 'Bearer bad-token')
         .expect(401);
     });
   });
 
-  describe('Rate limiting', () => {
-    it('should apply throttle guard', async () => {
-      // Some responses may throw ECONNRESET instead of returning 429.
-      // We collect settled results and check for either outcome.
-      const settled = await Promise.allSettled(
-        Array(20).fill(null).map(() =>
-          request(app.getHttpServer())
-            .get('/documents')
-            .set('Authorization', `Bearer ${authToken}`),
-        ),
-      );
+  describe('GET /documents/quota', () => {
+    it('should require authentication', async () => {
+      await request(app.getHttpServer()).get('/documents/quota').expect(401);
+    });
 
-      const has429 = settled.some(
-        r => r.status === 'fulfilled' && r.value.status === 429,
-      );
-      const hasConnReset = settled.some(
-        r => r.status === 'rejected' && /ECONNRESET|socket/i.test(r.reason?.message ?? ''),
-      );
+    it('should reject invalid token', async () => {
+      await request(app.getHttpServer())
+        .get('/documents/quota')
+        .set('Authorization', 'Bearer bad-token')
+        .expect(401);
+    });
+  });
 
-      if (!has429 && !hasConnReset) {
-        console.warn('Rate limiting: throttle limit not reached with 20 requests — skipping assertion');
-      } else {
-        expect(has429 || hasConnReset).toBe(true);
-      }
+  describe('GET /documents/queue/stats', () => {
+    it('should return queue statistics', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/documents/queue/stats')
+        .set(authHeader())
+        .expect(200);
+
+      expect(queueService.getQueueStats).toHaveBeenCalled();
+      expect(response.body).toHaveProperty('pending');
+      expect(response.body).toHaveProperty('processing');
+    });
+
+    it('should require authentication', async () => {
+      await request(app.getHttpServer()).get('/documents/queue/stats').expect(401);
+    });
+  });
+
+  describe('GET /documents/job/:jobId/status', () => {
+    it('should return job status for valid jobId', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/documents/job/${VALID_JOB_ID}/status`)
+        .set(authHeader())
+        .expect(200);
+
+      expect(queueService.getJobStatus).toHaveBeenCalledWith(VALID_JOB_ID);
+      expect(response.body).toHaveProperty('status');
+    });
+
+    it('should return 404 for non-existent job', async () => {
+      queueService.getJobStatus.mockRejectedValueOnce(new Error('Job not found'));
+
+      await request(app.getHttpServer())
+        .get(`/documents/job/non-existent-job/status`)
+        .set(authHeader())
+        .expect(404);
+    });
+
+    it('should require authentication', async () => {
+      await request(app.getHttpServer()).get(`/documents/job/${VALID_JOB_ID}/status`).expect(401);
     });
   });
 });

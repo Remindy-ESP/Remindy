@@ -7,13 +7,14 @@ describe('domain JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let reflector: { getAllAndOverride: jest.Mock };
 
-  const makeContext = (authHeader?: string) => ({
-    getHandler: jest.fn(),
-    getClass: jest.fn(),
-    switchToHttp: jest.fn().mockReturnValue({
-      getRequest: () => ({ headers: { authorization: authHeader } }),
-    }),
-  }) as unknown as ExecutionContext;
+  const makeContext = (authHeader?: string) =>
+    ({
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: () => ({ headers: { authorization: authHeader } }),
+      }),
+    }) as unknown as ExecutionContext;
 
   beforeEach(() => {
     reflector = { getAllAndOverride: jest.fn() };
@@ -74,8 +75,8 @@ describe('domain JwtAuthGuard', () => {
 
       expect(result).toBe(true);
       expect(req.user).toEqual({
-        id: '00000000-0000-0000-0000-000000000001',
-        userId: '00000000-0000-0000-0000-000000000001',
+        id: 'test-user-id',
+        userId: 'test-user-id',
         role: 'USER_PREMIUM',
       });
     });

@@ -7,13 +7,14 @@ describe('domain JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
   let reflector: { getAllAndOverride: jest.Mock };
 
-  const makeContext = (authHeader?: string) => ({
-    getHandler: jest.fn(),
-    getClass: jest.fn(),
-    switchToHttp: jest.fn().mockReturnValue({
-      getRequest: () => ({ headers: { authorization: authHeader } }),
-    }),
-  }) as unknown as ExecutionContext;
+  const makeContext = (authHeader?: string) =>
+    ({
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: () => ({ headers: { authorization: authHeader } }),
+      }),
+    }) as unknown as ExecutionContext;
 
   beforeEach(() => {
     reflector = { getAllAndOverride: jest.fn() };

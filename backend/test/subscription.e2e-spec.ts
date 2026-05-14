@@ -1,15 +1,17 @@
-import { INestApplication, ValidationPipe, CanActivate } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { Reflector } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { SubscriptionController } from '../src/modules/subscription/presentation/controllers/subscription.controller';
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '../src/modules/auth/presentation/guards/roles.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
-import { JwtTokenService } from '../src/modules/auth/infrastructure/services/jwt-token.service';
-import { EUser } from '../src/infrastructure/database/entities/user.entity';
 import { SubscriptionEntity } from '../src/modules/subscription/infrastructure/persistence/subscription.entity';
 import { CreateSubscriptionUseCase } from '../src/modules/subscription/application/use-cases/create-subscription.use-case';
 import { UpdateSubscriptionUseCase } from '../src/modules/subscription/application/use-cases/update-subscription.use-case';
@@ -26,6 +28,28 @@ const USER_ID = 'user-1111-1111-1111-111111111111';
 const OTHER_USER_ID = 'other-2222-2222-2222-222222222222';
 const SUB_ID = 'sub--3333-3333-3333-333333333333';
 const SUB_ID_2 = 'sub--4444-4444-4444-444444444444';
+
+const TOKEN_MAP: Record<string, { userId: string; role: Role }> = {
+  'user-token': { userId: USER_ID, role: Role.USER_PREMIUM },
+  'other-token': { userId: OTHER_USER_ID, role: Role.USER_PREMIUM },
+};
+
+class TestJwtAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = req.headers?.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+    const token = authHeader.slice(7);
+    const payload = TOKEN_MAP[token];
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+    req.user = payload;
+    return true;
+  }
+}
 
 const makeSubscription = (overrides: Partial<Record<string, unknown>> = {}): Subscription =>
   new Subscription({
@@ -46,10 +70,7 @@ const makeSubscription = (overrides: Partial<Record<string, unknown>> = {}): Sub
 describe('Subscription Module (e2e)', () => {
   let app: INestApplication;
 
-  const jwtTokenService = { verifyAccessToken: jest.fn() };
-  const userRepository = { findOne: jest.fn() };
   const subscriptionRepository = { findOne: jest.fn(), find: jest.fn() };
-
   const createSubscriptionUseCase = { execute: jest.fn() };
   const updateSubscriptionUseCase = { execute: jest.fn() };
   const deleteSubscriptionUseCase = { execute: jest.fn() };
@@ -60,11 +81,7 @@ describe('Subscription Module (e2e)', () => {
   const resumeSubscriptionUseCase = { execute: jest.fn() };
   const findSubscriptionEventsUseCase = { execute: jest.fn() };
 
-  // ThrottlerGuard override — pure mock, always allow in tests
-  const noopThrottlerGuard: CanActivate = { canActivate: () => true };
-
   const authHeaderFor = (token: string) => ({ Authorization: `Bearer ${token}` });
-
   const sampleSubscription = makeSubscription();
 
   const sampleEvents = [
@@ -81,33 +98,9 @@ describe('Subscription Module (e2e)', () => {
   ];
 
   beforeAll(async () => {
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      switch (token) {
-        case 'user-token':
-          return { sub: USER_ID, role: Role.USER_PREMIUM };
-        case 'other-token':
-          return { sub: OTHER_USER_ID, role: Role.USER_PREMIUM };
-        default:
-          throw new Error('invalid token');
-      }
-    });
-
-    userRepository.findOne.mockImplementation(({ where }: { where: { id: string } }) => {
-      if (where.id === USER_ID) {
-        return Promise.resolve({ id: USER_ID, mfaEnabled: false });
-      }
-      if (where.id === OTHER_USER_ID) {
-        return Promise.resolve({ id: OTHER_USER_ID, mfaEnabled: false });
-      }
-      return Promise.resolve(null);
-    });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [SubscriptionController],
       providers: [
-        Reflector,
-        JwtAuthGuard,
-        RolesGuard,
         { provide: CreateSubscriptionUseCase, useValue: createSubscriptionUseCase },
         { provide: UpdateSubscriptionUseCase, useValue: updateSubscriptionUseCase },
         { provide: DeleteSubscriptionUseCase, useValue: deleteSubscriptionUseCase },
@@ -117,30 +110,24 @@ describe('Subscription Module (e2e)', () => {
         { provide: PauseSubscriptionUseCase, useValue: pauseSubscriptionUseCase },
         { provide: ResumeSubscriptionUseCase, useValue: resumeSubscriptionUseCase },
         { provide: FindSubscriptionEventsUseCase, useValue: findSubscriptionEventsUseCase },
-        { provide: JwtTokenService, useValue: jwtTokenService },
-        { provide: getRepositoryToken(EUser), useValue: userRepository },
         { provide: getRepositoryToken(SubscriptionEntity), useValue: subscriptionRepository },
       ],
     })
       .overrideGuard(ThrottlerGuard)
-      .useValue(noopThrottlerGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(new TestJwtAuthGuard())
       .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
+      new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
     );
     await app.init();
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
+    if (app) await app.close();
   });
 
   beforeEach(() => {
@@ -166,8 +153,6 @@ describe('Subscription Module (e2e)', () => {
     subscriptionRepository.find.mockResolvedValue([]);
   });
 
-  // ---- Auth guard ----
-
   it('returns 401 when no token is provided on GET /subscriptions', async () => {
     await request(app.getHttpServer()).get('/subscriptions').expect(401);
   });
@@ -179,8 +164,6 @@ describe('Subscription Module (e2e)', () => {
       .send({ name: 'Netflix', amount: 15.99, frequency: 'monthly', startDate: '2025-01-01' })
       .expect(401);
   });
-
-  // ---- POST /subscriptions ----
 
   it('POST /subscriptions - creates a subscription and returns 201', async () => {
     const payload = {
@@ -257,8 +240,6 @@ describe('Subscription Module (e2e)', () => {
       .expect(400);
   });
 
-  // ---- GET /subscriptions ----
-
   it('GET /subscriptions - returns list of subscriptions for authenticated user', async () => {
     const response = await request(app.getHttpServer())
       .get('/subscriptions')
@@ -284,8 +265,6 @@ describe('Subscription Module (e2e)', () => {
     );
   });
 
-  // ---- GET /subscriptions/frequency/:type ----
-
   it('GET /subscriptions/frequency/:type - returns subscriptions filtered by frequency', async () => {
     const response = await request(app.getHttpServer())
       .get('/subscriptions/frequency/monthly')
@@ -310,8 +289,6 @@ describe('Subscription Module (e2e)', () => {
     expect(response.body).toHaveLength(0);
   });
 
-  // ---- GET /subscriptions/:id ----
-
   it('GET /subscriptions/:id - returns subscription by ID for its owner', async () => {
     const response = await request(app.getHttpServer())
       .get(`/subscriptions/${SUB_ID}`)
@@ -332,8 +309,6 @@ describe('Subscription Module (e2e)', () => {
       .set(authHeaderFor('user-token'))
       .expect(404);
   });
-
-  // ---- PUT /subscriptions/:id ----
 
   it('PUT /subscriptions/:id - updates subscription and returns updated response', async () => {
     const updatedSub = makeSubscription({ name: 'Netflix HD' });
@@ -381,8 +356,6 @@ describe('Subscription Module (e2e)', () => {
       .expect(400);
   });
 
-  // ---- DELETE /subscriptions/:id ----
-
   it('DELETE /subscriptions/:id - deletes subscription and returns 204', async () => {
     await request(app.getHttpServer())
       .delete(`/subscriptions/${SUB_ID}`)
@@ -407,8 +380,6 @@ describe('Subscription Module (e2e)', () => {
     await request(app.getHttpServer()).delete(`/subscriptions/${SUB_ID}`).expect(401);
   });
 
-  // ---- POST /subscriptions/:id/pause ----
-
   it('POST /subscriptions/:id/pause - pauses a subscription', async () => {
     const response = await request(app.getHttpServer())
       .post(`/subscriptions/${SUB_ID}/pause`)
@@ -429,8 +400,6 @@ describe('Subscription Module (e2e)', () => {
       .set(authHeaderFor('user-token'))
       .expect(404);
   });
-
-  // ---- POST /subscriptions/:id/resume ----
 
   it('POST /subscriptions/:id/resume - resumes a paused subscription', async () => {
     findSubscriptionUseCase.findById.mockResolvedValueOnce(
@@ -457,8 +426,6 @@ describe('Subscription Module (e2e)', () => {
       .expect(404);
   });
 
-  // ---- GET /subscriptions/:id/events ----
-
   it('GET /subscriptions/:id/events - returns list of events for a subscription', async () => {
     const response = await request(app.getHttpServer())
       .get(`/subscriptions/${SUB_ID}/events`)
@@ -467,10 +434,7 @@ describe('Subscription Module (e2e)', () => {
 
     expect(findSubscriptionEventsUseCase.execute).toHaveBeenCalledWith(SUB_ID);
     expect(response.body).toHaveLength(1);
-    expect(response.body[0]).toMatchObject({
-      subscriptionId: SUB_ID,
-      title: 'Netflix - Jan 2025',
-    });
+    expect(response.body[0]).toMatchObject({ subscriptionId: SUB_ID, title: 'Netflix - Jan 2025' });
   });
 
   it('GET /subscriptions/:id/events - returns 404 when subscription belongs to another user', async () => {

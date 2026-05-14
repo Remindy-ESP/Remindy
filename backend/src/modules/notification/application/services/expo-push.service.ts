@@ -1,8 +1,11 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Expo, ExpoPushMessage, ExpoPushTicket } from 'expo-server-sdk';
+
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
+
+export const EXPO_INSTANCE = Symbol('EXPO_INSTANCE');
+export const EXPO_CLASS = Symbol('EXPO_CLASS');
 
 export interface PushNotificationPayload {
   userId: string;
@@ -14,20 +17,16 @@ export interface PushNotificationPayload {
 @Injectable()
 export class ExpoPushService {
   private readonly logger = new Logger(ExpoPushService.name);
-  private readonly expo: Expo;
 
   constructor(
     @InjectRepository(EUser)
     private readonly userRepository: Repository<EUser>,
-  ) {
-    this.expo = new Expo();
-  }
+    @Inject(EXPO_INSTANCE) private readonly expo: any,
+    @Inject(EXPO_CLASS) private readonly ExpoClass: any,
+  ) {}
 
-  /**
-   * Register an Expo push token for a user
-   */
   async registerToken(userId: string, token: string): Promise<void> {
-    if (!Expo.isExpoPushToken(token)) {
+    if (!this.ExpoClass.isExpoPushToken(token)) {
       this.logger.warn(`Invalid Expo push token for user ${userId}: ${String(token)}`);
       throw new BadRequestException(`Invalid Expo push token: ${String(token)}`);
     }
@@ -36,17 +35,13 @@ export class ExpoPushService {
     this.logger.log(`Registered push token for user ${userId}`);
   }
 
-  /**
-   * Unregister the Expo push token for a user
-   */
   async unregisterToken(userId: string): Promise<void> {
-    await this.userRepository.update(userId, { expoPushToken: null as any });
+    await this.userRepository.update(userId, {
+      expoPushToken: null as any,
+    });
     this.logger.log(`Unregistered push token for user ${userId}`);
   }
 
-  /**
-   * Send a push notification to a single user
-   */
   async sendToUser(payload: PushNotificationPayload): Promise<boolean> {
     const user = await this.userRepository.findOne({
       where: { id: payload.userId },
@@ -58,12 +53,12 @@ export class ExpoPushService {
       return false;
     }
 
-    if (!Expo.isExpoPushToken(user.expoPushToken)) {
+    if (!this.ExpoClass.isExpoPushToken(user.expoPushToken)) {
       this.logger.warn(`Invalid stored push token for user ${payload.userId}`);
       return false;
     }
 
-    const message: ExpoPushMessage = {
+    const message = {
       to: user.expoPushToken,
       sound: 'default',
       title: payload.title,
@@ -73,14 +68,15 @@ export class ExpoPushService {
 
     try {
       const chunks = this.expo.chunkPushNotifications([message]);
+
       for (const chunk of chunks) {
-        const ticketChunk: ExpoPushTicket[] = await this.expo.sendPushNotificationsAsync(chunk);
+        const ticketChunk = await this.expo.sendPushNotificationsAsync(chunk);
+
         for (const ticket of ticketChunk) {
           if (ticket.status === 'error') {
             this.logger.error(
               `Push notification error for user ${payload.userId}: ${ticket.message}`,
             );
-            // If the token is invalid, remove it
             if (ticket.details?.error === 'DeviceNotRegistered') {
               this.logger.warn(`Removing invalid token for user ${payload.userId}`);
               await this.unregisterToken(payload.userId);
@@ -98,14 +94,10 @@ export class ExpoPushService {
     }
   }
 
-  /**
-   * Send push notifications to multiple users in batch
-   */
   async sendToUsers(payloads: PushNotificationPayload[]): Promise<Map<string, boolean>> {
     const results = new Map<string, boolean>();
-
-    // Fetch all user tokens in a single query
     const userIds = [...new Set(payloads.map(p => p.userId))];
+
     const users = await this.userRepository
       .createQueryBuilder('user')
       .select(['user.id', 'user.expoPushToken'])
@@ -114,18 +106,15 @@ export class ExpoPushService {
       .getMany();
 
     const tokenMap = new Map(users.map(u => [u.id, u.expoPushToken]));
-
-    // Build messages only for users with valid tokens
-    const messages: ExpoPushMessage[] = [];
+    const messages: any[] = [];
     const messageUserMap: string[] = [];
 
     for (const payload of payloads) {
       const token = tokenMap.get(payload.userId);
-      if (!token || !Expo.isExpoPushToken(token)) {
+      if (!token || !this.ExpoClass.isExpoPushToken(token)) {
         results.set(payload.userId, false);
         continue;
       }
-
       messages.push({
         to: token,
         sound: 'default',
@@ -141,13 +130,13 @@ export class ExpoPushService {
       return results;
     }
 
-    // Send in chunks (Expo recommends max 100 per chunk)
     const chunks = this.expo.chunkPushNotifications(messages);
     let messageIndex = 0;
 
     for (const chunk of chunks) {
       try {
         const ticketChunk = await this.expo.sendPushNotificationsAsync(chunk);
+
         for (const ticket of ticketChunk) {
           const userId = messageUserMap[messageIndex];
           if (ticket.status === 'ok') {
@@ -163,7 +152,6 @@ export class ExpoPushService {
         }
       } catch (error) {
         this.logger.error(`Failed to send push notification chunk: ${error}`);
-        // Mark remaining in this chunk as failed
         for (let i = messageIndex; i < messageIndex + chunk.length; i++) {
           results.set(messageUserMap[i], false);
         }
@@ -173,7 +161,6 @@ export class ExpoPushService {
 
     const successCount = [...results.values()].filter(v => v).length;
     this.logger.log(`Batch push: ${successCount}/${payloads.length} sent successfully`);
-
     return results;
   }
 }

@@ -1,35 +1,56 @@
-import { INestApplication, NotFoundException, ValidationPipe } from '@nestjs/common';
+import {
+  INestApplication,
+  NotFoundException,
+  ValidationPipe,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { Reflector } from '@nestjs/core';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { SupportController } from '../src/modules/support/presentation/controllers/support.controller';
 import { CreateSupportTicketUseCase } from '../src/modules/support/application/use-cases/create-support-ticket.use-case';
 import { ListMySupportTicketsUseCase } from '../src/modules/support/application/use-cases/list-my-support-tickets.use-case';
 import { GetMySupportTicketByIdUseCase } from '../src/modules/support/application/use-cases/get-my-support-ticket-by-id.use-case';
 import { ReplyToMySupportTicketUseCase } from '../src/modules/support/application/use-cases/reply-to-my-support-ticket.use-case';
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '../src/modules/auth/presentation/guards/roles.guard';
-import { JwtTokenService } from '../src/modules/auth/infrastructure/services/jwt-token.service';
-import { EUser } from '../src/infrastructure/database/entities/user.entity';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
 import { SupportTicketCategory } from '../src/modules/support/domain/enums/support-ticket-category.enum';
 import { SupportTicketStatus } from '../src/modules/support/domain/enums/support-ticket-status.enum';
 
+const TOKEN_MAP: Record<string, { id: string; role: Role }> = {
+  'user-token': { id: 'user-1', role: Role.USER_FREEMIUM },
+  'user2-token': { id: 'user-2', role: Role.USER_PREMIUM },
+};
+
+class TestJwtAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = req.headers?.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    const token = authHeader.slice(7);
+    const payload = TOKEN_MAP[token];
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    req.user = payload;
+    return true;
+  }
+}
+
 describe('Support Module (e2e)', () => {
   let app: INestApplication;
-
-  const users: Record<string, { id: string; role: Role; mfaEnabled: boolean }> = {
-    'user-1': { id: 'user-1', role: Role.USER_FREEMIUM, mfaEnabled: false },
-    'user-2': { id: 'user-2', role: Role.USER_PREMIUM, mfaEnabled: false },
-  };
 
   const createSupportTicketUseCase = { execute: jest.fn() };
   const listMySupportTicketsUseCase = { execute: jest.fn() };
   const getMySupportTicketByIdUseCase = { execute: jest.fn() };
   const replyToMySupportTicketUseCase = { execute: jest.fn() };
-  const jwtTokenService = { verifyAccessToken: jest.fn() };
-  const userRepository = { findOne: jest.fn() };
 
   const validTicketId = '11111111-1111-1111-1111-111111111111';
   const validUserId = 'user-1';
@@ -65,74 +86,32 @@ describe('Support Module (e2e)', () => {
   const authHeaderFor = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   beforeAll(async () => {
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      switch (token) {
-        case 'user-token':
-          return { sub: 'user-1', role: Role.USER_FREEMIUM };
-        case 'user2-token':
-          return { sub: 'user-2', role: Role.USER_PREMIUM };
-        default:
-          throw new Error('invalid token');
-      }
-    });
-
-    userRepository.findOne.mockImplementation(({ where }: { where: { id: string } }) => {
-      const user = users[where.id];
-      if (!user) return null;
-      return Promise.resolve({ id: user.id, mfaEnabled: user.mfaEnabled });
-    });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [SupportController],
       providers: [
-        Reflector,
-        JwtAuthGuard,
-        RolesGuard,
         { provide: CreateSupportTicketUseCase, useValue: createSupportTicketUseCase },
         { provide: ListMySupportTicketsUseCase, useValue: listMySupportTicketsUseCase },
         { provide: GetMySupportTicketByIdUseCase, useValue: getMySupportTicketByIdUseCase },
         { provide: ReplyToMySupportTicketUseCase, useValue: replyToMySupportTicketUseCase },
-        { provide: JwtTokenService, useValue: jwtTokenService },
-        { provide: getRepositoryToken(EUser), useValue: userRepository },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(new TestJwtAuthGuard())
+      .compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
+      new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
     );
     await app.init();
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
+    if (app) await app.close();
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      switch (token) {
-        case 'user-token':
-          return { sub: 'user-1', role: Role.USER_FREEMIUM };
-        case 'user2-token':
-          return { sub: 'user-2', role: Role.USER_PREMIUM };
-        default:
-          throw new Error('invalid token');
-      }
-    });
-
-    userRepository.findOne.mockImplementation(({ where }: { where: { id: string } }) => {
-      const user = users[where.id];
-      if (!user) return null;
-      return Promise.resolve({ id: user.id, mfaEnabled: user.mfaEnabled });
-    });
 
     createSupportTicketUseCase.execute.mockResolvedValue(sampleTicket);
     listMySupportTicketsUseCase.execute.mockResolvedValue({
@@ -154,10 +133,6 @@ describe('Support Module (e2e)', () => {
       },
     });
   });
-
-  // ---------------------------------------------------------------------------
-  // GET /support/tickets/categories
-  // ---------------------------------------------------------------------------
   describe('GET /support/tickets/categories', () => {
     it('returns the list of ticket categories when authenticated', async () => {
       const response = await request(app.getHttpServer())
@@ -183,10 +158,6 @@ describe('Support Module (e2e)', () => {
         .expect(401);
     });
   });
-
-  // ---------------------------------------------------------------------------
-  // POST /support/tickets
-  // ---------------------------------------------------------------------------
   describe('POST /support/tickets', () => {
     it('creates a support ticket with all fields', async () => {
       const payload = {
@@ -280,10 +251,6 @@ describe('Support Module (e2e)', () => {
         .expect(401);
     });
   });
-
-  // ---------------------------------------------------------------------------
-  // GET /support/tickets/me
-  // ---------------------------------------------------------------------------
   describe('GET /support/tickets/me', () => {
     it('returns my tickets list without filters', async () => {
       const response = await request(app.getHttpServer())
@@ -341,9 +308,6 @@ describe('Support Module (e2e)', () => {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // GET /support/tickets/:id
-  // ---------------------------------------------------------------------------
   describe('GET /support/tickets/:id', () => {
     it('returns ticket details for a valid UUID', async () => {
       const response = await request(app.getHttpServer())
@@ -391,9 +355,6 @@ describe('Support Module (e2e)', () => {
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // POST /support/tickets/:id/reply
-  // ---------------------------------------------------------------------------
   describe('POST /support/tickets/:id/reply', () => {
     it('submits a reply to an existing ticket', async () => {
       const replyBody = { message: 'Merci, voici des précisions supplémentaires.' };

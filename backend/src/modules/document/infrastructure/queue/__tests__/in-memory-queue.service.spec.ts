@@ -14,30 +14,30 @@ describe('InMemoryQueueService', () => {
   let mockR2Service: jest.Mocked<CloudflareR2Service>;
   let mockRepository: jest.Mocked<IDocumentRepository>;
   let mockEventEmitter: jest.Mocked<EventEmitter2>;
- 
+
   beforeEach(async () => {
     mockOcrService = {
       extractText: jest.fn(),
       cleanExtractedText: jest.fn(),
     } as any;
- 
+
     mockGeminiParser = {
       parseDocument: jest.fn(),
     } as any;
- 
+
     mockR2Service = {
       downloadFile: jest.fn(),
     } as any;
- 
+
     mockRepository = {
       updateOcrStatus: jest.fn(),
       updateOcrAndParsedData: jest.fn(),
     } as any;
- 
+
     mockEventEmitter = {
       emit: jest.fn(),
     } as any;
- 
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         InMemoryQueueService,
@@ -48,16 +48,16 @@ describe('InMemoryQueueService', () => {
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
- 
+
     service = module.get<InMemoryQueueService>(InMemoryQueueService);
   });
- 
+
   afterEach(() => {
     service.onModuleDestroy();
     jest.clearAllTimers();
     jest.useRealTimers();
   });
- 
+
   describe('addDocumentToQueue', () => {
     it('should add a document to the queue and return a job ID', async () => {
       const jobId = await service.addDocumentToQueue(
@@ -67,10 +67,10 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test.pdf',
       );
- 
+
       expect(jobId).toMatch(/^ocr-job-\d+-\d+$/);
     });
- 
+
     it('should generate unique job IDs', async () => {
       const jobId1 = await service.addDocumentToQueue(
         'doc-123',
@@ -79,7 +79,7 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test1.pdf',
       );
- 
+
       const jobId2 = await service.addDocumentToQueue(
         'doc-456',
         'user-123',
@@ -87,18 +87,18 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test2.pdf',
       );
- 
+
       expect(jobId1).not.toEqual(jobId2);
     });
   });
- 
+
   describe('getJobStatus', () => {
     it('should return job status for an existing job', async () => {
       // Mock all dependencies to prevent actual processing
       mockR2Service.downloadFile.mockResolvedValue(Buffer.from('test'));
       mockOcrService.extractText.mockResolvedValue('');
       mockOcrService.cleanExtractedText.mockReturnValue('');
- 
+
       const jobId = await service.addDocumentToQueue(
         'doc-123',
         'user-123',
@@ -106,9 +106,9 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test.pdf',
       );
- 
+
       const jobStatus = await service.getJobStatus(jobId);
- 
+
       // Le job peut être en waiting ou active selon le timing
       expect(jobStatus).toMatchObject({
         id: jobId,
@@ -116,7 +116,7 @@ describe('InMemoryQueueService', () => {
         attempts: expect.any(Number),
       });
     });
- 
+
     it('should throw error for non-existent job', async () => {
       await expect(service.getJobStatus('invalid-job-id')).rejects.toThrow(
         'Job invalid-job-id not found',
@@ -186,14 +186,14 @@ describe('InMemoryQueueService', () => {
       expect((service as any).workerInterval).toBe(firstInterval);
     });
   });
- 
+
   describe('getQueueStats', () => {
     it('should return queue statistics', async () => {
       await service.addDocumentToQueue('doc-1', 'user-1', 'key-1', 'application/pdf', 'test1.pdf');
       await service.addDocumentToQueue('doc-2', 'user-1', 'key-2', 'application/pdf', 'test2.pdf');
- 
+
       const stats = await service.getQueueStats();
- 
+
       expect(stats).toEqual({
         waiting: expect.any(Number),
         active: expect.any(Number),
@@ -203,22 +203,22 @@ describe('InMemoryQueueService', () => {
       });
     });
   });
- 
+
   describe('OCR processing', () => {
     // These tests need the real processing path (not the test bypass).
     // We temporarily set NODE_ENV to 'unit-test' so the queue runs the full pipeline
     // with mocked services, while the e2e bypass (NODE_ENV === 'test') stays inactive.
     let originalNodeEnv: string | undefined;
- 
+
     beforeEach(() => {
       originalNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'unit-test';
     });
- 
+
     afterEach(() => {
       process.env.NODE_ENV = originalNodeEnv;
     });
- 
+
     it('should process a job successfully', async () => {
       const fileBuffer = Buffer.from('test file content');
       const ocrText = 'Extracted text from document';
@@ -232,12 +232,12 @@ describe('InMemoryQueueService', () => {
         category: 'streaming' as const,
         confidence: 0.95,
       };
- 
+
       mockR2Service.downloadFile.mockResolvedValue(fileBuffer);
       mockOcrService.extractText.mockResolvedValue(ocrText);
       mockOcrService.cleanExtractedText.mockReturnValue(cleanedText);
       mockGeminiParser.parseDocument.mockResolvedValue(parsedData);
- 
+
       await service.addDocumentToQueue(
         'doc-123',
         'user-123',
@@ -245,10 +245,10 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test.pdf',
       );
- 
+
       // Attendre que le job soit traité
       await new Promise(resolve => setTimeout(resolve, 200));
- 
+
       expect(mockRepository.updateOcrStatus).toHaveBeenCalledWith('doc-123', 'processing');
       expect(mockR2Service.downloadFile).toHaveBeenCalledWith('r2-key-123');
       expect(mockOcrService.extractText).toHaveBeenCalledWith(fileBuffer, 'application/pdf');
@@ -265,7 +265,7 @@ describe('InMemoryQueueService', () => {
         parsingConfidence: parsedData.confidence,
       });
     });
- 
+
     it('should emit events during processing', async () => {
       const fileBuffer = Buffer.from('test file content');
       const ocrText = 'Extracted text';
@@ -278,12 +278,12 @@ describe('InMemoryQueueService', () => {
         category: 'autre' as const,
         confidence: 0.9,
       };
- 
+
       mockR2Service.downloadFile.mockResolvedValue(fileBuffer);
       mockOcrService.extractText.mockResolvedValue(ocrText);
       mockOcrService.cleanExtractedText.mockReturnValue(ocrText);
       mockGeminiParser.parseDocument.mockResolvedValue(parsedData);
- 
+
       await service.addDocumentToQueue(
         'doc-123',
         'user-123',
@@ -291,10 +291,10 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test.pdf',
       );
- 
+
       // Attendre le traitement
       await new Promise(resolve => setTimeout(resolve, 200));
- 
+
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'ocr.started',
         expect.objectContaining({
@@ -303,7 +303,7 @@ describe('InMemoryQueueService', () => {
           filename: 'test.pdf',
         }),
       );
- 
+
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'ocr.completed',
         expect.objectContaining({
@@ -416,7 +416,7 @@ describe('InMemoryQueueService', () => {
     // Simplifié : test juste qu'un retry event est émis sans attendre toutes les tentatives
     it('should emit retry event on failure', async () => {
       mockR2Service.downloadFile.mockRejectedValue(new Error('Download failed'));
- 
+
       await service.addDocumentToQueue(
         'doc-123',
         'user-123',
@@ -424,16 +424,16 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test.pdf',
       );
- 
+
       // Attendre suffisamment longtemps pour toutes les tentatives
       await new Promise(resolve => setTimeout(resolve, 30000));
- 
+
       expect(mockRepository.updateOcrStatus).toHaveBeenCalledWith(
         'doc-123',
         'failed',
         expect.stringContaining('OCR failed after 3 attempts'),
       );
- 
+
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'ocr.failed',
         expect.objectContaining({
@@ -444,7 +444,7 @@ describe('InMemoryQueueService', () => {
         }),
       );
     }, 35000);
- 
+
     it('should retry on failure with exponential backoff', async () => {
       let attemptCount = 0;
       mockR2Service.downloadFile.mockImplementation(() => {
@@ -454,7 +454,7 @@ describe('InMemoryQueueService', () => {
         }
         return Promise.resolve(Buffer.from('success'));
       });
- 
+
       mockOcrService.extractText.mockResolvedValue('text');
       mockOcrService.cleanExtractedText.mockReturnValue('text');
       mockGeminiParser.parseDocument.mockResolvedValue({
@@ -466,7 +466,7 @@ describe('InMemoryQueueService', () => {
         category: 'autre' as const,
         confidence: 0.9,
       });
- 
+
       await service.addDocumentToQueue(
         'doc-123',
         'user-123',
@@ -474,10 +474,10 @@ describe('InMemoryQueueService', () => {
         'application/pdf',
         'test.pdf',
       );
- 
+
       // Attendre juste le premier retry
       await new Promise(resolve => setTimeout(resolve, 5500));
- 
+
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'ocr.retrying',
         expect.objectContaining({

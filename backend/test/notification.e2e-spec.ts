@@ -1,23 +1,49 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { Reflector } from '@nestjs/core';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 import { NotificationController } from '../src/modules/notification/presentation/controllers/notification.controller';
 import { FindAllNotificationsUseCase } from '../src/modules/notification/application/use-cases/find-all-notifications.use-case';
 import { SnoozeNotificationUseCase } from '../src/modules/notification/application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from '../src/modules/notification/application/use-cases/mark-notification-as-read.use-case';
-
+import { ExpoPushService } from '../src/modules/notification/application/services/expo-push.service';
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '../src/modules/auth/presentation/guards/roles.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
-import { JwtTokenService } from '../src/modules/auth/infrastructure/services/jwt-token.service';
-import { EUser } from '../src/infrastructure/database/entities/user.entity';
 
 const validNotificationId = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 const validUserId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+
+const TOKEN_MAP: Record<string, { userId: string; role: Role }> = {
+  'user-token': { userId: validUserId, role: Role.USER_PREMIUM },
+};
+
+class TestJwtAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = req.headers?.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    const token = authHeader.slice(7);
+    const payload = TOKEN_MAP[token];
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    req.user = payload;
+    return true;
+  }
+}
 
 const sampleNotification = {
   id: validNotificationId,
@@ -44,35 +70,24 @@ describe('NotificationController (e2e)', () => {
   const findAllNotificationsUseCase = { execute: jest.fn() };
   const snoozeNotificationUseCase = { execute: jest.fn() };
   const markNotificationAsReadUseCase = { execute: jest.fn() };
-
-  const jwtTokenService = { verifyAccessToken: jest.fn() };
-  const userRepository = { findOne: jest.fn() };
+  const expoPushService = { registerToken: jest.fn(), unregisterToken: jest.fn() };
 
   const authHeaderFor = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   beforeAll(async () => {
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      if (token === 'user-token') return { sub: validUserId, role: Role.USER_PREMIUM };
-      throw new Error('invalid token');
-    });
-
-    userRepository.findOne.mockResolvedValue({ id: validUserId, mfaEnabled: false });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [NotificationController],
       providers: [
-        Reflector,
-        JwtAuthGuard,
-        RolesGuard,
         { provide: FindAllNotificationsUseCase, useValue: findAllNotificationsUseCase },
         { provide: SnoozeNotificationUseCase, useValue: snoozeNotificationUseCase },
         { provide: MarkNotificationAsReadUseCase, useValue: markNotificationAsReadUseCase },
-        { provide: JwtTokenService, useValue: jwtTokenService },
-        { provide: getRepositoryToken(EUser), useValue: userRepository },
+        { provide: ExpoPushService, useValue: expoPushService },
       ],
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(new TestJwtAuthGuard())
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -99,14 +114,7 @@ describe('NotificationController (e2e)', () => {
       ...sampleNotification,
       readAt: new Date('2025-11-06T16:00:00Z'),
     });
-
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      if (token === 'user-token') return { sub: validUserId, role: Role.USER_PREMIUM };
-      throw new Error('invalid token');
-    });
   });
-
-  // ─── Authentication ──────────────────────────────────────────────────────────
 
   it('GET /notifications — 401 when no token provided', async () => {
     await request(app.getHttpServer()).get('/notifications').expect(401);
@@ -118,8 +126,6 @@ describe('NotificationController (e2e)', () => {
       .set(authHeaderFor('bad-token'))
       .expect(401);
   });
-
-  // ─── GET /notifications ──────────────────────────────────────────────────────
 
   it('GET /notifications — returns notifications for authenticated user', async () => {
     const response = await request(app.getHttpServer())
@@ -179,8 +185,6 @@ describe('NotificationController (e2e)', () => {
     expect(response.body).toEqual([]);
   });
 
-  // ─── PUT /notifications/:id/snooze ──────────────────────────────────────────
-
   it('PUT /notifications/:id/snooze — snoozes notification with future date', async () => {
     const payload = { snoozed_until: '2025-11-10T10:00:00Z' };
 
@@ -229,8 +233,6 @@ describe('NotificationController (e2e)', () => {
       .send({ snoozed_until: '2025-11-10T10:00:00Z', unknownField: 'bad' })
       .expect(400);
   });
-
-  // ─── PUT /notifications/:id/mark-read ───────────────────────────────────────
 
   it('PUT /notifications/:id/mark-read — marks notification as read', async () => {
     const response = await request(app.getHttpServer())

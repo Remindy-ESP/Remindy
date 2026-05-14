@@ -1,8 +1,12 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { Reflector } from '@nestjs/core';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 import { EventSeriesController } from '../src/modules/event-series/presentation/controllers/event-series.controller';
@@ -10,16 +14,34 @@ import { CreateEventSeriesUseCase } from '../src/modules/event-series/applicatio
 import { FindEventSeriesBySubscriptionUseCase } from '../src/modules/event-series/application/use-cases/find-event-series-by-subscription.use-case';
 import { GenerateEventsFromSeriesUseCase } from '../src/modules/event-series/application/use-cases/generate-events-from-series.use-case';
 import { FindSubscriptionUseCase } from '../src/modules/subscription/application/use-cases/find-subscription.use-case';
-
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '../src/modules/auth/presentation/guards/roles.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
-import { JwtTokenService } from '../src/modules/auth/infrastructure/services/jwt-token.service';
-import { EUser } from '../src/infrastructure/database/entities/user.entity';
 
 const validSeriesId = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const validSubId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const validUserId = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+
+const TOKEN_MAP: Record<string, { userId: string; role: Role }> = {
+  'user-token': { userId: validUserId, role: Role.USER_PREMIUM },
+  'other-user-token': { userId: 'other-user-id', role: Role.USER_PREMIUM },
+};
+
+class TestJwtAuthGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const req = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = req.headers?.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+    const token = authHeader.slice(7);
+    const payload = TOKEN_MAP[token];
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+    req.user = payload;
+    return true;
+  }
+}
 
 const sampleSeries = {
   id: validSeriesId,
@@ -66,36 +88,22 @@ describe('EventSeriesController (e2e)', () => {
   const generateEventsUseCase = { execute: jest.fn() };
   const findSubscriptionUseCase = { findById: jest.fn() };
 
-  const jwtTokenService = { verifyAccessToken: jest.fn() };
-  const userRepository = { findOne: jest.fn() };
-
   const authHeaderFor = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   beforeAll(async () => {
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      if (token === 'user-token') return { sub: validUserId, role: Role.USER_PREMIUM };
-      if (token === 'other-user-token') return { sub: 'other-user-id', role: Role.USER_PREMIUM };
-      throw new Error('invalid token');
-    });
-
-    userRepository.findOne.mockResolvedValue({ id: validUserId, mfaEnabled: false });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [EventSeriesController],
       providers: [
-        Reflector,
-        JwtAuthGuard,
-        RolesGuard,
         { provide: CreateEventSeriesUseCase, useValue: createEventSeriesUseCase },
         { provide: FindEventSeriesBySubscriptionUseCase, useValue: findBySubscriptionUseCase },
         { provide: GenerateEventsFromSeriesUseCase, useValue: generateEventsUseCase },
         { provide: FindSubscriptionUseCase, useValue: findSubscriptionUseCase },
-        { provide: JwtTokenService, useValue: jwtTokenService },
-        { provide: getRepositoryToken(EUser), useValue: userRepository },
       ],
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(new TestJwtAuthGuard())
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -111,20 +119,11 @@ describe('EventSeriesController (e2e)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-
     createEventSeriesUseCase.execute.mockResolvedValue(sampleSeries);
     findBySubscriptionUseCase.execute.mockResolvedValue(sampleSeries);
     generateEventsUseCase.execute.mockResolvedValue([sampleOccurrence]);
     findSubscriptionUseCase.findById.mockResolvedValue(sampleSubscription);
-
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      if (token === 'user-token') return { sub: validUserId, role: Role.USER_PREMIUM };
-      if (token === 'other-user-token') return { sub: 'other-user-id', role: Role.USER_PREMIUM };
-      throw new Error('invalid token');
-    });
   });
-
-  // ─── Authentication ──────────────────────────────────────────────────────────
 
   it('POST /event-series — 401 when no token provided', async () => {
     await request(app.getHttpServer())
@@ -148,9 +147,6 @@ describe('EventSeriesController (e2e)', () => {
       })
       .expect(401);
   });
-
-  // ─── POST /event-series ──────────────────────────────────────────────────────
-
   it('POST /event-series — creates a new event series for subscription owner', async () => {
     const payload = {
       subscriptionId: validSubId,
@@ -206,10 +202,7 @@ describe('EventSeriesController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/event-series')
       .set(authHeaderFor('user-token'))
-      .send({
-        rrule: 'FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15',
-        dtstart: '2025-01-15T00:00:00Z',
-      })
+      .send({ rrule: 'FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15', dtstart: '2025-01-15T00:00:00Z' })
       .expect(400);
   });
 
@@ -217,10 +210,7 @@ describe('EventSeriesController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/event-series')
       .set(authHeaderFor('user-token'))
-      .send({
-        subscriptionId: validSubId,
-        dtstart: '2025-01-15T00:00:00Z',
-      })
+      .send({ subscriptionId: validSubId, dtstart: '2025-01-15T00:00:00Z' })
       .expect(400);
   });
 
@@ -228,10 +218,7 @@ describe('EventSeriesController (e2e)', () => {
     await request(app.getHttpServer())
       .post('/event-series')
       .set(authHeaderFor('user-token'))
-      .send({
-        subscriptionId: validSubId,
-        rrule: 'FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15',
-      })
+      .send({ subscriptionId: validSubId, rrule: 'FREQ=MONTHLY;INTERVAL=1;BYMONTHDAY=15' })
       .expect(400);
   });
 
@@ -266,8 +253,6 @@ describe('EventSeriesController (e2e)', () => {
     expect(createEventSeriesUseCase.execute).not.toHaveBeenCalled();
   });
 
-  // ─── GET /event-series/subscription/:subscriptionId ─────────────────────────
-
   it('GET /event-series/subscription/:subscriptionId — returns series for owner', async () => {
     const response = await request(app.getHttpServer())
       .get(`/event-series/subscription/${validSubId}`)
@@ -298,17 +283,11 @@ describe('EventSeriesController (e2e)', () => {
     await request(app.getHttpServer()).get(`/event-series/subscription/${validSubId}`).expect(401);
   });
 
-  // ─── GET /event-series/:id/generate ─────────────────────────────────────────
-
   it('GET /event-series/:id/generate — returns generated occurrences for owner', async () => {
     const response = await request(app.getHttpServer())
       .get(`/event-series/${validSeriesId}/generate`)
       .set(authHeaderFor('user-token'))
-      .query({
-        start: '2025-01-01T00:00:00Z',
-        end: '2025-12-31T23:59:59Z',
-        max: 12,
-      })
+      .query({ start: '2025-01-01T00:00:00Z', end: '2025-12-31T23:59:59Z', max: 12 })
       .expect(200);
 
     expect(generateEventsUseCase.execute).toHaveBeenCalledWith(
@@ -343,7 +322,6 @@ describe('EventSeriesController (e2e)', () => {
       .expect(200);
 
     expect(response.body).toEqual([]);
-    // findSubscriptionUseCase not called when occurrences is empty
     expect(findSubscriptionUseCase.findById).not.toHaveBeenCalled();
   });
 
