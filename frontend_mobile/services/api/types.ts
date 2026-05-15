@@ -266,3 +266,29 @@ export interface NotificationResponse {
     limit: number;
   };
 }
+
+// User Preferences
+export type ThemePreference = 'light' | 'dark' | 'auto';
+
+export interface UserPreferences {
+  userId: string;
+  theme: ThemePreference;
+  notificationEmail: boolean;
+  notificationPush: boolean;
+  notificationSms: boolean;
+  defaultReminderDelay: number;
+  currency: string;
+  showOnlineStatus: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateUserPreferencesRequest {
+  theme?: ThemePreference;
+  notificationEmail?: boolean;
+  notificationPush?: boolean;
+  notificationSms?: boolean;
+  defaultReminderDelay?: number;
+  currency?: string;
+  showOnlineStatus?: boolean;
+}
