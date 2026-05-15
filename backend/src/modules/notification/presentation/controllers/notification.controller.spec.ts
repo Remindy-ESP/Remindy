@@ -5,6 +5,7 @@ import { FindAllNotificationsUseCase } from '../../application/use-cases/find-al
 import { SnoozeNotificationUseCase } from '../../application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from '../../application/use-cases/mark-notification-as-read.use-case';
 import { ExpoPushService } from '../../application/services/expo-push.service';
+import { NOTIFICATION_REPOSITORY } from '../../application/ports/notification-repository.interface';
 import { Notification } from '../../domain/notification.entity';
 import { NotificationFilterDto } from '../dto/notification-filter.dto';
 import { SnoozeNotificationDto } from '../dto/snooze-notification.dto';
@@ -17,6 +18,7 @@ describe('NotificationController', () => {
   let snoozeNotificationUseCase: jest.Mocked<SnoozeNotificationUseCase>;
   let markNotificationAsReadUseCase: jest.Mocked<MarkNotificationAsReadUseCase>;
   let expoPushService: jest.Mocked<ExpoPushService>;
+  let notificationRepository: any;
 
   const mockUserId = '123e4567-e89b-12d3-a456-426614174000';
   const mockRequest = {
@@ -67,6 +69,13 @@ describe('NotificationController', () => {
             unregisterToken: jest.fn(),
           },
         },
+        {
+          provide: NOTIFICATION_REPOSITORY,
+          useValue: {
+            findById: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
       ],
     })
       .overrideGuard(ThrottlerGuard)
@@ -80,6 +89,7 @@ describe('NotificationController', () => {
     snoozeNotificationUseCase = module.get(SnoozeNotificationUseCase);
     markNotificationAsReadUseCase = module.get(MarkNotificationAsReadUseCase);
     expoPushService = module.get(ExpoPushService);
+    notificationRepository = module.get(NOTIFICATION_REPOSITORY);
   });
 
   describe('findAll', () => {
@@ -190,6 +200,29 @@ describe('NotificationController', () => {
 
       expect(result).toEqual({ message: 'Push token unregistered successfully' });
       expect(expoPushService.unregisterToken).toHaveBeenCalledWith(mockUserId);
+    });
+  });
+
+  describe('deleteNotification', () => {
+    it('should delete a notification that belongs to the user', async () => {
+      notificationRepository.findById.mockResolvedValue({
+        ...mockNotification,
+        userId: mockUserId,
+      });
+      notificationRepository.delete.mockResolvedValue(undefined);
+
+      const result = await controller.deleteNotification(mockRequest, 'notification-123');
+
+      expect(result).toEqual({ message: 'Notification deleted successfully' });
+      expect(notificationRepository.findById).toHaveBeenCalledWith('notification-123');
+      expect(notificationRepository.delete).toHaveBeenCalledWith('notification-123');
+    });
+
+    it('should throw NotFoundException if notification does not exist', async () => {
+      notificationRepository.findById.mockResolvedValue(null);
+
+      await expect(controller.deleteNotification(mockRequest, 'non-existent-id')).rejects.toThrow();
+      expect(notificationRepository.delete).not.toHaveBeenCalled();
     });
   });
 });

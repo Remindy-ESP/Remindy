@@ -6,8 +6,11 @@ import {
   UseGuards,
   Req,
   Post,
+  Put,
   Delete,
   HttpCode,
+  Inject,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,6 +28,8 @@ import { FindAllNotificationsUseCase } from '../../application/use-cases/find-al
 import { SnoozeNotificationUseCase } from '../../application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from '../../application/use-cases/mark-notification-as-read.use-case';
 import { ExpoPushService } from '../../application/services/expo-push.service';
+import type { INotificationRepository } from '../../application/ports/notification-repository.interface';
+import { NOTIFICATION_REPOSITORY } from '../../application/ports/notification-repository.interface';
 import { NotificationPresentationMapper } from '../mappers/notification-presentation.mapper';
 import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
 import {
@@ -43,6 +48,8 @@ export class NotificationController {
     private readonly snoozeNotificationUseCase: SnoozeNotificationUseCase,
     private readonly markNotificationAsReadUseCase: MarkNotificationAsReadUseCase,
     private readonly expoPushService: ExpoPushService,
+    @Inject(NOTIFICATION_REPOSITORY)
+    private readonly notificationRepository: INotificationRepository,
   ) {}
 
   @ApiNotificationFindAll()
@@ -81,6 +88,16 @@ export class NotificationController {
     return NotificationPresentationMapper.toResponseDto(notification);
   }
 
+  @Put('mark-all-read')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @SwaggerResponse({ status: 200, description: 'All notifications marked as read' })
+  async markAllAsRead(@Req() req: Request): Promise<{ message: string; count: number }> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const count = await this.notificationRepository.markAllAsRead(user.userId);
+    return { message: 'All notifications marked as read', count };
+  }
+
   @Post('push-token')
   @HttpCode(200)
   @ApiOperation({ summary: 'Register Expo push notification token' })
@@ -102,5 +119,26 @@ export class NotificationController {
     const { user } = req as Request & { user: { userId: string; role: string } };
     await this.expoPushService.unregisterToken(user.userId);
     return { message: 'Push token unregistered successfully' };
+  }
+
+  @Delete(':id')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Delete a notification (soft delete)' })
+  @SwaggerResponse({ status: 200, description: 'Notification deleted successfully' })
+  @SwaggerResponse({ status: 404, description: 'Notification not found' })
+  async deleteNotification(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ): Promise<{ message: string }> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+
+    // Verify the notification belongs to this user
+    const notification = await this.notificationRepository.findById(id);
+    if (!notification || notification.userId !== user.userId) {
+      throw new NotFoundException(`Notification ${id} not found`);
+    }
+
+    await this.notificationRepository.delete(id);
+    return { message: 'Notification deleted successfully' };
   }
 }

@@ -44,6 +44,19 @@ export const notificationService = {
   },
 
   /**
+   * Mark all notifications as read
+   */
+  markAllAsRead: async () => {
+    try {
+      const response = await client.put<{ message: string; count: number }>('/notifications/mark-all-read');
+      return response.data;
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Register Expo push token with the backend
    */
   registerPushToken: async (token: string) => {
@@ -67,6 +80,19 @@ export const notificationService = {
       return response.data;
     } catch (error) {
       console.error('Error unregistering push token:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a notification (soft delete)
+   */
+  deleteNotification: async (id: string) => {
+    try {
+      const response = await client.delete<{ message: string }>(`/notifications/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting notification ${id}:`, error);
       throw error;
     }
   },

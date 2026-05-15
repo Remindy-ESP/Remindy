@@ -13,6 +13,7 @@ export interface INotificationRepository {
   save(notification: Notification): Promise<Notification>;
   update(id: string, notification: Notification): Promise<Notification | null>;
   delete(id: string): Promise<void>;
+  markAllAsRead(userId: string): Promise<number>;
 }
 
 export const NOTIFICATION_REPOSITORY = Symbol('INotificationRepository');

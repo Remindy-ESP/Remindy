@@ -1,5 +1,16 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    RefreshControl,
+    Animated,
+    Alert,
+} from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +21,7 @@ export default function NotificationsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const openSwipeableRef = useRef<Swipeable | null>(null);
 
     const fetchNotifications = useCallback(async () => {
         try {
@@ -41,12 +53,33 @@ export default function NotificationsScreen() {
             await notificationService.markAsRead(id);
             // Mettre à jour localement
             setNotifications(prev => prev.map(n => 
-                n.id === id ? { ...n, readAt: new Date().toISOString() } : n
+                n.id === id ? { ...n, read_at: new Date().toISOString() } : n
             ));
         } catch (err) {
             console.error('Failed to mark notification as read', err);
         }
     };
+
+    const handleDelete = async (id: string) => {
+        try {
+            await notificationService.deleteNotification(id);
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        } catch (err) {
+            console.error('Failed to delete notification', err);
+            Alert.alert('Erreur', 'Impossible de supprimer la notification');
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        try {
+            await notificationService.markAllAsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
+        } catch (err) {
+            console.error('Failed to mark all as read', err);
+        }
+    };
+
+    const hasUnread = notifications.some(n => !n.read_at);
 
     const getIconName = (type: NotificationType): keyof typeof Ionicons.glyphMap => {
         switch (type) {
@@ -68,37 +101,117 @@ export default function NotificationsScreen() {
         }
     };
 
+    const renderRightActions = (
+        progress: Animated.AnimatedInterpolation<number>,
+        _dragX: Animated.AnimatedInterpolation<number>,
+        id: string,
+    ) => {
+        const translateX = progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [80, 0],
+        });
+
+        const opacity = progress.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 0.5, 1],
+        });
+
+        return (
+            <Animated.View style={[styles.deleteAction, { transform: [{ translateX }], opacity }]}>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(id)}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="trash-outline" size={22} color="#fff" />
+                    <Text style={styles.deleteText}>Supprimer</Text>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
+
+    const renderLeftActions = (
+        progress: Animated.AnimatedInterpolation<number>,
+        _dragX: Animated.AnimatedInterpolation<number>,
+        id: string,
+    ) => {
+        const translateX = progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-80, 0],
+        });
+
+        const opacity = progress.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 0.5, 1],
+        });
+
+        return (
+            <Animated.View style={[styles.deleteActionLeft, { transform: [{ translateX }], opacity }]}>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(id)}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="trash-outline" size={22} color="#fff" />
+                    <Text style={styles.deleteText}>Supprimer</Text>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
+
     const renderNotificationItem = ({ item }: { item: Notification }) => {
-        const isRead = !!item.readAt;
-        const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString('fr-FR', {
+        const isRead = !!item.read_at;
+        const date = item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR', {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
         }) : '';
 
         return (
-            <TouchableOpacity 
-                style={[styles.notificationCard, isRead && styles.notificationCardRead]}
-                onPress={() => !isRead && handleMarkAsRead(item.id)}
-                activeOpacity={0.7}
+            <Swipeable
+                ref={(ref) => {
+                    // Close previous swipeable when a new one opens
+                    if (ref) {
+                        ref.close;
+                    }
+                }}
+                renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item.id)}
+                renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, item.id)}
+                onSwipeableOpen={() => {
+                    // Close previous open swipeable
+                    if (openSwipeableRef.current) {
+                        openSwipeableRef.current.close();
+                    }
+                }}
+                overshootRight={false}
+                overshootLeft={false}
+                friction={2}
+                rightThreshold={40}
+                leftThreshold={40}
             >
-                <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
-                    <Ionicons name={getIconName(item.type)} size={24} color={getIconColor(item.type)} />
-                </View>
-                
-                <View style={styles.notificationContent}>
-                    <View style={styles.notificationHeader}>
-                        <Text style={[styles.notificationTitle, !isRead && styles.textUnread]} numberOfLines={1}>
-                            {item.title}
-                        </Text>
-                        <Text style={styles.notificationDate}>{date}</Text>
+                <TouchableOpacity 
+                    style={[styles.notificationCard, isRead && styles.notificationCardRead]}
+                    onPress={() => !isRead && handleMarkAsRead(item.id)}
+                    activeOpacity={0.7}
+                >
+                    <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
+                        <Ionicons name={getIconName(item.type)} size={24} color={getIconColor(item.type)} />
                     </View>
-                    <Text style={[styles.notificationBody, !isRead && styles.textUnread]} numberOfLines={2}>
-                        {item.body}
-                    </Text>
-                    {!isRead && (
-                        <View style={styles.unreadDot} />
-                    )}
-                </View>
-            </TouchableOpacity>
+                    
+                    <View style={styles.notificationContent}>
+                        <View style={styles.notificationHeader}>
+                            <Text style={[styles.notificationTitle, !isRead && styles.textUnread]} numberOfLines={1}>
+                                {item.title}
+                            </Text>
+                            <Text style={styles.notificationDate}>{date}</Text>
+                        </View>
+                        <Text style={[styles.notificationBody, !isRead && styles.textUnread]} numberOfLines={2}>
+                            {item.body}
+                        </Text>
+                        {!isRead && (
+                            <View style={styles.unreadDot} />
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Swipeable>
         );
     };
 
@@ -113,10 +226,20 @@ export default function NotificationsScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Notifications</Text>
-                <Text style={styles.headerSubtitle}>
-                    Vos alertes et rappels
-                </Text>
+                <View style={styles.headerTop}>
+                    <View>
+                        <Text style={styles.headerTitle}>Notifications</Text>
+                        <Text style={styles.headerSubtitle}>
+                            Vos alertes et rappels
+                        </Text>
+                    </View>
+                    {hasUnread && (
+                        <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllAsRead}>
+                            <Ionicons name="checkmark-done-outline" size={18} color="#4CAF50" />
+                            <Text style={styles.markAllText}>Tout lu</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
             </View>
             
             {error ? (
@@ -176,6 +299,26 @@ const styles = StyleSheet.create({
     headerSubtitle: {
         fontSize: 16,
         color: '#e0e0e0',
+    },
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    markAllButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(76, 175, 80, 0.15)',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 6,
+        marginTop: 4,
+    },
+    markAllText: {
+        color: '#4CAF50',
+        fontSize: 13,
+        fontWeight: '600',
     },
     listContainer: {
         padding: 16,
@@ -271,5 +414,35 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         backgroundColor: '#FF5252',
+    },
+
+    // Swipe Delete Styles
+    deleteAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    deleteActionLeft: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    deleteButton: {
+        backgroundColor: '#FF5252',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        height: '100%',
+        borderRadius: 12,
+        gap: 4,
+    },
+    deleteText: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '600',
     },
 });

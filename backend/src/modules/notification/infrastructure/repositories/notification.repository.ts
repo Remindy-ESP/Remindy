@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { INotificationRepository } from '../../application/ports/notification-repository.interface';
 import { Notification } from '../../domain/notification.entity';
 import { NotificationEntity } from '../persistence/notification.entity';
@@ -111,5 +111,14 @@ export class NotificationRepository implements INotificationRepository {
 
   async delete(id: string): Promise<void> {
     await this.repository.softDelete(id);
+  }
+
+  async markAllAsRead(userId: string): Promise<number> {
+    const result = await this.repository.update(
+      { userId, readAt: IsNull() },
+      { readAt: new Date(), status: 'sent' as any },
+    );
+
+    return result.affected ?? 0;
   }
 }

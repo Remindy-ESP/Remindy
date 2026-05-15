@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/context/AuthContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
@@ -48,7 +49,7 @@ export default function RootLayout() {
     <AuthProvider>
       <CoachMarksProvider>
         <StatusBar style="light" />
-        <View style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -87,7 +88,7 @@ export default function RootLayout() {
             />
           </Stack>
           <CoachMarksOverlay />
-        </View>
+        </GestureHandlerRootView>
       </CoachMarksProvider>
     </AuthProvider>
   );

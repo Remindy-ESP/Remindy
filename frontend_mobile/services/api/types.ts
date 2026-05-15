@@ -232,21 +232,21 @@ export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'snoozed';
 
 export interface Notification {
   id: string;
-  userId: string;
-  eventId?: string;
-  reminderId?: string;
+  user_id: string;
+  event_id?: string;
+  reminder_id?: string;
   type: NotificationType;
   channel: NotificationChannel;
   title: string;
   body: string;
-  sentAt?: string;
-  readAt?: string;
+  sent_at?: string;
+  read_at?: string;
   status: NotificationStatus;
-  snoozedUntil?: string;
-  errorMessage?: string;
+  snoozed_until?: string;
+  error_message?: string;
   metadata?: any;
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface NotificationFilter {
