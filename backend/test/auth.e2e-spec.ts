@@ -243,7 +243,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/reset-password', async () => {
     const payload = {
       token: 'reset-token-123',
-      newPassword: TEST_PASSWORD,
+      newPassword: TEST_USER_CREDENTIAL,
     };
 
     resetPasswordUseCase.execute.mockResolvedValue(undefined);
