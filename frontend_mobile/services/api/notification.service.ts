@@ -96,6 +96,19 @@ export const notificationService = {
       throw error;
     }
   },
+
+  /**
+   * Delete all notifications (soft delete)
+   */
+  deleteAllNotifications: async () => {
+    try {
+      const response = await client.delete<{ message: string }>('/notifications/delete-all');
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+      throw error;
+    }
+  },
 };
 
 export default notificationService;

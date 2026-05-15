@@ -79,7 +79,31 @@ export default function NotificationsScreen() {
         }
     };
 
+    const handleDeleteAll = () => {
+        Alert.alert(
+            'Tout supprimer',
+            'Voulez-vous vraiment supprimer toutes vos notifications ?',
+            [
+                { text: 'Annuler', style: 'cancel' },
+                { 
+                    text: 'Supprimer', 
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await notificationService.deleteAllNotifications();
+                            setNotifications([]);
+                        } catch (err) {
+                            console.error('Failed to delete all notifications', err);
+                            Alert.alert('Erreur', 'Impossible de supprimer les notifications');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const hasUnread = notifications.some(n => !n.read_at);
+    const hasNotifications = notifications.length > 0;
 
     const getIconName = (type: NotificationType): keyof typeof Ionicons.glyphMap => {
         switch (type) {
@@ -233,12 +257,19 @@ export default function NotificationsScreen() {
                             Vos alertes et rappels
                         </Text>
                     </View>
-                    {hasUnread && (
-                        <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllAsRead}>
-                            <Ionicons name="checkmark-done-outline" size={18} color="#4CAF50" />
-                            <Text style={styles.markAllText}>Tout lu</Text>
-                        </TouchableOpacity>
-                    )}
+                    <View style={styles.headerActions}>
+                        {hasUnread && (
+                            <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllAsRead}>
+                                <Ionicons name="checkmark-done-outline" size={18} color="#4CAF50" />
+                                <Text style={styles.markAllText}>Tout lu</Text>
+                            </TouchableOpacity>
+                        )}
+                        {hasNotifications && (
+                            <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
+                                <Ionicons name="trash-outline" size={18} color="#FF5252" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
             </View>
             
@@ -305,6 +336,12 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'flex-start',
     },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 4,
+    },
     markAllButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -313,12 +350,19 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 20,
         gap: 6,
-        marginTop: 4,
     },
     markAllText: {
         color: '#4CAF50',
         fontSize: 13,
         fontWeight: '600',
+    },
+    deleteAllButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 82, 82, 0.15)',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
     },
     listContainer: {
         padding: 16,

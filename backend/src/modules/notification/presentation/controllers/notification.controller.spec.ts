@@ -74,6 +74,8 @@ describe('NotificationController', () => {
           useValue: {
             findById: jest.fn(),
             delete: jest.fn(),
+            deleteAll: jest.fn(),
+            markAllAsRead: jest.fn(),
           },
         },
       ],
@@ -223,6 +225,17 @@ describe('NotificationController', () => {
 
       await expect(controller.deleteNotification(mockRequest, 'non-existent-id')).rejects.toThrow();
       expect(notificationRepository.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteAllNotifications', () => {
+    it('should delete all notifications for the user', async () => {
+      notificationRepository.deleteAll.mockResolvedValue(undefined);
+
+      const result = await controller.deleteAllNotifications(mockRequest);
+
+      expect(result).toEqual({ message: 'All notifications deleted successfully' });
+      expect(notificationRepository.deleteAll).toHaveBeenCalledWith(mockUserId);
     });
   });
 });

@@ -113,6 +113,10 @@ export class NotificationRepository implements INotificationRepository {
     await this.repository.softDelete(id);
   }
 
+  async deleteAll(userId: string): Promise<void> {
+    await this.repository.softDelete({ userId });
+  }
+
   async markAllAsRead(userId: string): Promise<number> {
     const result = await this.repository.update(
       { userId, readAt: IsNull() },

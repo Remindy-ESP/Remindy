@@ -8,7 +8,6 @@ import { ExpoPushService } from '../../notification/application/services/expo-pu
 import { Notification } from '../../notification/domain/notification.entity';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { ReminderEntity } from '../../reminder/infrastructure/persistence/reminder.entity';
-import { NotificationEntity } from '../../notification/infrastructure/persistence/notification.entity';
 import type { PushNotificationPayload } from '../../notification/application/services/expo-push.service';
 
 interface DueNotificationRow {
@@ -169,7 +168,7 @@ export class ProcessRenewalNotificationsTask {
          AND (r.subscription_id IS NULL OR r.subscription_id = s.id)`,
       )
       .leftJoin(
-        NotificationEntity,
+        'notifications',
         'n',
         `n.user_id = s.user_id
          AND n.type = 'subscription_renewed'
@@ -270,7 +269,7 @@ export class ProcessRenewalNotificationsTask {
          AND (r.subscription_id IS NULL OR r.subscription_id = s.id)`,
       )
       .leftJoin(
-        NotificationEntity,
+        'notifications',
         'n',
         `n.user_id = s.user_id
          AND n.type = 'trial_ending'

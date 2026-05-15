@@ -111,6 +111,16 @@ export class NotificationController {
     return { message: 'Push token registered successfully' };
   }
 
+  @Delete('delete-all')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Delete all notifications for the user (soft delete)' })
+  @SwaggerResponse({ status: 200, description: 'All notifications deleted successfully' })
+  async deleteAllNotifications(@Req() req: Request): Promise<{ message: string }> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    await this.notificationRepository.deleteAll(user.userId);
+    return { message: 'All notifications deleted successfully' };
+  }
+
   @Delete('push-token')
   @HttpCode(200)
   @ApiOperation({ summary: 'Unregister Expo push notification token' })
