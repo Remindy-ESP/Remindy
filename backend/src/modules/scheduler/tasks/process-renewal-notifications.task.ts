@@ -102,6 +102,12 @@ export class ProcessRenewalNotificationsTask {
     const pushPayloads: PushNotificationPayload[] = [];
     const uniqueSubscriptionIds = new Set<string>();
 
+    // ─── 0. Transition expired trials to active ───────────────────────
+    const transitions = await this.processTrialTransitions(todayStr);
+    if (transitions > 0) {
+      this.logger.log(`Transitioned ${transitions} expired trials to active status`);
+    }
+
     // ─── 1. Renewal notifications ───────────────────────────────────────
     const renewalResults = await this.processRenewalNotifications(
       todayStr,
@@ -134,6 +140,22 @@ export class ProcessRenewalNotificationsTask {
       notificationsCreated,
       pushSent,
     };
+  }
+
+  /**
+   * Transition subscriptions from 'trial' to 'active' when trial period ends
+   */
+  private async processTrialTransitions(todayStr: string): Promise<number> {
+    const result = await this.subscriptionRepository
+      .createQueryBuilder()
+      .update(SubscriptionEntity)
+      .set({ status: 'active' })
+      .where('status = :trialStatus', { trialStatus: 'trial' })
+      .andWhere('trial_end_date < :today', { today: todayStr })
+      .andWhere('deleted_at IS NULL')
+      .execute();
+
+    return result.affected || 0;
   }
 
   /**
@@ -175,7 +197,7 @@ export class ProcessRenewalNotificationsTask {
          AND n.metadata->>'subscriptionId' = CAST(s.id AS TEXT)
          AND n.metadata->>'nextDueDate' = TO_CHAR(s.next_due_date, 'YYYY-MM-DD')`,
       )
-      .where('s.status = :status', { status: 'active' })
+      .where('s.status IN (:...statuses)', { statuses: ['active', 'trial'] })
       .andWhere('s.next_due_date IS NOT NULL')
       .andWhere('s.deleted_at IS NULL')
       .andWhere(`(DATE(s.next_due_date) - DATE(:today)) = r.days_before`, { today: todayStr })

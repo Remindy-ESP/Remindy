@@ -13,6 +13,7 @@ import {
   ScrollView,
   RefreshControl,
   Platform,
+  Switch,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -32,6 +33,8 @@ interface SubscriptionFormData {
   endDate?: string;
   categoryId: string;
   reminderDays: number;
+  isTrial: boolean;
+  trialEndDate?: string;
 }
 
 export default function SubscriptionScreen() {
@@ -66,6 +69,7 @@ export default function SubscriptionScreen() {
   // Date picker state
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showTrialEndDatePicker, setShowTrialEndDatePicker] = useState(false);
 
   const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
@@ -75,6 +79,7 @@ export default function SubscriptionScreen() {
     startDate: new Date().toISOString().split('T')[0],
     categoryId: '',
     reminderDays: 3,
+    isTrial: false,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -109,13 +114,16 @@ export default function SubscriptionScreen() {
   };
 
   const handleEndDateChange = (event: any, selectedDate?: Date) => {
-    setShowEndDatePicker(Platform.OS === 'ios');
+    setShowEndDatePicker(false);
     if (selectedDate) {
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      setFormData({ ...formData, endDate: dateString });
+      setFormData({ ...formData, endDate: selectedDate.toISOString().split('T')[0] });
+    }
+  };
+
+  const handleTrialEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowTrialEndDatePicker(false);
+    if (selectedDate) {
+      setFormData({ ...formData, trialEndDate: selectedDate.toISOString().split('T')[0] });
     }
   };
 
@@ -314,6 +322,8 @@ export default function SubscriptionScreen() {
       endDate: subscription.endDate ? subscription.endDate.split('T')[0] : undefined,
       categoryId: subscription.categoryId || '',
       reminderDays: existingReminderDays,
+      isTrial: subscription.status === 'trial' || !!subscription.trialEndDate,
+      trialEndDate: subscription.trialEndDate ? subscription.trialEndDate.split('T')[0] : undefined,
     });
     setFormErrors({});
     setModalVisible(true);
@@ -353,8 +363,13 @@ export default function SubscriptionScreen() {
         frequency: mapBillingCycleToFrequency(formData.billingCycle),
         startDate: formData.startDate,
         currency: 'EUR',
-        status: 'active',
+        status: formData.isTrial ? 'trial' : 'active',
       };
+
+      if (formData.isTrial && formData.trialEndDate) {
+        requestData.trialStartDate = formData.startDate; // Usually starts at subscription start
+        requestData.trialEndDate = formData.trialEndDate;
+      }
 
       if (formData.endDate) {
         requestData.endDate = formData.endDate;
@@ -401,19 +416,35 @@ export default function SubscriptionScreen() {
       } else {
         const created = await subscriptionService.create(requestData);
 
-        // Create a reminder for the new subscription
-        if (formData.reminderDays > 0) {
-          try {
-            await reminderService.create({
+        // Create reminders for the new subscription
+        try {
+          const reminderPromises = [];
+          
+          if (formData.reminderDays > 0) {
+            reminderPromises.push(reminderService.create({
               subscription_id: created.id,
               type: 'subscription_renewal',
               days_before: formData.reminderDays,
               enabled: true,
               channel: 'push',
-            });
-          } catch (reminderErr) {
-            console.warn('Failed to create reminder, subscription was created:', reminderErr);
+            }));
           }
+
+          if (formData.isTrial && formData.reminderDays > 0) {
+            reminderPromises.push(reminderService.create({
+              subscription_id: created.id,
+              type: 'trial_ending',
+              days_before: formData.reminderDays,
+              enabled: true,
+              channel: 'push',
+            }));
+          }
+
+          if (reminderPromises.length > 0) {
+            await Promise.all(reminderPromises);
+          }
+        } catch (reminderErr) {
+          console.warn('Failed to create reminders, subscription was created:', reminderErr);
         }
 
         showSuccess('Opération créée avec succès');
@@ -789,6 +820,42 @@ export default function SubscriptionScreen() {
                 </View>
               </View>
 
+              <View style={styles.formGroup}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <Text style={styles.label}>Période d'essai</Text>
+                  <Switch
+                    value={formData.isTrial}
+                    onValueChange={(value) => {
+                      const updates: Partial<SubscriptionFormData> = { isTrial: value };
+                      if (value && !formData.trialEndDate) {
+                        // Default trial end to M+1
+                        const defaultEnd = new Date();
+                        defaultEnd.setMonth(defaultEnd.getMonth() + 1);
+                        updates.trialEndDate = defaultEnd.toISOString().split('T')[0];
+                      }
+                      setFormData({ ...formData, ...updates });
+                    }}
+                    trackColor={{ false: '#3d3d6f', true: '#6366f1' }}
+                    thumbColor={formData.isTrial ? '#fff' : '#9ca3af'}
+                  />
+                </View>
+                
+                {formData.isTrial && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={[styles.label, { fontSize: 13, color: '#9ca3af' }]}>Date de fin de période d'essai</Text>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowTrialEndDatePicker(true)}
+                    >
+                      <Text style={styles.dateButtonText}>
+                        {formData.trialEndDate ? formatDateForDisplay(formData.trialEndDate) : 'Sélectionner une date'}
+                      </Text>
+                      <Text style={styles.dateIcon}>📅</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
                   <Text style={styles.label}>Date de début *</Text>
@@ -843,6 +910,14 @@ export default function SubscriptionScreen() {
                   mode="date"
                   display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                   onChange={handleEndDateChange}
+                />
+              )}
+              {showTrialEndDatePicker && (
+                <DateTimePicker
+                  value={formData.trialEndDate ? new Date(formData.trialEndDate) : new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleTrialEndDateChange}
                 />
               )}
 

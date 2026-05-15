@@ -13,7 +13,11 @@ import {
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { notificationService, Notification, NotificationType } from '../../services/api';
+import { categoryService } from '../../services/api/category.service';
+import { subscriptionService } from '../../services/api/subscription.service';
+import type { Category, Subscription } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import Button from '@/components/Button';
 
 export default function NotificationsScreen() {
     const { user } = useAuth();
@@ -23,11 +27,23 @@ export default function NotificationsScreen() {
     const [error, setError] = useState<string | null>(null);
     const openSwipeableRef = useRef<Swipeable | null>(null);
 
+    // Category filter state
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [categoriesOpen, setCategoriesOpen] = useState(false);
+
     const fetchNotifications = useCallback(async () => {
         try {
             setError(null);
-            const data = await notificationService.getNotifications({ limit: 50 });
+            const [data, cats, subs] = await Promise.all([
+                notificationService.getNotifications({ limit: 50 }),
+                categoryService.getAll().catch(() => []),
+                subscriptionService.getAll().catch(() => []),
+            ]);
             setNotifications(data || []);
+            setCategories(cats || []);
+            setSubscriptions(subs || []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
             setError(err.response?.data?.message || 'Erreur lors du chargement des notifications');
@@ -42,6 +58,30 @@ export default function NotificationsScreen() {
             fetchNotifications();
         }
     }, [user, fetchNotifications]);
+
+    // Build subscriptionId -> categoryName map
+    const subscriptionCategoryMap = React.useMemo(() => {
+        const map: Record<string, string> = {};
+        for (const sub of subscriptions) {
+            if (sub.categoryId) {
+                const cat = categories.find(c => c.id === sub.categoryId);
+                if (cat) {
+                    map[sub.id] = cat.name;
+                }
+            }
+        }
+        return map;
+    }, [subscriptions, categories]);
+
+    // Filter notifications by selected category
+    const filteredNotifications = React.useMemo(() => {
+        if (!selectedCategory) return notifications;
+        return notifications.filter(n => {
+            const subId = n.metadata?.subscriptionId;
+            if (!subId) return false;
+            return subscriptionCategoryMap[subId] === selectedCategory;
+        });
+    }, [notifications, selectedCategory, subscriptionCategoryMap]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -102,8 +142,8 @@ export default function NotificationsScreen() {
         );
     };
 
-    const hasUnread = notifications.some(n => !n.read_at);
-    const hasNotifications = notifications.length > 0;
+    const hasUnread = filteredNotifications.some(n => !n.read_at);
+    const hasNotifications = filteredNotifications.length > 0;
 
     const getIconName = (type: NotificationType): keyof typeof Ionicons.glyphMap => {
         switch (type) {
@@ -272,6 +312,51 @@ export default function NotificationsScreen() {
                     </View>
                 </View>
             </View>
+
+            {/* Category Filter */}
+            <Button
+                onPress={() => setCategoriesOpen(!categoriesOpen)}
+                label={selectedCategory || "Catégories"}
+                isOpen={categoriesOpen}
+            />
+
+            {categoriesOpen && (
+                <View style={styles.categoriesContainer}>
+                    {categories.length === 0 ? (
+                        <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
+                            Aucune catégorie disponible
+                        </Text>
+                    ) : (
+                        <>
+                            <TouchableOpacity
+                                style={styles.categoryItem}
+                                onPress={() => {
+                                    setSelectedCategory(null);
+                                    setCategoriesOpen(false);
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.categoryText}>Toutes les catégories</Text>
+                            </TouchableOpacity>
+                            {categories.map((category: Category) => (
+                                <TouchableOpacity
+                                    key={category.id}
+                                    style={styles.categoryItem}
+                                    onPress={() => {
+                                        setSelectedCategory(category.name);
+                                        setCategoriesOpen(false);
+                                    }}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.categoryText}>
+                                        {category.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </>
+                    )}
+                </View>
+            )}
             
             {error ? (
                 <View style={styles.centered}>
@@ -280,14 +365,18 @@ export default function NotificationsScreen() {
                         <Text style={styles.retryText}>Réessayer</Text>
                     </TouchableOpacity>
                 </View>
-            ) : notifications.length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
                 <View style={styles.emptyContainer}>
                     <Ionicons name="notifications-off-outline" size={64} color="#555" />
-                    <Text style={styles.emptyText}>Pas de notifications pour le moment</Text>
+                    <Text style={styles.emptyText}>
+                        {selectedCategory
+                            ? `Aucune notification pour "${selectedCategory}"`
+                            : 'Pas de notifications pour le moment'}
+                    </Text>
                 </View>
             ) : (
                 <FlatList
-                    data={notifications}
+                    data={filteredNotifications}
                     keyExtractor={(item) => item.id}
                     renderItem={renderNotificationItem}
                     contentContainerStyle={styles.listContainer}
@@ -488,5 +577,37 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 11,
         fontWeight: '600',
+    },
+
+    // Category Filter Styles
+    categoriesContainer: {
+        position: 'absolute',
+        top: 120,
+        alignSelf: 'center',
+        minWidth: 146,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
+        overflow: 'hidden',
+        zIndex: 1000,
+    },
+    categoryItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    categoryText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1F1F39',
+        textAlign: 'center',
     },
 });
