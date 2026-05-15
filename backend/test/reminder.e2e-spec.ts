@@ -20,6 +20,7 @@ import { DeleteReminderUseCase } from '../src/modules/reminder/application/use-c
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
 
+
 const validReminderId = '11111111-1111-4111-8111-111111111111';
 const validSubId = '22222222-2222-4222-8222-222222222222';
 const validUserId = '33333333-3333-4333-8333-333333333333';
@@ -31,7 +32,6 @@ const TOKEN_MAP: Record<string, { userId: string; role: Role }> = {
 class TestJwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
-
     const authHeader: string | undefined = req.headers?.authorization;
 
     if (!authHeader?.startsWith('Bearer ')) {
@@ -63,6 +63,17 @@ const sampleReminder = {
   deletedAt: undefined,
 };
 
+
+const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+async function expectUnauthorized(
+  app: INestApplication,
+  method: 'get' | 'post' | 'put' | 'delete',
+  url: string,
+): Promise<void> {
+  await request(app.getHttpServer())[method](url).expect(401);
+}
+
 describe('ReminderController (e2e)', () => {
   let app: INestApplication;
 
@@ -71,10 +82,6 @@ describe('ReminderController (e2e)', () => {
   const createReminderUseCase = { execute: jest.fn() };
   const updateReminderUseCase = { execute: jest.fn() };
   const deleteReminderUseCase = { execute: jest.fn() };
-
-  const authHeader = (token: string) => ({
-    Authorization: `Bearer ${token}`,
-  });
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -94,15 +101,9 @@ describe('ReminderController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-
     app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidNonWhitelisted: true,
-      }),
+      new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
     );
-
     await app.init();
   });
 
@@ -116,15 +117,12 @@ describe('ReminderController (e2e)', () => {
     findAllRemindersUseCase.execute.mockResolvedValue([sampleReminder]);
     findReminderByIdUseCase.execute.mockResolvedValue(sampleReminder);
     createReminderUseCase.execute.mockResolvedValue(sampleReminder);
-    updateReminderUseCase.execute.mockResolvedValue({
-      ...sampleReminder,
-      daysBefore: 3,
-    });
+    updateReminderUseCase.execute.mockResolvedValue({ ...sampleReminder, daysBefore: 3 });
     deleteReminderUseCase.execute.mockResolvedValue(undefined);
   });
 
   it('GET /reminders — 401 sans token', async () => {
-    await request(app.getHttpServer()).get('/reminders').expect(401);
+    await expectUnauthorized(app, 'get', '/reminders');
   });
 
   it('GET /reminders — 401 token invalide', async () => {
@@ -143,7 +141,6 @@ describe('ReminderController (e2e)', () => {
     expect(findAllRemindersUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({ userId: validUserId }),
     );
-
     expect(res.body[0].id).toBe(validReminderId);
   });
 
@@ -153,14 +150,9 @@ describe('ReminderController (e2e)', () => {
       .set(authHeader('user-token'))
       .expect(200);
 
-    expect(findReminderByIdUseCase.execute).toHaveBeenCalledWith(
-      validReminderId,
-      validUserId,
-    );
-
+    expect(findReminderByIdUseCase.execute).toHaveBeenCalledWith(validReminderId, validUserId);
     expect(res.body.id).toBe(validReminderId);
   });
-
 
   it('POST /reminders — create', async () => {
     const payload = {
@@ -186,10 +178,8 @@ describe('ReminderController (e2e)', () => {
         enabled: true,
       }),
     );
-
     expect(res.body.id).toBe(validReminderId);
   });
-
 
   it('PUT /reminders/:id — update', async () => {
     const res = await request(app.getHttpServer())
@@ -203,11 +193,8 @@ describe('ReminderController (e2e)', () => {
       validUserId,
       expect.objectContaining({ daysBefore: 3 }),
     );
-
     expect(res.body.days_before).toBe(3);
   });
-
- 
 
   it('DELETE /reminders/:id — delete', async () => {
     await request(app.getHttpServer())
@@ -215,16 +202,11 @@ describe('ReminderController (e2e)', () => {
       .set(authHeader('user-token'))
       .expect(204);
 
-    expect(deleteReminderUseCase.execute).toHaveBeenCalledWith(
-      validReminderId,
-      validUserId,
-    );
+    expect(deleteReminderUseCase.execute).toHaveBeenCalledWith(validReminderId, validUserId);
   });
 
   it('DELETE /reminders/:id — 401 sans token', async () => {
-    await request(app.getHttpServer())
-      .delete(`/reminders/${validReminderId}`)
-      .expect(401);
+    await expectUnauthorized(app, 'delete', `/reminders/${validReminderId}`);
 
     expect(deleteReminderUseCase.execute).not.toHaveBeenCalled();
   });
