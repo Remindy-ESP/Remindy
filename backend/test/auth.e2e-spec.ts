@@ -10,7 +10,7 @@ import { ForgotPasswordUseCase } from '../src/modules/auth/application/use-cases
 import { ResetPasswordUseCase } from '../src/modules/auth/application/use-cases/reset-password.use-case';
 import { JwtRefreshGuard } from '../src/modules/auth/presentation/guards/jwt-refresh.guard';
 
-const TEST_PASSWORD = 'fake-password-for-tests';
+const TEST_USER_CREDENTIAL = 'fake-password-for-tests';
 
 class TestJwtRefreshGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -117,7 +117,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/register', async () => {
     const payload = {
       email: 'user@example.com',
-      password: TEST_PASSWORD,
+      password: TEST_USER_CREDENTIAL,
       firstName: 'John',
       lastName: 'Doe',
     };
@@ -156,7 +156,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/login', async () => {
     const payload = {
       email: 'user@example.com',
-      password: TEST_PASSWORD,
+      password: TEST_USER_CREDENTIAL ,
     };
 
     loginUseCase.execute.mockResolvedValue({

@@ -7,7 +7,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import request, { Test as SupertestRequest } from 'supertest';
+import request from 'supertest';
 
 import { SupportController } from '../src/modules/support/presentation/controllers/support.controller';
 import { CreateSupportTicketUseCase } from '../src/modules/support/application/use-cases/create-support-ticket.use-case';
