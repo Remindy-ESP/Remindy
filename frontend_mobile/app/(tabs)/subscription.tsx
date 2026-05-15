@@ -18,6 +18,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
+import { reminderService } from '../../services/api/reminder.service';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
@@ -281,7 +282,7 @@ export default function SubscriptionScreen() {
     setModalVisible(true);
   };
 
-  const openEditModal = (subscription: Subscription) => {
+  const openEditModal = async (subscription: Subscription) => {
     setEditingSubscription(subscription);
     setPriceInput(subscription.amount?.toString() || '0');
 
@@ -293,6 +294,17 @@ export default function SubscriptionScreen() {
       'yearly': 'YEARLY',
     };
 
+    // Fetch existing reminder for this subscription
+    let existingReminderDays = 3;
+    try {
+      const reminders = await reminderService.getBySubscription(subscription.id);
+      if (reminders.length > 0) {
+        existingReminderDays = reminders[0].days_before;
+      }
+    } catch (err) {
+      console.warn('Could not fetch reminders for subscription:', err);
+    }
+
     setFormData({
       name: subscription.name,
       description: subscription.notes || '',
@@ -301,7 +313,7 @@ export default function SubscriptionScreen() {
       startDate: subscription.startDate ? subscription.startDate.split('T')[0] : new Date().toISOString().split('T')[0],
       endDate: subscription.endDate ? subscription.endDate.split('T')[0] : undefined,
       categoryId: subscription.categoryId || '',
-      reminderDays: 0,
+      reminderDays: existingReminderDays,
     });
     setFormErrors({});
     setModalVisible(true);
@@ -349,12 +361,6 @@ export default function SubscriptionScreen() {
       }
       if (formData.description) {
         requestData.notes = formData.description;
-        requestData.notes = formData.description;
-      }
-      if (formData.reminderDays && requestData.notes) {
-        requestData.notes = `${requestData.notes}\nRappel ${formData.reminderDays} jour(s) avant`;
-      } else if (formData.reminderDays) {
-        requestData.notes = `Rappel ${formData.reminderDays} jour(s) avant`;
       }
 
       // Add categoryId if selected
@@ -364,9 +370,52 @@ export default function SubscriptionScreen() {
 
       if (editingSubscription) {
         await subscriptionService.update(editingSubscription.id, requestData);
+
+        // Update or create reminder for this subscription
+        if (formData.reminderDays > 0) {
+          try {
+            const existingReminders = await reminderService.getBySubscription(editingSubscription.id);
+            if (existingReminders.length > 0) {
+              // Update the first existing reminder
+              await reminderService.update(existingReminders[0].id, {
+                days_before: formData.reminderDays,
+                enabled: true,
+                channel: 'push',
+              });
+            } else {
+              // Create a new reminder for this subscription
+              await reminderService.create({
+                subscription_id: editingSubscription.id,
+                type: 'subscription_renewal',
+                days_before: formData.reminderDays,
+                enabled: true,
+                channel: 'push',
+              });
+            }
+          } catch (reminderErr) {
+            console.warn('Failed to update reminder, subscription was saved:', reminderErr);
+          }
+        }
+
         showSuccess('Opération modifiée avec succès');
       } else {
-        await subscriptionService.create(requestData);
+        const created = await subscriptionService.create(requestData);
+
+        // Create a reminder for the new subscription
+        if (formData.reminderDays > 0) {
+          try {
+            await reminderService.create({
+              subscription_id: created.id,
+              type: 'subscription_renewal',
+              days_before: formData.reminderDays,
+              enabled: true,
+              channel: 'push',
+            });
+          } catch (reminderErr) {
+            console.warn('Failed to create reminder, subscription was created:', reminderErr);
+          }
+        }
+
         showSuccess('Opération créée avec succès');
       }
       setModalVisible(false);
@@ -798,15 +847,21 @@ export default function SubscriptionScreen() {
               )}
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Rappel de notifications</Text>
+                <Text style={styles.label}>Rappel (jours avant l'échéance)</Text>
                 <TextInput
                   style={styles.input}
-                  value={formData.reminderDays?.toString() || '3'}
-                  onChangeText={(text) => setFormData({ ...formData, reminderDays: parseInt(text) || 3 })}
-                  placeholder="3"
+                  value={formData.reminderDays > 0 ? formData.reminderDays.toString() : ''}
+                  onChangeText={(text) => {
+                    const parsed = parseInt(text);
+                    setFormData({ ...formData, reminderDays: isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), 365) });
+                  }}
+                  placeholder="Ex: 7 (0 = pas de rappel)"
                   placeholderTextColor="#9ca3af"
                   keyboardType="number-pad"
                 />
+                <Text style={{ color: '#9ca3af', fontSize: 11, marginTop: 4 }}>
+                  Nombre de jours avant le renouvellement pour recevoir une notification push
+                </Text>
               </View>
 
               <View style={styles.modalActions}>
