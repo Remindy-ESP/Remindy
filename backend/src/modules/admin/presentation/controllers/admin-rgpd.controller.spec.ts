@@ -52,8 +52,7 @@ describe('AdminRgpdController', () => {
       const exportEntry = { id: 'export-1', status: 'pending' };
       mockService.requestExport.mockResolvedValue(exportEntry);
 
-      const req = makeReq();
-      const result = await controller.requestExport(req, 'user-target-1');
+      const result = await controller.requestExport(makeReq(), 'user-target-1');
 
       expect(mockService.requestExport).toHaveBeenCalledWith(
         { id: 'actor-1', role: Role.SUPER_ADMIN },
@@ -62,6 +61,31 @@ describe('AdminRgpdController', () => {
       );
       expect(result).toEqual(exportEntry);
     });
+
+    it('forwards correct ip when it differs', async () => {
+      mockService.requestExport.mockResolvedValue({});
+
+      await controller.requestExport(makeReq({ ip: '192.168.1.1' }), 'user-2');
+
+      expect(mockService.requestExport).toHaveBeenCalledWith(
+        expect.any(Object),
+        'user-2',
+        { ipAddress: '192.168.1.1' },
+      );
+    });
+
+    it('forwards USER_ADMIN role', async () => {
+      mockService.requestExport.mockResolvedValue({});
+
+      const req = makeReq({ user: { id: 'actor-2', role: Role.USER_ADMIN } });
+      await controller.requestExport(req, 'user-3');
+
+      expect(mockService.requestExport).toHaveBeenCalledWith(
+        { id: 'actor-2', role: Role.USER_ADMIN },
+        'user-3',
+        expect.any(Object),
+      );
+    });
   });
 
   describe('listExports()', () => {
@@ -69,15 +93,26 @@ describe('AdminRgpdController', () => {
       const data = { items: [], total: 0, page: 1, limit: 20 };
       mockService.listExports.mockResolvedValue(data);
 
-      const req = makeReq();
       const query = { page: 1, limit: 20 } as any;
-      const result = await controller.listExports(req, query);
+      const result = await controller.listExports(makeReq(), query);
 
       expect(mockService.listExports).toHaveBeenCalledWith(
         { id: 'actor-1', role: Role.SUPER_ADMIN },
         query,
       );
       expect(result).toEqual(data);
+    });
+
+    it('forwards USER_ADMIN role', async () => {
+      mockService.listExports.mockResolvedValue({ items: [], total: 0 });
+
+      const req = makeReq({ user: { id: 'actor-2', role: Role.USER_ADMIN } });
+      await controller.listExports(req, {} as any);
+
+      expect(mockService.listExports).toHaveBeenCalledWith(
+        { id: 'actor-2', role: Role.USER_ADMIN },
+        expect.any(Object),
+      );
     });
   });
 
@@ -86,8 +121,7 @@ describe('AdminRgpdController', () => {
       const data = { ok: true, userId: 'user-target-1', deletedAt: new Date() };
       mockService.deleteUserData.mockResolvedValue(data);
 
-      const req = makeReq();
-      const result = await controller.deleteUserData(req, 'user-target-1');
+      const result = await controller.deleteUserData(makeReq(), 'user-target-1');
 
       expect(mockService.deleteUserData).toHaveBeenCalledWith(
         { id: 'actor-1', role: Role.SUPER_ADMIN },
@@ -95,6 +129,31 @@ describe('AdminRgpdController', () => {
         { ipAddress: '10.0.0.1' },
       );
       expect(result).toEqual(data);
+    });
+
+    it('forwards correct ip when it differs', async () => {
+      mockService.deleteUserData.mockResolvedValue({});
+
+      await controller.deleteUserData(makeReq({ ip: '172.16.0.1' }), 'user-4');
+
+      expect(mockService.deleteUserData).toHaveBeenCalledWith(
+        expect.any(Object),
+        'user-4',
+        { ipAddress: '172.16.0.1' },
+      );
+    });
+
+    it('forwards USER_ADMIN role', async () => {
+      mockService.deleteUserData.mockResolvedValue({});
+
+      const req = makeReq({ user: { id: 'actor-2', role: Role.USER_ADMIN } });
+      await controller.deleteUserData(req, 'user-5');
+
+      expect(mockService.deleteUserData).toHaveBeenCalledWith(
+        { id: 'actor-2', role: Role.USER_ADMIN },
+        'user-5',
+        expect.any(Object),
+      );
     });
   });
 });

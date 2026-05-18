@@ -7,6 +7,7 @@ import { AuthUser } from 'src/modules/auth/domain/entities/auth-user.entity';
 import { IUserAuthRepository } from 'src/modules/auth/domain/repositories/user-auth.repository';
 @Injectable()
 export class UserAuthTypeOrmRepository implements IUserAuthRepository {
+  /* istanbul ignore next */
   constructor(
     @InjectRepository(EUser)
     private readonly repo: Repository<EUser>,

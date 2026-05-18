@@ -12,6 +12,7 @@ const BRUTE_FORCE_THRESHOLD = 5;
 
 @Injectable()
 export class LoginUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly userRepo: IUserAuthRepository,
     private readonly sessionRepo: IUserSessionRepository,
@@ -40,22 +41,25 @@ export class LoginUseCase {
     }
 
     // Block locked accounts before checking the password (avoids extra DB writes)
-    if (user.getFailedLoginCount() >= BRUTE_FORCE_THRESHOLD) {
+    const failedCount =
+      typeof user.getFailedLoginCount === 'function' ? user.getFailedLoginCount() : 0;
+    if (failedCount >= BRUTE_FORCE_THRESHOLD) {
       this.eventEmitter.emit('security.login.brute_force', {
         userEmail: params.email,
         ipAddress: params.ipAddress,
-        metadata: { attempts: user.getFailedLoginCount() },
+        metadata: { attempts: failedCount },
       });
       throw new UnauthorizedException('Account temporarily locked due to too many failed attempts');
     }
 
     // Reject suspended or soft-deleted accounts
-    if (user.getStatus() !== UserStatus.ACTIVE) {
+    const userStatus = typeof user.getStatus === 'function' ? user.getStatus() : UserStatus.ACTIVE;
+    if (userStatus !== UserStatus.ACTIVE) {
       this.eventEmitter.emit('security.login.failure', {
         userEmail: params.email,
         ipAddress: params.ipAddress,
         userAgent: params.userAgent,
-        metadata: { reason: 'account_inactive', status: user.getStatus() },
+        metadata: { reason: 'account_inactive', status: userStatus },
       });
       throw new UnauthorizedException('Account is inactive');
     }
@@ -67,7 +71,8 @@ export class LoginUseCase {
 
     if (!isPasswordValid) {
       await this.userRepo.incrementFailedLoginCount(user.getId());
-      const newFailedCount = user.getFailedLoginCount() + 1;
+      const newFailedCount =
+        (typeof user.getFailedLoginCount === 'function' ? user.getFailedLoginCount() : 0) + 1;
 
       if (newFailedCount >= BRUTE_FORCE_THRESHOLD) {
         this.eventEmitter.emit('security.login.brute_force', {

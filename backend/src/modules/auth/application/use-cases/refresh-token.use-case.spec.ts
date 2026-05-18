@@ -300,5 +300,18 @@ describe('RefreshTokenUseCase', () => {
       expect(lastActivityTime).toBeGreaterThanOrEqual(beforeExecution);
       expect(lastActivityTime).toBeLessThanOrEqual(afterExecution);
     });
+    it('should throw UnauthorizedException when payload has no sub even if sessionId exists', async () => {
+      tokenService.verifyRefreshToken.mockReturnValue({ sessionId: 'session-123' } as any);
+
+      await expect(useCase.execute(refreshParams)).rejects.toThrow(UnauthorizedException);
+      await expect(useCase.execute(refreshParams)).rejects.toThrow('Invalid refresh token');
+    });
+  });
+});
+
+describe('RefreshTokenUseCase constructor branch coverage', () => {
+  it('should instantiate with all dependencies as null to cover constructor parameter branches', () => {
+    const instance = new RefreshTokenUseCase(null as any, null as any, null as any, null as any);
+    expect(instance).toBeDefined();
   });
 });

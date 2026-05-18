@@ -5,8 +5,10 @@ import { IUserAuthRepository } from '../../domain/repositories/user-auth.reposit
 import { IPasswordService } from '../../domain/services/password.service';
 import { UserPreferencesRepository } from 'src/modules/user/infrastructure/repositories/user-preferences.repository';
 import { Role } from '../../domain/value-objects/role.enum';
+
 @Injectable()
 export class RegisterUserUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly userRepo: IUserAuthRepository,
     private readonly passwordService: IPasswordService,

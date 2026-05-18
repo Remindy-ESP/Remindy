@@ -1,263 +1,239 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { RgpdExportService } from '../../../application/services/rgpd-export.service';
-import { RgpdExportRepository } from '../../../../user/infrastructure/repositories/rgpd-export.repository';
-import { UserTypeOrmRepository } from '../../../../user/infrastructure/repositories/user-typeorm.repository';
-
-const TEST_IP_ADDRESS = '192.0.2.1';
-
-describe('RgpdExportService', () => {
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { RgpdExportService } from '../rgpd-export.service';
+import { RgpdExportRepository } from '../../../infrastructure/repositories/rgpd-export.repository';
+import { UserTypeOrmRepository } from '../../../infrastructure/repositories/user-typeorm.repository';
+const TEST_IP = 'test-ip-address' 
+describe('user/domain/services/RgpdExportService', () => {
   let service: RgpdExportService;
   let rgpdExportRepository: jest.Mocked<RgpdExportRepository>;
   let userRepository: jest.Mocked<UserTypeOrmRepository>;
 
   const mockUser = {
     id: 'user-123',
-    email: 'test@example.com',
-  };
+    email: 'john@example.com',
+  } as any;
 
   const mockExport = {
     id: 'export-123',
     userId: 'user-123',
-    status: 'pending' as const,
-    format: 'json' as const,
-    requestedBy: 'user' as const,
+    status: 'pending',
+    format: 'json',
+    requestedBy: 'user',
     ipAddress: '127.0.0.1',
-    fileR2Key: undefined,
-    fileSize: undefined,
-    signedUrl: undefined,
-    expiresAt: undefined,
-    errorMessage: undefined,
-    createdAt: new Date('2025-01-01'),
-    completedAt: undefined,
-  };
+    fileR2Key: null,
+    fileSize: null,
+    signedUrl: null,
+    expiresAt: null,
+    errorMessage: null,
+    createdAt: new Date('2025-01-01T00:00:00.000Z'),
+    completedAt: null,
+  } as any;
 
-  beforeEach(async () => {
-    const mockRgpdExportRepo = {
+  beforeEach(() => {
+    rgpdExportRepository = {
       findById: jest.fn(),
       findByUserId: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
-    };
+    } as any;
 
-    const mockUserRepo = {
+    userRepository = {
       findById: jest.fn(),
-    };
+    } as any;
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RgpdExportService,
-        {
-          provide: RgpdExportRepository,
-          useValue: mockRgpdExportRepo,
-        },
-        {
-          provide: UserTypeOrmRepository,
-          useValue: mockUserRepo,
-        },
-      ],
-    }).compile();
-
-    service = module.get<RgpdExportService>(RgpdExportService);
-    rgpdExportRepository = module.get(RgpdExportRepository);
-    userRepository = module.get(UserTypeOrmRepository);
+    service = new RgpdExportService(rgpdExportRepository, userRepository);
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('createExportRequest', () => {
-    it('should create export request successfully', async () => {
-      const createDto = { format: 'json' as const };
-      const ipAddress = TEST_IP_ADDRESS;
-
-      userRepository.findById.mockResolvedValue(mockUser as any);
+    it('creates a json export by default', async () => {
+      userRepository.findById.mockResolvedValue(mockUser);
       rgpdExportRepository.findByUserId.mockResolvedValue([]);
-      rgpdExportRepository.create.mockResolvedValue(mockExport as any);
+      rgpdExportRepository.create.mockResolvedValue(mockExport);
 
-      const result = await service.createExportRequest('user-123', createDto, ipAddress);
+      const result = await service.createExportRequest('user-123', {}, TEST_IP);
 
-      expect(result).toEqual({
-        id: mockExport.id,
-        userId: mockExport.userId,
-        status: mockExport.status,
-        format: mockExport.format,
-        fileR2Key: undefined,
-        fileSize: undefined,
-        signedUrl: undefined,
-        expiresAt: undefined,
-        errorMessage: undefined,
-        requestedBy: mockExport.requestedBy,
-        createdAt: mockExport.createdAt,
-        completedAt: undefined,
-      });
       expect(rgpdExportRepository.create).toHaveBeenCalledWith({
         userId: 'user-123',
         status: 'pending',
         format: 'json',
         requestedBy: 'user',
-        ipAddress,
+        ipAddress: TEST_IP,
+      });
+
+      expect(result).toEqual({
+        id: 'export-123',
+        userId: 'user-123',
+        status: 'pending',
+        format: 'json',
+        fileR2Key: null,
+        fileSize: null,
+        signedUrl: null,
+        expiresAt: null,
+        errorMessage: null,
+        requestedBy: 'user',
+        createdAt: mockExport.createdAt,
+        completedAt: null,
       });
     });
 
-    it('should throw NotFoundException when user not found', async () => {
-      userRepository.findById.mockResolvedValue(null);
-
-      await expect(
-        service.createExportRequest('nonexistent-id', { format: 'json' }, '127.0.0.1'),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw BadRequestException when pending export exists', async () => {
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      rgpdExportRepository.findByUserId.mockResolvedValue([
-        { ...mockExport, status: 'pending' },
-      ] as any);
-
-      await expect(
-        service.createExportRequest('user-123', { format: 'json' }, '127.0.0.1'),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.createExportRequest('user-123', { format: 'json' }, '127.0.0.1'),
-      ).rejects.toThrow('You already have a pending export request');
-    });
-
-    it('should throw BadRequestException when processing export exists', async () => {
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      rgpdExportRepository.findByUserId.mockResolvedValue([
-        { ...mockExport, status: 'processing' },
-      ] as any);
-
-      await expect(
-        service.createExportRequest('user-123', { format: 'json' }, '127.0.0.1'),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('should throw BadRequestException for invalid format', async () => {
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      rgpdExportRepository.findByUserId.mockResolvedValue([]);
-
-      await expect(
-        service.createExportRequest('user-123', { format: 'xml' as any }, '127.0.0.1'),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.createExportRequest('user-123', { format: 'xml' as any }, '127.0.0.1'),
-      ).rejects.toThrow('Invalid format. Must be json or csv');
-    });
-
-    it('should default to json format when not specified', async () => {
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      rgpdExportRepository.findByUserId.mockResolvedValue([]);
-      rgpdExportRepository.create.mockResolvedValue(mockExport as any);
-
-      await service.createExportRequest('user-123', {}, '127.0.0.1');
-
-      expect(rgpdExportRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          format: 'json',
-        }),
-      );
-    });
-
-    it('should accept csv format', async () => {
-      userRepository.findById.mockResolvedValue(mockUser as any);
+    it('accepts csv format', async () => {
+      userRepository.findById.mockResolvedValue(mockUser);
       rgpdExportRepository.findByUserId.mockResolvedValue([]);
       rgpdExportRepository.create.mockResolvedValue({
         ...mockExport,
         format: 'csv',
-      } as any);
+      });
 
-      await service.createExportRequest('user-123', { format: 'csv' }, '127.0.0.1');
+      await service.createExportRequest('user-123', { format: 'csv' }, TEST_IP);
 
       expect(rgpdExportRepository.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          format: 'csv',
-        }),
+        expect.objectContaining({ format: 'csv' }),
       );
+    });
+
+    it('throws when user does not exist', async () => {
+      userRepository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.createExportRequest('missing-user', { format: 'json' }, TEST_IP),
+      ).rejects.toThrow(new NotFoundException('User not found'));
+    });
+
+    it('throws when format is invalid', async () => {
+      userRepository.findById.mockResolvedValue(mockUser);
+      rgpdExportRepository.findByUserId.mockResolvedValue([]);
+
+      await expect(
+        service.createExportRequest('user-123', { format: 'xml' as any }, TEST_IP),
+      ).rejects.toThrow(new BadRequestException('Invalid format. Must be json or csv'));
+    });
+
+    it('throws when a pending export already exists', async () => {
+      userRepository.findById.mockResolvedValue(mockUser);
+      rgpdExportRepository.findByUserId.mockResolvedValue([{ ...mockExport, status: 'pending' }]);
+
+      await expect(
+        service.createExportRequest('user-123', { format: 'json' }, TEST_IP),
+      ).rejects.toThrow(new BadRequestException('You already have a pending export request'));
+    });
+
+    it('throws when a processing export already exists', async () => {
+      userRepository.findById.mockResolvedValue(mockUser);
+      rgpdExportRepository.findByUserId.mockResolvedValue([
+        { ...mockExport, status: 'processing' },
+      ]);
+
+      await expect(
+        service.createExportRequest('user-123', { format: 'json' }, TEST_IP),
+      ).rejects.toThrow(new BadRequestException('You already have a pending export request'));
     });
   });
 
   describe('getExportStatus', () => {
-    it('should return export status successfully', async () => {
-      rgpdExportRepository.findById.mockResolvedValue(mockExport as any);
+    it('returns the export when it belongs to the user', async () => {
+      rgpdExportRepository.findById.mockResolvedValue(mockExport);
 
-      const result = await service.getExportStatus('user-123', 'export-123');
-
-      expect(result.id).toBe('export-123');
-      expect(result.userId).toBe('user-123');
-      expect(result.status).toBe('pending');
-      expect(rgpdExportRepository.findById).toHaveBeenCalledWith('export-123');
+      await expect(service.getExportStatus('user-123', 'export-123')).resolves.toEqual({
+        id: 'export-123',
+        userId: 'user-123',
+        status: 'pending',
+        format: 'json',
+        fileR2Key: null,
+        fileSize: null,
+        signedUrl: null,
+        expiresAt: null,
+        errorMessage: null,
+        requestedBy: 'user',
+        createdAt: mockExport.createdAt,
+        completedAt: null,
+      });
     });
 
-    it('should throw NotFoundException when export not found', async () => {
+    it('throws when export does not exist', async () => {
       rgpdExportRepository.findById.mockResolvedValue(null);
 
-      await expect(service.getExportStatus('user-123', 'nonexistent-id')).rejects.toThrow(
-        NotFoundException,
-      );
-      await expect(service.getExportStatus('user-123', 'nonexistent-id')).rejects.toThrow(
-        'Export request not found',
+      await expect(service.getExportStatus('user-123', 'missing')).rejects.toThrow(
+        new NotFoundException('Export request not found'),
       );
     });
 
-    it('should throw NotFoundException when export belongs to another user', async () => {
+    it('throws when export belongs to another user', async () => {
       rgpdExportRepository.findById.mockResolvedValue({
         ...mockExport,
         userId: 'other-user',
-      } as any);
+      });
 
       await expect(service.getExportStatus('user-123', 'export-123')).rejects.toThrow(
-        NotFoundException,
+        new NotFoundException('Export request not found'),
       );
     });
   });
 
   describe('getUserExports', () => {
-    it('should return all user exports', async () => {
-      const mockExports = [
+    it('returns mapped exports for the user', async () => {
+      userRepository.findById.mockResolvedValue(mockUser);
+      rgpdExportRepository.findByUserId.mockResolvedValue([
         mockExport,
-        { ...mockExport, id: 'export-456', status: 'completed' as const },
-      ];
+        { ...mockExport, id: 'export-456', status: 'completed' },
+      ]);
 
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      rgpdExportRepository.findByUserId.mockResolvedValue(mockExports as any);
-
-      const result = await service.getUserExports('user-123');
-
-      expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('export-123');
-      expect(result[1].id).toBe('export-456');
-      expect(rgpdExportRepository.findByUserId).toHaveBeenCalledWith('user-123');
+      await expect(service.getUserExports('user-123')).resolves.toEqual([
+        {
+          id: 'export-123',
+          userId: 'user-123',
+          status: 'pending',
+          format: 'json',
+          fileR2Key: null,
+          fileSize: null,
+          signedUrl: null,
+          expiresAt: null,
+          errorMessage: null,
+          requestedBy: 'user',
+          createdAt: mockExport.createdAt,
+          completedAt: null,
+        },
+        {
+          id: 'export-456',
+          userId: 'user-123',
+          status: 'completed',
+          format: 'json',
+          fileR2Key: null,
+          fileSize: null,
+          signedUrl: null,
+          expiresAt: null,
+          errorMessage: null,
+          requestedBy: 'user',
+          createdAt: mockExport.createdAt,
+          completedAt: null,
+        },
+      ]);
     });
 
-    it('should throw NotFoundException when user not found', async () => {
+    it('throws when user does not exist for getUserExports', async () => {
       userRepository.findById.mockResolvedValue(null);
 
-      await expect(service.getUserExports('nonexistent-id')).rejects.toThrow(NotFoundException);
-    });
-
-    it('should return empty array when user has no exports', async () => {
-      userRepository.findById.mockResolvedValue(mockUser as any);
-      rgpdExportRepository.findByUserId.mockResolvedValue([]);
-
-      const result = await service.getUserExports('user-123');
-
-      expect(result).toEqual([]);
+      await expect(service.getUserExports('missing-user')).rejects.toThrow(
+        new NotFoundException('User not found'),
+      );
     });
   });
 
   describe('processExport', () => {
-    it('should update status to processing and then completed', async () => {
-      rgpdExportRepository.findById.mockResolvedValue(mockExport as any);
-      rgpdExportRepository.update.mockResolvedValue(mockExport as any);
+    it('marks export as processing then completed', async () => {
+      rgpdExportRepository.findById.mockResolvedValue(mockExport);
+      rgpdExportRepository.update.mockResolvedValue(undefined as any);
 
       await service.processExport('export-123');
 
-      expect(rgpdExportRepository.update).toHaveBeenCalledWith('export-123', {
+      expect(rgpdExportRepository.update).toHaveBeenNthCalledWith(1, 'export-123', {
         status: 'processing',
       });
-      expect(rgpdExportRepository.update).toHaveBeenCalledWith(
+      expect(rgpdExportRepository.update).toHaveBeenNthCalledWith(
+        2,
         'export-123',
         expect.objectContaining({
           status: 'completed',
@@ -266,31 +242,29 @@ describe('RgpdExportService', () => {
       );
     });
 
-    it('should throw NotFoundException when export not found', async () => {
+    it('throws when export is missing during processing', async () => {
       rgpdExportRepository.findById.mockResolvedValue(null);
 
-      await expect(service.processExport('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.processExport('missing-export')).rejects.toThrow(
+        new NotFoundException('Export request not found'),
+      );
     });
 
-    it('should update status to failed on error', async () => {
-      const mockError = new Error('Processing failed');
+    it('marks export as failed with the original error message', async () => {
+      const error = new Error('processing failed');
 
-      rgpdExportRepository.findById.mockResolvedValue(mockExport as any);
-
+      rgpdExportRepository.findById.mockResolvedValue(mockExport);
       rgpdExportRepository.update
-        .mockResolvedValueOnce(mockExport as any)
-        .mockRejectedValueOnce(mockError)
-        .mockResolvedValueOnce(mockExport as any);
+        .mockResolvedValueOnce(undefined as any)
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce(undefined as any);
 
       await service.processExport('export-123');
 
-      expect(rgpdExportRepository.update).toHaveBeenLastCalledWith(
-        'export-123',
-        expect.objectContaining({
-          status: 'failed',
-          errorMessage: mockError.message,
-        }),
-      );
+      expect(rgpdExportRepository.update).toHaveBeenLastCalledWith('export-123', {
+        status: 'failed',
+        errorMessage: 'processing failed',
+      });
     });
   });
 });
