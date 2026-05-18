@@ -25,7 +25,6 @@ export const ApiCategoryCreate = () =>
 export const ApiCategoryFindAll = () =>
   applyDecorators(
     Get(),
-    Public(),
     ApiOperation({ summary: 'Get all categories (system + user custom)' }),
     ApiQuery({ name: 'userId', required: false, description: 'Filter by user ID' }),
     ApiQuery({ name: 'name', required: false, description: 'Filter by name (partial match)' }),
