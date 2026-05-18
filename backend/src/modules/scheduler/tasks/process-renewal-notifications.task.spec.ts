@@ -19,8 +19,11 @@ describe('ProcessRenewalNotificationsTask', () => {
         select: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
         getRawMany: jest.fn().mockResolvedValue([]),
       }),
     };
@@ -65,8 +68,8 @@ describe('ProcessRenewalNotificationsTask', () => {
     it('should query both renewal and trial ending notifications and log if 0 found', async () => {
       await task.handleCron();
 
-      // createQueryBuilder is called twice: once for renewals, once for trial endings
-      expect(subscriptionRepository.createQueryBuilder).toHaveBeenCalledTimes(2);
+      // createQueryBuilder is called three times: once for trial transitions, once for renewals, once for trial endings
+      expect(subscriptionRepository.createQueryBuilder).toHaveBeenCalledTimes(3);
       expect(loggerSpy).toHaveBeenCalledWith('Found 0 renewal notification(s) to create');
       expect(loggerSpy).toHaveBeenCalledWith('Found 0 trial ending notification(s) to create');
       expect(notificationRepository.save).not.toHaveBeenCalled();
@@ -91,8 +94,11 @@ describe('ProcessRenewalNotificationsTask', () => {
         select: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
         getRawMany: jest.fn().mockResolvedValueOnce([mockRenewalRow]).mockResolvedValueOnce([]),
       };
       subscriptionRepository.createQueryBuilder.mockReturnValue(qbMock);
@@ -105,8 +111,8 @@ describe('ProcessRenewalNotificationsTask', () => {
       expect(expoPushService.sendToUsers).toHaveBeenCalledWith([
         {
           userId: 'user-123',
-          title: 'Renouvellement Netflix dans 3 jour(s)',
-          body: expect.stringContaining('15.99EUR sera renouvelé le'),
+          title: 'Renouvellement',
+          body: expect.stringContaining('Netflix — renouvellement dans 3 jour(s)'),
           data: expect.objectContaining({ type: 'subscription_renewal' }),
         },
       ]);
@@ -130,8 +136,11 @@ describe('ProcessRenewalNotificationsTask', () => {
         select: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
         getRawMany: jest.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([mockTrialRow]),
       };
       subscriptionRepository.createQueryBuilder.mockReturnValue(qbMock);
@@ -144,8 +153,8 @@ describe('ProcessRenewalNotificationsTask', () => {
       expect(expoPushService.sendToUsers).toHaveBeenCalledWith([
         {
           userId: 'user-456',
-          title: expect.stringContaining("Fin d'essai Spotify"),
-          body: expect.stringContaining("période d'essai"),
+          title: "Période d'essai",
+          body: expect.stringContaining('Spotify — essai gratuit se termine dans 3 jour(s)'),
           data: expect.objectContaining({ type: 'trial_ending' }),
         },
       ]);
@@ -180,8 +189,11 @@ describe('ProcessRenewalNotificationsTask', () => {
         select: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
         getRawMany: jest
           .fn()
           .mockResolvedValueOnce([mockRenewalRow])

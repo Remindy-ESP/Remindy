@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { categoryService } from '../../services/api/category.service';
 import { subscriptionService } from '../../services/api/subscription.service';
@@ -53,11 +54,13 @@ export default function NotificationsScreen() {
         }
     }, []);
 
-    useEffect(() => {
-        if (user) {
-            fetchNotifications();
-        }
-    }, [user, fetchNotifications]);
+    useFocusEffect(
+        React.useCallback(() => {
+            if (user) {
+                fetchNotifications();
+            }
+        }, [user, fetchNotifications])
+    );
 
     // Build subscriptionId -> categoryName map
     const subscriptionCategoryMap = React.useMemo(() => {

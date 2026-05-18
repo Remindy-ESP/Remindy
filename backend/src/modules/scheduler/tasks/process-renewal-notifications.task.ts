@@ -212,7 +212,6 @@ export class ProcessRenewalNotificationsTask {
       try {
         uniqueSubscriptionIds.add(row.subscriptionId);
 
-        const dueDate = new Date(row.nextDueDate);
         const title = `Renouvellement`;
         const body = `${row.subscriptionName} — renouvellement dans ${row.daysBefore} jour(s)`;
 
@@ -313,7 +312,6 @@ export class ProcessRenewalNotificationsTask {
       try {
         uniqueSubscriptionIds.add(row.subscriptionId);
 
-        const endDate = new Date(row.trialEndDate);
         const title = `Période d'essai`;
         const body = `${row.subscriptionName} — essai gratuit se termine dans ${row.daysBefore} jour(s)`;
 

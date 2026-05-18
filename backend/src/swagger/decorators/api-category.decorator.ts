@@ -10,7 +10,6 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { Public } from '../../modules/auth/presentation/decorators/public.decorator';
 import { CategoryResponseDto } from '../../modules/category/presentation/dto/category-response.dto';
 
 export const ApiCategoryCreate = () =>
