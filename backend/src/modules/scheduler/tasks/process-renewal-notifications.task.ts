@@ -213,8 +213,8 @@ export class ProcessRenewalNotificationsTask {
         uniqueSubscriptionIds.add(row.subscriptionId);
 
         const dueDate = new Date(row.nextDueDate);
-        const title = `Renouvellement ${row.subscriptionName} dans ${row.daysBefore} jour(s)`;
-        const body = `Votre abonnement ${row.subscriptionName} de ${row.subscriptionAmount}${row.subscriptionCurrency} sera renouvelé le ${dueDate.toLocaleDateString('fr-FR')}`;
+        const title = `Renouvellement`;
+        const body = `${row.subscriptionName} — renouvellement dans ${row.daysBefore} jour(s)`;
 
         const notification = new Notification({
           userId: row.userId,
@@ -314,8 +314,8 @@ export class ProcessRenewalNotificationsTask {
         uniqueSubscriptionIds.add(row.subscriptionId);
 
         const endDate = new Date(row.trialEndDate);
-        const title = `Fin d'essai ${row.subscriptionName} dans ${row.daysBefore} jour(s)`;
-        const body = `La période d'essai de ${row.subscriptionName} (${row.subscriptionAmount}${row.subscriptionCurrency}/mois) se termine le ${endDate.toLocaleDateString('fr-FR')}. Pensez à annuler si vous ne souhaitez pas être facturé.`;
+        const title = `Période d'essai`;
+        const body = `${row.subscriptionName} — essai gratuit se termine dans ${row.daysBefore} jour(s)`;
 
         const notification = new Notification({
           userId: row.userId,

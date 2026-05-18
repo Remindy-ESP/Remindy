@@ -147,9 +147,12 @@ export default function NotificationsScreen() {
 
     const getIconName = (type: NotificationType): keyof typeof Ionicons.glyphMap => {
         switch (type) {
-            case 'subscription_renewal': return 'calendar-outline';
+            case 'subscription_renewal':
+            case 'subscription_renewed': return 'calendar-outline';
             case 'payment_overdue': return 'alert-circle-outline';
-            case 'document_expiry': return 'document-text-outline';
+            case 'trial_ending': return 'hourglass-outline';
+            case 'document_expiry':
+            case 'document_processed': return 'document-text-outline';
             case 'reminder': return 'time-outline';
             case 'system': return 'information-circle-outline';
             default: return 'notifications-outline';
@@ -159,9 +162,24 @@ export default function NotificationsScreen() {
     const getIconColor = (type: NotificationType): string => {
         switch (type) {
             case 'payment_overdue': return '#FF5252';
-            case 'subscription_renewal': return '#4CAF50';
-            case 'document_expiry': return '#FF9800';
+            case 'subscription_renewal':
+            case 'subscription_renewed': return '#4CAF50';
+            case 'trial_ending': return '#FF9800';
+            case 'document_expiry':
+            case 'document_processed': return '#2196F3';
             default: return '#E0E0E0';
+        }
+    };
+
+    const getCardBackground = (type: NotificationType): string => {
+        switch (type) {
+            case 'subscription_renewal':
+            case 'subscription_renewed': return 'rgba(76, 175, 80, 0.08)';
+            case 'trial_ending': return 'rgba(255, 152, 0, 0.08)';
+            case 'payment_overdue': return 'rgba(255, 82, 82, 0.08)';
+            case 'document_expiry':
+            case 'document_processed': return 'rgba(33, 150, 243, 0.08)';
+            default: return 'rgba(255, 255, 255, 0.05)';
         }
     };
 
@@ -252,7 +270,7 @@ export default function NotificationsScreen() {
                 leftThreshold={40}
             >
                 <TouchableOpacity 
-                    style={[styles.notificationCard, isRead && styles.notificationCardRead]}
+                    style={[styles.notificationCard, { backgroundColor: getCardBackground(item.type) }, isRead && styles.notificationCardRead]}
                     onPress={() => !isRead && handleMarkAsRead(item.id)}
                     activeOpacity={0.7}
                 >
@@ -267,7 +285,7 @@ export default function NotificationsScreen() {
                             </Text>
                             <Text style={styles.notificationDate}>{date}</Text>
                         </View>
-                        <Text style={[styles.notificationBody, !isRead && styles.textUnread]} numberOfLines={2}>
+                        <Text style={[styles.notificationBody, !isRead && styles.textUnread]} numberOfLines={3}>
                             {item.body}
                         </Text>
                         {!isRead && (

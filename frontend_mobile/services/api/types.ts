@@ -226,7 +226,7 @@ export interface StorageQuota {
   availableFormatted: string;
 }
 
-export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewal' | 'document_expiry' | 'system';
+export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewed' | 'trial_ending' | 'document_processed' | 'subscription_renewal' | 'document_expiry' | 'system';
 export type NotificationChannel = 'email' | 'push' | 'sms';
 export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'snoozed';
 
