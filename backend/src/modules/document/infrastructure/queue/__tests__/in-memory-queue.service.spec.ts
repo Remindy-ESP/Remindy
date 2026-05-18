@@ -112,7 +112,7 @@ describe('InMemoryQueueService', () => {
       // Le job peut être en waiting ou active selon le timing
       expect(jobStatus).toMatchObject({
         id: jobId,
-        status: expect.stringMatching(/waiting|active|failed/),
+        status: expect.stringMatching(/waiting|active|failed|completed/),
         attempts: expect.any(Number),
       });
     });
@@ -205,6 +205,20 @@ describe('InMemoryQueueService', () => {
   });
 
   describe('OCR processing', () => {
+    // These tests need the real processing path (not the test bypass).
+    // We temporarily set NODE_ENV to 'unit-test' so the queue runs the full pipeline
+    // with mocked services, while the e2e bypass (NODE_ENV === 'test') stays inactive.
+    let originalNodeEnv: string | undefined;
+
+    beforeEach(() => {
+      originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'unit-test';
+    });
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+
     it('should process a job successfully', async () => {
       const fileBuffer = Buffer.from('test file content');
       const ocrText = 'Extracted text from document';

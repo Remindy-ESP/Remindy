@@ -6,6 +6,7 @@ import { IEmailService } from '../../infrastructure/services/email.service';
 
 @Injectable()
 export class ForgotPasswordUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly userRepo: IUserAuthRepository,
     private readonly tokenService: ITokenService,

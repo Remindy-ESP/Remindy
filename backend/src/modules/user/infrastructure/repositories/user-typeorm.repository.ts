@@ -65,3 +65,5 @@ export class UserTypeOrmRepository implements UserRepository {
     await this.userRepository.softDelete({ id: userId });
   }
 }
+
+export { UserRepository } from '../../domain/repositories/user-user.repository';

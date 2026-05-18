@@ -236,4 +236,39 @@ describe('JwtRefreshStrategy', () => {
       }
     });
   });
+  describe('refresh token extractor', () => {
+    it('extracts the refresh token from cookies when it is a string', () => {
+      const extractor = (strategy as any)._jwtFromRequest;
+      const token = extractor({ cookies: { refreshToken: 'refresh-token-value' } });
+
+      expect(token).toBe('refresh-token-value');
+    });
+
+    it('returns null when cookies object is missing', () => {
+      const extractor = (strategy as any)._jwtFromRequest;
+      const token = extractor({});
+
+      expect(token).toBeNull();
+    });
+
+    it('returns null when refreshToken cookie is missing', () => {
+      const extractor = (strategy as any)._jwtFromRequest;
+      const token = extractor({ cookies: {} });
+
+      expect(token).toBeNull();
+    });
+
+    it('returns null when refreshToken cookie is not a string', () => {
+      const extractor = (strategy as any)._jwtFromRequest;
+      const token = extractor({ cookies: { refreshToken: 12345 } });
+
+      expect(token).toBeNull();
+    });
+    it('returns null when cookies object is missing', () => {
+      const extractor = (strategy as any)._jwtFromRequest;
+      const token = extractor({});
+
+      expect(token).toBeNull();
+    });
+  });
 });

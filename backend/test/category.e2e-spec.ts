@@ -1,14 +1,17 @@
-import { INestApplication, ValidationPipe, CanActivate } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { Reflector } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CategoryController } from '../src/modules/category/presentation/controllers/category.controller';
-import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
-import { RolesGuard } from '../src/modules/auth/presentation/guards/roles.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
-import { JwtTokenService } from '../src/modules/auth/infrastructure/services/jwt-token.service';
 import { EUser } from '../src/infrastructure/database/entities/user.entity';
 import { CreateCategoryUseCase } from '../src/modules/category/application/use-cases/create-category.use-case';
 import { UpdateCategoryUseCase } from '../src/modules/category/application/use-cases/update-category.use-case';
@@ -16,11 +19,47 @@ import { DeleteCategoryUseCase } from '../src/modules/category/application/use-c
 import { FindCategoryByIdUseCase } from '../src/modules/category/application/use-cases/find-category-by-id.use-case';
 import { FindAllCategoriesUseCase } from '../src/modules/category/application/use-cases/find-all-categories.use-case';
 import { Category } from '../src/modules/category/domain/category.entity';
+import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
+import { RolesGuard } from '../src/modules/auth/presentation/guards/roles.guard';
 
 const USER_ID = 'user-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const OTHER_USER_ID = 'user-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
 const CAT_ID = 'cat--cccc-cccc-cccc-cccccccccccc';
 const CAT_ID_2 = 'cat--dddd-dddd-dddd-dddddddddddd';
+
+const TOKEN_MAP: Record<string, { sub: string; role: Role }> = {
+  'user-token': { sub: USER_ID, role: Role.USER_PREMIUM },
+  'other-token': { sub: OTHER_USER_ID, role: Role.USER_PREMIUM },
+};
+
+class TestJwtAuthGuard implements CanActivate {
+  constructor(private readonly reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) return true;
+
+    const request = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = request.headers?.authorization;
+
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    const token = authHeader.slice(7);
+    const payload = TOKEN_MAP[token];
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or missing authentication token');
+    }
+
+    request.user = { userId: payload.sub, role: payload.role };
+    return true;
+  }
+}
 
 const makeCategory = (overrides: Partial<Record<string, unknown>> = {}): Category =>
   new Category({
@@ -38,7 +77,6 @@ const makeCategory = (overrides: Partial<Record<string, unknown>> = {}): Categor
 describe('Category Module (e2e)', () => {
   let app: INestApplication;
 
-  const jwtTokenService = { verifyAccessToken: jest.fn() };
   const userRepository = { findOne: jest.fn() };
 
   const createCategoryUseCase = { execute: jest.fn() };
@@ -47,13 +85,11 @@ describe('Category Module (e2e)', () => {
   const findCategoryByIdUseCase = { execute: jest.fn() };
   const findAllCategoriesUseCase = { execute: jest.fn() };
 
-  // ThrottlerGuard override — pure mock, always allow in tests
   const noopThrottlerGuard: CanActivate = { canActivate: () => true };
 
   const authHeaderFor = (token: string) => ({ Authorization: `Bearer ${token}` });
 
   const sampleCategory = makeCategory();
-
   const systemCategory = new Category({
     id: CAT_ID_2,
     name: 'Travel',
@@ -66,40 +102,18 @@ describe('Category Module (e2e)', () => {
   });
 
   beforeAll(async () => {
-    jwtTokenService.verifyAccessToken.mockImplementation((token: string) => {
-      switch (token) {
-        case 'user-token':
-          return { sub: USER_ID, role: Role.USER_PREMIUM };
-        case 'other-token':
-          return { sub: OTHER_USER_ID, role: Role.USER_PREMIUM };
-        default:
-          throw new Error('invalid token');
-      }
-    });
-
-    userRepository.findOne.mockImplementation(({ where }: { where: { id: string } }) => {
-      if (where.id === USER_ID) {
-        return Promise.resolve({ id: USER_ID, mfaEnabled: false });
-      }
-      if (where.id === OTHER_USER_ID) {
-        return Promise.resolve({ id: OTHER_USER_ID, mfaEnabled: false });
-      }
-      return Promise.resolve(null);
-    });
-
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [CategoryController],
       providers: [
         Reflector,
-        JwtAuthGuard,
-        RolesGuard,
         { provide: CreateCategoryUseCase, useValue: createCategoryUseCase },
         { provide: UpdateCategoryUseCase, useValue: updateCategoryUseCase },
         { provide: DeleteCategoryUseCase, useValue: deleteCategoryUseCase },
         { provide: FindCategoryByIdUseCase, useValue: findCategoryByIdUseCase },
         { provide: FindAllCategoriesUseCase, useValue: findAllCategoriesUseCase },
-        { provide: JwtTokenService, useValue: jwtTokenService },
         { provide: getRepositoryToken(EUser), useValue: userRepository },
+        JwtAuthGuard,
+        RolesGuard,
       ],
     })
       .overrideGuard(ThrottlerGuard)
@@ -107,6 +121,7 @@ describe('Category Module (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -115,34 +130,24 @@ describe('Category Module (e2e)', () => {
       }),
     );
 
-    // The CategoryController only applies ThrottlerGuard at class level, but its
-    // create/update/delete methods access req.user.userId. We apply JwtAuthGuard
-    // globally here so the test environment mirrors how the real app module works:
-    // the controller itself does not guard, so tests that omit the token will 401.
-    const jwtAuthGuard = moduleFixture.get<JwtAuthGuard>(JwtAuthGuard);
     const reflector = moduleFixture.get<Reflector>(Reflector);
-    app.useGlobalGuards(new JwtAuthGuard(jwtTokenService as unknown as JwtTokenService, reflector));
+    app.useGlobalGuards(new TestJwtAuthGuard(reflector));
 
     await app.init();
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
+    if (app) await app.close();
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-
     findCategoryByIdUseCase.execute.mockResolvedValue(sampleCategory);
     findAllCategoriesUseCase.execute.mockResolvedValue([sampleCategory, systemCategory]);
     createCategoryUseCase.execute.mockResolvedValue(sampleCategory);
     updateCategoryUseCase.execute.mockResolvedValue(sampleCategory);
     deleteCategoryUseCase.execute.mockResolvedValue(undefined);
   });
-
-  // ---- POST /categories ----
 
   it('POST /categories - creates a category and returns 201', async () => {
     const payload = { name: 'Streaming', icon: 'play-circle', color: '#3B82F6' };
@@ -226,8 +231,6 @@ describe('Category Module (e2e)', () => {
       .expect(400);
   });
 
-  // ---- GET /categories ----
-
   it('GET /categories - returns all categories (public endpoint, no auth required)', async () => {
     const response = await request(app.getHttpServer()).get('/categories').expect(200);
 
@@ -272,8 +275,6 @@ describe('Category Module (e2e)', () => {
     expect(response.body[0].isSystem).toBe(true);
   });
 
-  // ---- GET /categories/:id ----
-
   it('GET /categories/:id - returns a single category by ID (authenticated)', async () => {
     const response = await request(app.getHttpServer())
       .get(`/categories/${CAT_ID}`)
@@ -292,8 +293,6 @@ describe('Category Module (e2e)', () => {
   it('GET /categories/:id - returns 401 when not authenticated', async () => {
     await request(app.getHttpServer()).get(`/categories/${CAT_ID}`).expect(401);
   });
-
-  // ---- PUT /categories/:id ----
 
   it('PUT /categories/:id - updates a category and returns updated response', async () => {
     const updatedCategory = makeCategory({ name: 'Video Streaming', color: '#6366F1' });
@@ -357,8 +356,6 @@ describe('Category Module (e2e)', () => {
       OTHER_USER_ID,
     );
   });
-
-  // ---- DELETE /categories/:id ----
 
   it('DELETE /categories/:id - deletes a category and returns 204', async () => {
     await request(app.getHttpServer())

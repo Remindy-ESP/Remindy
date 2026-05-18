@@ -35,23 +35,11 @@ describe('RequestRgpdExportUseCase', () => {
   });
 
   describe('execute', () => {
-    it('should create RGPD export request with specified format', async () => {
+    // Branch: dto.format is defined → use it
+    it('should create RGPD export request with specified json format', async () => {
       const userId = 'user-123';
       const dto: RequestRgpdExportDto = { format: 'json' };
       const mockRequest = { id: 'export-123', userId, format: 'json' };
-
-      rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
-
-      const result = await useCase.execute(userId, dto);
-
-      expect(result).toBe(mockRequest);
-      expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
-    });
-
-    it('should use json as default format when not specified', async () => {
-      const userId = 'user-456';
-      const dto: RequestRgpdExportDto = {};
-      const mockRequest = { id: 'export-456', userId, format: 'json' };
 
       rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
 
@@ -74,6 +62,33 @@ describe('RequestRgpdExportUseCase', () => {
       expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'csv');
     });
 
+    // Branch: dto.format is undefined → use default 'json' (right side of ??)
+    it('should use json as default format when dto.format is undefined', async () => {
+      const userId = 'user-456';
+      const dto: RequestRgpdExportDto = { format: undefined };
+      const mockRequest = { id: 'export-456', userId, format: 'json' };
+
+      rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
+
+      const result = await useCase.execute(userId, dto);
+
+      expect(result).toBe(mockRequest);
+      expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
+    });
+
+    // Branch: dto.format is null → use default 'json' (right side of ??)
+    it('should use json as default format when dto.format is null', async () => {
+      const userId = 'user-null';
+      const dto: RequestRgpdExportDto = { format: null as any };
+      const mockRequest = { id: 'export-null', userId, format: 'json' };
+
+      rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
+
+      await useCase.execute(userId, dto);
+
+      expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
+    });
+
     it('should handle different user ids', async () => {
       const userIds = ['user-1', 'user-2', 'user-3'];
       const dto: RequestRgpdExportDto = { format: 'json' };
@@ -88,30 +103,6 @@ describe('RequestRgpdExportUseCase', () => {
       }
 
       expect(rgpdExportRepo.createRequest).toHaveBeenCalledTimes(3);
-    });
-
-    it('should handle null format by using default', async () => {
-      const userId = 'user-null';
-      const dto: RequestRgpdExportDto = { format: null as any };
-      const mockRequest = { id: 'export-null', userId, format: 'json' };
-
-      rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
-
-      await useCase.execute(userId, dto);
-
-      expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
-    });
-
-    it('should handle undefined format by using default', async () => {
-      const userId = 'user-undefined';
-      const dto: RequestRgpdExportDto = { format: undefined };
-      const mockRequest = { id: 'export-undefined', userId, format: 'json' };
-
-      rgpdExportRepo.createRequest.mockResolvedValue(mockRequest as any);
-
-      await useCase.execute(userId, dto);
-
-      expect(rgpdExportRepo.createRequest).toHaveBeenCalledWith(userId, 'json');
     });
   });
 });

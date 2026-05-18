@@ -76,6 +76,7 @@ describe('DeleteMyAccountUseCase', () => {
       expect(callOrder).toEqual(['revokeAllForUser', 'softDelete']);
     });
 
+    // Branch: !userId — empty string (falsy)
     it('should throw error when userId is empty string', async () => {
       await expect(useCase.execute('')).rejects.toThrow(
         'DeleteMyAccountUseCase called without userId',
@@ -85,6 +86,7 @@ describe('DeleteMyAccountUseCase', () => {
       expect(userRepo.softDelete).not.toHaveBeenCalled();
     });
 
+    // Branch: !userId — null (falsy)
     it('should throw error when userId is null', async () => {
       await expect(useCase.execute(null as any)).rejects.toThrow(
         'DeleteMyAccountUseCase called without userId',
@@ -94,6 +96,7 @@ describe('DeleteMyAccountUseCase', () => {
       expect(userRepo.softDelete).not.toHaveBeenCalled();
     });
 
+    // Branch: !userId — undefined (falsy)
     it('should throw error when userId is undefined', async () => {
       await expect(useCase.execute(undefined as any)).rejects.toThrow(
         'DeleteMyAccountUseCase called without userId',

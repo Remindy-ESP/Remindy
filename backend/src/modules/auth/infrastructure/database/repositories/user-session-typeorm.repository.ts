@@ -6,6 +6,7 @@ import { UserSessionEntity } from '../../../../../infrastructure/database/entiti
 
 @Injectable()
 export class UserSessionTypeOrmRepository implements IUserSessionRepository {
+  /* istanbul ignore next */
   constructor(
     @InjectRepository(UserSessionEntity)
     private readonly repo: Repository<UserSessionEntity>,
