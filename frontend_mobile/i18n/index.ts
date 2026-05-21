@@ -4,28 +4,14 @@ import {
   DEFAULT_NAMESPACE,
   FALLBACK_LANGUAGE,
   NAMESPACES,
-  SUPPORTED_LANGUAGES,
   SupportedLanguage,
 } from './config';
 import { detectLanguage } from './detectLanguage';
 import { setStoredLanguage } from './languageStorage';
-
-const emptyResources = SUPPORTED_LANGUAGES.reduce(
-  (acc, lng) => {
-    acc[lng] = NAMESPACES.reduce(
-      (ns, name) => {
-        ns[name] = {};
-        return ns;
-      },
-      {} as Record<string, object>,
-    );
-    return acc;
-  },
-  {} as Record<SupportedLanguage, Record<string, object>>,
-);
+import { resources } from './resources';
 
 i18n.use(initReactI18next).init({
-  resources: emptyResources,
+  resources,
   lng: FALLBACK_LANGUAGE,
   fallbackLng: FALLBACK_LANGUAGE,
   ns: NAMESPACES as unknown as string[],
