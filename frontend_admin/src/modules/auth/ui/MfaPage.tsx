@@ -35,8 +35,11 @@ export function MfaPage() {
       } else {
         await verifyMfa(code);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Code invalide');
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? 'Code invalide';
+      setError(message);
     } finally {
       setLoading(false);
     }
