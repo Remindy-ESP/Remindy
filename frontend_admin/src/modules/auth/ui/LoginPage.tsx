@@ -32,8 +32,11 @@ export function LoginPage() {
     setError('');
     try {
       await login(data.email, data.password);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Identifiants incorrects');
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? 'Identifiants incorrects';
+      setError(message);
     }
   };
 
