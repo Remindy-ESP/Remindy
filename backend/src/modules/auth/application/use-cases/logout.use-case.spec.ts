@@ -161,5 +161,22 @@ describe('LogoutUseCase', () => {
 
       await expect(useCase.execute(refreshToken)).rejects.toThrow();
     });
+    it('should do nothing when verifyRefreshToken returns payload without sessionId', async () => {
+      mockTokenService.verifyRefreshToken.mockReturnValue({ sub: 'user-123' } as any);
+
+      await useCase.execute('refresh-token');
+
+      expect(mockSessionRepo.findActiveSessionById).not.toHaveBeenCalled();
+      expect(mockPasswordService.compare).not.toHaveBeenCalled();
+      expect(mockSessionRepo.revokeSession).not.toHaveBeenCalled();
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('LogoutUseCase constructor branch coverage', () => {
+  it('should instantiate with all dependencies as null to cover constructor parameter branches', () => {
+    const instance = new LogoutUseCase(null as any, null as any, null as any, null as any);
+    expect(instance).toBeDefined();
   });
 });

@@ -1,5 +1,14 @@
-import { Controller, Body, Req, Res, UnauthorizedException } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Body,
+  Req,
+  Res,
+  UnauthorizedException,
+  Post,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { RegisterRequestDto } from '../../application/dto/register-request.dto';
 import { RegisterUserUseCase } from '../../application/use-cases/register-user.use-case';
@@ -12,13 +21,13 @@ import { ForgotPasswordRequestDto } from '../../application/dto/forgot-password-
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
 import { ResetPasswordRequestDto } from '../../application/dto/reset-password-request.dto';
 import {
-  ApiAuthRegister,
-  ApiAuthLogin,
-  ApiAuthRefreshToken,
   ApiAuthLogout,
-  ApiAuthForgotPassword,
   ApiAuthResetPassword,
 } from '../../../../swagger/decorators/api-auth.decorator';
+import { Public } from '../decorators/public.decorator';
+import { RegisterUserResponseDto } from '../dto/register-response.dto';
+import { LoginResponseDto } from '../dto/login-response.dto';
+import { JwtRefreshGuard } from '../guards/jwt-refresh.guard';
 
 @ApiTags('Authentification')
 @Controller('auth')
@@ -32,7 +41,21 @@ export class AuthController {
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
-  @ApiAuthRegister()
+  @Public()
+  @Post('register')
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Registration successful',
+    type: RegisterUserResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid data',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description: 'Email already in use',
+  })
   async register(
     @Req() req: Request,
     @Body() dto: RegisterRequestDto,
@@ -62,7 +85,21 @@ export class AuthController {
     };
   }
 
-  @ApiAuthLogin()
+  @Public()
+  @Post('login')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Connexion réussie',
+    type: LoginResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Email ou mot de passe incorrect',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Données invalides',
+  })
   async login(
     @Req() req: Request,
     @Body() dto: LoginRequestDto,
@@ -86,7 +123,9 @@ export class AuthController {
     return { accessToken, refreshToken };
   }
 
-  @ApiAuthRefreshToken()
+  @Public()
+  @Post('refresh-token')
+  @UseGuards(JwtRefreshGuard)
   async refreshToken(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -132,12 +171,15 @@ export class AuthController {
     return { success: true };
   }
 
-  @ApiAuthForgotPassword()
+  @Public()
+  @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordRequestDto) {
     await this.forgotPasswordUseCase.execute(dto.email);
     return { success: true, message: 'If the email exists, a reset link has been sent' };
   }
 
+  @Public()
+  @Post('reset-password')
   @ApiAuthResetPassword()
   async resetPassword(@Body() dto: ResetPasswordRequestDto) {
     await this.resetPasswordUseCase.execute({ token: dto.token, newPassword: dto.newPassword });

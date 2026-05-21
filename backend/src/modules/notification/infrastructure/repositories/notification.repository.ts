@@ -68,6 +68,27 @@ export class NotificationRepository implements INotificationRepository {
     return NotificationMapper.toDomainArray(entities);
   }
 
+  async findByUserAndMetadata(
+    userId: string,
+    type: string,
+    subscriptionId: string,
+    nextDueDate: string,
+  ): Promise<Notification | null> {
+    const entity = await this.repository
+      .createQueryBuilder('notification')
+      .where('notification.userId = :userId', { userId })
+      .andWhere('notification.type = :type', { type })
+      .andWhere("notification.metadata->>'subscriptionId' = :subscriptionId", { subscriptionId })
+      .andWhere("notification.metadata->>'nextDueDate' = :nextDueDate", { nextDueDate })
+      .getOne();
+
+    if (!entity) {
+      return null;
+    }
+
+    return NotificationMapper.toDomain(entity);
+  }
+
   async save(notification: Notification): Promise<Notification> {
     const entity = NotificationMapper.toPersistence(notification);
     const saved = await this.repository.save(entity);

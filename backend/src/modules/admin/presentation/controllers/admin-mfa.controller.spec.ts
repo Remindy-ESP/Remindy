@@ -30,7 +30,6 @@ const mockTokenService = {
   generateAccessToken: jest.fn(),
 };
 
-// Mock qrcode
 jest.mock('qrcode', () => ({
   toDataURL: jest.fn().mockResolvedValue('data:image/png;base64,mock'),
 }));
@@ -70,8 +69,7 @@ describe('AdminMfaController', () => {
 
   describe('throttleTest()', () => {
     it('returns ok:true', () => {
-      const result = controller.throttleTest();
-      expect(result).toEqual({ ok: true });
+      expect(controller.throttleTest()).toEqual({ ok: true });
     });
   });
 
@@ -151,6 +149,21 @@ describe('AdminMfaController', () => {
       );
       expect(mockUserMfaRepo.enable).not.toHaveBeenCalled();
     });
+
+    it('includes role in generated token payload', async () => {
+      mockUserMfaRepo.ensureEncryptedSecret.mockResolvedValue(undefined);
+      mockUserMfaRepo.getDecryptedSecret.mockResolvedValue('MYSECRET');
+      mockTotp.verify.mockReturnValue(true);
+      mockUserMfaRepo.enable.mockResolvedValue(undefined);
+      mockTokenService.generateAccessToken.mockReturnValue('token-xyz');
+      mockUserMfaRepo.resetFailedLogin.mockResolvedValue(undefined);
+
+      await controller.enable(makeReq({ role: Role.SUPER_ADMIN }) as any, { code: '000000' });
+
+      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith(
+        expect.objectContaining({ role: Role.SUPER_ADMIN }),
+      );
+    });
   });
 
   describe('verify()', () => {
@@ -168,16 +181,16 @@ describe('AdminMfaController', () => {
       expect(mockUserMfaRepo.resetFailedLogin).toHaveBeenCalledWith('user-1');
     });
 
-    it('throws ForbiddenException when MFA is not enabled', async () => {
-      mockUserMfaRepo.findByIdForMfa.mockResolvedValue({ id: 'user-1', mfaEnabled: false });
+    it('throws ForbiddenException when user not found', async () => {
+      mockUserMfaRepo.findByIdForMfa.mockResolvedValue(null);
 
       await expect(controller.verify(makeReq() as any, { code: '123456' })).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('throws ForbiddenException when user not found', async () => {
-      mockUserMfaRepo.findByIdForMfa.mockResolvedValue(null);
+    it('throws ForbiddenException when MFA is not enabled', async () => {
+      mockUserMfaRepo.findByIdForMfa.mockResolvedValue({ id: 'user-1', mfaEnabled: false });
 
       await expect(controller.verify(makeReq() as any, { code: '123456' })).rejects.toThrow(
         ForbiddenException,
@@ -205,6 +218,21 @@ describe('AdminMfaController', () => {
         ForbiddenException,
       );
       expect(mockUserMfaRepo.incrementFailedLogin).toHaveBeenCalledWith('user-1');
+    });
+
+    it('includes role in generated token payload', async () => {
+      mockUserMfaRepo.findByIdForMfa.mockResolvedValue({ id: 'user-1', mfaEnabled: true });
+      mockUserMfaRepo.ensureEncryptedSecret.mockResolvedValue(undefined);
+      mockUserMfaRepo.getDecryptedSecret.mockResolvedValue('MYSECRET');
+      mockTotp.verify.mockReturnValue(true);
+      mockTokenService.generateAccessToken.mockReturnValue('token-abc');
+      mockUserMfaRepo.resetFailedLogin.mockResolvedValue(undefined);
+
+      await controller.verify(makeReq({ role: Role.SUPER_ADMIN }) as any, { code: '111111' });
+
+      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith(
+        expect.objectContaining({ role: Role.SUPER_ADMIN }),
+      );
     });
   });
 });

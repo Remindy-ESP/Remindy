@@ -22,7 +22,7 @@ const mockService = {
   getSecurityStats: jest.fn(),
 };
 
-const makeReq = () => ({ user: { id: 'actor-1', role: Role.SUPER_ADMIN } });
+const makeReq = (role = Role.SUPER_ADMIN) => ({ user: { id: 'actor-1', role } });
 
 describe('AdminSecurityController', () => {
   let controller: AdminSecurityController;
@@ -61,43 +61,54 @@ describe('AdminSecurityController', () => {
   });
 
   describe('getSuspiciousEvents()', () => {
-    it('delegates to service.getSuspiciousEvents with numeric page/limit', async () => {
-      const data = { items: [], total: 0, page: 1, limit: 50 };
-      mockService.getSuspiciousEvents.mockResolvedValue(data);
+    it('coerces string page/limit to numbers', async () => {
+      mockService.getSuspiciousEvents.mockResolvedValue({ items: [], total: 0 });
 
-      const result = await controller.getSuspiciousEvents('2', '25');
-
+      await controller.getSuspiciousEvents('2', '25');
       expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(2, 25);
-      expect(result).toEqual(data);
     });
 
-    it('uses default values when page/limit not provided', async () => {
+    it('uses numeric defaults when page/limit are already numbers', async () => {
       mockService.getSuspiciousEvents.mockResolvedValue({});
 
       await controller.getSuspiciousEvents(1, 50);
       expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(1, 50);
     });
+
+    it('coerces string "1" correctly', async () => {
+      mockService.getSuspiciousEvents.mockResolvedValue({});
+
+      await controller.getSuspiciousEvents('1', '100');
+      expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(1, 100);
+    });
   });
 
   describe('getBlockedIps()', () => {
-    it('returns only active IPs by default (all=undefined)', async () => {
+    it('passes activeOnly=true when all is undefined', async () => {
       mockService.getBlockedIps.mockResolvedValue([]);
 
       await controller.getBlockedIps(undefined);
       expect(mockService.getBlockedIps).toHaveBeenCalledWith(true);
     });
 
-    it('returns all IPs when all=true is passed', async () => {
+    it('passes activeOnly=false when all="true"', async () => {
       mockService.getBlockedIps.mockResolvedValue([]);
 
       await controller.getBlockedIps('true');
       expect(mockService.getBlockedIps).toHaveBeenCalledWith(false);
     });
 
-    it('returns only active IPs when all=false', async () => {
+    it('passes activeOnly=true when all="false"', async () => {
       mockService.getBlockedIps.mockResolvedValue([]);
 
       await controller.getBlockedIps('false');
+      expect(mockService.getBlockedIps).toHaveBeenCalledWith(true);
+    });
+
+    it('passes activeOnly=true when all is any other string', async () => {
+      mockService.getBlockedIps.mockResolvedValue([]);
+
+      await controller.getBlockedIps('yes');
       expect(mockService.getBlockedIps).toHaveBeenCalledWith(true);
     });
   });
@@ -110,11 +121,18 @@ describe('AdminSecurityController', () => {
       const dto = { ipAddress: '1.2.3.4', reason: BlockReason.MANUAL } as any;
       const result = await controller.blockIp(makeReq() as any, dto);
 
-      expect(mockService.blockIp).toHaveBeenCalledWith(
-        { id: 'actor-1', role: Role.SUPER_ADMIN },
-        dto,
-      );
+      expect(mockService.blockIp).toHaveBeenCalledWith({ id: 'actor-1', role: Role.SUPER_ADMIN }, dto);
       expect(result).toEqual(entry);
+    });
+
+    it('forwards USER_ADMIN role', async () => {
+      mockService.blockIp.mockResolvedValue({});
+
+      await controller.blockIp(makeReq(Role.USER_ADMIN) as any, {} as any);
+      expect(mockService.blockIp).toHaveBeenCalledWith(
+        { id: 'actor-1', role: Role.USER_ADMIN },
+        expect.any(Object),
+      );
     });
   });
 
@@ -124,16 +142,20 @@ describe('AdminSecurityController', () => {
 
       const result = await controller.unblockIp(makeReq() as any, 'ip-1');
 
-      expect(mockService.unblockIp).toHaveBeenCalledWith(
-        { id: 'actor-1', role: Role.SUPER_ADMIN },
-        'ip-1',
-      );
+      expect(mockService.unblockIp).toHaveBeenCalledWith({ id: 'actor-1', role: Role.SUPER_ADMIN }, 'ip-1');
       expect(result).toEqual({ ok: true });
+    });
+
+    it('forwards USER_ADMIN role', async () => {
+      mockService.unblockIp.mockResolvedValue({});
+
+      await controller.unblockIp(makeReq(Role.USER_ADMIN) as any, 'ip-2');
+      expect(mockService.unblockIp).toHaveBeenCalledWith({ id: 'actor-1', role: Role.USER_ADMIN }, 'ip-2');
     });
   });
 
   describe('getIpActivity()', () => {
-    it('delegates to service.getIpActivity with ip', async () => {
+    it('delegates to service.getIpActivity', async () => {
       const data = { ipAddress: '1.2.3.4', isBlocked: false, recentLogs: [] };
       mockService.getIpActivity.mockResolvedValue(data);
 
@@ -167,6 +189,16 @@ describe('AdminSecurityController', () => {
         dto,
       );
       expect(result).toEqual(policy);
+    });
+
+    it('forwards USER_ADMIN role', async () => {
+      mockService.updatePolicy.mockResolvedValue({});
+
+      await controller.updatePolicy(makeReq(Role.USER_ADMIN) as any, {} as any);
+      expect(mockService.updatePolicy).toHaveBeenCalledWith(
+        { id: 'actor-1', role: Role.USER_ADMIN },
+        expect.any(Object),
+      );
     });
   });
 

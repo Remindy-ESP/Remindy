@@ -83,6 +83,9 @@ export class EUser {
   @Column({ type: 'integer', default: 0 })
   failedLoginCount: number;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  expoPushToken: string;
+
   @Column({ type: 'timestamptz', nullable: true })
   passwordChangedAt: Date;
 
