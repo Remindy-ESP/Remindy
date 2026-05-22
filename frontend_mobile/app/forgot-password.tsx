@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
@@ -25,18 +27,18 @@ export default function ForgotPasswordScreen() {
     setSuccess('');
 
     if (!email.trim()) {
-      setError("L'email est requis");
+      setError(t('validation.emailRequired'));
       return;
     }
 
     try {
       setLoading(true);
       await authService.forgotPassword(email.trim());
-      setSuccess('Si cet email existe, un lien de reinitialisation a ete envoye.');
+      setSuccess(t('auth.forgot.successMessage'));
     } catch (err) {
-      const message = getErrorMessage(err, "Impossible d'envoyer la demande.");
+      const message = getErrorMessage(err, t('auth.forgot.errorSend'));
       setError(message);
-      Alert.alert('Erreur', message);
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }
@@ -48,9 +50,9 @@ export default function ForgotPasswordScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Mot de passe oublie</Text>
+        <Text style={styles.title}>{t('auth.forgot.title')}</Text>
         <Text style={styles.subtitle}>
-          Entrez votre email pour recevoir un lien de reinitialisation.
+          {t('auth.forgot.subtitle')}
         </Text>
 
         {error ? (
@@ -67,7 +69,7 @@ export default function ForgotPasswordScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Email"
+          placeholder={t('auth.email')}
           placeholderTextColor="#999"
           value={email}
           onChangeText={setEmail}
@@ -86,7 +88,7 @@ export default function ForgotPasswordScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Envoyer le lien</Text>
+            <Text style={styles.buttonText}>{t('auth.forgot.submit')}</Text>
           )}
         </TouchableOpacity>
 
@@ -95,7 +97,7 @@ export default function ForgotPasswordScreen() {
           disabled={loading}
           testID="forgot-back-button"
         >
-          <Text style={styles.linkText}>Retour a la connexion</Text>
+          <Text style={styles.linkText}>{t('auth.forgot.back')}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

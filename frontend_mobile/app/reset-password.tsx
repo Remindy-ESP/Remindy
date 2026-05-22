@@ -12,9 +12,11 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ token?: string | string[] }>();
   const queryToken = Array.isArray(params.token) ? params.token[0] : params.token;
 
@@ -36,39 +38,39 @@ export default function ResetPasswordScreen() {
     setSuccess('');
 
     if (!token.trim()) {
-      setError('Token de reinitialisation requis');
+      setError(t('auth.reset.tokenRequired'));
       return;
     }
 
     if (!newPassword) {
-      setError('Nouveau mot de passe requis');
+      setError(t('auth.reset.newPasswordRequired'));
       return;
     }
 
     if (newPassword.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caracteres');
+      setError(t('auth.reset.passwordMinLength'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('auth.reset.passwordsMismatch'));
       return;
     }
 
     try {
       setLoading(true);
       await authService.resetPassword(token.trim(), newPassword);
-      setSuccess('Mot de passe reinitialise avec succes.');
-      Alert.alert('Succes', 'Mot de passe reinitialise.', [
+      setSuccess(t('auth.reset.success'));
+      Alert.alert(t('auth.reset.successAlertTitle'), t('auth.reset.successAlertMessage'), [
         {
-          text: 'OK',
+          text: t('common.ok'),
           onPress: () => router.replace('/'),
         },
       ]);
     } catch (err) {
-      const message = getErrorMessage(err, 'Echec de la reinitialisation du mot de passe.');
+      const message = getErrorMessage(err, t('auth.reset.errorFallback'));
       setError(message);
-      Alert.alert('Erreur', message);
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }
@@ -80,9 +82,9 @@ export default function ResetPasswordScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Reinitialiser le mot de passe</Text>
+        <Text style={styles.title}>{t('auth.reset.title')}</Text>
         <Text style={styles.subtitle}>
-          Collez le token recu par email ou ouvrez le lien directement depuis votre appareil.
+          {t('auth.reset.subtitle')}
         </Text>
 
         {error ? (
@@ -99,7 +101,7 @@ export default function ResetPasswordScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Token"
+          placeholder={t('auth.reset.tokenPlaceholder')}
           placeholderTextColor="#999"
           value={token}
           onChangeText={setToken}
@@ -110,7 +112,7 @@ export default function ResetPasswordScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Nouveau mot de passe"
+          placeholder={t('auth.reset.newPasswordPlaceholder')}
           placeholderTextColor="#999"
           value={newPassword}
           onChangeText={setNewPassword}
@@ -121,7 +123,7 @@ export default function ResetPasswordScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Confirmer le mot de passe"
+          placeholder={t('auth.reset.confirmPlaceholder')}
           placeholderTextColor="#999"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
@@ -139,12 +141,12 @@ export default function ResetPasswordScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Reinitialiser</Text>
+            <Text style={styles.buttonText}>{t('auth.reset.submit')}</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.replace('/')} disabled={loading} testID="reset-login-link">
-          <Text style={styles.linkText}>Retour a la connexion</Text>
+          <Text style={styles.linkText}>{t('auth.reset.back')}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
