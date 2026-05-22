@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import type { INotificationRepository } from '../../notification/application/ports/notification-repository.interface';
 import { NOTIFICATION_REPOSITORY } from '../../notification/application/ports/notification-repository.interface';
 import { ExpoPushService } from '../../notification/application/services/expo-push.service';
-import { Notification, NotificationType } from '../../notification/domain/notification.entity';
+import { Notification, NotificationType, NotificationChannel } from '../../notification/domain/notification.entity';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { ReminderEntity } from '../../reminder/infrastructure/persistence/reminder.entity';
 import type { PushNotificationPayload } from '../../notification/application/services/expo-push.service';
@@ -171,7 +171,7 @@ export class ProcessRenewalNotificationsTask {
       userId: row.userId,
       reminderId: row.reminderId,
       type: notificationType,
-      channel: row.reminderChannel as any,
+      channel: row.reminderChannel as NotificationChannel,
       title,
       body,
       status: 'pending',

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { INotificationRepository } from '../../application/ports/notification-repository.interface';
 import { Notification } from '../../domain/notification.entity';
+import type { NotificationStatus } from '../../domain/notification.entity';
 import { NotificationEntity } from '../persistence/notification.entity';
 import { NotificationMapper } from '../mappers/notification.mapper';
 import { NotificationFilterAppDto } from '../../application/dto/notification-filter-app.dto';
@@ -120,7 +121,7 @@ export class NotificationRepository implements INotificationRepository {
   async markAllAsRead(userId: string): Promise<number> {
     const result = await this.repository.update(
       { userId, readAt: IsNull() },
-      { readAt: new Date(), status: 'sent' as any },
+      { readAt: new Date(), status: 'sent' as NotificationStatus },
     );
 
     return result.affected ?? 0;
