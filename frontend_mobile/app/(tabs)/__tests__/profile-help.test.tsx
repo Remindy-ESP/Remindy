@@ -75,6 +75,18 @@ describe('ProfileHelpScreen', () => {
     expect(getByText('Support')).toBeTruthy();
   });
 
+  it('navigates to support-new when new ticket button is pressed', () => {
+    const { getByText } = render(<ProfileHelpScreen />);
+    fireEvent.press(getByText('Nouveau ticket'));
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/support-new');
+  });
+
+  it('navigates to support-tickets when my tickets button is pressed', () => {
+    const { getByText } = render(<ProfileHelpScreen />);
+    fireEvent.press(getByText('Mes tickets'));
+    expect(mockPush).toHaveBeenCalledWith('/(tabs)/support-tickets');
+  });
+
   it('navigates back when back button is pressed', () => {
     const { UNSAFE_getAllByType } = render(<ProfileHelpScreen />);
     const { TouchableOpacity } = require('react-native');
