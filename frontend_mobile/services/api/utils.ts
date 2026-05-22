@@ -3,6 +3,7 @@
  */
 
 import { AxiosError } from 'axios';
+import i18n from '@/i18n';
 
 /**
  * Backend error response structure
@@ -17,8 +18,9 @@ interface BackendErrorResponse {
  * Extract error message from backend response
  * Handles both string and array messages from NestJS ValidationPipe
  */
-export function getErrorMessage(error: unknown, defaultMessage = 'An error occurred'): string {
-  if (!error) return defaultMessage;
+export function getErrorMessage(error: unknown, defaultMessage?: string): string {
+  const fallback = defaultMessage ?? i18n.t('errors.generic');
+  if (!error) return fallback;
 
   // Handle Axios errors
   if (error && typeof error === 'object' && 'response' in error) {
@@ -48,7 +50,7 @@ export function getErrorMessage(error: unknown, defaultMessage = 'An error occur
   }
 
   // Fallback to default message
-  return defaultMessage;
+  return fallback;
 }
 
 /**
