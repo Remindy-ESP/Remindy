@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTranslation } from 'react-i18next';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
@@ -34,6 +35,8 @@ interface SubscriptionFormData {
 }
 
 export default function SubscriptionScreen() {
+  const { t } = useTranslation('subscriptions');
+  const { t: tCommon } = useTranslation('common');
   const router = useRouter();
   const {
     openAdd,
@@ -158,7 +161,7 @@ export default function SubscriptionScreen() {
       setPriceInput(amountStr || '');
       setFormData({
         name: providerName || '',
-        description: documentId ? `Importé depuis le document ${documentId}` : '',
+        description: documentId ? t('description.importedFromDoc', { documentId }) : '',
         price: amountStr ? parseFloat(amountStr) : 0,
         billingCycle: mapFrequencyToBillingCycle(parsedFrequency),
         startDate: dateStr || new Date().toISOString().split('T')[0],
@@ -211,7 +214,7 @@ export default function SubscriptionScreen() {
       setCategories(categoriesData);
     } catch (err: any) {
       console.error('Error fetching data:', err);
-      setError(getErrorMessage(err, 'Failed to load subscriptions'));
+      setError(getErrorMessage(err, t('loadError')));
     } finally {
       setLoading(false);
     }
@@ -249,16 +252,16 @@ export default function SubscriptionScreen() {
     const errors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      errors.name = 'Le nom est requis';
+      errors.name = t('validation.nameRequired');
     }
 
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
-      errors.price = 'Le prix doit être supérieur à 0 (ex : 15.99 ou 15,99)';
+      errors.price = t('validation.priceInvalid');
     }
 
     if (!formData.startDate) {
-      errors.startDate = 'La date de début est requis';
+      errors.startDate = t('validation.startDateRequired');
     }
 
     setFormErrors(errors);
@@ -329,7 +332,7 @@ export default function SubscriptionScreen() {
     // Parse price safely (handles both comma and dot)
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
-      Alert.alert('Error', 'Invalid price format');
+      Alert.alert(t('validation.errorTitle'), t('validation.invalidPriceFormat'));
       return;
     }
 
@@ -352,9 +355,9 @@ export default function SubscriptionScreen() {
         requestData.notes = formData.description;
       }
       if (formData.reminderDays && requestData.notes) {
-        requestData.notes = `${requestData.notes}\nRappel ${formData.reminderDays} jour(s) avant`;
+        requestData.notes = `${requestData.notes}\n${t('description.reminderNote', { count: formData.reminderDays })}`;
       } else if (formData.reminderDays) {
-        requestData.notes = `Rappel ${formData.reminderDays} jour(s) avant`;
+        requestData.notes = t('description.reminderNote', { count: formData.reminderDays });
       }
 
       // Add categoryId if selected
@@ -364,35 +367,35 @@ export default function SubscriptionScreen() {
 
       if (editingSubscription) {
         await subscriptionService.update(editingSubscription.id, requestData);
-        showSuccess('Opération modifiée avec succès');
+        showSuccess(t('success.updated'));
       } else {
         await subscriptionService.create(requestData);
-        showSuccess('Opération créée avec succès');
+        showSuccess(t('success.created'));
       }
       setModalVisible(false);
       await fetchData();
     } catch (err: any) {
-      const errorMessage = getErrorMessage(err, 'Échec de l\'enregistrement de l\'opération');
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = getErrorMessage(err, t('errors.saveFailed'));
+      Alert.alert(t('errors.errorTitle'), errorMessage);
     }
   };
 
   const handleDelete = (subscription: Subscription) => {
     Alert.alert(
-      'Supprimer l\'opération',
-      `Êtes-vous sûr de vouloir supprimer votre opération "${subscription.name}"?`,
+      t('delete.confirmTitle'),
+      t('delete.confirmBody', { name: subscription.name }),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: tCommon('actions.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: tCommon('actions.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await subscriptionService.delete(subscription.id);
-              showSuccess('Opération supprimée avec succès');
+              showSuccess(t('success.deleted'));
               await fetchData();
             } catch (err: any) {
-              Alert.alert('Erreur', getErrorMessage(err, 'Échec de la suppression de l\'opération'));
+              Alert.alert(t('errors.errorTitle'), getErrorMessage(err, t('errors.deleteFailed')));
             }
           },
         },
@@ -404,14 +407,14 @@ export default function SubscriptionScreen() {
     try {
       if (subscription.status === 'active') {
         await subscriptionService.pause(subscription.id);
-        showSuccess('Opération mise en pause avec succès');
+        showSuccess(t('success.paused'));
       } else {
         await subscriptionService.resume(subscription.id);
-        showSuccess('Opération reprise avec succès');
+        showSuccess(t('success.resumed'));
       }
       await fetchData();
     } catch (err: any) {
-      Alert.alert('Erreur', getErrorMessage(err, 'Échec de la mise à jour de l\'opération'));
+      Alert.alert(t('errors.errorTitle'), getErrorMessage(err, t('errors.pauseResumeFailed')));
     }
   };
 
@@ -429,30 +432,29 @@ export default function SubscriptionScreen() {
   const getBillingCycleLabel = (cycle: string) => {
     const lowerCycle = cycle?.toLowerCase();
     switch (lowerCycle) {
-      case 'one-time': return 'Achat unique';
-      case 'monthly': return 'Mensuel';
-      case 'yearly': return 'Annuel';
-      case 'weekly': return 'Hebdomadaire';
-      case 'quarterly': return 'Trimestriel';
+      case 'one-time': return t('frequency.oneTime');
+      case 'monthly': return t('frequency.monthly');
+      case 'yearly': return t('frequency.yearly');
+      case 'weekly': return t('frequency.weekly');
+      case 'quarterly': return t('frequency.quarterly');
       default: return cycle;
     }
   };
 
   const formatDate = (dateString: string | undefined): string => {
     if (!dateString) {
-      return 'N/A';
+      return t('card.notAvailable');
     }
 
     try {
       const date = new Date(dateString);
-      // Check if date is valid
       if (isNaN(date.getTime())) {
-        return 'Invalid Date';
+        return t('card.invalidDate');
       }
       return date.toLocaleDateString();
     } catch (error) {
       console.error('Error formatting date:', error);
-      return 'Invalid Date';
+      return t('card.invalidDate');
     }
   };
 
@@ -507,7 +509,7 @@ export default function SubscriptionScreen() {
 
       <View style={styles.cardFooter}>
         <Text style={styles.dateText}>
-          Début: {formatDate(item.startDate)}
+          {t('card.startDate', { date: formatDate(item.startDate) })}
         </Text>
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -539,11 +541,11 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Opérations</Text>
+          <Text style={styles.headerTitle}>{t('title')}</Text>
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Chargement des opérations...</Text>
+          <Text style={styles.loadingText}>{t('loadingMessage')}</Text>
         </View>
       </View>
     );
@@ -553,12 +555,12 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Opérations</Text>
+          <Text style={styles.headerTitle}>{t('title')}</Text>
         </View>
         <View style={styles.centerContent}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
-            <Text style={styles.retryButtonText}>Réessayer</Text>
+            <Text style={styles.retryButtonText}>{tCommon('actions.retry')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -569,15 +571,15 @@ export default function SubscriptionScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Opérations</Text>
+          <Text style={styles.headerTitle}>{t('title')}</Text>
           <Text style={styles.headerSubtitle}>
-            {filteredSubscriptions.length} opération{filteredSubscriptions.length !== 1 ? 's' : ''}
-            {(filterFrequency || filterCategoryId) && ` (${subscriptions.length} au total)`}
+            {t('count', { count: filteredSubscriptions.length })}
+            {(filterFrequency || filterCategoryId) && t('totalSuffix', { total: subscriptions.length })}
           </Text>
         </View>
         <CoachMarkTarget targetKey={COACH_MARK_TARGETS.subscriptionAddButton}>
           <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-            <Text style={styles.addButtonText}>+ Ajouter</Text>
+            <Text style={styles.addButtonText}>{t('addButton')}</Text>
           </TouchableOpacity>
         </CoachMarkTarget>
       </View>
@@ -585,7 +587,7 @@ export default function SubscriptionScreen() {
       {/* Filtres */}
       <View style={styles.filtersContainer}>
         <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Type de paiement</Text>
+          <Text style={styles.filterLabel}>{t('filters.frequencyLabel')}</Text>
           <View style={styles.filterPickerContainer}>
             <Picker
               selectedValue={filterFrequency}
@@ -593,18 +595,18 @@ export default function SubscriptionScreen() {
               style={styles.filterPicker}
               dropdownIconColor="#fff"
             >
-              <Picker.Item label="Tous" value="" />
-              <Picker.Item label="Achat unique" value="one-time" />
-              <Picker.Item label="Hebdomadaire" value="weekly" />
-              <Picker.Item label="Mensuel" value="monthly" />
-              <Picker.Item label="Trimestriel" value="quarterly" />
-              <Picker.Item label="Annuel" value="yearly" />
+              <Picker.Item label={t('filters.allFrequencies')} value="" />
+              <Picker.Item label={t('frequency.oneTime')} value="one-time" />
+              <Picker.Item label={t('frequency.weekly')} value="weekly" />
+              <Picker.Item label={t('frequency.monthly')} value="monthly" />
+              <Picker.Item label={t('frequency.quarterly')} value="quarterly" />
+              <Picker.Item label={t('frequency.yearly')} value="yearly" />
             </Picker>
           </View>
         </View>
 
         <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Catégorie</Text>
+          <Text style={styles.filterLabel}>{t('filters.categoryLabel')}</Text>
           <View style={styles.filterPickerContainer}>
             <Picker
               selectedValue={filterCategoryId}
@@ -612,7 +614,7 @@ export default function SubscriptionScreen() {
               style={styles.filterPicker}
               dropdownIconColor="#fff"
             >
-              <Picker.Item label="Toutes" value="" />
+              <Picker.Item label={t('filters.allCategories')} value="" />
               {categories.map((cat) => (
                 <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
               ))}
@@ -625,13 +627,13 @@ export default function SubscriptionScreen() {
         <View style={styles.centerContent}>
           {subscriptions.length === 0 ? (
             <>
-              <Text style={styles.emptyText}>Pas d'opérations.</Text>
-              <Text style={styles.emptySubtext}>Appuyez sur le bouton + pour créer votre premier opération.</Text>
+              <Text style={styles.emptyText}>{t('empty.noOps')}</Text>
+              <Text style={styles.emptySubtext}>{t('empty.noOpsHint')}</Text>
             </>
           ) : (
             <>
-              <Text style={styles.emptyText}>Aucune opération ne correspond aux filtres.</Text>
-              <Text style={styles.emptySubtext}>Essayez de modifier les filtres ci-dessus.</Text>
+              <Text style={styles.emptyText}>{t('empty.noFilterMatch')}</Text>
+              <Text style={styles.emptySubtext}>{t('empty.noFilterMatchHint')}</Text>
             </>
           )}
         </View>
@@ -658,7 +660,7 @@ export default function SubscriptionScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>
-                  {editingSubscription ? 'Modifier l\'opération' : 'Ajouter un opération'}
+                  {editingSubscription ? t('modal.editTitle') : t('modal.addTitle')}
                 </Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
                   <Text style={styles.closeButton}>✕</Text>
@@ -666,24 +668,24 @@ export default function SubscriptionScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Nom *</Text>
+                <Text style={styles.label}>{t('modal.nameLabel')}</Text>
                 <TextInput
                   style={[styles.input, formErrors.name && styles.inputError]}
                   value={formData.name}
                   onChangeText={(text) => setFormData({ ...formData, name: text })}
-                  placeholder="Ex: Netflix, Spotify"
+                  placeholder={t('modal.namePlaceholder')}
                   placeholderTextColor="#9ca3af"
                 />
                 {formErrors.name && <Text style={styles.errorLabel}>{formErrors.name}</Text>}
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Description</Text>
+                <Text style={styles.label}>{t('modal.descriptionLabel')}</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={formData.description}
                   onChangeText={(text) => setFormData({ ...formData, description: text })}
-                  placeholder="Description optionnelle..."
+                  placeholder={t('modal.descriptionPlaceholder')}
                   placeholderTextColor="#9ca3af"
                   multiline
                   numberOfLines={3}
@@ -692,12 +694,12 @@ export default function SubscriptionScreen() {
 
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Prix *</Text>
+                  <Text style={styles.label}>{t('modal.priceLabel')}</Text>
                   <TextInput
                     style={[styles.input, formErrors.price && styles.inputError]}
                     value={priceInput}
                     onChangeText={(text) => setPriceInput(text)}
-                    placeholder="15.99 ou 15,99"
+                    placeholder={t('modal.pricePlaceholder')}
                     placeholderTextColor="#9ca3af"
                     keyboardType="decimal-pad"
                   />
@@ -705,7 +707,7 @@ export default function SubscriptionScreen() {
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Cycle de paiement *</Text>
+                  <Text style={styles.label}>{t('modal.cycleLabel')}</Text>
                   <View style={styles.pickerContainer}>
                     <Picker
                       selectedValue={formData.billingCycle}
@@ -713,18 +715,18 @@ export default function SubscriptionScreen() {
                       style={styles.picker}
                       dropdownIconColor="#fff"
                     >
-                      <Picker.Item label="Achat unique" value="ONE_TIME" />
-                      <Picker.Item label="Semaine" value="WEEKLY" />
-                      <Picker.Item label="Mois" value="MONTHLY" />
-                      <Picker.Item label="Trimestre" value="QUARTERLY" />
-                      <Picker.Item label="Annuel" value="YEARLY" />
+                      <Picker.Item label={t('cycle.oneTime')} value="ONE_TIME" />
+                      <Picker.Item label={t('cycle.weekly')} value="WEEKLY" />
+                      <Picker.Item label={t('cycle.monthly')} value="MONTHLY" />
+                      <Picker.Item label={t('cycle.quarterly')} value="QUARTERLY" />
+                      <Picker.Item label={t('cycle.yearly')} value="YEARLY" />
                     </Picker>
                   </View>
                 </View>
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Catégorie</Text>
+                <Text style={styles.label}>{t('modal.categoryLabel')}</Text>
                 <View style={styles.pickerContainer}>
                   <Picker
                     selectedValue={formData.categoryId}
@@ -732,7 +734,7 @@ export default function SubscriptionScreen() {
                     style={styles.picker}
                     dropdownIconColor="#fff"
                   >
-                    <Picker.Item label="Aucune catégorie" value="" />
+                    <Picker.Item label={t('modal.noCategory')} value="" />
                     {categories.map((cat) => (
                       <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
                     ))}
@@ -742,13 +744,13 @@ export default function SubscriptionScreen() {
 
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Date de début *</Text>
+                  <Text style={styles.label}>{t('modal.startDateLabel')}</Text>
                   <TouchableOpacity
                     style={[styles.dateButton, formErrors.startDate && styles.inputError]}
                     onPress={() => setShowStartDatePicker(true)}
                   >
                     <Text style={styles.dateButtonText}>
-                      {formData.startDate ? formatDateForDisplay(formData.startDate) : 'DD/MM/YYYY'}
+                      {formData.startDate ? formatDateForDisplay(formData.startDate) : t('modal.datePlaceholder')}
                     </Text>
                     <Text style={styles.dateIcon}>📅</Text>
                   </TouchableOpacity>
@@ -756,14 +758,14 @@ export default function SubscriptionScreen() {
                 </View>
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
-                  <Text style={styles.label}>Date de fin (optionnel)</Text>
+                  <Text style={styles.label}>{t('modal.endDateLabel')}</Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TouchableOpacity
                       style={[styles.dateButton, { flex: 1 }]}
                       onPress={() => setShowEndDatePicker(true)}
                     >
                       <Text style={styles.dateButtonText}>
-                        {formData.endDate ? formatDateForDisplay(formData.endDate) : 'DD/MM/YYYY'}
+                        {formData.endDate ? formatDateForDisplay(formData.endDate) : t('modal.datePlaceholder')}
                       </Text>
                       <Text style={styles.dateIcon}>📅</Text>
                     </TouchableOpacity>
@@ -798,7 +800,7 @@ export default function SubscriptionScreen() {
               )}
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Rappel de notifications</Text>
+                <Text style={styles.label}>{t('modal.reminderLabel')}</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.reminderDays?.toString() || '3'}
@@ -814,14 +816,14 @@ export default function SubscriptionScreen() {
                   style={[styles.modalButton, styles.cancelButton]}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Annuler</Text>
+                  <Text style={styles.cancelButtonText}>{tCommon('actions.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modalButton, styles.submitButton]}
                   onPress={handleSubmit}
                 >
                   <Text style={styles.submitButtonText}>
-                    {editingSubscription ? 'Mettre à jour' : 'Créer'}
+                    {editingSubscription ? t('modal.submitUpdate') : t('modal.submitCreate')}
                   </Text>
                 </TouchableOpacity>
               </View>

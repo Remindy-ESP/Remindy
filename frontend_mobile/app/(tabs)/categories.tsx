@@ -12,10 +12,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { categoryService } from '@/services/api/category.service';
 import type { Category } from '@/services/api';
 
 export default function CategoriesScreen() {
+  const { t } = useTranslation('subscriptions');
+  const { t: tCommon } = useTranslation('common');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,11 +48,11 @@ export default function CategoriesScreen() {
       setCategories(data);
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError('Impossible de charger les catégories.');
+      setError(t('categories.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -65,7 +68,7 @@ export default function CategoriesScreen() {
 
   const handleCreate = async () => {
     if (!newName.trim()) {
-      Alert.alert('Erreur', 'Le nom de la catégorie est requis.');
+      Alert.alert(t('categories.errors.errorTitle'), t('categories.errors.nameRequired'));
       return;
     }
     try {
@@ -75,7 +78,7 @@ export default function CategoriesScreen() {
       await fetchCategories();
     } catch (err) {
       console.error('Error creating category:', err);
-      Alert.alert('Erreur', "Impossible de créer la catégorie.");
+      Alert.alert(t('categories.errors.errorTitle'), t('categories.errors.createFailed'));
     } finally {
       setCreating(false);
     }
@@ -96,7 +99,7 @@ export default function CategoriesScreen() {
       await fetchCategories();
     } catch (err) {
       console.error('Error renaming category:', err);
-      Alert.alert('Erreur', "Impossible de renommer la catégorie.");
+      Alert.alert(t('categories.errors.errorTitle'), t('categories.errors.renameFailed'));
     } finally {
       setRenaming(false);
     }
@@ -104,19 +107,19 @@ export default function CategoriesScreen() {
 
   const handleDelete = (cat: Category) => {
     Alert.alert(
-      'Supprimer la catégorie',
-      `Supprimer "${cat.name}" ?`,
+      t('categories.deleteTitle'),
+      t('categories.deleteBody', { name: cat.name }),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: tCommon('actions.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: tCommon('actions.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await categoryService.delete(cat.id);
               await fetchCategories();
             } catch {
-              Alert.alert('Erreur', "Impossible de supprimer la catégorie.");
+              Alert.alert(t('categories.errors.errorTitle'), t('categories.errors.deleteFailed'));
             }
           },
         },
@@ -131,7 +134,7 @@ export default function CategoriesScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color="#4f46e5" />
-        <Text style={styles.loadingText}>Chargement des catégories...</Text>
+        <Text style={styles.loadingText}>{t('categories.loadingMessage')}</Text>
       </View>
     );
   }
@@ -141,7 +144,7 @@ export default function CategoriesScreen() {
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={fetchCategories}>
-          <Text style={styles.retryBtnText}>Réessayer</Text>
+          <Text style={styles.retryBtnText}>{tCommon('actions.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -153,18 +156,18 @@ export default function CategoriesScreen() {
         {/* System categories */}
         <View style={styles.sectionHeader}>
           <Ionicons name="shield-checkmark-outline" size={16} color="#8E93B7" />
-          <Text style={styles.sectionTitle}>Catégories système</Text>
+          <Text style={styles.sectionTitle}>{t('categories.sectionSystem')}</Text>
         </View>
 
         {systemCategories.length === 0 ? (
-          <Text style={styles.emptyText}>Aucune catégorie système.</Text>
+          <Text style={styles.emptyText}>{t('categories.emptySystem')}</Text>
         ) : (
           systemCategories.map((cat) => (
             <View key={cat.id} style={styles.categoryRow}>
               <View style={[styles.colorDot, { backgroundColor: cat.color || '#6366f1' }]} />
               <Text style={styles.categoryName}>{cat.name}</Text>
               <View style={[styles.systemBadge]}>
-                <Text style={styles.systemBadgeText}>SYSTÈME</Text>
+                <Text style={styles.systemBadgeText}>{t('categories.systemBadge')}</Text>
               </View>
             </View>
           ))
@@ -173,11 +176,11 @@ export default function CategoriesScreen() {
         {/* User categories */}
         <View style={[styles.sectionHeader, { marginTop: 28 }]}>
           <Ionicons name="folder-outline" size={16} color="#8E93B7" />
-          <Text style={styles.sectionTitle}>Mes catégories</Text>
+          <Text style={styles.sectionTitle}>{t('categories.sectionUser')}</Text>
         </View>
 
         {userCategories.length === 0 ? (
-          <Text style={styles.emptyText}>Aucune catégorie personnalisée.</Text>
+          <Text style={styles.emptyText}>{t('categories.emptyUser')}</Text>
         ) : (
           userCategories.map((cat) => (
             <View key={cat.id} style={styles.categoryRow}>
@@ -205,7 +208,7 @@ export default function CategoriesScreen() {
 
         <TouchableOpacity style={styles.addBtn} onPress={openCreateModal} testID="add-category-btn">
           <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          <Text style={styles.addBtnText}>Nouvelle catégorie</Text>
+          <Text style={styles.addBtnText}>{t('categories.addButton')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -218,19 +221,19 @@ export default function CategoriesScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Nouvelle catégorie</Text>
+            <Text style={styles.modalTitle}>{t('categories.createTitle')}</Text>
 
-            <Text style={styles.inputLabel}>Nom</Text>
+            <Text style={styles.inputLabel}>{t('categories.nameLabel')}</Text>
             <TextInput
               style={styles.textInput}
               value={newName}
               onChangeText={setNewName}
-              placeholder="Ex: Santé, Loisirs..."
+              placeholder={t('categories.namePlaceholder')}
               placeholderTextColor="#666"
               autoFocus
             />
 
-            <Text style={styles.inputLabel}>Couleur</Text>
+            <Text style={styles.inputLabel}>{t('categories.colorLabel')}</Text>
             <View style={styles.colorGrid}>
               {PRESET_COLORS.map((c) => (
                 <TouchableOpacity
@@ -250,7 +253,7 @@ export default function CategoriesScreen() {
                 style={styles.cancelBtn}
                 onPress={() => setCreateModalVisible(false)}
               >
-                <Text style={styles.cancelBtnText}>Annuler</Text>
+                <Text style={styles.cancelBtnText}>{tCommon('actions.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.confirmBtn}
@@ -260,7 +263,7 @@ export default function CategoriesScreen() {
                 {creating ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.confirmBtnText}>Créer</Text>
+                  <Text style={styles.confirmBtnText}>{tCommon('actions.create')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -277,8 +280,8 @@ export default function CategoriesScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Renommer "{renamingCategory?.name}"</Text>
-            <Text style={styles.inputLabel}>Nouveau nom</Text>
+            <Text style={styles.modalTitle}>{t('categories.renameTitle', { name: renamingCategory?.name ?? '' })}</Text>
+            <Text style={styles.inputLabel}>{t('categories.renameLabel')}</Text>
             <TextInput
               style={styles.textInput}
               value={renameValue}
@@ -291,7 +294,7 @@ export default function CategoriesScreen() {
                 style={styles.cancelBtn}
                 onPress={() => setRenameModalVisible(false)}
               >
-                <Text style={styles.cancelBtnText}>Annuler</Text>
+                <Text style={styles.cancelBtnText}>{tCommon('actions.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.confirmBtn}
@@ -301,7 +304,7 @@ export default function CategoriesScreen() {
                 {renaming ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.confirmBtnText}>Renommer</Text>
+                  <Text style={styles.confirmBtnText}>{t('categories.renameAction')}</Text>
                 )}
               </TouchableOpacity>
             </View>

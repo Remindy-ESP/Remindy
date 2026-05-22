@@ -1,1 +1,115 @@
-{}
+{
+  "title": "Opérations",
+  "loadingMessage": "Chargement des opérations...",
+  "loadError": "Échec du chargement des opérations",
+  "retry": "Réessayer",
+  "addButton": "+ Ajouter",
+  "count_one": "{{count}} opération",
+  "count_other": "{{count}} opérations",
+  "totalSuffix": " ({{total}} au total)",
+  "filters": {
+    "frequencyLabel": "Type de paiement",
+    "categoryLabel": "Catégorie",
+    "allFrequencies": "Tous",
+    "allCategories": "Toutes"
+  },
+  "frequency": {
+    "oneTime": "Achat unique",
+    "weekly": "Hebdomadaire",
+    "monthly": "Mensuel",
+    "quarterly": "Trimestriel",
+    "yearly": "Annuel"
+  },
+  "cycle": {
+    "oneTime": "Achat unique",
+    "weekly": "Semaine",
+    "monthly": "Mois",
+    "quarterly": "Trimestre",
+    "yearly": "Annuel"
+  },
+  "empty": {
+    "noOps": "Pas d'opérations.",
+    "noOpsHint": "Appuyez sur le bouton + pour créer votre premier opération.",
+    "noFilterMatch": "Aucune opération ne correspond aux filtres.",
+    "noFilterMatchHint": "Essayez de modifier les filtres ci-dessus."
+  },
+  "card": {
+    "startDate": "Début: {{date}}",
+    "notAvailable": "N/A",
+    "invalidDate": "Date invalide"
+  },
+  "modal": {
+    "addTitle": "Ajouter un opération",
+    "editTitle": "Modifier l'opération",
+    "nameLabel": "Nom *",
+    "namePlaceholder": "Ex: Netflix, Spotify",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Description optionnelle...",
+    "priceLabel": "Prix *",
+    "pricePlaceholder": "15.99 ou 15,99",
+    "cycleLabel": "Cycle de paiement *",
+    "categoryLabel": "Catégorie",
+    "noCategory": "Aucune catégorie",
+    "startDateLabel": "Date de début *",
+    "endDateLabel": "Date de fin (optionnel)",
+    "datePlaceholder": "JJ/MM/AAAA",
+    "reminderLabel": "Rappel de notifications",
+    "submitCreate": "Créer",
+    "submitUpdate": "Mettre à jour"
+  },
+  "validation": {
+    "nameRequired": "Le nom est requis",
+    "priceInvalid": "Le prix doit être supérieur à 0 (ex : 15.99 ou 15,99)",
+    "startDateRequired": "La date de début est requis",
+    "errorTitle": "Erreur",
+    "invalidPriceFormat": "Format de prix invalide"
+  },
+  "success": {
+    "created": "Opération créée avec succès",
+    "updated": "Opération modifiée avec succès",
+    "deleted": "Opération supprimée avec succès",
+    "paused": "Opération mise en pause avec succès",
+    "resumed": "Opération reprise avec succès"
+  },
+  "errors": {
+    "errorTitle": "Erreur",
+    "saveFailed": "Échec de l'enregistrement de l'opération",
+    "deleteFailed": "Échec de la suppression de l'opération",
+    "pauseResumeFailed": "Échec de la mise à jour de l'opération"
+  },
+  "delete": {
+    "confirmTitle": "Supprimer l'opération",
+    "confirmBody": "Êtes-vous sûr de vouloir supprimer votre opération \"{{name}}\"?"
+  },
+  "description": {
+    "importedFromDoc": "Importé depuis le document {{documentId}}",
+    "reminderNote_one": "Rappel {{count}} jour avant",
+    "reminderNote_other": "Rappel {{count}} jours avant"
+  },
+  "categories": {
+    "loadFailed": "Impossible de charger les catégories.",
+    "loadingMessage": "Chargement des catégories...",
+    "sectionSystem": "Catégories système",
+    "sectionUser": "Mes catégories",
+    "emptySystem": "Aucune catégorie système.",
+    "emptyUser": "Aucune catégorie personnalisée.",
+    "systemBadge": "SYSTÈME",
+    "addButton": "Nouvelle catégorie",
+    "createTitle": "Nouvelle catégorie",
+    "nameLabel": "Nom",
+    "namePlaceholder": "Ex: Santé, Loisirs...",
+    "colorLabel": "Couleur",
+    "renameTitle": "Renommer \"{{name}}\"",
+    "renameLabel": "Nouveau nom",
+    "renameAction": "Renommer",
+    "deleteTitle": "Supprimer la catégorie",
+    "deleteBody": "Supprimer \"{{name}}\" ?",
+    "errors": {
+      "errorTitle": "Erreur",
+      "nameRequired": "Le nom de la catégorie est requis.",
+      "createFailed": "Impossible de créer la catégorie.",
+      "renameFailed": "Impossible de renommer la catégorie.",
+      "deleteFailed": "Impossible de supprimer la catégorie."
+    }
+  }
+}

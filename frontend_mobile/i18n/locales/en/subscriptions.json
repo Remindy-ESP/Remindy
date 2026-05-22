@@ -1,1 +1,115 @@
-{}
+{
+  "title": "Operations",
+  "loadingMessage": "Loading operations...",
+  "loadError": "Failed to load subscriptions",
+  "retry": "Retry",
+  "addButton": "+ Add",
+  "count_one": "{{count}} operation",
+  "count_other": "{{count}} operations",
+  "totalSuffix": " ({{total}} in total)",
+  "filters": {
+    "frequencyLabel": "Payment type",
+    "categoryLabel": "Category",
+    "allFrequencies": "All",
+    "allCategories": "All"
+  },
+  "frequency": {
+    "oneTime": "One-time",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly"
+  },
+  "cycle": {
+    "oneTime": "One-time",
+    "weekly": "Week",
+    "monthly": "Month",
+    "quarterly": "Quarter",
+    "yearly": "Yearly"
+  },
+  "empty": {
+    "noOps": "No operations.",
+    "noOpsHint": "Tap the + button to create your first operation.",
+    "noFilterMatch": "No operation matches the filters.",
+    "noFilterMatchHint": "Try changing the filters above."
+  },
+  "card": {
+    "startDate": "Start: {{date}}",
+    "notAvailable": "N/A",
+    "invalidDate": "Invalid Date"
+  },
+  "modal": {
+    "addTitle": "Add an operation",
+    "editTitle": "Edit operation",
+    "nameLabel": "Name *",
+    "namePlaceholder": "E.g. Netflix, Spotify",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Optional description...",
+    "priceLabel": "Price *",
+    "pricePlaceholder": "15.99 or 15,99",
+    "cycleLabel": "Billing cycle *",
+    "categoryLabel": "Category",
+    "noCategory": "No category",
+    "startDateLabel": "Start date *",
+    "endDateLabel": "End date (optional)",
+    "datePlaceholder": "DD/MM/YYYY",
+    "reminderLabel": "Notification reminder",
+    "submitCreate": "Create",
+    "submitUpdate": "Update"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "priceInvalid": "Price must be greater than 0 (e.g. 15.99 or 15,99)",
+    "startDateRequired": "Start date is required",
+    "errorTitle": "Error",
+    "invalidPriceFormat": "Invalid price format"
+  },
+  "success": {
+    "created": "Operation created successfully",
+    "updated": "Operation updated successfully",
+    "deleted": "Operation deleted successfully",
+    "paused": "Operation paused successfully",
+    "resumed": "Operation resumed successfully"
+  },
+  "errors": {
+    "errorTitle": "Error",
+    "saveFailed": "Failed to save the operation",
+    "deleteFailed": "Failed to delete the operation",
+    "pauseResumeFailed": "Failed to update the operation"
+  },
+  "delete": {
+    "confirmTitle": "Delete operation",
+    "confirmBody": "Are you sure you want to delete your operation \"{{name}}\"?"
+  },
+  "description": {
+    "importedFromDoc": "Imported from document {{documentId}}",
+    "reminderNote_one": "Reminder {{count}} day before",
+    "reminderNote_other": "Reminder {{count}} days before"
+  },
+  "categories": {
+    "loadFailed": "Unable to load categories.",
+    "loadingMessage": "Loading categories...",
+    "sectionSystem": "System categories",
+    "sectionUser": "My categories",
+    "emptySystem": "No system categories.",
+    "emptyUser": "No custom categories.",
+    "systemBadge": "SYSTEM",
+    "addButton": "New category",
+    "createTitle": "New category",
+    "nameLabel": "Name",
+    "namePlaceholder": "E.g. Health, Leisure...",
+    "colorLabel": "Color",
+    "renameTitle": "Rename \"{{name}}\"",
+    "renameLabel": "New name",
+    "renameAction": "Rename",
+    "deleteTitle": "Delete category",
+    "deleteBody": "Delete \"{{name}}\"?",
+    "errors": {
+      "errorTitle": "Error",
+      "nameRequired": "Category name is required.",
+      "createFailed": "Unable to create category.",
+      "renameFailed": "Unable to rename category.",
+      "deleteFailed": "Unable to delete category."
+    }
+  }
+}

@@ -580,13 +580,13 @@ describe('SubscriptionScreen', () => {
 
       fireEvent.changeText(await getByPlaceholderText('Ex: Netflix, Spotify'), 'Netflix');
       fireEvent.changeText(await getByPlaceholderText('15.99 ou 15,99'), '15.99');
-      // reminderDays defaults to 3, so notes should include "Rappel 3 jour(s) avant"
+      // reminderDays defaults to 3, so notes should include "Rappel 3 jours avant" (pluralized)
 
       await act(async () => { fireEvent.press(await findByText('Créer')); });
 
       await waitFor(() => {
         expect(mockedSubscriptionService.create).toHaveBeenCalledWith(
-          expect.objectContaining({ notes: expect.stringContaining('Rappel 3 jour(s) avant') })
+          expect.objectContaining({ notes: expect.stringContaining('Rappel 3 jours avant') })
         );
       });
     });
@@ -754,7 +754,7 @@ describe('SubscriptionScreen', () => {
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
       // The end-date button shows DD/MM/YYYY too — press the second one
-      const datePlaceholders = await getAllByText('DD/MM/YYYY');
+      const datePlaceholders = await getAllByText('JJ/MM/AAAA');
       // datePlaceholders[0] = start date, datePlaceholders[1] = end date
       fireEvent.press(datePlaceholders[datePlaceholders.length - 1]);
       expect(getByTestId('date-time-picker')).toBeTruthy();
@@ -764,7 +764,7 @@ describe('SubscriptionScreen', () => {
       const { findByText, getAllByText } = render(<SubscriptionScreen />);
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
-      const datePlaceholders = await getAllByText('DD/MM/YYYY');
+      const datePlaceholders = await getAllByText('JJ/MM/AAAA');
       // Press the end-date button (last DD/MM/YYYY placeholder)
       fireEvent.press(datePlaceholders[datePlaceholders.length - 1]);
       const confirmBtn = await findByText('Confirm');
@@ -777,7 +777,7 @@ describe('SubscriptionScreen', () => {
       const { findByText, getAllByText } = render(<SubscriptionScreen />);
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
-      const datePlaceholders = await getAllByText('DD/MM/YYYY');
+      const datePlaceholders = await getAllByText('JJ/MM/AAAA');
       fireEvent.press(datePlaceholders[datePlaceholders.length - 1]);
       const confirmBtn = await findByText('Confirm');
       fireEvent.press(confirmBtn);
@@ -790,7 +790,7 @@ describe('SubscriptionScreen', () => {
         fireEvent.press(crossButtons[crossButtons.length - 1]);
       });
       // DD/MM/YYYY placeholder should be back for end date
-      await waitFor(() => expect(getAllByText('DD/MM/YYYY').length).toBeGreaterThan(0));
+      await waitFor(() => expect(getAllByText('JJ/MM/AAAA').length).toBeGreaterThan(0));
     });
   });
 
