@@ -20,7 +20,7 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-c
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case';
 import { IEmailService } from './infrastructure/services/email.service';
-import { BrevoEmailService } from './infrastructure/services/sendgrid-email.service';
+import { ResendEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 import { UsersModule } from '../user/user.module';
@@ -82,7 +82,7 @@ import { AdminModule } from '../admin/admin.module';
     },
     {
       provide: IEmailService,
-      useClass: BrevoEmailService,
+      useClass: ResendEmailService,
     },
   ],
   exports: [JwtTokenService, ITokenService, UserMfaTypeOrmRepository, TotpService],

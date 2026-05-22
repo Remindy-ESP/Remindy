@@ -3,10 +3,10 @@ import axios from 'axios';
 import { IEmailService } from './email.service';
 
 @Injectable()
-export class BrevoEmailService implements IEmailService {
-  private readonly logger = new Logger(BrevoEmailService.name);
+export class ResendEmailService implements IEmailService {
+  private readonly logger = new Logger(ResendEmailService.name);
 
-  private readonly apiUrl = 'https://api.brevo.com/v3/smtp/email';
+  private readonly apiUrl = 'https://api.resend.com/emails';
 
   async sendPasswordResetEmail(params: { to: string; resetLink: string }): Promise<void> {
     const { to, resetLink } = params;
@@ -15,13 +15,10 @@ export class BrevoEmailService implements IEmailService {
       await axios.post(
         this.apiUrl,
         {
-          sender: {
-            email: process.env.MAIL_FROM,
-            name: 'Remindy',
-          },
-          to: [{ email: to }],
+          from: process.env.MAIL_FROM ?? 'Remindy <onboarding@resend.dev>',
+          to: [to],
           subject: 'Réinitialisation de votre mot de passe',
-          htmlContent: `
+          html: `
             <p>Bonjour,</p>
 
             <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
@@ -37,7 +34,7 @@ export class BrevoEmailService implements IEmailService {
         },
         {
           headers: {
-            'api-key': process.env.SENDGRID_API_KEY,
+            Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
             'Content-Type': 'application/json',
           },
         },
