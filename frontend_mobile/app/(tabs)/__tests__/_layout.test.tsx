@@ -60,7 +60,7 @@ jest.mock('@/navigation/MenuConfig', () => ({
   APP_ROUTES: [
     {
       key: 'dashboard',
-      label: 'Accueil',
+      labelKey: 'nav.dashboard',
       route: '/(tabs)/dashboard',
       showInBurger: true,
       showInFooter: true,
@@ -68,7 +68,7 @@ jest.mock('@/navigation/MenuConfig', () => ({
     },
     {
       key: 'cloud',
-      label: 'Cloud',
+      labelKey: 'nav.cloud',
       route: '/(tabs)/cloud',
       showInBurger: true,
       showInFooter: false,
