@@ -9,6 +9,7 @@ const LABELS: Record<string, string> = {
   users: 'Utilisateurs',
   audit: 'Audit',
   security: 'Sécurité',
+  support: 'Support',
 };
 
 interface Props {

@@ -12,6 +12,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useAuth } from '@/modules/auth/application/AuthContext';
 import { AdminPermission } from '@/shared/domain/types';
 
@@ -42,6 +43,12 @@ const NAV_ITEMS: NavItem[] = [
     path: '/audit',
     icon: <ReceiptLongIcon />,
     permission: AdminPermission.AUDIT_READ,
+  },
+  {
+    label: 'Support',
+    path: '/support',
+    icon: <SupportAgentIcon />,
+    permission: AdminPermission.SUPPORT_READ,
   },
   {
     label: 'Sécurité',
