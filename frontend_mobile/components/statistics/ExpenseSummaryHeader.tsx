@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ComparisonBadge } from './ComparisonBadge';
 import type { ExpenseTrend } from '@/services/api/statistics.service';
+import { useTranslation } from '@/context/I18nContext';
+import { formatCurrency } from '@/utils/format';
 
 interface ExpenseSummaryHeaderProps {
   periodLabel: string;
@@ -12,11 +14,6 @@ interface ExpenseSummaryHeaderProps {
   onInfoPress: () => void;
 }
 
-const currencyFormatter = new Intl.NumberFormat('fr-FR', {
-  style: 'currency',
-  currency: 'EUR',
-});
-
 export function ExpenseSummaryHeader({
   periodLabel,
   totalAmount,
@@ -25,10 +22,11 @@ export function ExpenseSummaryHeader({
   comparisonLabel,
   onInfoPress,
 }: ExpenseSummaryHeaderProps) {
+  const { t, language } = useTranslation();
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
-        <Text style={styles.title}>Bilan des dépenses</Text>
+        <Text style={styles.title}>{t('statistics.summaryTitle')}</Text>
         <ComparisonBadge
           label={comparisonLabel}
           percentageChange={percentageChange}
@@ -40,7 +38,7 @@ export function ExpenseSummaryHeader({
         {periodLabel}
       </Text>
       <Text testID="expense-total-amount" style={styles.totalAmount}>
-        {currencyFormatter.format(totalAmount)}
+        {formatCurrency(totalAmount, language)}
       </Text>
     </View>
   );

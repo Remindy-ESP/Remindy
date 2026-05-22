@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { ExpenseTrend } from '@/services/api/statistics.service';
+import { useTranslation } from '@/context/I18nContext';
 
 interface ComparisonBadgeProps {
   label: string;
@@ -26,6 +27,7 @@ export function ComparisonBadge({
   trend,
   onInfoPress,
 }: ComparisonBadgeProps) {
+  const { t } = useTranslation();
   const color = TREND_COLORS[trend];
   return (
     <View style={styles.container}>
@@ -37,7 +39,7 @@ export function ComparisonBadge({
       </Text>
       <TouchableOpacity
         testID="comparison-info-button"
-        accessibilityLabel="Plus d'informations sur la comparaison"
+        accessibilityLabel={t('statistics.comparison.infoAccessibility')}
         onPress={onInfoPress}
         style={styles.infoButton}
         activeOpacity={0.7}

@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
+import { useTranslation } from '@/context/I18nContext';
 
 type PromoItem = {
   id: string;
@@ -65,22 +66,30 @@ const PROMOS: PromoItem[] = [
 ];
 
 export default function PromotionScreen() {
+  const { t } = useTranslation();
+
   const handleCopyPromoCode = (promo: PromoItem) => {
     Clipboard.setString(promo.promoCode);
-    Alert.alert('Code promo copie', `${promo.brand} : ${promo.promoCode}`);
+    Alert.alert(
+      t('promotion.copiedTitle'),
+      t('promotion.copiedMessage', { brand: promo.brand, code: promo.promoCode }),
+    );
   };
 
   const handleOpenPartnerWebsite = async (promo: PromoItem) => {
     try {
       const supported = await Linking.canOpenURL(promo.partnerUrl);
       if (!supported) {
-        Alert.alert('Lien indisponible', `Impossible d'ouvrir ${promo.partnerUrl}`);
+        Alert.alert(
+          t('promotion.linkUnavailableTitle'),
+          t('promotion.linkUnavailableMessage', { url: promo.partnerUrl }),
+        );
         return;
       }
 
       await Linking.openURL(promo.partnerUrl);
     } catch {
-      Alert.alert('Erreur', 'Impossible d ouvrir le site partenaire pour le moment.');
+      Alert.alert(t('common.error'), t('promotion.openErrorMessage'));
     }
   };
 
@@ -88,8 +97,8 @@ export default function PromotionScreen() {
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>Promos</Text>
-          <Text style={styles.subtitle}>Offres partenaires et codes promo disponibles</Text>
+          <Text style={styles.title}>{t('promotion.title')}</Text>
+          <Text style={styles.subtitle}>{t('promotion.subtitle')}</Text>
         </View>
 
         <View style={styles.listCard}>
@@ -118,7 +127,7 @@ export default function PromotionScreen() {
                       <Pressable
                         testID={`copy-code-${promo.id}`}
                         accessibilityRole="button"
-                        accessibilityLabel={`Copier le code promo ${promo.brand}`}
+                        accessibilityLabel={t('promotion.copyAccessibility', { brand: promo.brand })}
                         style={({ pressed }) => [
                           styles.iconButton,
                           pressed && styles.iconButtonPressed,
@@ -139,7 +148,7 @@ export default function PromotionScreen() {
                     <Pressable
                       testID={`open-link-${promo.id}`}
                       accessibilityRole="button"
-                      accessibilityLabel={`Ouvrir le site ${promo.brand}`}
+                      accessibilityLabel={t('promotion.openAccessibility', { brand: promo.brand })}
                       style={({ pressed }) => [
                         styles.linkButton,
                         pressed && styles.linkButtonPressed,

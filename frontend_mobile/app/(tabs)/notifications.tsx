@@ -3,9 +3,12 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { Ionicons } from '@expo/vector-icons';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
+import { formatDate } from '@/utils/format';
 
 export default function NotificationsScreen() {
     const { user } = useAuth();
+    const { t, language } = useTranslation();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -18,12 +21,12 @@ export default function NotificationsScreen() {
             setNotifications(data || []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
-            setError(err.response?.data?.message || 'Erreur lors du chargement des notifications');
+            setError(err.response?.data?.message || t('notifications.loadError'));
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (user) {
@@ -40,7 +43,7 @@ export default function NotificationsScreen() {
         try {
             await notificationService.markAsRead(id);
             // Mettre à jour localement
-            setNotifications(prev => prev.map(n => 
+            setNotifications(prev => prev.map(n =>
                 n.id === id ? { ...n, readAt: new Date().toISOString() } : n
             ));
         } catch (err) {
@@ -70,12 +73,17 @@ export default function NotificationsScreen() {
 
     const renderNotificationItem = ({ item }: { item: Notification }) => {
         const isRead = !!item.readAt;
-        const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString('fr-FR', {
-            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-        }) : '';
+        const date = item.createdAt
+            ? formatDate(item.createdAt, language, {
+                  day: '2-digit',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+              })
+            : '';
 
         return (
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={[styles.notificationCard, isRead && styles.notificationCardRead]}
                 onPress={() => !isRead && handleMarkAsRead(item.id)}
                 activeOpacity={0.7}
@@ -83,7 +91,7 @@ export default function NotificationsScreen() {
                 <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
                     <Ionicons name={getIconName(item.type)} size={24} color={getIconColor(item.type)} />
                 </View>
-                
+
                 <View style={styles.notificationContent}>
                     <View style={styles.notificationHeader}>
                         <Text style={[styles.notificationTitle, !isRead && styles.textUnread]} numberOfLines={1}>
@@ -113,23 +121,23 @@ export default function NotificationsScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Notifications</Text>
+                <Text style={styles.headerTitle}>{t('notifications.headerTitle')}</Text>
                 <Text style={styles.headerSubtitle}>
-                    Vos alertes et rappels
+                    {t('notifications.headerSubtitle')}
                 </Text>
             </View>
-            
+
             {error ? (
                 <View style={styles.centered}>
                     <Text style={styles.errorText}>{error}</Text>
                     <TouchableOpacity style={styles.retryButton} onPress={fetchNotifications}>
-                        <Text style={styles.retryText}>Réessayer</Text>
+                        <Text style={styles.retryText}>{t('notifications.retry')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : notifications.length === 0 ? (
                 <View style={styles.emptyContainer}>
                     <Ionicons name="notifications-off-outline" size={64} color="#555" />
-                    <Text style={styles.emptyText}>Pas de notifications pour le moment</Text>
+                    <Text style={styles.emptyText}>{t('notifications.empty')}</Text>
                 </View>
             ) : (
                 <FlatList
@@ -209,7 +217,7 @@ const styles = StyleSheet.create({
         color: '#FF5252',
         fontWeight: 'bold',
     },
-    
+
     // Notification Item Styles
     notificationCard: {
         flexDirection: 'row',
