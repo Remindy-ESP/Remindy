@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { storageService } from '@/services/api';
 import type { StorageQuota } from '@/services/api';
+import i18n from '@/i18n';
 
 export function useStorageQuota() {
   const [quota, setQuota] = useState<StorageQuota | null>(null);
@@ -15,7 +16,7 @@ export function useStorageQuota() {
       setQuota(data);
     } catch (err) {
       console.error('Error fetching storage quota:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load storage quota');
+      setError(err instanceof Error ? err.message : i18n.t('errors.storageQuotaLoadFailed'));
     } finally {
       setLoading(false);
     }

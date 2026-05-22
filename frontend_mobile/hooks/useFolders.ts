@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { folderService } from '@/services/api';
 import type { Folder, CreateFolderRequest, UpdateFolderRequest, FolderFilters } from '@/services/api';
+import i18n from '@/i18n';
 
 export function useFolders() {
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -15,7 +16,7 @@ export function useFolders() {
       setFolders(data);
     } catch (err) {
       console.error('Error fetching folders:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load folders');
+      setError(err instanceof Error ? err.message : i18n.t('errors.foldersLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -30,7 +31,7 @@ export function useFolders() {
       return folder;
     } catch (err) {
       console.error('Error creating folder:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create folder');
+      setError(err instanceof Error ? err.message : i18n.t('errors.folderCreateFailed'));
       throw err;
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ export function useFolders() {
       return updated;
     } catch (err) {
       console.error('Error updating folder:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update folder');
+      setError(err instanceof Error ? err.message : i18n.t('errors.folderUpdateFailed'));
       throw err;
     } finally {
       setLoading(false);
@@ -61,7 +62,7 @@ export function useFolders() {
       setFolders((prev) => prev.filter((folder) => folder.id !== id));
     } catch (err) {
       console.error('Error deleting folder:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete folder');
+      setError(err instanceof Error ? err.message : i18n.t('errors.folderDeleteFailed'));
       throw err;
     } finally {
       setLoading(false);
@@ -75,7 +76,7 @@ export function useFolders() {
       await folderService.moveDocumentToFolder(folderId, documentId);
     } catch (err) {
       console.error('Error moving document:', err);
-      setError(err instanceof Error ? err.message : 'Failed to move document');
+      setError(err instanceof Error ? err.message : i18n.t('errors.documentMoveFailed'));
       throw err;
     } finally {
       setLoading(false);
