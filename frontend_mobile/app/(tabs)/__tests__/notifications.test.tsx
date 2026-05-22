@@ -17,7 +17,7 @@ jest.mock('@react-navigation/native', () => {
   return {
     ...jest.requireActual('@react-navigation/native'),
     useFocusEffect: (cb) => {
-      mockReact.useEffect(() => { cb(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      mockReact.useEffect(() => { cb(); }, []);
     },
   };
 });
