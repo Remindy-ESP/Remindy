@@ -48,7 +48,7 @@ const meta = { ipAddress: '127.0.0.1' };
 
 const makeUser = (overrides: Partial<any> = {}) => ({
   id: 'user-1',
-  role_key: Role.USER,
+  role_key: Role.USER_FREEMIUM,
   ...overrides,
 });
 

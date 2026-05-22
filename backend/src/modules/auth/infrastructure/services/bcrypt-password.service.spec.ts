@@ -96,7 +96,7 @@ describe('BcryptPasswordService', () => {
       const password = 'myPassword';
       const error = new Error('Bcrypt hashing failed');
 
-      jest.spyOn(bcrypt, 'hash').mockRejectedValue(error);
+      jest.spyOn(bcrypt, 'hash').mockRejectedValue(error as never);
 
       await expect(service.hash(password)).rejects.toThrow('Bcrypt hashing failed');
     });
@@ -169,7 +169,7 @@ describe('BcryptPasswordService', () => {
       const hash = '$2b$12$hash';
       const error = new Error('Bcrypt compare failed');
 
-      jest.spyOn(bcrypt, 'compare').mockRejectedValue(error);
+      jest.spyOn(bcrypt, 'compare').mockRejectedValue(error as never);
 
       await expect(service.compare(password, hash)).rejects.toThrow('Bcrypt compare failed');
     });

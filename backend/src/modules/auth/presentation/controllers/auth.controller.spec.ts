@@ -135,10 +135,11 @@ describe('AuthController', () => {
       const tokens = {
         accessToken: 'access_token_value',
         refreshToken: 'refresh_token_value',
+        userId: 'user-123',
       };
 
       registerUserUseCase.execute.mockResolvedValue(mockUser);
-      loginUseCase.execute.mockResolvedValue(tokens);
+      loginUseCase.execute.mockResolvedValue(tokens as any);
 
       const result = await controller.register(
         mockRequest as Request,
@@ -192,7 +193,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-456',
+      } as any);
 
       const reqWithoutIp = { ...mockRequest, ip: undefined };
 
@@ -230,7 +232,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-789',
+      } as any);
 
       const reqWithoutUserAgent = {
         ...mockRequest,
@@ -261,9 +264,10 @@ describe('AuthController', () => {
       const tokens = {
         accessToken: 'access_token_value',
         refreshToken: 'refresh_token_value',
+        userId: 'user-123',
       };
 
-      loginUseCase.execute.mockResolvedValue(tokens);
+      loginUseCase.execute.mockResolvedValue(tokens as any);
 
       const result = await controller.login(
         mockRequest as Request,
@@ -299,7 +303,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-123',
+      } as any);
 
       const reqWithoutIp = { ...mockRequest, ip: undefined };
 
@@ -321,7 +326,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-123',
+      } as any);
 
       const reqWithoutUserAgent = {
         ...mockRequest,
@@ -455,7 +461,7 @@ describe('AuthController', () => {
 
       await controller.refreshToken(
         reqWithInvalidCookie as Request,
-        mockResponse,
+        mockResponse as unknown as Response,
         { refreshToken: 'body_token' }
       );
 
@@ -480,7 +486,7 @@ describe('AuthController', () => {
 
       await controller.refreshToken(
   reqWithoutUserAgent as Request,
-  mockResponse
+  mockResponse as unknown as Response
 );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({

@@ -9,6 +9,7 @@ describe('domain JwtAuthGuard', () => {
 
   const buildRequest = (authHeader?: string) => ({
     headers: authHeader ? { authorization: authHeader } : {},
+    user: undefined as any,
   });
 
   const buildContext = (authHeader?: string): ExecutionContext =>

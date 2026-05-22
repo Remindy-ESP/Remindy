@@ -5,7 +5,7 @@ import {
   SUBSCRIPTION_REPOSITORY,
 } from '../ports/subscription-repository.interface';
 import { Subscription } from '../../domain/subscription.entity';
-import { FindAllSubscriptionsAppDto } from '../dto/find-all-subscriptions-app.dto';
+import { SubscriptionFilterAppDto as FindAllSubscriptionsAppDto } from '../dto/subscription-filter-app.dto';
 
 describe('FindAllSubscriptionsUseCase', () => {
   let useCase: FindAllSubscriptionsUseCase;
@@ -42,7 +42,7 @@ describe('FindAllSubscriptionsUseCase', () => {
     const expectedSubscriptions = [
       new Subscription({
         id: 'sub-1',
-        userId: dto.userId,
+        userId: dto.userId as string,
         name: 'Netflix',
         amount: 15.99,
         currency: 'EUR',
@@ -55,7 +55,7 @@ describe('FindAllSubscriptionsUseCase', () => {
       }),
       new Subscription({
         id: 'sub-2',
-        userId: dto.userId,
+        userId: dto.userId as string,
         name: 'Spotify',
         amount: 9.99,
         currency: 'EUR',
@@ -87,7 +87,7 @@ describe('FindAllSubscriptionsUseCase', () => {
     const expectedSubscriptions = [
       new Subscription({
         id: 'sub-1',
-        userId: dto.userId,
+        userId: dto.userId as string,
         name: 'Netflix',
         amount: 15.99,
         currency: 'EUR',
@@ -118,7 +118,7 @@ describe('FindAllSubscriptionsUseCase', () => {
     const expectedSubscriptions = [
       new Subscription({
         id: 'sub-1',
-        userId: dto.userId,
+        userId: dto.userId as string,
         name: 'Adobe Creative Cloud',
         amount: 599.99,
         currency: 'EUR',
@@ -163,7 +163,7 @@ describe('FindAllSubscriptionsUseCase', () => {
     const expectedSubscriptions = [
       new Subscription({
         id: 'sub-1',
-        userId: dto.userId,
+        userId: dto.userId as string,
         name: 'Netflix',
         amount: 15.99,
         currency: 'EUR',

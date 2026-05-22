@@ -158,7 +158,7 @@ describe('AuthUser Entity', () => {
         email: 'test@example.com',
         passwordHash: 'hashed_password',
         role_key: Role.USER_PREMIUM,
-        status: UserStatus.SUSPENDED,
+        status: UserStatus.BANNED,
         firstName: 'John',
         lastName: 'Doe',
         phone: '+1234567890',
@@ -195,7 +195,7 @@ describe('AuthUser Entity', () => {
     });
 
     it('should get status', () => {
-      expect(user.getStatus()).toBe(UserStatus.SUSPENDED);
+      expect(user.getStatus()).toBe(UserStatus.BANNED);
     });
 
     it('should get failed login count', () => {

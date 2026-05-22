@@ -54,7 +54,7 @@ function makeTicketEntity(overrides: Partial<any> = {}): any {
 
 describe('SupportTicketReadRepository', () => {
   let sut: SupportTicketReadRepository;
-  let ticketsRepo: jest.Mocked<Partial<Repository<SupportTicketEntity>>>;
+  let ticketsRepo: { createQueryBuilder: jest.Mock; findOne: jest.Mock };
 
   beforeEach(async () => {
     ticketsRepo = {
@@ -78,7 +78,7 @@ describe('SupportTicketReadRepository', () => {
   describe('listMine', () => {
     it('should return paginated list with basic filters', async () => {
       const qb = createQBMock();
-      ticketsRepo.createQueryBuilder!.mockReturnValue(qb as any);
+      ticketsRepo.createQueryBuilder.mockReturnValue(qb as any);
 
       const ticket = makeTicketEntity();
       qb.getManyAndCount.mockResolvedValue([[ticket], 1]);
@@ -95,7 +95,7 @@ describe('SupportTicketReadRepository', () => {
 
     it('should apply status filter when provided', async () => {
       const qb = createQBMock();
-      ticketsRepo.createQueryBuilder!.mockReturnValue(qb as any);
+      ticketsRepo.createQueryBuilder.mockReturnValue(qb as any);
       qb.getManyAndCount.mockResolvedValue([[], 0]);
 
       await sut.listMine('user-1', { page: 1, limit: 10, status: 'open' as any });
@@ -105,7 +105,7 @@ describe('SupportTicketReadRepository', () => {
 
     it('should apply category filter when provided', async () => {
       const qb = createQBMock();
-      ticketsRepo.createQueryBuilder!.mockReturnValue(qb as any);
+      ticketsRepo.createQueryBuilder.mockReturnValue(qb as any);
       qb.getManyAndCount.mockResolvedValue([[], 0]);
 
       await sut.listMine('user-1', { page: 1, limit: 10, category: 'billing' as any });
@@ -117,7 +117,7 @@ describe('SupportTicketReadRepository', () => {
 
     it('should not apply status or category filter when not provided', async () => {
       const qb = createQBMock();
-      ticketsRepo.createQueryBuilder!.mockReturnValue(qb as any);
+      ticketsRepo.createQueryBuilder.mockReturnValue(qb as any);
       qb.getManyAndCount.mockResolvedValue([[], 0]);
 
       await sut.listMine('user-1', { page: 1, limit: 10 });
@@ -127,7 +127,7 @@ describe('SupportTicketReadRepository', () => {
 
     it('should map assignedAdmin when present', async () => {
       const qb = createQBMock();
-      ticketsRepo.createQueryBuilder!.mockReturnValue(qb as any);
+      ticketsRepo.createQueryBuilder.mockReturnValue(qb as any);
 
       const ticket = makeTicketEntity({
         assignedAdmin: {
@@ -153,7 +153,7 @@ describe('SupportTicketReadRepository', () => {
 
     it('should calculate correct skip offset for pagination', async () => {
       const qb = createQBMock();
-      ticketsRepo.createQueryBuilder!.mockReturnValue(qb as any);
+      ticketsRepo.createQueryBuilder.mockReturnValue(qb as any);
       qb.getManyAndCount.mockResolvedValue([[], 0]);
 
       await sut.listMine('user-1', { page: 3, limit: 20 });
@@ -165,7 +165,7 @@ describe('SupportTicketReadRepository', () => {
 
   describe('findMineById', () => {
     it('should return null when ticket not found', async () => {
-      ticketsRepo.findOne!.mockResolvedValue(null);
+      ticketsRepo.findOne.mockResolvedValue(null);
 
       const result = await sut.findMineById('user-1', 'ticket-999');
 
@@ -190,7 +190,7 @@ describe('SupportTicketReadRepository', () => {
           },
         ],
       });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -223,7 +223,7 @@ describe('SupportTicketReadRepository', () => {
           },
         ],
       });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -249,7 +249,7 @@ describe('SupportTicketReadRepository', () => {
           },
         ],
       });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -269,7 +269,7 @@ describe('SupportTicketReadRepository', () => {
           },
         ],
       });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -289,7 +289,7 @@ describe('SupportTicketReadRepository', () => {
           },
         ],
       });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -298,7 +298,7 @@ describe('SupportTicketReadRepository', () => {
 
     it('should handle null messages array gracefully', async () => {
       const ticket = makeTicketEntity({ messages: null });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -314,7 +314,7 @@ describe('SupportTicketReadRepository', () => {
           lastName: 'User',
         },
       });
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineById('user-1', 'ticket-1');
 
@@ -330,7 +330,7 @@ describe('SupportTicketReadRepository', () => {
   describe('findMineRecordById', () => {
     it('should return the raw ticket entity when found', async () => {
       const ticket = makeTicketEntity();
-      ticketsRepo.findOne!.mockResolvedValue(ticket);
+      ticketsRepo.findOne.mockResolvedValue(ticket);
 
       const result = await sut.findMineRecordById('user-1', 'ticket-1');
 
@@ -341,7 +341,7 @@ describe('SupportTicketReadRepository', () => {
     });
 
     it('should return null when ticket not found', async () => {
-      ticketsRepo.findOne!.mockResolvedValue(null);
+      ticketsRepo.findOne.mockResolvedValue(null);
 
       const result = await sut.findMineRecordById('user-1', 'ticket-999');
 
