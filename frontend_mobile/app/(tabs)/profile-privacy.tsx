@@ -10,10 +10,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { userService } from '@/services/api';
 
 export default function ProfilePrivacyScreen() {
+  const { t } = useTranslation('auth');
+  const { t: tCommon } = useTranslation('common');
   const router = useRouter();
   const { logout } = useAuth();
   const [isExporting, setIsExporting] = useState(false);
@@ -25,16 +28,20 @@ export default function ProfilePrivacyScreen() {
       const result = await userService.exportData({ format: 'json' });
 
       Alert.alert(
-        'Export demande',
-        `Statut: ${result.status}\nFormat: ${result.format}\nId: ${result.id}`
+        t('privacy.exportRequestTitle'),
+        t('privacy.exportRequestBody', {
+          status: result.status,
+          format: result.format,
+          id: result.id,
+        })
       );
     } catch (error: any) {
       console.error('RGPD export request failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        "Impossible de demander l'export des donnees.";
-      Alert.alert('Erreur', String(message));
+        t('privacy.exportFailed');
+      Alert.alert(t('privacy.errorTitle'), String(message));
     } finally {
       setIsExporting(false);
     }
@@ -45,15 +52,15 @@ export default function ProfilePrivacyScreen() {
       setIsDeleting(true);
       await userService.deleteMe();
       await logout();
-      Alert.alert('Compte supprime', 'Votre compte a ete supprime.');
+      Alert.alert(t('privacy.deleteSuccessTitle'), t('privacy.deleteSuccessBody'));
       router.replace('/');
     } catch (error: any) {
       console.error('Delete account failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Impossible de supprimer le compte.';
-      Alert.alert('Erreur', String(message));
+        t('privacy.deleteFailed');
+      Alert.alert(t('privacy.errorTitle'), String(message));
     } finally {
       setIsDeleting(false);
     }
@@ -61,12 +68,12 @@ export default function ProfilePrivacyScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Supprimer le compte',
-      'Cette action efface vos donnees via une suppression de compte (soft delete backend). Voulez-vous continuer ?',
+      t('privacy.deleteConfirmTitle'),
+      t('privacy.deleteConfirmBody'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: tCommon('actions.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: tCommon('actions.delete'),
           style: 'destructive',
           onPress: () => {
             void performDeleteAccount();
@@ -83,15 +90,15 @@ export default function ProfilePrivacyScreen() {
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Confidentialite</Text>
-          <Text style={styles.headerSubtitle}>Donnees, export et suppression du compte</Text>
+          <Text style={styles.headerTitle}>{t('privacy.headerTitle')}</Text>
+          <Text style={styles.headerSubtitle}>{t('privacy.headerSubtitle')}</Text>
         </View>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Gestion des donnees</Text>
+        <Text style={styles.cardTitle}>{t('privacy.dataManagementTitle')}</Text>
         <Text style={styles.cardBody}>
-          Vous pouvez demander un export de vos donnees personnelles avant une suppression de compte.
+          {t('privacy.dataManagementBody')}
         </Text>
 
         <TouchableOpacity
@@ -106,16 +113,16 @@ export default function ProfilePrivacyScreen() {
           ) : (
             <>
               <Ionicons name="download-outline" size={18} color="#fff" />
-              <Text style={styles.actionButtonText}>Exporter mes donnees</Text>
+              <Text style={styles.actionButtonText}>{t('privacy.exportButton')}</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.warningCard}>
-        <Text style={styles.warningTitle}>Zone sensible</Text>
+        <Text style={styles.warningTitle}>{t('privacy.warningTitle')}</Text>
         <Text style={styles.warningBody}>
-          La suppression du compte est irreversible cote utilisateur. Le backend applique actuellement une suppression logique.
+          {t('privacy.warningBody')}
         </Text>
 
         <TouchableOpacity
@@ -130,7 +137,7 @@ export default function ProfilePrivacyScreen() {
           ) : (
             <>
               <Ionicons name="trash-outline" size={18} color="#fff" />
-              <Text style={styles.deleteButtonText}>Supprimer mon compte</Text>
+              <Text style={styles.deleteButtonText}>{t('privacy.deleteButton')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -245,4 +252,3 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
 });
-

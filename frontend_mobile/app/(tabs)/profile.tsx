@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import UserAvatar from '@/components/profile/UserAvatar';
 
@@ -54,18 +55,20 @@ function InfoRow({ label, value }: InfoRowProps) {
 }
 
 export default function ProfileScreen() {
+  const { t } = useTranslation('auth');
+  const { t: tCommon } = useTranslation('common');
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    Alert.alert('Deconnexion', 'Etes-vous sur de vouloir vous deconnecter ?', [
+    Alert.alert(t('logout.confirmTitle'), t('logout.confirmMessage'), [
       {
-        text: 'Annuler',
+        text: tCommon('actions.cancel'),
         style: 'cancel',
       },
       {
-        text: 'Deconnexion',
+        text: t('logout.confirmAction'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -74,7 +77,7 @@ export default function ProfileScreen() {
             router.replace('/');
           } catch (error) {
             console.error('Logout error:', error);
-            Alert.alert('Erreur', 'Echec de la deconnexion. Veuillez reessayer.');
+            Alert.alert(t('logout.errorTitle'), t('logout.failed'));
           } finally {
             setLoggingOut(false);
           }
@@ -200,7 +203,7 @@ export default function ProfileScreen() {
         ) : (
           <>
             <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.logoutButtonText}>Deconnexion</Text>
+            <Text style={styles.logoutButtonText}>{t('logout.buttonLabel')}</Text>
           </>
         )}
       </TouchableOpacity>

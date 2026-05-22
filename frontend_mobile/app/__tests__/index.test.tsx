@@ -181,14 +181,14 @@ describe('AuthScreen', () => {
     mockAuthState.isLoading = true;
     const { getByText } = render(<AuthScreen />);
     // onboardingCheckDone starts false, so spinner shows regardless
-    await waitFor(() => expect(getByText('Loading...')).toBeTruthy());
+    await waitFor(() => expect(getByText('Chargement...')).toBeTruthy());
   });
 
   it('shows loading spinner while onboarding check is pending', async () => {
     // never resolves → onboardingCheckDone stays false
     mockHasSeenOnboarding.mockReturnValue(new Promise(() => {}));
     const { getByText } = render(<AuthScreen />);
-    await waitFor(() => expect(getByText('Loading...')).toBeTruthy());
+    await waitFor(() => expect(getByText('Chargement...')).toBeTruthy());
   });
 
   // ── Onboarding redirect ─────────────────────────────────────────────────────
@@ -218,7 +218,7 @@ describe('AuthScreen', () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('submit-button')).toBeTruthy());
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Email is required')).toBeTruthy();
+    expect(await findByText("L'email est requis")).toBeTruthy();
   });
 
   it('shows error when email is invalid', async () => {
@@ -226,7 +226,7 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
     fireEvent.changeText(getByTestId('email-input'), 'not-an-email');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Please enter a valid email address')).toBeTruthy();
+    expect(await findByText('Veuillez saisir une adresse email valide')).toBeTruthy();
   });
 
   it('shows error when password is empty', async () => {
@@ -234,7 +234,7 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
     fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Password is required')).toBeTruthy();
+    expect(await findByText('Mot de passe requis')).toBeTruthy();
   });
 
   it('shows error when password is too short', async () => {
@@ -243,7 +243,7 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
     fireEvent.changeText(getByTestId('password-input'), 'abc');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Password must be at least 6 characters')).toBeTruthy();
+    expect(await findByText('Le mot de passe doit contenir au moins 6 caractères')).toBeTruthy();
   });
 
   it('shows error when firstName is empty in register mode', async () => {
@@ -253,7 +253,7 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
     fireEvent.changeText(getByTestId('password-input'), 'password123');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('First name is required')).toBeTruthy();
+    expect(await findByText('Le prénom est requis')).toBeTruthy();
   });
 
   it('shows error when lastName is empty in register mode', async () => {
@@ -264,7 +264,7 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('password-input'), 'password123');
     fireEvent.changeText(getByTestId('firstName-input'), 'John');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Last name is required')).toBeTruthy();
+    expect(await findByText('Le nom est requis')).toBeTruthy();
   });
 
   it('shows error when confirmPassword is empty in register mode', async () => {
@@ -276,7 +276,7 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('firstName-input'), 'John');
     fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Please confirm your password')).toBeTruthy();
+    expect(await findByText('Veuillez confirmer votre mot de passe')).toBeTruthy();
   });
 
   it('shows error when passwords do not match in register mode', async () => {
@@ -289,7 +289,7 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
     fireEvent.changeText(getByTestId('confirm-password-input'), 'different');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Passwords do not match')).toBeTruthy();
+    expect(await findByText('Les mots de passe ne correspondent pas')).toBeTruthy();
   });
 
   // ── Login success ───────────────────────────────────────────────────────────
@@ -318,7 +318,7 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Invalid credentials')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Login Failed', 'Invalid credentials');
+      expect(Alert.alert).toHaveBeenCalledWith('Échec de la connexion', 'Invalid credentials');
     });
   });
 
@@ -337,7 +337,7 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Email already taken')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Registration Failed', 'Email already taken');
+      expect(Alert.alert).toHaveBeenCalledWith("Échec de l'inscription", 'Email already taken');
     });
   });
 
@@ -348,9 +348,9 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByTestId('submit-button')).toBeTruthy());
     // trigger a validation error
     fireEvent.press(getByTestId('submit-button'));
-    await waitFor(() => expect(queryByText('Email is required')).toBeTruthy());
+    await waitFor(() => expect(queryByText("L'email est requis")).toBeTruthy());
     // toggle clears it
     fireEvent.press(getByTestId('toggle-auth-mode'));
-    expect(queryByText('Email is required')).toBeNull();
+    expect(queryByText("L'email est requis")).toBeNull();
   });
 });

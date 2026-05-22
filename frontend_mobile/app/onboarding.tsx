@@ -11,87 +11,27 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import onboardingService from '@/services/local/onboarding.service';
 
-type OnboardingStep = {
-  key: string;
-  title: string;
-  description: string;
+type OnboardingStepConfig = {
+  key: 'dashboard' | 'subscription' | 'cloud' | 'promotions' | 'profile-security';
   icon: keyof typeof Ionicons.glyphMap;
-  bullets: string[];
   route: string;
-  routeLabel: string;
 };
 
-const STEPS: OnboardingStep[] = [
-  {
-    key: 'dashboard',
-    title: 'Dashboard',
-    description: 'Vue d ensemble de vos depenses, evenements et actions rapides.',
-    icon: 'grid-outline',
-    bullets: [
-      'Consulter les evenements du jour',
-      'Visualiser les categories et periodes',
-      'Acces rapide aux actions principales',
-    ],
-    route: '/(tabs)/dashboard',
-    routeLabel: 'Voir le dashboard',
-  },
-  {
-    key: 'subscription',
-    title: 'Ajouter un abonnement',
-    description: 'Creez vos abonnements, rappels et periodes de facturation facilement.',
-    icon: 'add-circle-outline',
-    bullets: [
-      'Ajouter un abonnement manuellement',
-      'Configurer frequence et rappels',
-      'Suivre les montants a venir',
-    ],
-    route: '/(tabs)/subscription',
-    routeLabel: 'Voir les abonnements',
-  },
-  {
-    key: 'cloud',
-    title: 'Cloud / Documents',
-    description: 'Importez et organisez vos documents dans des dossiers.',
-    icon: 'cloud-upload-outline',
-    bullets: [
-      'Uploader PDF et documents',
-      'Classer dans des dossiers',
-      'Lier des documents aux abonnements',
-    ],
-    route: '/(tabs)/cloud',
-    routeLabel: 'Voir le cloud',
-  },
-  {
-    key: 'promotions',
-    title: 'Promotions',
-    description: 'Copiez des codes promo et ouvrez directement les sites partenaires.',
-    icon: 'pricetags-outline',
-    bullets: [
-      'Code promo en un clic',
-      'Redirection partenaire',
-      'Offres visibles dans l onglet Promos',
-    ],
-    route: '/(tabs)/promotion',
-    routeLabel: 'Voir les promos',
-  },
-  {
-    key: 'profile-security',
-    title: 'Profil & Securite',
-    description: 'Gerez vos preferences, votre compte et la securite.',
-    icon: 'shield-checkmark-outline',
-    bullets: [
-      'Modifier vos informations de profil',
-      'Changer votre mot de passe',
-      'Acceder a l aide et aux informations app',
-    ],
-    route: '/(tabs)/profile-security',
-    routeLabel: 'Voir la securite',
-  },
+// Step config holds only data — copy is resolved at render via t(),
+// so a language switch updates the screen without remount.
+const STEPS: OnboardingStepConfig[] = [
+  { key: 'dashboard', icon: 'grid-outline', route: '/(tabs)/dashboard' },
+  { key: 'subscription', icon: 'add-circle-outline', route: '/(tabs)/subscription' },
+  { key: 'cloud', icon: 'cloud-upload-outline', route: '/(tabs)/cloud' },
+  { key: 'promotions', icon: 'pricetags-outline', route: '/(tabs)/promotion' },
+  { key: 'profile-security', icon: 'shield-checkmark-outline', route: '/(tabs)/profile-security' },
 ];
 
 export default function OnboardingScreen() {
+  const { t } = useTranslation('auth');
   const router = useRouter();
   const params = useLocalSearchParams<{ from?: string | string[] }>();
   const from = Array.isArray(params.from) ? params.from[0] : params.from;
@@ -103,6 +43,10 @@ export default function OnboardingScreen() {
   const fromHelp = from === 'help';
 
   const progress = useMemo(() => ((index + 1) / STEPS.length) * 100, [index]);
+
+  const bullets = t(`onboarding.steps.${step.key}.bullets`, {
+    returnObjects: true,
+  }) as string[];
 
   const finishOnboarding = async (target?: 'home' | 'back') => {
     if (saving) {
@@ -120,7 +64,7 @@ export default function OnboardingScreen() {
 
       router.replace('/');
     } catch {
-      Alert.alert('Erreur', 'Impossible d enregistrer l etat du guide. Veuillez reessayer.');
+      Alert.alert(t('onboarding.errorTitle'), t('onboarding.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -171,16 +115,16 @@ export default function OnboardingScreen() {
             <Ionicons name={step.icon} size={34} color="#E6E8FF" />
           </View>
 
-          <Text style={styles.title}>{step.title}</Text>
-          <Text style={styles.description}>{step.description}</Text>
+          <Text style={styles.title}>{t(`onboarding.steps.${step.key}.title`)}</Text>
+          <Text style={styles.description}>{t(`onboarding.steps.${step.key}.description`)}</Text>
 
           <View style={styles.card}>
-            {step.bullets.map((bullet, bulletIndex) => (
+            {bullets.map((bullet, bulletIndex) => (
               <View
                 key={`${step.key}-${bulletIndex}`}
                 style={[
                   styles.bulletRow,
-                  bulletIndex === step.bullets.length - 1 && styles.lastBulletRow,
+                  bulletIndex === bullets.length - 1 && styles.lastBulletRow,
                 ]}
               >
                 <View style={styles.bulletDot} />
@@ -193,7 +137,7 @@ export default function OnboardingScreen() {
             <View style={styles.noticeCard}>
               <Ionicons name="information-circle-outline" size={18} color="#C8CEFF" />
               <Text style={styles.noticeText}>
-                Ce guide est ouvert depuis l aide. Vos progres d onboarding restent enregistres.
+                {t('onboarding.fromHelpNotice')}
               </Text>
             </View>
           ) : null}
@@ -208,7 +152,7 @@ export default function OnboardingScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="open-outline" size={16} color="#C8CEFF" />
-            <Text style={styles.ghostButtonText}>{step.routeLabel}</Text>
+            <Text style={styles.ghostButtonText}>{t(`onboarding.steps.${step.key}.routeLabel`)}</Text>
           </TouchableOpacity>
         </View>
 
@@ -220,7 +164,7 @@ export default function OnboardingScreen() {
             testID="onboarding-secondary-button"
             activeOpacity={0.85}
           >
-            <Text style={styles.secondaryButtonText}>{index === 0 ? 'Passer' : 'Precedent'}</Text>
+            <Text style={styles.secondaryButtonText}>{index === 0 ? t('onboarding.skip') : t('onboarding.previous')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -233,7 +177,7 @@ export default function OnboardingScreen() {
             {saving ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.primaryButtonText}>{isLastStep ? 'Terminer' : 'Suivant'}</Text>
+              <Text style={styles.primaryButtonText}>{isLastStep ? t('onboarding.finish') : t('onboarding.next')}</Text>
             )}
           </TouchableOpacity>
         </View>
