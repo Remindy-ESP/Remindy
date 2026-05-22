@@ -5,9 +5,11 @@ describe('EventResponseDto', () => {
     const dto: EventResponseDto = {
       id: 'event-123',
       subscriptionId: 'sub-123',
+      userId: 'user-123',
       title: 'Monthly Payment',
       amount: 9.99,
       startsAt: '2025-01-01T10:00:00.000Z',
+      dueDate: '2025-01-01T10:00:00.000Z',
       status: 'scheduled',
       createdAt: '2025-01-01T10:00:00.000Z',
       updatedAt: '2025-01-01T10:00:00.000Z',

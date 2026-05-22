@@ -54,16 +54,16 @@ describe('DocumentRepository', () => {
       const document = new Document({
         userId: 'user-123',
         subscriptionId: 'sub-123',
-        contractId: null,
+        contractId: null as any,
         filename: 'test.pdf',
         r2Key: 'documents/test.pdf',
         r2Bucket: 'my-bucket',
         fileHash: 'hash123',
         fileSize: 1024,
         mimeType: 'application/pdf',
-        ocrText: null,
+        ocrText: null as any,
         ocrStatus: 'pending',
-        ocrError: null,
+        ocrError: null as any,
       });
 
       const savedEntity = Object.assign(new DocumentEntity(), {
@@ -251,8 +251,8 @@ describe('DocumentRepository', () => {
       const document = new Document({
         id: documentId,
         userId: 'user-123',
-        subscriptionId: null,
-        contractId: null,
+        subscriptionId: null as any,
+        contractId: null as any,
         filename: 'updated.pdf',
         r2Key: 'documents/updated.pdf',
         r2Bucket: 'bucket',
@@ -261,7 +261,7 @@ describe('DocumentRepository', () => {
         mimeType: 'application/pdf',
         ocrText: 'Updated text',
         ocrStatus: 'completed',
-        ocrError: null,
+        ocrError: null as any,
       });
 
       const existingEntity = Object.assign(new DocumentEntity(), {
@@ -521,7 +521,7 @@ describe('DocumentRepository', () => {
           ocrStatus: 'completed',
           uploadedAt: new Date(),
           updatedAt: new Date(),
-          deletedAt: null,
+          deletedAt: null as any,
         },
         {
           id: 'doc-2',
@@ -536,7 +536,7 @@ describe('DocumentRepository', () => {
           ocrStatus: 'completed',
           uploadedAt: new Date(),
           updatedAt: new Date(),
-          deletedAt: null,
+          deletedAt: null as any,
         },
       ];
 
