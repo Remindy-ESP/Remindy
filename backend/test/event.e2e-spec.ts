@@ -35,7 +35,7 @@ const TOKENS = {
   other: { userId: OTHER_USER_ID, role: Role.USER_PREMIUM },
 } as const;
 
-const TOKEN_MAP: Record<string, typeof TOKENS.user> = {
+const TOKEN_MAP: Record<string, { userId: string; role: Role }> = {
   'user-token': TOKENS.user,
   'other-user-token': TOKENS.other,
 };

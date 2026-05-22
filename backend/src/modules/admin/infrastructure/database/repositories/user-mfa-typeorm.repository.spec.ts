@@ -7,10 +7,10 @@ const mockUsers = {
   increment: jest.fn(),
 };
 
-const mockCrypto: jest.Mocked<Partial<CryptoService>> = {
-  encrypt: jest.fn(),
-  decrypt: jest.fn(),
-  isEncrypted: jest.fn(),
+const mockCrypto = {
+  encrypt: jest.fn() as jest.Mock,
+  decrypt: jest.fn() as jest.Mock,
+  isEncrypted: jest.fn() as jest.Mock,
 };
 
 const makeRepo = () => new UserMfaTypeOrmRepository(mockUsers as any, mockCrypto as any);

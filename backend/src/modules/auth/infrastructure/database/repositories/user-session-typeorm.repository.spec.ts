@@ -54,8 +54,8 @@ describe('UserSessionTypeOrmRepository', () => {
       };
 
       const savedSession = {
-        id: 'session-123',
         ...createdSession,
+        id: 'session-123',
       };
 
       typeOrmRepository.create.mockReturnValue(createdSession as any);
@@ -98,8 +98,8 @@ describe('UserSessionTypeOrmRepository', () => {
       };
 
       const savedSession = {
-        id: 'session-456',
         ...createdSession,
+        id: 'session-456',
       };
 
       typeOrmRepository.create.mockReturnValue(createdSession as any);

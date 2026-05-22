@@ -140,7 +140,7 @@ describe('UserAuthTypeOrmRepository', () => {
         id: 'user-new-123',
         ...ormEntity,
         createdAt: savedEntity.createdAt,
-      });
+      } as any);
 
       mapper.toOrm.mockReturnValue(ormEntity);
       typeOrmRepository.save.mockResolvedValue(savedEntity);

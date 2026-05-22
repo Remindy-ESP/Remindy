@@ -31,10 +31,10 @@ describe('CloudflareR2Service', () => {
     };
 
     mockS3Client = {
-      send: jest.fn(),
+      send: jest.fn() as jest.Mock,
     } as any;
 
-    S3Client.mockImplementation(() => mockS3Client);
+    (S3Client as jest.MockedClass<typeof S3Client>).mockImplementation(() => mockS3Client);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,7 +59,7 @@ describe('CloudflareR2Service', () => {
       const key = 'users/123/documents/test.pdf';
       const mimeType = 'application/pdf';
 
-      mockS3Client.send.mockResolvedValueOnce({});
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({});
 
       const result = await service.uploadFile(fileBuffer, key, mimeType);
 
@@ -72,7 +72,7 @@ describe('CloudflareR2Service', () => {
       const key = 'test-key';
       const mimeType = 'application/pdf';
 
-      mockS3Client.send.mockRejectedValueOnce(new Error('S3 upload failed'));
+      (mockS3Client.send as jest.Mock).mockRejectedValueOnce(new Error('S3 upload failed'));
 
       await expect(service.uploadFile(fileBuffer, key, mimeType)).rejects.toThrow(
         'Failed to upload file to R2',
@@ -89,7 +89,7 @@ describe('CloudflareR2Service', () => {
         },
       };
 
-      mockS3Client.send.mockResolvedValueOnce({ Body: mockBody });
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({ Body: mockBody });
 
       const result = await service.downloadFile(key);
 
@@ -101,7 +101,7 @@ describe('CloudflareR2Service', () => {
     it('should throw error when download fails', async () => {
       const key = 'test-key';
 
-      mockS3Client.send.mockRejectedValueOnce(new Error('File not found'));
+      (mockS3Client.send as jest.Mock).mockRejectedValueOnce(new Error('File not found'));
 
       await expect(service.downloadFile(key)).rejects.toThrow('Failed to download file from R2');
     });
@@ -111,7 +111,7 @@ describe('CloudflareR2Service', () => {
     it('should delete file successfully', async () => {
       const key = 'test-key';
 
-      mockS3Client.send.mockResolvedValueOnce({});
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({});
 
       await service.deleteFile(key);
 
@@ -121,7 +121,7 @@ describe('CloudflareR2Service', () => {
     it('should throw error when delete fails', async () => {
       const key = 'test-key';
 
-      mockS3Client.send.mockRejectedValueOnce(new Error('Permission denied'));
+      (mockS3Client.send as jest.Mock).mockRejectedValueOnce(new Error('Permission denied'));
 
       await expect(service.deleteFile(key)).rejects.toThrow('Failed to delete file from R2');
     });
@@ -155,7 +155,7 @@ describe('CloudflareR2Service', () => {
 
       const serviceNoPublicUrl = module.get<CloudflareR2Service>(CloudflareR2Service);
 
-      mockS3Client.send.mockResolvedValueOnce({});
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({});
 
       const result = await serviceNoPublicUrl.uploadFile(
         Buffer.from('test'),
@@ -189,7 +189,7 @@ describe('CloudflareR2Service', () => {
 
   describe('fileExists', () => {
     it('should return true when file exists', async () => {
-      mockS3Client.send.mockResolvedValueOnce({ Body: {} });
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({ Body: {} });
 
       const result = await service.fileExists('test-key');
 
@@ -199,7 +199,7 @@ describe('CloudflareR2Service', () => {
     it('should return false when file does not exist (NoSuchKey)', async () => {
       const error = new Error('Not found');
       (error as any).name = 'NoSuchKey';
-      mockS3Client.send.mockRejectedValueOnce(error);
+      (mockS3Client.send as jest.Mock).mockRejectedValueOnce(error);
 
       const result = await service.fileExists('test-key');
 
@@ -209,7 +209,7 @@ describe('CloudflareR2Service', () => {
     it('should rethrow non-NoSuchKey errors', async () => {
       const error = new Error('Access denied');
       (error as any).name = 'AccessDenied';
-      mockS3Client.send.mockRejectedValueOnce(error);
+      (mockS3Client.send as jest.Mock).mockRejectedValueOnce(error);
 
       await expect(service.fileExists('test-key')).rejects.toThrow('Access denied');
     });
@@ -218,7 +218,7 @@ describe('CloudflareR2Service', () => {
   describe('getFileMetadata', () => {
     it('should return file metadata', async () => {
       const lastModified = new Date('2025-01-01');
-      mockS3Client.send.mockResolvedValueOnce({
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({
         ContentLength: 1024,
         ContentType: 'application/pdf',
         LastModified: lastModified,
@@ -233,7 +233,7 @@ describe('CloudflareR2Service', () => {
     });
 
     it('should use defaults when metadata fields are missing', async () => {
-      mockS3Client.send.mockResolvedValueOnce({
+      (mockS3Client.send as jest.Mock).mockResolvedValueOnce({
         Body: {},
         // No ContentLength, ContentType, LastModified
       });
@@ -246,7 +246,7 @@ describe('CloudflareR2Service', () => {
     });
 
     it('should throw error when metadata retrieval fails', async () => {
-      mockS3Client.send.mockRejectedValueOnce(new Error('Not found'));
+      (mockS3Client.send as jest.Mock).mockRejectedValueOnce(new Error('Not found'));
 
       await expect(service.getFileMetadata('missing-key')).rejects.toThrow(
         'Failed to get file metadata',

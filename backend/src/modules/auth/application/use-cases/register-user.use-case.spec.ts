@@ -82,7 +82,7 @@ describe('RegisterUserUseCase', () => {
       });
 
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
 
       const result = await useCase.execute(registerDto);
 
@@ -121,7 +121,7 @@ describe('RegisterUserUseCase', () => {
       });
 
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
 
       const result = await useCase.execute(minimalDto);
 
@@ -140,7 +140,7 @@ describe('RegisterUserUseCase', () => {
       });
 
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
 
       const result = await useCase.execute(registerDto);
 
@@ -159,7 +159,7 @@ describe('RegisterUserUseCase', () => {
       });
 
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
 
       const result = await useCase.execute({
         ...registerDto,
@@ -192,7 +192,7 @@ describe('RegisterUserUseCase', () => {
       });
 
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
 
       const result = await useCase.execute(dto);
 
@@ -220,7 +220,7 @@ describe('RegisterUserUseCase', () => {
       });
 
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
 
       const result = await useCase.execute(dto);
 

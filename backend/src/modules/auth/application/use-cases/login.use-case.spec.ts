@@ -185,7 +185,7 @@ describe('LoginUseCase', () => {
     const user = {
       ...baseUser,
     };
-    delete user.getFailedLoginCount;
+    delete (user as any).getFailedLoginCount;
 
     userRepo.findByEmail.mockResolvedValue(user);
 
@@ -198,7 +198,7 @@ describe('LoginUseCase', () => {
     const user = {
       ...baseUser,
     };
-    delete user.getStatus;
+    delete (user as any).getStatus;
 
     userRepo.findByEmail.mockResolvedValue(user);
 

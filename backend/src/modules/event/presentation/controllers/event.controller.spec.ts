@@ -14,8 +14,8 @@ import { Event } from '../../domain/event.entity';
 import { Subscription } from 'src/modules/subscription/domain/subscription.entity';
 import { EventFilterDto } from '../dto/event-filter.dto';
 import { RescheduleEventDto } from '../dto/reschedule-event.dto';
-import { UpdateEventStatusDto } from '../dto/update-event-status.dto';
-import { UpdateEventPaymentStatusDto } from '../dto/update-event-payment-status.dto';
+import { UpdateEventStatusDto, EventStatusEnum } from '../dto/update-event-status.dto';
+import { UpdateEventPaymentStatusDto, PaymentStatusEnum } from '../dto/update-event-payment-status.dto';
 
 describe('EventController', () => {
   let controller: EventController;
@@ -270,13 +270,13 @@ describe('EventController', () => {
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(
-        controller.updateStatus(mockRequest, 'event-123', { status: 'completed' }),
+        controller.updateStatus(mockRequest, 'event-123', { status: EventStatusEnum.COMPLETED }),
       ).rejects.toThrow(`Event with id event-123 not found`);
     });
 
     it('should update event status', async () => {
       const updateStatusDto: UpdateEventStatusDto = {
-        status: 'completed',
+        status: EventStatusEnum.COMPLETED,
       };
       const updatedEvent = {
         ...mockEvent,
@@ -307,13 +307,13 @@ describe('EventController', () => {
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(
-        controller.updatePaymentStatus(mockRequest, 'event-123', { paymentStatus: 'paid' }),
+        controller.updatePaymentStatus(mockRequest, 'event-123', { paymentStatus: PaymentStatusEnum.PAID }),
       ).rejects.toThrow(`Event with id event-123 not found`);
     });
 
     it('should update event payment status', async () => {
       const updatePaymentStatusDto: UpdateEventPaymentStatusDto = {
-        paymentStatus: 'paid',
+        paymentStatus: PaymentStatusEnum.PAID,
       };
       const updatedEvent = {
         ...mockEvent,

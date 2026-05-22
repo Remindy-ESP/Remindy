@@ -8,7 +8,7 @@ describe('SubscriptionMapper', () => {
       const entity = new SubscriptionEntity();
       entity.id = 'sub-123';
       entity.userId = 'user-123';
-      entity.contractId = 'contract-123';
+      entity.contractId = 123;
       entity.name = 'Netflix';
       entity.amount = 9.99;
       entity.currency = 'EUR';
@@ -75,7 +75,7 @@ describe('SubscriptionMapper', () => {
       const domain = new Subscription({
         id: 'sub-123',
         userId: 'user-123',
-        contractId: 'contract-123',
+        contractId: 123,
         name: 'Netflix',
         amount: 9.99,
         currency: 'EUR',
@@ -204,7 +204,7 @@ describe('SubscriptionMapper', () => {
       const originalDomain = new Subscription({
         id: 'sub-123',
         userId: 'user-123',
-        contractId: 'contract-123',
+        contractId: 123,
         name: 'Netflix',
         amount: 9.99,
         currency: 'EUR',
