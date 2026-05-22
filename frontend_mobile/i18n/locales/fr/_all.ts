@@ -13,6 +13,7 @@ import validation from './validation.json';
 import errors from './errors.json';
 import coach from './coach.json';
 import category from './category.json';
+import support from './support.json';
 
 const fr = {
   common,
@@ -30,6 +31,7 @@ const fr = {
   errors,
   coach,
   category,
+  support,
 };
 
 export default fr;
