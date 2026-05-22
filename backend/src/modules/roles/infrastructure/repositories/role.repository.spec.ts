@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoleRepository } from './role.repository';
 import { RoleEntity } from '../../../../infrastructure/database/entities/role.entity';
+import { RoleLimitEntity } from '../../../../infrastructure/database/entities/role-limit.entity';
 
 describe('RoleRepository', () => {
   let repository: RoleRepository;
@@ -13,10 +14,9 @@ describe('RoleRepository', () => {
     label: 'Utilisateur Freemium',
     description: 'Utilisateur avec accès gratuit limité',
     createdAt: new Date('2025-01-01'),
-    updatedAt: new Date('2025-01-01'),
     users: [],
-    limit: null,
-  };
+    roleLimit: null as unknown as RoleLimitEntity,
+  } as any;
 
   const mockRoles: RoleEntity[] = [
     mockRole,
@@ -25,19 +25,17 @@ describe('RoleRepository', () => {
       label: 'Utilisateur Premium',
       description: 'Utilisateur avec accès premium complet',
       createdAt: new Date('2025-01-01'),
-      updatedAt: new Date('2025-01-01'),
       users: [],
-      limit: null,
-    },
+      roleLimit: null as unknown as RoleLimitEntity,
+    } as any,
     {
       key: 'user_admin',
       label: 'Administrateur',
       description: "Administrateur de l'application",
       createdAt: new Date('2025-01-01'),
-      updatedAt: new Date('2025-01-01'),
       users: [],
-      limit: null,
-    },
+      roleLimit: null as unknown as RoleLimitEntity,
+    } as any,
   ];
 
   beforeEach(async () => {
@@ -127,10 +125,9 @@ describe('RoleRepository', () => {
       const createdRole: RoleEntity = {
         ...createData,
         createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01'),
         users: [],
-        limit: null,
-      };
+        roleLimit: null as unknown as RoleLimitEntity,
+      } as any;
 
       mockRepository.create.mockReturnValue(createdRole);
       mockRepository.save.mockResolvedValue(createdRole);
@@ -151,12 +148,11 @@ describe('RoleRepository', () => {
       const createdRole: RoleEntity = {
         key: 'user_basic',
         label: 'Utilisateur Basique',
-        description: null,
+        description: null as unknown as string,
         createdAt: new Date('2025-01-01'),
-        updatedAt: new Date('2025-01-01'),
         users: [],
-        limit: null,
-      };
+        roleLimit: null as unknown as RoleLimitEntity,
+      } as any;
 
       mockRepository.create.mockReturnValue(createdRole);
       mockRepository.save.mockResolvedValue(createdRole);
@@ -182,7 +178,7 @@ describe('RoleRepository', () => {
         ...mockRole,
         ...updateData,
         updatedAt: new Date('2025-01-02'),
-      };
+      } as any;
 
       mockRepository.update.mockResolvedValue({ affected: 1 } as any);
       mockRepository.findOne.mockResolvedValue(updatedRole);
@@ -218,7 +214,7 @@ describe('RoleRepository', () => {
         ...mockRole,
         label: 'New Label',
         updatedAt: new Date('2025-01-02'),
-      };
+      } as any;
 
       mockRepository.update.mockResolvedValue({ affected: 1 } as any);
       mockRepository.findOne.mockResolvedValue(updatedRole);
@@ -239,7 +235,7 @@ describe('RoleRepository', () => {
         ...mockRole,
         description: 'New description',
         updatedAt: new Date('2025-01-02'),
-      };
+      } as any;
 
       mockRepository.update.mockResolvedValue({ affected: 1 } as any);
       mockRepository.findOne.mockResolvedValue(updatedRole);

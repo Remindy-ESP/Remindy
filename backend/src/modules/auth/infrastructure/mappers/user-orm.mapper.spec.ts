@@ -24,7 +24,7 @@ describe('UserOrmMapper', () => {
       entity.failedLoginCount = 0;
       entity.emailVerified = true;
       entity.mfaEnabled = false;
-      entity.mfaSecret = undefined;
+      entity.mfaSecret = undefined as any;
       entity.createdAt = new Date('2024-01-01');
 
       const domain = mapper.toDomain(entity);
@@ -53,7 +53,7 @@ describe('UserOrmMapper', () => {
       entity.role_key = Role.USER_PREMIUM;
       entity.firstName = 'Jane';
       entity.lastName = 'Smith';
-      entity.phone = null;
+      entity.phone = null as any;
       entity.status = UserStatus.ACTIVE;
       entity.failedLoginCount = 0;
       entity.emailVerified = true;

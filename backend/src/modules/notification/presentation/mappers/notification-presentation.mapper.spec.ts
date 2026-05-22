@@ -11,7 +11,7 @@ describe('NotificationPresentationMapper', () => {
         userId: 'user-123',
         eventId: 'event-123',
         reminderId: 'reminder-123',
-        type: 'payment_due',
+        type: 'payment_overdue',
         channel: 'email',
         title: 'Payment Due',
         body: 'Your payment is due soon',
@@ -31,7 +31,7 @@ describe('NotificationPresentationMapper', () => {
       expect(dto.user_id).toBe('user-123');
       expect(dto.event_id).toBe('event-123');
       expect(dto.reminder_id).toBe('reminder-123');
-      expect(dto.type).toBe('payment_due');
+      expect(dto.type).toBe('payment_overdue');
       expect(dto.channel).toBe('email');
       expect(dto.title).toBe('Payment Due');
       expect(dto.body).toBe('Your payment is due soon');
@@ -47,7 +47,7 @@ describe('NotificationPresentationMapper', () => {
       const notification = new Notification({
         id: 'notif-456',
         userId: 'user-456',
-        type: 'payment_failed',
+        type: 'payment_overdue',
         channel: 'push',
         title: 'Payment Failed',
         body: 'Your payment has failed',
@@ -74,7 +74,7 @@ describe('NotificationPresentationMapper', () => {
         new Notification({
           id: 'notif-1',
           userId: 'user-1',
-          type: 'payment_due',
+          type: 'payment_overdue',
           channel: 'email',
           title: 'Title 1',
           body: 'Body 1',
@@ -84,7 +84,7 @@ describe('NotificationPresentationMapper', () => {
         new Notification({
           id: 'notif-2',
           userId: 'user-2',
-          type: 'payment_failed',
+          type: 'payment_overdue',
           channel: 'push',
           title: 'Title 2',
           body: 'Body 2',

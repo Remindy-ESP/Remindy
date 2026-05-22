@@ -25,7 +25,6 @@ describe('RefreshTokenUseCase', () => {
     phone: '',
     role_key: Role.USER_PREMIUM,
     mfaEnabled: false,
-    mfaVerified: false,
     status: UserStatus.ACTIVE,
     failedLoginCount: 0,
     emailVerified: true,
@@ -130,7 +129,7 @@ describe('RefreshTokenUseCase', () => {
     });
 
     it('should throw UnauthorizedException when token verification fails', async () => {
-      tokenService.verifyRefreshToken.mockReturnValue(null);
+      tokenService.verifyRefreshToken.mockReturnValue(null as any);
 
       await expect(useCase.execute(refreshParams)).rejects.toThrow(UnauthorizedException);
       await expect(useCase.execute(refreshParams)).rejects.toThrow('Invalid refresh token');

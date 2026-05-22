@@ -64,7 +64,7 @@ describe('AdminSecurityController', () => {
     it('coerces string page/limit to numbers', async () => {
       mockService.getSuspiciousEvents.mockResolvedValue({ items: [], total: 0 });
 
-      await controller.getSuspiciousEvents('2', '25');
+      await controller.getSuspiciousEvents('2' as unknown as number, '25' as unknown as number);
       expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(2, 25);
     });
 
@@ -78,7 +78,7 @@ describe('AdminSecurityController', () => {
     it('coerces string "1" correctly', async () => {
       mockService.getSuspiciousEvents.mockResolvedValue({});
 
-      await controller.getSuspiciousEvents('1', '100');
+      await controller.getSuspiciousEvents('1' as unknown as number, '100' as unknown as number);
       expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(1, 100);
     });
   });

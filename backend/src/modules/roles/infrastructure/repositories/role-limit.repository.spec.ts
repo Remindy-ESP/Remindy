@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RoleLimitRepository } from './role-limit.repository';
 import { RoleLimitEntity } from '../../../../infrastructure/database/entities/role-limit.entity';
+import { RoleEntity } from '../../../../infrastructure/database/entities/role.entity';
 
 describe('RoleLimitRepository', () => {
   let repository: RoleLimitRepository;
@@ -18,7 +19,7 @@ describe('RoleLimitRepository', () => {
     canUseOcr: false,
     createdAt: new Date('2025-01-01'),
     updatedAt: new Date('2025-01-01'),
-    roleEntity: null,
+    roleEntity: null as unknown as RoleEntity,
   };
 
   const mockRoleLimits: RoleLimitEntity[] = [
@@ -33,7 +34,7 @@ describe('RoleLimitRepository', () => {
       canUseOcr: true,
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-01'),
-      roleEntity: null,
+      roleEntity: null as unknown as RoleEntity,
     },
   ];
 
@@ -128,7 +129,7 @@ describe('RoleLimitRepository', () => {
         ...createData,
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
-        roleEntity: null,
+        roleEntity: null as unknown as RoleEntity,
       };
 
       mockRepository.create.mockReturnValue(createdRoleLimit);
@@ -148,15 +149,15 @@ describe('RoleLimitRepository', () => {
 
       const createdRoleLimit: RoleLimitEntity = {
         role: 'user_basic',
-        maxSubscriptions: null,
-        maxDocuments: null,
-        maxDocumentSizeMb: null,
-        maxRemindersPerSubscription: null,
-        canExportData: null,
-        canUseOcr: null,
+        maxSubscriptions: null as unknown as number,
+        maxDocuments: null as unknown as number,
+        maxDocumentSizeMb: null as unknown as number,
+        maxRemindersPerSubscription: null as unknown as number,
+        canExportData: null as unknown as boolean,
+        canUseOcr: null as unknown as boolean,
         createdAt: new Date('2025-01-01'),
         updatedAt: new Date('2025-01-01'),
-        roleEntity: null,
+        roleEntity: null as unknown as RoleEntity,
       };
 
       mockRepository.create.mockReturnValue(createdRoleLimit);

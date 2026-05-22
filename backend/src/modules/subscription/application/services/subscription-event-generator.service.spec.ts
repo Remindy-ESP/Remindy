@@ -1,6 +1,7 @@
 import { SubscriptionEventGeneratorService } from './subscription-event-generator.service';
 import { makeSubscription } from '../../__fixtures__/subscription.fixtures';
 import { makeEvent } from '../../../event/__fixtures__/event.fixtures';
+import { Event } from '../../../event/domain/event.entity';
 
 describe('SubscriptionEventGeneratorService', () => {
   let sut: SubscriptionEventGeneratorService;

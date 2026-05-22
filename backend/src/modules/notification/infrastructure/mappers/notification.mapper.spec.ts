@@ -10,7 +10,7 @@ describe('NotificationMapper', () => {
       entity.userId = 'user-123';
       entity.eventId = 'event-123';
       entity.reminderId = 'reminder-123';
-      entity.type = 'payment_due';
+      entity.type = 'payment_overdue';
       entity.channel = 'email';
       entity.title = 'Payment Due';
       entity.body = 'Your payment is due soon';
@@ -46,7 +46,7 @@ describe('NotificationMapper', () => {
       const entity = new NotificationEntity();
       entity.id = 'notif-456';
       entity.userId = 'user-456';
-      entity.type = 'payment_failed';
+      entity.type = 'payment_overdue';
       entity.channel = 'push';
       entity.title = 'Payment Failed';
       entity.body = 'Your payment has failed';
@@ -72,7 +72,7 @@ describe('NotificationMapper', () => {
         userId: 'user-123',
         eventId: 'event-123',
         reminderId: 'reminder-123',
-        type: 'payment_due',
+        type: 'payment_overdue',
         channel: 'email',
         title: 'Payment Due',
         body: 'Your payment is due soon',
@@ -105,7 +105,7 @@ describe('NotificationMapper', () => {
     it('should map Notification domain without id (new entity)', () => {
       const domain = new Notification({
         userId: 'user-456',
-        type: 'subscription_renewal',
+        type: 'subscription_renewed',
         channel: 'sms',
         title: 'Renewal Soon',
         body: 'Your subscription will renew',
@@ -143,7 +143,7 @@ describe('NotificationMapper', () => {
         Object.assign(new NotificationEntity(), {
           id: 'notif-1',
           userId: 'user-1',
-          type: 'payment_due',
+          type: 'payment_overdue',
           channel: 'email',
           title: 'Title 1',
           body: 'Body 1',
@@ -153,7 +153,7 @@ describe('NotificationMapper', () => {
         Object.assign(new NotificationEntity(), {
           id: 'notif-2',
           userId: 'user-2',
-          type: 'payment_failed',
+          type: 'payment_overdue',
           channel: 'push',
           title: 'Title 2',
           body: 'Body 2',
@@ -184,7 +184,7 @@ describe('NotificationMapper', () => {
         id: 'notif-123',
         userId: 'user-123',
         eventId: 'event-123',
-        type: 'payment_due',
+        type: 'payment_overdue',
         channel: 'email',
         title: 'Payment Due',
         body: 'Your payment is due soon',
