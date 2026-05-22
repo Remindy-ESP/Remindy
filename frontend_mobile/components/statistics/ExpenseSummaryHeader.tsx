@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { ComparisonBadge } from './ComparisonBadge';
 import type { ExpenseTrend } from '@/services/api/statistics.service';
 
@@ -25,10 +26,11 @@ export function ExpenseSummaryHeader({
   comparisonLabel,
   onInfoPress,
 }: ExpenseSummaryHeaderProps) {
+  const { t } = useTranslation('statistics');
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
-        <Text style={styles.title}>Bilan des dépenses</Text>
+        <Text style={styles.title}>{t('summaryTitle')}</Text>
         <ComparisonBadge
           label={comparisonLabel}
           percentageChange={percentageChange}

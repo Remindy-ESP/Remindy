@@ -1,1 +1,32 @@
-{}
+{
+  "title": "Statistics",
+  "subtitle": "Check your stats",
+  "loading": "Loading statistics...",
+  "error": "Error: {{error}}",
+  "errorHint": "Check that the server is running and your network connection.",
+  "summaryError": "Summary unavailable: {{error}}",
+  "summaryTitle": "Spending summary",
+  "breakdown": {
+    "title": "Breakdown by category",
+    "empty": "No spending for this period",
+    "otherCategory": "Other",
+    "transactionCount_one": "{{count}} transaction",
+    "transactionCount_other": "{{count}} transactions"
+  },
+  "loadFailed": "Failed to load statistics",
+  "periods": {
+    "day": "Today",
+    "week": "Week",
+    "month": "Monthly",
+    "year": "Year"
+  },
+  "comparison": {
+    "closeLabel": "Close",
+    "info": {
+      "day": "Cumulative spending from the start of the month up to today compared to the same period in the previous month.\nExample: October 1–5 vs September 1–5.",
+      "week": "Cumulative spending of the past week compared to the previous week.\nExample: week of October 6 vs week of October 13.",
+      "month": "Total spent since the start of the month compared to the previous month. Comparison may be misleading early in the month.\nExample: October vs September.",
+      "year": "Spending in the current year compared to the previous year.\nExample: 2025 vs 2024."
+    }
+  }
+}

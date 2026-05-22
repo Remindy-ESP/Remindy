@@ -1,15 +1,15 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { PERIOD_LABELS, type Period } from '@/types/statistics';
+import { useTranslation } from 'react-i18next';
+import { PERIOD_KEYS, type Period } from '@/types/statistics';
 
 interface PeriodFilterTabsProps {
   selectedPeriod: Period;
   onPeriodChange: (period: Period) => void;
 }
 
-const PERIOD_KEYS: Period[] = ['day', 'week', 'month', 'year'];
-
 export function PeriodFilterTabs({ selectedPeriod, onPeriodChange }: PeriodFilterTabsProps) {
+  const { t } = useTranslation('statistics');
   return (
     <View style={styles.periodSection}>
       <View style={styles.periodMenu}>
@@ -32,7 +32,7 @@ export function PeriodFilterTabs({ selectedPeriod, onPeriodChange }: PeriodFilte
                   isActive ? styles.periodTabTextActive : styles.periodTabTextInactive,
                 ]}
               >
-                {PERIOD_LABELS[key]}
+                {t(`periods.${key}`)}
               </Text>
             </TouchableOpacity>
           );

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { eventService, categoryService, type Event, type Category } from '@/services/api';
-import { PERIOD_LABELS, type Period } from '@/types/statistics';
+import { PERIOD_KEYS, type Period } from '@/types/statistics';
 
 export type TimePeriod = Period;
 
@@ -20,15 +21,17 @@ export interface PeriodStats {
 }
 
 export function useStatistics() {
+  const { t } = useTranslation('statistics');
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('month');
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const timePeriods: { key: TimePeriod; label: string }[] = (
-    ['day', 'week', 'month', 'year'] as const
-  ).map((key) => ({ key, label: PERIOD_LABELS[key] }));
+  const timePeriods: { key: TimePeriod; label: string }[] = PERIOD_KEYS.map((key) => ({
+    key,
+    label: t(`periods.${key}`),
+  }));
 
   const fetchData = useCallback(async () => {
     try {
@@ -42,11 +45,11 @@ export function useStatistics() {
       setCategories(categoriesData);
     } catch (err) {
       console.error('Error fetching statistics data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load statistics');
+      setError(err instanceof Error ? err.message : t('loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const getEventsForPeriod = useCallback((period: TimePeriod): Event[] => {
     const now = new Date();
@@ -87,6 +90,7 @@ export function useStatistics() {
 
   const getStatsForPeriod = useCallback((period: TimePeriod): PeriodStats => {
     const periodEvents = getEventsForPeriod(period);
+    const otherCategoryLabel = t('breakdown.otherCategory');
 
     let totalExpenses = 0;
     const categoryMap = new Map<string, { total: number; count: number }>();
@@ -95,7 +99,7 @@ export function useStatistics() {
       const amount = event.subscription?.amount ?? 0;
       totalExpenses += amount;
 
-      const catName = event.subscription?.category?.name || 'Autre';
+      const catName = event.subscription?.category?.name || otherCategoryLabel;
       const existing = categoryMap.get(catName) || { total: 0, count: 0 };
       categoryMap.set(catName, {
         total: existing.total + amount,
@@ -122,7 +126,7 @@ export function useStatistics() {
       averageTransaction: periodEvents.length > 0 ? totalExpenses / periodEvents.length : 0,
       categoryBreakdown,
     };
-  }, [getEventsForPeriod, categories]);
+  }, [getEventsForPeriod, categories, t]);
 
   return {
     activePeriod,
