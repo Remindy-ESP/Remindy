@@ -152,7 +152,9 @@
     },
     "support": {
       "title": "Support",
-      "body": "If you have a problem, see the About page to contact support or retry from the actions in the app."
+      "body": "Contact our team directly from the app. Track your requests and receive replies right here.",
+      "newButton": "New ticket",
+      "myTicketsButton": "My tickets"
     }
   },
   "about": {

@@ -92,6 +92,24 @@ export default function ProfileHelpScreen() {
         <Text style={styles.cardBody}>
           {t('profile.help.support.body')}
         </Text>
+
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => router.push('/(tabs)/support-new')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="create-outline" size={18} color="#fff" />
+          <Text style={styles.primaryButtonText}>{t('profile.help.support.newButton')}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.secondaryButton}
+          onPress={() => router.push('/(tabs)/support-tickets')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="list-outline" size={18} color="#DDE1FF" />
+          <Text style={styles.secondaryButtonText}>{t('profile.help.support.myTicketsButton')}</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

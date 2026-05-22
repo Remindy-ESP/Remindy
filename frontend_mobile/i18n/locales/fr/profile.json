@@ -152,7 +152,9 @@
     },
     "support": {
       "title": "Support",
-      "body": "En cas de probleme, consultez la page A propos pour contacter le support ou reessayez depuis les actions de l application."
+      "body": "Contactez notre equipe depuis l application. Suivez vos demandes et recevez des reponses directement ici.",
+      "newButton": "Nouveau ticket",
+      "myTicketsButton": "Mes tickets"
     }
   },
   "about": {
