@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Event } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
+import { formatLongDate, formatCurrency } from '@/utils/format';
 
 interface DailyExpensesSummaryProps {
     date: string | null;
@@ -9,20 +11,15 @@ interface DailyExpensesSummaryProps {
 }
 
 export const DailyExpensesSummary: React.FC<DailyExpensesSummaryProps> = ({ date, events }) => {
+    const { t, language } = useTranslation();
+
     if (!date) return null;
 
     const totalAmount = events.reduce((sum, event) => {
-        // Only count if there is a subscription attached
-        // You might also want to filter by status if needed (e.g., only PENDING or COMPLETED)
         return sum + (event.subscription?.amount || 0);
     }, 0);
 
-    // Format date for display (e.g., "2 janvier 2025")
-    const formattedDate = new Date(date).toLocaleDateString('fr-FR', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
+    const formattedDate = formatLongDate(new Date(date), language);
 
     return (
         <View style={styles.container}>
@@ -30,11 +27,11 @@ export const DailyExpensesSummary: React.FC<DailyExpensesSummaryProps> = ({ date
                 <Ionicons name="receipt-outline" size={24} color="#1F1F39" />
             </View>
             <View style={styles.textContainer}>
-                <Text style={styles.title}>Dépenses du jour</Text>
+                <Text style={styles.title}>{t('common.dailyExpenses.title')}</Text>
                 <Text style={styles.date}>{formattedDate}</Text>
             </View>
             <View style={styles.amountContainer}>
-                <Text style={styles.amount}>{totalAmount.toFixed(2)}€</Text>
+                <Text style={styles.amount}>{formatCurrency(totalAmount, language)}</Text>
             </View>
         </View>
     );

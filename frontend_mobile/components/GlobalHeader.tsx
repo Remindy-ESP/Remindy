@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import BurgerMenu from './BurgerMenu';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from './profile/UserAvatar';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -23,6 +24,7 @@ export default function GlobalHeader() {
     const insets = useSafeAreaInsets();
     const headerHeight = SCREEN_HEIGHT * 0.07 + insets.top;
     const { user } = useAuth();
+    const { t } = useTranslation();
 
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [isProfileMenuVisible, setIsProfileMenuVisible] = useState(false);
@@ -104,7 +106,7 @@ export default function GlobalHeader() {
                                 style={styles.menuItem}
                                 onPress={traverseToProfile}
                             >
-                                <Text style={styles.menuItemText}>Profil</Text>
+                                <Text style={styles.menuItemText}>{t('common.headerMenu.profile')}</Text>
                             </TouchableOpacity>
 
                             <View style={styles.separator} />
@@ -116,13 +118,13 @@ export default function GlobalHeader() {
                                     router.push('/(tabs)/categories' as any);
                                 }}
                             >
-                                <Text style={styles.menuItemText}>Catégories</Text>
+                                <Text style={styles.menuItemText}>{t('common.headerMenu.categories')}</Text>
                             </TouchableOpacity>
 
                             <View style={styles.separator} />
 
                             <TouchableOpacity style={styles.menuItem}>
-                                <Text style={styles.menuItemText}>Réglages</Text>
+                                <Text style={styles.menuItemText}>{t('common.headerMenu.settings')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
