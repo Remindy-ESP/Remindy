@@ -16,7 +16,7 @@ jest.mock('@react-navigation/native', () => {
   const mockReact = require('react');
   return {
     ...jest.requireActual('@react-navigation/native'),
-    useFocusEffect: (cb) => {
+    useFocusEffect: (cb: () => void) => {
       mockReact.useEffect(() => { cb(); }, []);
     },
   };
