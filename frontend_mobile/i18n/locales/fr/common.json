@@ -1,1 +1,45 @@
-{}
+{
+  "actions": {
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "retry": "Réessayer",
+    "create": "Créer",
+    "back": "Retour",
+    "close": "Fermer",
+    "ok": "OK",
+    "edit": "Modifier",
+    "continue": "Continuer",
+    "submit": "Valider"
+  },
+  "errorBoundary": {
+    "title": "Une erreur est survenue",
+    "message": "Un problème inattendu a empêché l'affichage de cette page. Vous pouvez réessayer.",
+    "retry": "Réessayer"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "message": "La page que vous cherchez n'existe pas ou n'est plus disponible.",
+    "goHome": "Retour à l'accueil",
+    "goBack": "Retour"
+  },
+  "addOperation": {
+    "title": "Nouvelle opération",
+    "manualEntry": "Saisir manuellement",
+    "or": "OU",
+    "pdfInsert": "Insérer PDF"
+  },
+  "createFolder": {
+    "title": "Nouveau dossier",
+    "placeholder": "Nom du dossier",
+    "color": "Couleur"
+  },
+  "placeholder": {
+    "inPreparation": "En préparation",
+    "comingSoon": "Cette page sera disponible bientôt."
+  },
+  "summary": {
+    "dailyExpenses": "Dépenses du jour"
+  }
+}

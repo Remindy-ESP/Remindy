@@ -101,3 +101,35 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({}),
   Link: 'Link',
 }));
+
+// Mock expo-localization to return French as the device locale.
+// Existing tests assert on French UI strings — without this the i18n
+// fallback chain resolves to English (FALLBACK_LANGUAGE) and every
+// test that asserts on French copy would break. Tests covering EN/FR
+// switching explicitly override this mock per-test.
+jest.mock('expo-localization', () => ({
+  getLocales: () => [
+    {
+      languageCode: 'fr',
+      languageTag: 'fr-FR',
+      regionCode: 'FR',
+      textDirection: 'ltr',
+      measurementSystem: 'metric',
+      currencyCode: 'EUR',
+      currencySymbol: '€',
+      decimalSeparator: ',',
+      digitGroupingSeparator: ' ',
+      temperatureUnit: 'celsius',
+    },
+  ],
+  getCalendars: () => [],
+}));
+
+// Ensure i18n has resolved to its detected language before any test
+// renders. detectLanguage is async (AsyncStorage read) so without this
+// the first paint of a test would briefly show fallback English.
+beforeAll(async () => {
+  // require lazily so the mocks above are wired before i18n initializes
+  const i18nModule = require('./i18n');
+  await i18nModule.initI18n();
+});

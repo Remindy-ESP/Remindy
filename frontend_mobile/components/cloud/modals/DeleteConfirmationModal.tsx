@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface DeleteConfirmationModalProps {
   readonly visible: boolean;
@@ -10,6 +11,7 @@ interface DeleteConfirmationModalProps {
 }
 
 export default function DeleteConfirmationModal({ visible, title, message, onClose, onConfirm }: DeleteConfirmationModalProps) {
+  const { t } = useTranslation('common');
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
@@ -32,7 +34,7 @@ export default function DeleteConfirmationModal({ visible, title, message, onClo
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttons}>
             <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.cancelText}>Annuler</Text>
+              <Text style={styles.cancelText}>{t('actions.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.deleteButton, loading && styles.disabledButton]}
@@ -40,7 +42,7 @@ export default function DeleteConfirmationModal({ visible, title, message, onClo
               disabled={loading}
               activeOpacity={0.7}
             >
-              {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.deleteText}>Supprimer</Text>}
+              {loading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.deleteText}>{t('actions.delete')}</Text>}
             </TouchableOpacity>
           </View>
         </Pressable>

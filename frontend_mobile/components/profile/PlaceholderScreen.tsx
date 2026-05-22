@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface PlaceholderScreenProps {
   title: string;
@@ -10,8 +11,11 @@ interface PlaceholderScreenProps {
 export default function PlaceholderScreen({
   title,
   subtitle,
-  message = 'Cette page sera disponible bientot.',
+  message,
 }: PlaceholderScreenProps) {
+  const { t } = useTranslation('common');
+  const cardText = message ?? t('placeholder.comingSoon');
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -21,8 +25,8 @@ export default function PlaceholderScreen({
 
       <View style={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>En preparation</Text>
-          <Text style={styles.cardText}>{message}</Text>
+          <Text style={styles.cardTitle}>{t('placeholder.inPreparation')}</Text>
+          <Text style={styles.cardText}>{cardText}</Text>
         </View>
       </View>
     </View>
@@ -71,4 +75,3 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
-

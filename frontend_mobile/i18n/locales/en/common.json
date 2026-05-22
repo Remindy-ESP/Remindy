@@ -1,1 +1,45 @@
-{}
+{
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "retry": "Retry",
+    "create": "Create",
+    "back": "Back",
+    "close": "Close",
+    "ok": "OK",
+    "edit": "Edit",
+    "continue": "Continue",
+    "submit": "Submit"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "An unexpected problem prevented this page from loading. You can try again.",
+    "retry": "Retry"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "message": "The page you are looking for does not exist or is no longer available.",
+    "goHome": "Back to home",
+    "goBack": "Back"
+  },
+  "addOperation": {
+    "title": "New operation",
+    "manualEntry": "Manual entry",
+    "or": "OR",
+    "pdfInsert": "Insert PDF"
+  },
+  "createFolder": {
+    "title": "New folder",
+    "placeholder": "Folder name",
+    "color": "Color"
+  },
+  "placeholder": {
+    "inPreparation": "Coming soon",
+    "comingSoon": "This page will be available soon."
+  },
+  "summary": {
+    "dailyExpenses": "Today's expenses"
+  }
+}

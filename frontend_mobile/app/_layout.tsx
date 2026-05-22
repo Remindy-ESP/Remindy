@@ -6,19 +6,21 @@ import { View, Platform } from 'react-native';
 import { AuthProvider } from '@/context/AuthContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppStatusScreen from '@/components/system/AppStatusScreen';
 import { CoachMarksProvider } from '@/features/coach-marks/CoachMarksContext';
 import CoachMarksOverlay from '@/components/system/CoachMarksOverlay';
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  const { t } = useTranslation('common');
   return (
     <AppStatusScreen
       code="500"
-      title="Une erreur est survenue"
-      message="Un probleme inattendu a empeche l affichage de cette page. Vous pouvez reessayer."
+      title={t('errorBoundary.title')}
+      message={t('errorBoundary.message')}
       actions={[
         {
-          label: 'Reessayer',
+          label: t('errorBoundary.retry'),
           onPress: retry,
           testID: 'error-500-retry-button',
         },

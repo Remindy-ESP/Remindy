@@ -1,23 +1,25 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import AppStatusScreen from '@/components/system/AppStatusScreen';
 
 export default function NotFoundScreen() {
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   return (
     <AppStatusScreen
       code="404"
-      title="Page introuvable"
-      message="La page que vous cherchez n existe pas ou n est plus disponible."
+      title={t('notFound.title')}
+      message={t('notFound.message')}
       actions={[
         {
-          label: 'Retour a l accueil',
+          label: t('notFound.goHome'),
           onPress: () => router.replace('/(tabs)/dashboard'),
           testID: 'not-found-home-button',
         },
         {
-          label: 'Retour',
+          label: t('notFound.goBack'),
           onPress: () => router.back(),
           variant: 'secondary',
           testID: 'not-found-back-button',
@@ -26,4 +28,3 @@ export default function NotFoundScreen() {
     />
   );
 }
-
