@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Modal, View, Text, TouchableOpacity, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { useTranslation } from '@/context/I18nContext';
 
 interface BaseModalProps {
   readonly visible: boolean;
@@ -22,6 +23,7 @@ export default function BaseModal({
   loading = false,
   children,
 }: BaseModalProps) {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
@@ -30,7 +32,7 @@ export default function BaseModal({
           {children}
           <View style={styles.buttons}>
             <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.cancelText}>Annuler</Text>
+              <Text style={styles.cancelText}>{t('cloud.modals.common.cancel')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.submitButton, (submitDisabled || loading) && styles.disabledButton]}

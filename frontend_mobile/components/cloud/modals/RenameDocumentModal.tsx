@@ -1,5 +1,6 @@
 import React from 'react';
 import BaseInputModal from './BaseInputModal';
+import { useTranslation } from '@/context/I18nContext';
 
 interface RenameDocumentModalProps {
   readonly visible: boolean;
@@ -9,12 +10,13 @@ interface RenameDocumentModalProps {
 }
 
 export default function RenameDocumentModal({ visible, currentName, onClose, onSubmit }: RenameDocumentModalProps) {
+  const { t } = useTranslation();
   return (
     <BaseInputModal
       visible={visible}
-      title="Renommer le document"
-      placeholder="Nom du document"
-      submitText="Renommer"
+      title={t('cloud.modals.renameDocument.title')}
+      placeholder={t('cloud.modals.renameDocument.placeholder')}
+      submitText={t('cloud.modals.renameDocument.submit')}
       initialValue={currentName}
       onClose={onClose}
       onSubmit={onSubmit}

@@ -2,6 +2,8 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { DocumentResponse } from '@/services/api/document.service';
+import { useTranslation } from '@/context/I18nContext';
+import { formatDate } from '@/utils/format';
 
 interface DocumentDetailsModalProps {
   readonly visible: boolean;
@@ -11,6 +13,8 @@ interface DocumentDetailsModalProps {
 }
 
 export default function DocumentDetailsModal({ visible, document, onClose, onRetryOcr }: DocumentDetailsModalProps) {
+  const { t, language } = useTranslation();
+
   if (!document) return null;
 
   const formatFileSize = (bytes: number): string => {
@@ -21,9 +25,8 @@ export default function DocumentDetailsModal({ visible, document, onClose, onRet
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
   };
 
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
+  const formatUploadDate = (dateString: string): string => {
+    return formatDate(dateString, language, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -35,13 +38,13 @@ export default function DocumentDetailsModal({ visible, document, onClose, onRet
   const getStatusInfo = () => {
     switch (document.ocr_status) {
       case 'completed':
-        return { color: '#32c80e', label: 'Terminé', icon: 'checkmark-circle' };
+        return { color: '#32c80e', label: t('cloud.modals.documentDetails.status.completed'), icon: 'checkmark-circle' };
       case 'processing':
-        return { color: '#F39C12', label: 'En cours', icon: 'sync' };
+        return { color: '#F39C12', label: t('cloud.modals.documentDetails.status.processing'), icon: 'sync' };
       case 'failed':
-        return { color: '#E74C3C', label: 'Échec', icon: 'close-circle' };
+        return { color: '#E74C3C', label: t('cloud.modals.documentDetails.status.failed'), icon: 'close-circle' };
       default:
-        return { color: '#9ca3af', label: 'En attente', icon: 'time' };
+        return { color: '#9ca3af', label: t('cloud.modals.documentDetails.status.pending'), icon: 'time' };
     }
   };
 
@@ -52,30 +55,30 @@ export default function DocumentDetailsModal({ visible, document, onClose, onRet
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.modal} onPress={(e) => e.stopPropagation()}>
           <View style={styles.header}>
-            <Text style={styles.title}>Détails du document</Text>
+            <Text style={styles.title}>{t('cloud.modals.documentDetails.title')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
           <ScrollView style={styles.content}>
             <View style={styles.section}>
-              <Text style={styles.label}>Nom du fichier</Text>
+              <Text style={styles.label}>{t('cloud.modals.documentDetails.filename')}</Text>
               <Text style={styles.value}>{document.filename}</Text>
             </View>
             <View style={styles.section}>
-              <Text style={styles.label}>Taille</Text>
+              <Text style={styles.label}>{t('cloud.modals.documentDetails.size')}</Text>
               <Text style={styles.value}>{formatFileSize(document.file_size)}</Text>
             </View>
             <View style={styles.section}>
-              <Text style={styles.label}>Type</Text>
+              <Text style={styles.label}>{t('cloud.modals.documentDetails.type')}</Text>
               <Text style={styles.value}>{document.mime_type}</Text>
             </View>
             <View style={styles.section}>
-              <Text style={styles.label}>Date d'ajout</Text>
-              <Text style={styles.value}>{formatDate(document.uploaded_at)}</Text>
+              <Text style={styles.label}>{t('cloud.modals.documentDetails.uploadedAt')}</Text>
+              <Text style={styles.value}>{formatUploadDate(document.uploaded_at)}</Text>
             </View>
             <View style={styles.section}>
-              <Text style={styles.label}>Statut OCR</Text>
+              <Text style={styles.label}>{t('cloud.modals.documentDetails.ocrStatus')}</Text>
               <View style={styles.statusContainer}>
                 <Ionicons name={statusInfo.icon as any} size={16} color={statusInfo.color} />
                 <Text style={[styles.statusText, { color: statusInfo.color }]}>{statusInfo.label}</Text>
@@ -83,23 +86,23 @@ export default function DocumentDetailsModal({ visible, document, onClose, onRet
               {document.ocr_status === 'failed' && onRetryOcr && (
                 <TouchableOpacity style={styles.retryButton} onPress={onRetryOcr} activeOpacity={0.7}>
                   <Ionicons name="refresh" size={16} color="#6366f1" />
-                  <Text style={styles.retryText}>Réessayer</Text>
+                  <Text style={styles.retryText}>{t('cloud.modals.documentDetails.retry')}</Text>
                 </TouchableOpacity>
               )}
             </View>
             {document.ocr_text && (
               <View style={styles.section}>
-                <Text style={styles.label}>Texte extrait</Text>
+                <Text style={styles.label}>{t('cloud.modals.documentDetails.ocrText')}</Text>
                 <Text style={styles.ocrText}>{document.ocr_text}</Text>
               </View>
             )}
             {Boolean(document.parsed_provider) && (
               <View style={styles.section}>
-                <Text style={styles.label}>Données analysées</Text>
-                {Boolean(document.parsed_provider) && <Text style={styles.parsedItem}>Fournisseur: {document.parsed_provider}</Text>}
-                {Boolean(document.parsed_amount) && <Text style={styles.parsedItem}>Montant: {document.parsed_amount} {document.parsed_currency}</Text>}
-                {Boolean(document.parsed_date) && <Text style={styles.parsedItem}>Date: {document.parsed_date}</Text>}
-                {Boolean(document.parsed_frequency) && <Text style={styles.parsedItem}>Fréquence: {document.parsed_frequency}</Text>}
+                <Text style={styles.label}>{t('cloud.modals.documentDetails.parsedData')}</Text>
+                {Boolean(document.parsed_provider) && <Text style={styles.parsedItem}>{t('cloud.modals.documentDetails.providerLabel')} {document.parsed_provider}</Text>}
+                {Boolean(document.parsed_amount) && <Text style={styles.parsedItem}>{t('cloud.modals.documentDetails.amountLabel')} {document.parsed_amount} {document.parsed_currency}</Text>}
+                {Boolean(document.parsed_date) && <Text style={styles.parsedItem}>{t('cloud.modals.documentDetails.dateLabel')} {document.parsed_date}</Text>}
+                {Boolean(document.parsed_frequency) && <Text style={styles.parsedItem}>{t('cloud.modals.documentDetails.frequencyLabel')} {document.parsed_frequency}</Text>}
               </View>
             )}
           </ScrollView>

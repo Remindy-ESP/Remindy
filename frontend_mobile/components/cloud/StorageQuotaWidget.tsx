@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { StorageQuota } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 interface StorageQuotaWidgetProps {
   readonly quota: StorageQuota | null;
 }
 
 export default function StorageQuotaWidget({ quota }: StorageQuotaWidgetProps) {
+  const { t } = useTranslation();
+
   if (!quota) return null;
 
   const getBarColor = () => {
@@ -18,7 +21,7 @@ export default function StorageQuotaWidget({ quota }: StorageQuotaWidgetProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Stockage</Text>
+        <Text style={styles.title}>{t('cloud.quota.title')}</Text>
         <Text style={styles.usage}>
           {quota.usedFormatted} / {quota.totalFormatted}
         </Text>
@@ -26,7 +29,7 @@ export default function StorageQuotaWidget({ quota }: StorageQuotaWidgetProps) {
       <View style={styles.barContainer}>
         <View style={[styles.barFill, { width: `${Math.min(quota.usagePercentage, 100)}%`, backgroundColor: getBarColor() }]} />
       </View>
-      <Text style={styles.percentage}>{quota.usagePercentage.toFixed(1)}% utilisé</Text>
+      <Text style={styles.percentage}>{quota.usagePercentage.toFixed(1)}{t('cloud.quota.usedSuffix')}</Text>
     </View>
   );
 }

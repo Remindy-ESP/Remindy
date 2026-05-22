@@ -1,0 +1,139 @@
+{
+  "page": {
+    "title": "Mes Documents",
+    "subtitle": "Gérez votre stockage cloud"
+  },
+  "defaultFolders": {
+    "subscriptionsRoot": "Abonnements",
+    "documentsSub": "Documents"
+  },
+  "list": {
+    "empty": "Aucun document",
+    "emptySubtext": "Commencez par ajouter un document",
+    "sectionFolders": "Dossiers",
+    "sectionDocuments": "Documents"
+  },
+  "actions": {
+    "newFolder": "Nouveau dossier",
+    "addDocument": "Ajouter un document",
+    "uploading": "Ajout du document...",
+    "loading": "Chargement..."
+  },
+  "folderMenu": {
+    "message": "Que souhaitez-vous faire ?",
+    "rename": "Renommer",
+    "delete": "Supprimer",
+    "cancel": "Annuler"
+  },
+  "delete": {
+    "documentTitle": "Supprimer le document",
+    "folderTitle": "Supprimer le dossier",
+    "documentMessage": "Êtes-vous sûr de vouloir supprimer ce document ?",
+    "documentLinkedMessage": "Ce document est lié à {{subscription}}. Êtes-vous sûr de vouloir le supprimer ? Le document restera accessible depuis l'abonnement.",
+    "folderMessage": "Êtes-vous sûr de vouloir supprimer ce dossier ? Son contenu sera déplacé vers le dossier parent.",
+    "linkedFallback": "un abonnement"
+  },
+  "alerts": {
+    "quotaExceededTitle": "Quota dépassé",
+    "quotaExceededMessage": "Vous avez atteint la limite de stockage. Supprimez des documents pour en ajouter de nouveaux.",
+    "fileTooLargeTitle": "Fichier trop volumineux",
+    "fileTooLargeMessage": "Le fichier ne peut pas dépasser 10 MB.",
+    "insufficientSpaceTitle": "Espace insuffisant",
+    "insufficientSpaceMessage": "Il n'y a pas assez d'espace de stockage pour ce fichier.",
+    "uploadSuccessMessage": "Document ajouté avec succès",
+    "uploadErrorMessage": "Impossible d'ajouter le document",
+    "limitReachedTitle": "Limite atteinte",
+    "limitReachedMessage": "Maximum 5 documents par transaction.",
+    "folderNotFoundTitle": "Dossier introuvable",
+    "folderNotFoundMessage": "Ce dossier a été supprimé ou n'existe plus.",
+    "notAuthenticated": "Non authentifié",
+    "viewError": "Impossible de visualiser le document",
+    "downloadError": "Impossible de télécharger le document",
+    "downloadTimeout": "Download timeout après 60 secondes",
+    "sharingUnavailable": "Le téléchargement n'est pas disponible sur cet appareil",
+    "downloadSuccessTitle": "Téléchargement réussi",
+    "downloadSuccessMessage": "{{filename}} a été téléchargé.",
+    "downloadFallbackTitle": "Document téléchargé",
+    "downloadFallbackMessage": "{{filename}} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur \"Visualiser\"."
+  },
+  "navigation": {
+    "home": "Accueil"
+  },
+  "quota": {
+    "title": "Stockage",
+    "usedSuffix": "% utilisé"
+  },
+  "documentCount": {
+    "one": "%{count} document",
+    "other": "%{count} documents"
+  },
+  "documentActions": {
+    "view": "Visualiser",
+    "download": "Télécharger",
+    "info": "Informations",
+    "rename": "Renommer",
+    "move": "Déplacer",
+    "link": "Lier à une transaction",
+    "delete": "Supprimer"
+  },
+  "modals": {
+    "common": {
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    },
+    "createFolder": {
+      "title": "Nouveau dossier",
+      "placeholder": "Nom du dossier",
+      "submit": "Créer",
+      "colorLabel": "Couleur"
+    },
+    "renameFolder": {
+      "title": "Renommer le dossier",
+      "placeholder": "Nom du dossier",
+      "submit": "Renommer"
+    },
+    "renameDocument": {
+      "title": "Renommer le document",
+      "placeholder": "Nom du document",
+      "submit": "Renommer"
+    },
+    "moveToFolder": {
+      "title": "Déplacer vers",
+      "submit": "Déplacer",
+      "root": "Racine"
+    },
+    "linkToSubscription": {
+      "title": "Lier à un abonnement",
+      "submit": "Lier",
+      "noSubscription": "Aucun abonnement",
+      "unlinkSubtext": "Dissocier ce document"
+    },
+    "documentDetails": {
+      "title": "Détails du document",
+      "filename": "Nom du fichier",
+      "size": "Taille",
+      "type": "Type",
+      "uploadedAt": "Date d'ajout",
+      "ocrStatus": "Statut OCR",
+      "ocrText": "Texte extrait",
+      "parsedData": "Données analysées",
+      "providerLabel": "Fournisseur:",
+      "amountLabel": "Montant:",
+      "dateLabel": "Date:",
+      "frequencyLabel": "Fréquence:",
+      "retry": "Réessayer",
+      "status": {
+        "completed": "Terminé",
+        "processing": "En cours",
+        "failed": "Échec",
+        "pending": "En attente"
+      }
+    },
+    "pdfViewer": {
+      "loading": "Chargement du PDF...",
+      "loadError": "Impossible de charger le PDF",
+      "webviewError": "Erreur lors du chargement du PDF",
+      "shareDialogTitle": "Enregistrer le document"
+    }
+  }
+}

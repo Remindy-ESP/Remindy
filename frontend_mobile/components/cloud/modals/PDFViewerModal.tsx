@@ -3,6 +3,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Pla
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as FileSystem from 'expo-file-system/legacy';
+import { useTranslation } from '@/context/I18nContext';
 
 interface PDFViewerModalProps {
   visible: boolean;
@@ -13,6 +14,7 @@ interface PDFViewerModalProps {
 }
 
 export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, onClose }: PDFViewerModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -90,8 +92,8 @@ export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, o
       }
     } catch (err: any) {
       console.error('[PDFViewer] Error:', err);
-      setError(err.message || 'Impossible de charger le PDF');
-      Alert.alert('Erreur', 'Impossible de charger le PDF');
+      setError(err.message || t('cloud.modals.pdfViewer.loadError'));
+      Alert.alert(t('common.error'), t('cloud.modals.pdfViewer.loadError'));
     } finally {
       setLoading(false);
     }
@@ -121,7 +123,7 @@ export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, o
           {loading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#6366f1" />
-              <Text style={styles.loadingText}>Chargement du PDF...</Text>
+              <Text style={styles.loadingText}>{t('cloud.modals.pdfViewer.loading')}</Text>
             </View>
           )}
 
@@ -141,7 +143,7 @@ export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, o
               onError={(syntheticEvent) => {
                 const { nativeEvent } = syntheticEvent;
                 console.error('[PDFViewer] WebView error:', nativeEvent);
-                setError('Erreur lors du chargement du PDF');
+                setError(t('cloud.modals.pdfViewer.webviewError'));
                 setLoading(false);
               }}
               javaScriptEnabled={true}
