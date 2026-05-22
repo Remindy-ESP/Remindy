@@ -94,11 +94,11 @@ describe('AuthController (e2e)', () => {
         return next();
       }
 
-      req.cookies = cookieHeader.split(';').reduce<Record<string, string>>((acc, part) => {
+      req.cookies = (cookieHeader.split(';').reduce as any)((acc: Record<string, string>, part: string) => {
         const [key, ...valueParts] = part.trim().split('=');
         acc[key] = valueParts.join('=');
         return acc;
-      }, {});
+      }, {}) as Record<string, string>;
 
       next();
     });

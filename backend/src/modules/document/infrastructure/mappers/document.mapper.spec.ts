@@ -18,7 +18,7 @@ describe('DocumentMapper', () => {
       entity.mimeType = 'application/pdf';
       entity.ocrText = 'Extracted text';
       entity.ocrStatus = 'completed';
-      entity.ocrError = null;
+      entity.ocrError = null as any;
       entity.uploadedAt = new Date('2024-01-01');
       entity.updatedAt = new Date('2024-01-15');
       entity.deletedAt = undefined;
@@ -74,20 +74,20 @@ describe('DocumentMapper', () => {
       const entity = new DocumentEntity();
       entity.id = 'doc-789';
       entity.userId = 'user-789';
-      entity.subscriptionId = null;
-      entity.contractId = null;
+      entity.subscriptionId = null as any;
+      entity.contractId = null as any;
       entity.filename = 'failed.pdf';
       entity.r2Key = 'documents/failed.pdf';
       entity.r2Bucket = 'my-bucket';
       entity.fileHash = 'hash789';
       entity.fileSize = 512;
       entity.mimeType = 'application/pdf';
-      entity.ocrText = null;
+      entity.ocrText = null as any;
       entity.ocrStatus = 'failed';
       entity.ocrError = 'OCR processing failed';
       entity.uploadedAt = new Date();
       entity.updatedAt = new Date();
-      entity.deletedAt = null;
+      entity.deletedAt = null as any;
 
       const domain = DocumentMapper.toDomain(entity);
 
@@ -111,10 +111,10 @@ describe('DocumentMapper', () => {
         mimeType: 'application/pdf',
         ocrText: 'Extracted text',
         ocrStatus: 'completed',
-        ocrError: null,
+        ocrError: null as any,
         uploadedAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-15'),
-        deletedAt: null,
+        deletedAt: null as any,
       });
 
       const entity = DocumentMapper.toPersistence(domain);
@@ -138,17 +138,17 @@ describe('DocumentMapper', () => {
     it('should not set id if domain id is undefined', () => {
       const domain = new Document({
         userId: 'user-456',
-        subscriptionId: null,
-        contractId: null,
+        subscriptionId: null as any,
+        contractId: null as any,
         filename: 'new.pdf',
         r2Key: 'documents/new.pdf',
         r2Bucket: 'my-bucket',
         fileHash: 'hash456',
         fileSize: 2048,
         mimeType: 'application/pdf',
-        ocrText: null,
+        ocrText: null as any,
         ocrStatus: 'pending',
-        ocrError: null,
+        ocrError: null as any,
       });
 
       const entity = DocumentMapper.toPersistence(domain);

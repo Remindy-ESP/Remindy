@@ -99,8 +99,9 @@ describe('JwtTokenService', () => {
     it('should generate access token with correct payload', () => {
       const payload: JwtAccessPayload = {
         sub: 'user-123',
-        email: 'test@example.com',
-        role_key: 'USER_FREEMIUM',
+        role: 'USER_FREEMIUM' as any,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
       const expectedToken = 'access_token_value';
       const accessSecret = 'access_token_secret';
@@ -123,8 +124,9 @@ describe('JwtTokenService', () => {
     it('should generate access token with all payload fields', () => {
       const payload: JwtAccessPayload = {
         sub: 'user-789',
-        email: 'admin@example.com',
-        role_key: 'ADMIN',
+        role: 'USER_ADMIN' as any,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
 
       configService.get.mockReturnValueOnce('secret').mockReturnValueOnce('30m');
@@ -135,8 +137,7 @@ describe('JwtTokenService', () => {
       expect(jwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({
           sub: 'user-789',
-          email: 'admin@example.com',
-          role_key: 'ADMIN',
+          role: 'USER_ADMIN',
         }),
         expect.any(Object),
       );
@@ -148,8 +149,9 @@ describe('JwtTokenService', () => {
       const token = 'valid_access_token';
       const expectedPayload: JwtAccessPayload = {
         sub: 'user-123',
-        email: 'test@example.com',
-        role_key: 'USER_FREEMIUM',
+        role: 'USER_FREEMIUM' as any,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
       const accessSecret = 'access_token_secret';
 
@@ -301,8 +303,9 @@ describe('JwtTokenService', () => {
     it('should use different secrets for access and refresh tokens', () => {
       const accessPayload: JwtAccessPayload = {
         sub: 'user-123',
-        email: 'test@example.com',
-        role_key: 'USER_FREEMIUM',
+        role: 'USER_FREEMIUM' as any,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
       const refreshPayload: JwtRefreshPayload = {
         sub: 'user-123',
@@ -326,8 +329,9 @@ describe('JwtTokenService', () => {
     it('should use different expirations for access and refresh tokens', () => {
       const accessPayload: JwtAccessPayload = {
         sub: 'user-123',
-        email: 'test@example.com',
-        role_key: 'USER_FREEMIUM',
+        role: 'USER_FREEMIUM' as any,
+        mfaEnabled: false,
+        mfaVerified: false,
       };
       const refreshPayload: JwtRefreshPayload = {
         sub: 'user-123',

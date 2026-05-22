@@ -87,7 +87,7 @@ describe('CreateEventUseCase', () => {
         ...dto,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       repository.create.mockResolvedValue(expectedEvent);
 
@@ -153,7 +153,7 @@ describe('CreateEventUseCase', () => {
         ...dto,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      } as any);
 
       repository.create.mockResolvedValue(expectedEvent);
 
@@ -291,7 +291,7 @@ describe('CreateEventUseCase', () => {
             ...dto,
             createdAt: new Date(),
             updatedAt: new Date(),
-          }),
+          } as any),
       );
 
       repository.createMany.mockResolvedValue(expectedEvents);

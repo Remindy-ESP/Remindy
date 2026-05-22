@@ -211,7 +211,7 @@ describe('JwtStrategy', () => {
       mfaVerified: 'yes',
     };
 
-    const result = strategy.validate(payload);
+    const result = strategy.validate(payload as any);
 
     expect(result).toEqual({
       id: 'user-123',
