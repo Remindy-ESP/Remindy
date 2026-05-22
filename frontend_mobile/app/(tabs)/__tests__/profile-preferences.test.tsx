@@ -2,18 +2,6 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import ProfilePreferencesScreen from '../profile-preferences';
 
-jest.mock('@/components/profile/PlaceholderScreen', () => {
-  const React = require('react');
-  const { View, Text } = require('react-native');
-  return ({ title, subtitle, message }: any) => (
-    <View>
-      <Text>{title}</Text>
-      <Text>{subtitle}</Text>
-      {message && <Text>{message}</Text>}
-    </View>
-  );
-});
-
 describe('ProfilePreferencesScreen', () => {
   it('renders without crashing', () => {
     const { toJSON } = render(<ProfilePreferencesScreen />);
@@ -30,8 +18,14 @@ describe('ProfilePreferencesScreen', () => {
     expect(getByText('Reglages de profil et options utilisateur')).toBeTruthy();
   });
 
-  it('displays the placeholder message', () => {
-    const { getByText } = render(<ProfilePreferencesScreen />);
-    expect(getByText('Les preferences de profil seront configurees ici.')).toBeTruthy();
+  it('renders the language switcher', () => {
+    const { getByTestId } = render(<ProfilePreferencesScreen />);
+    expect(getByTestId('language-switcher')).toBeTruthy();
+  });
+
+  it('renders an option for each supported language', () => {
+    const { getByTestId } = render(<ProfilePreferencesScreen />);
+    expect(getByTestId('language-option-en')).toBeTruthy();
+    expect(getByTestId('language-option-fr')).toBeTruthy();
   });
 });

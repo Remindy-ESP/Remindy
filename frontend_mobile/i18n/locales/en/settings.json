@@ -72,6 +72,11 @@
     "subtitle": "Profile settings and user options",
     "message": "Profile preferences will be configured here."
   },
+  "language": {
+    "sectionTitle": "Language",
+    "sectionSubtitle": "Choose the language used across the app",
+    "current": "Current: {{label}}"
+  },
   "help": {
     "headerTitle": "Help",
     "headerSubtitle": "User guide and quick assistance",
