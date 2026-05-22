@@ -5,33 +5,28 @@ import { Repository } from 'typeorm';
 import type { INotificationRepository } from '../../notification/application/ports/notification-repository.interface';
 import { NOTIFICATION_REPOSITORY } from '../../notification/application/ports/notification-repository.interface';
 import { ExpoPushService } from '../../notification/application/services/expo-push.service';
-import { Notification } from '../../notification/domain/notification.entity';
+import { Notification, NotificationType } from '../../notification/domain/notification.entity';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { ReminderEntity } from '../../reminder/infrastructure/persistence/reminder.entity';
 import type { PushNotificationPayload } from '../../notification/application/services/expo-push.service';
 
-interface DueNotificationRow {
+interface BaseNotificationRow {
   subscriptionId: string;
   subscriptionName: string;
   subscriptionAmount: number;
   subscriptionCurrency: string;
-  nextDueDate: string;
   userId: string;
   reminderId: string;
   reminderChannel: string;
   daysBefore: number;
 }
 
-interface TrialEndingRow {
-  subscriptionId: string;
-  subscriptionName: string;
-  subscriptionAmount: number;
-  subscriptionCurrency: string;
+interface DueNotificationRow extends BaseNotificationRow {
+  nextDueDate: string;
+}
+
+interface TrialEndingRow extends BaseNotificationRow {
   trialEndDate: string;
-  userId: string;
-  reminderId: string;
-  reminderChannel: string;
-  daysBefore: number;
 }
 
 @Injectable()
@@ -159,6 +154,40 @@ export class ProcessRenewalNotificationsTask {
   }
 
   /**
+   * Persist a single notification entry and queue its push payload.
+   * Shared by both renewal and trial-ending loops to avoid duplication.
+   */
+  private async persistNotification(
+    row: BaseNotificationRow,
+    notificationType: NotificationType,
+    pushType: string,
+    title: string,
+    body: string,
+    dateKey: string,
+    dateValue: string,
+    pushPayloads: PushNotificationPayload[],
+  ): Promise<void> {
+    const notification = new Notification({
+      userId: row.userId,
+      reminderId: row.reminderId,
+      type: notificationType,
+      channel: row.reminderChannel as any,
+      title,
+      body,
+      status: 'pending',
+      metadata: { subscriptionId: row.subscriptionId, [dateKey]: dateValue, reminderId: row.reminderId },
+    });
+    notification.markAsSent();
+    await this.notificationRepository.save(notification);
+    pushPayloads.push({
+      userId: row.userId,
+      title,
+      body,
+      data: { type: pushType, subscriptionId: row.subscriptionId, [dateKey]: dateValue },
+    });
+  }
+
+  /**
    * Process subscription renewal notifications
    * Finds active subscriptions whose next_due_date matches a user's reminder daysBefore
    */
@@ -211,43 +240,16 @@ export class ProcessRenewalNotificationsTask {
     for (const row of dueNotifications) {
       try {
         uniqueSubscriptionIds.add(row.subscriptionId);
-
         const title = `Renouvellement`;
         const body = `${row.subscriptionName} — renouvellement dans ${row.daysBefore} jour(s)`;
-
-        const notification = new Notification({
-          userId: row.userId,
-          reminderId: row.reminderId,
-          type: 'subscription_renewed',
-          channel: row.reminderChannel as any,
-          title,
-          body,
-          status: 'pending',
-          metadata: {
-            subscriptionId: row.subscriptionId,
-            nextDueDate: row.nextDueDate,
-            reminderId: row.reminderId,
-          },
-        });
-
-        notification.markAsSent();
-        await this.notificationRepository.save(notification);
+        await this.persistNotification(
+          row, 'subscription_renewed', 'subscription_renewal', title, body,
+          'nextDueDate', row.nextDueDate, pushPayloads,
+        );
         created++;
-
         this.logger.log(
           `Created renewal notification for subscription ${row.subscriptionId} - User: ${row.userId}`,
         );
-
-        pushPayloads.push({
-          userId: row.userId,
-          title,
-          body,
-          data: {
-            type: 'subscription_renewal',
-            subscriptionId: row.subscriptionId,
-            nextDueDate: row.nextDueDate,
-          },
-        });
       } catch (error) {
         this.logger.error(
           `Failed to create renewal notification for subscription ${row.subscriptionId}: ${error}`,
@@ -311,43 +313,16 @@ export class ProcessRenewalNotificationsTask {
     for (const row of trialNotifications) {
       try {
         uniqueSubscriptionIds.add(row.subscriptionId);
-
         const title = `Période d'essai`;
         const body = `${row.subscriptionName} — essai gratuit se termine dans ${row.daysBefore} jour(s)`;
-
-        const notification = new Notification({
-          userId: row.userId,
-          reminderId: row.reminderId,
-          type: 'trial_ending',
-          channel: row.reminderChannel as any,
-          title,
-          body,
-          status: 'pending',
-          metadata: {
-            subscriptionId: row.subscriptionId,
-            trialEndDate: row.trialEndDate,
-            reminderId: row.reminderId,
-          },
-        });
-
-        notification.markAsSent();
-        await this.notificationRepository.save(notification);
+        await this.persistNotification(
+          row, 'trial_ending', 'trial_ending', title, body,
+          'trialEndDate', row.trialEndDate, pushPayloads,
+        );
         created++;
-
         this.logger.log(
           `Created trial ending notification for subscription ${row.subscriptionId} - User: ${row.userId}`,
         );
-
-        pushPayloads.push({
-          userId: row.userId,
-          title,
-          body,
-          data: {
-            type: 'trial_ending',
-            subscriptionId: row.subscriptionId,
-            trialEndDate: row.trialEndDate,
-          },
-        });
       } catch (error) {
         this.logger.error(
           `Failed to create trial ending notification for subscription ${row.subscriptionId}: ${error}`,
