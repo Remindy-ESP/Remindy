@@ -30,11 +30,13 @@ export default function CategoriesScreen() {
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renamingCategory, setRenamingCategory] = useState<Category | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [renameColor, setRenameColor] = useState('#6366f1');
   const [renaming, setRenaming] = useState(false);
 
   const PRESET_COLORS = [
-    '#6366f1', '#4ade80', '#f59e0b', '#ef4444', '#3b82f6',
-    '#ec4899', '#14b8a6', '#f97316', '#8b5cf6', '#64748b',
+    '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981',
+    '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7',
+    '#d946ef', '#ec4899', '#f43f5e', '#64748b', '#78716c', '#52525b', '#000000'
   ];
 
   const fetchCategories = useCallback(async () => {
@@ -84,6 +86,7 @@ export default function CategoriesScreen() {
   const openRenameModal = (cat: Category) => {
     setRenamingCategory(cat);
     setRenameValue(cat.name);
+    setRenameColor(cat.color || '#6366f1');
     setRenameModalVisible(true);
   };
 
@@ -91,7 +94,7 @@ export default function CategoriesScreen() {
     if (!renameValue.trim() || !renamingCategory) return;
     try {
       setRenaming(true);
-      await categoryService.update(renamingCategory.id, { name: renameValue.trim() });
+      await categoryService.update(renamingCategory.id, { name: renameValue.trim(), color: renameColor });
       setRenameModalVisible(false);
       await fetchCategories();
     } catch (err) {
@@ -277,7 +280,7 @@ export default function CategoriesScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Renommer "{renamingCategory?.name}"</Text>
+            <Text style={styles.modalTitle}>Modifier "{renamingCategory?.name}"</Text>
             <Text style={styles.inputLabel}>Nouveau nom</Text>
             <TextInput
               style={styles.textInput}
@@ -286,6 +289,22 @@ export default function CategoriesScreen() {
               placeholderTextColor="#666"
               autoFocus
             />
+            
+            <Text style={styles.inputLabel}>Couleur</Text>
+            <View style={styles.colorGrid}>
+              {PRESET_COLORS.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: c },
+                    renameColor === c && styles.colorOptionSelected,
+                  ]}
+                  onPress={() => setRenameColor(c)}
+                />
+              ))}
+            </View>
+
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.cancelBtn}

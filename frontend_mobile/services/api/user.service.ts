@@ -5,6 +5,8 @@ import {
   RequestRgpdExport,
   RgpdExportResponse,
   UploadUserPhotoFile,
+  UserPreferences,
+  UpdateUserPreferencesRequest,
 } from './types';
 
 /**
@@ -62,16 +64,16 @@ class UserService {
   /**
    * Get user preferences
    */
-  async getPreferences(): Promise<any> {
-    const response = await apiClient.get(`${this.BASE_PATH}/preferences`);
+  async getPreferences(): Promise<UserPreferences> {
+    const response = await apiClient.get<UserPreferences>(`${this.BASE_PATH}/preferences`);
     return response.data;
   }
 
   /**
    * Update user preferences
    */
-  async updatePreferences(preferences: any): Promise<any> {
-    const response = await apiClient.put(
+  async updatePreferences(preferences: UpdateUserPreferencesRequest): Promise<UserPreferences> {
+    const response = await apiClient.put<UserPreferences>(
       `${this.BASE_PATH}/preferences`,
       preferences
     );
