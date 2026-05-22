@@ -2,12 +2,14 @@ import React from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from '@/context/I18nContext';
 
 const APP_VERSION = '1.0.0';
 const SUPPORT_EMAIL = 'support@remindy.com';
 
 export default function ProfileAboutScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleContactPress = async () => {
     const emailUrl = `mailto:${SUPPORT_EMAIL}`;
@@ -15,13 +17,19 @@ export default function ProfileAboutScreen() {
     try {
       const canOpen = await Linking.canOpenURL(emailUrl);
       if (!canOpen) {
-        Alert.alert('Email indisponible', `Contactez-nous a ${SUPPORT_EMAIL}`);
+        Alert.alert(
+          t('profile.about.emailUnavailableTitle'),
+          t('profile.about.emailUnavailableMessage', { email: SUPPORT_EMAIL }),
+        );
         return;
       }
 
       await Linking.openURL(emailUrl);
     } catch {
-      Alert.alert('Erreur', `Impossible d'ouvrir votre application email.\n${SUPPORT_EMAIL}`);
+      Alert.alert(
+        t('profile.about.emailErrorTitle'),
+        t('profile.about.emailErrorMessage', { email: SUPPORT_EMAIL }),
+      );
     }
   };
 
@@ -32,24 +40,24 @@ export default function ProfileAboutScreen() {
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>A propos</Text>
-          <Text style={styles.headerSubtitle}>Informations sur l application</Text>
+          <Text style={styles.headerTitle}>{t('profile.about.title')}</Text>
+          <Text style={styles.headerSubtitle}>{t('profile.about.subtitle')}</Text>
         </View>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.appName}>Remindy</Text>
+        <Text style={styles.appName}>{t('profile.about.appName')}</Text>
         <Text style={styles.appDescription}>
-          Application de suivi des abonnements, rappels et gestion de vos services du quotidien.
+          {t('profile.about.description')}
         </Text>
 
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Version</Text>
+          <Text style={styles.infoLabel}>{t('profile.about.versionLabel')}</Text>
           <Text style={styles.infoValue}>{APP_VERSION}</Text>
         </View>
 
         <View style={[styles.infoRow, styles.lastRow]}>
-          <Text style={styles.infoLabel}>Contact</Text>
+          <Text style={styles.infoLabel}>{t('profile.about.contactLabel')}</Text>
           <TouchableOpacity onPress={() => void handleContactPress()} testID="about-support-email-button">
             <Text style={styles.linkValue}>{SUPPORT_EMAIL}</Text>
           </TouchableOpacity>
@@ -140,4 +148,3 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
-

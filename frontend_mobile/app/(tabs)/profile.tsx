@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from '@/components/profile/UserAvatar';
 
 type MenuItemProps = {
@@ -55,17 +56,18 @@ function InfoRow({ label, value }: InfoRowProps) {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, logout, isLoading } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    Alert.alert('Deconnexion', 'Etes-vous sur de vouloir vous deconnecter ?', [
+    Alert.alert(t('profile.logout.confirmTitle'), t('profile.logout.confirmMessage'), [
       {
-        text: 'Annuler',
+        text: t('profile.logout.cancel'),
         style: 'cancel',
       },
       {
-        text: 'Deconnexion',
+        text: t('profile.logout.button'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -74,7 +76,7 @@ export default function ProfileScreen() {
             router.replace('/');
           } catch (error) {
             console.error('Logout error:', error);
-            Alert.alert('Erreur', 'Echec de la deconnexion. Veuillez reessayer.');
+            Alert.alert(t('profile.logout.errorTitle'), t('profile.logout.errorMessage'));
           } finally {
             setLoggingOut(false);
           }
@@ -83,20 +85,22 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const fallbackUserName = t('profile.fallbackUserName');
+
   const userName = useMemo(() => {
     if (!user) {
-      return 'Utilisateur';
+      return fallbackUserName;
     }
 
     const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-    return fullName || 'Utilisateur';
-  }, [user]);
+    return fullName || fallbackUserName;
+  }, [user, fallbackUserName]);
 
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={styles.loadingText}>Chargement du profil...</Text>
+        <Text style={styles.loadingText}>{t('profile.loadingProfile')}</Text>
       </View>
     );
   }
@@ -113,16 +117,16 @@ export default function ProfileScreen() {
         />
 
         <Text style={styles.name}>{userName}</Text>
-        <Text style={styles.email}>{user?.email || 'utilisateur@remindy.com'}</Text>
+        <Text style={styles.email}>{user?.email || t('profile.fallbackEmail')}</Text>
 
         <View style={styles.rolePill}>
-          <Text style={styles.rolePillText}>{user?.role || 'user'}</Text>
+          <Text style={styles.rolePillText}>{user?.role || t('profile.fallbackRole')}</Text>
         </View>
       </View>
 
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Profil</Text>
+          <Text style={styles.sectionTitle}>{t('profile.sections.profile')}</Text>
           <TouchableOpacity
             testID="edit-profile-item"
             style={styles.editButton}
@@ -130,60 +134,60 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="create-outline" size={16} color="#E5E7FF" />
-            <Text style={styles.editButtonText}>Modifier</Text>
+            <Text style={styles.editButtonText}>{t('profile.editButton')}</Text>
           </TouchableOpacity>
         </View>
 
-        <InfoRow label="Prenom" value={user?.firstName} />
-        <InfoRow label="Nom" value={user?.lastName} />
-        <InfoRow label="Email" value={user?.email} />
-        <InfoRow label="Telephone" value={user?.phone} />
-        <InfoRow label="Langue" value={user?.language} />
-        <InfoRow label="Fuseau horaire" value={user?.timezone} />
+        <InfoRow label={t('profile.infoLabels.firstName')} value={user?.firstName} />
+        <InfoRow label={t('profile.infoLabels.lastName')} value={user?.lastName} />
+        <InfoRow label={t('profile.infoLabels.email')} value={user?.email} />
+        <InfoRow label={t('profile.infoLabels.phone')} value={user?.phone} />
+        <InfoRow label={t('profile.infoLabels.language')} value={user?.language} />
+        <InfoRow label={t('profile.infoLabels.timezone')} value={user?.timezone} />
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Parametres</Text>
+        <Text style={styles.sectionTitle}>{t('profile.sections.settings')}</Text>
 
         <MenuItem
           testID="notifications-item"
           icon="notifications-outline"
-          label="Notifications"
+          label={t('profile.menu.notifications')}
           onPress={() => router.push('/(tabs)/notifications' as any)}
         />
         <MenuItem
           testID="preferences-item"
           icon="settings-outline"
-          label="Preferences"
+          label={t('profile.menu.preferences')}
           onPress={() => router.push('/(tabs)/profile-preferences' as any)}
         />
         <MenuItem
           testID="security-item"
           icon="shield-checkmark-outline"
-          label="Securite"
+          label={t('profile.menu.security')}
           onPress={() => router.push('/(tabs)/profile-security' as any)}
         />
         <MenuItem
           testID="privacy-item"
           icon="lock-closed-outline"
-          label="Confidentialite"
+          label={t('profile.menu.privacy')}
           onPress={() => router.push('/(tabs)/profile-privacy' as any)}
         />
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Support</Text>
+        <Text style={styles.sectionTitle}>{t('profile.sections.support')}</Text>
 
         <MenuItem
           testID="help-item"
           icon="help-circle-outline"
-          label="Aide"
+          label={t('profile.menu.help')}
           onPress={() => router.push('/(tabs)/profile-help' as any)}
         />
         <MenuItem
           testID="about-item"
           icon="information-circle-outline"
-          label="A propos"
+          label={t('profile.menu.about')}
           onPress={() => router.push('/(tabs)/profile-about' as any)}
         />
       </View>
@@ -200,7 +204,7 @@ export default function ProfileScreen() {
         ) : (
           <>
             <Ionicons name="log-out-outline" size={20} color="#fff" />
-            <Text style={styles.logoutButtonText}>Deconnexion</Text>
+            <Text style={styles.logoutButtonText}>{t('profile.logout.button')}</Text>
           </>
         )}
       </TouchableOpacity>

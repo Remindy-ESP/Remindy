@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
 import { userService } from '@/services/api';
 import type { UpdateUserRequest } from '@/services/api';
 import UserAvatar from '@/components/profile/UserAvatar';
@@ -33,6 +34,7 @@ type FormFieldProps = {
   placeholder: string;
   onChangeText: (value: string) => void;
   onClear?: () => void;
+  clearLabel?: string;
   keyboardType?: 'default' | 'phone-pad';
   autoCapitalize?: 'none' | 'words';
   testID?: string;
@@ -44,6 +46,7 @@ function FormField({
   placeholder,
   onChangeText,
   onClear,
+  clearLabel,
   keyboardType = 'default',
   autoCapitalize = 'none',
   testID,
@@ -54,7 +57,7 @@ function FormField({
         <Text style={styles.fieldLabel}>{label}</Text>
         {onClear ? (
           <TouchableOpacity onPress={onClear} activeOpacity={0.8}>
-            <Text style={styles.clearText}>Effacer</Text>
+            <Text style={styles.clearText}>{clearLabel}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -74,6 +77,7 @@ function FormField({
 
 export default function ProfileEditScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isPhotoUploading, setIsPhotoUploading] = useState(false);
@@ -103,7 +107,7 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!user) {
-      Alert.alert('Erreur', 'Utilisateur introuvable.');
+      Alert.alert(t('profile.edit.errorTitle'), t('profile.edit.userNotFound'));
       return;
     }
 
@@ -119,15 +123,15 @@ export default function ProfileEditScreen() {
       setIsSaving(true);
       await userService.updateMe(payload);
       await refreshUser();
-      Alert.alert('Succes', 'Profil mis a jour.');
+      Alert.alert(t('profile.edit.successTitle'), t('profile.edit.successMessage'));
       router.back();
     } catch (error: any) {
       console.error('Profile update failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Impossible de mettre a jour le profil.';
-      Alert.alert('Erreur', String(message));
+        t('profile.edit.updateFailed');
+      Alert.alert(t('profile.edit.errorTitle'), String(message));
     } finally {
       setIsSaving(false);
     }
@@ -182,7 +186,7 @@ export default function ProfileEditScreen() {
 
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission requise', 'Autorisez l acces a vos photos pour choisir une image.');
+        Alert.alert(t('profile.edit.photo.permissionTitle'), t('profile.edit.photo.permissionMessage'));
         return;
       }
 
@@ -200,20 +204,20 @@ export default function ProfileEditScreen() {
       const asset = result.assets[0];
 
       if (typeof asset.fileSize === 'number' && asset.fileSize <= 0) {
-        Alert.alert('Erreur', 'Le fichier image est vide.');
+        Alert.alert(t('profile.edit.errorTitle'), t('profile.edit.photo.emptyFile'));
         return;
       }
 
       await userService.uploadMyPhoto(buildPhotoFilePayload(asset));
       await refreshUser();
-      Alert.alert('Succes', 'Photo de profil mise a jour.');
+      Alert.alert(t('profile.edit.successTitle'), t('profile.edit.photo.uploadSuccess'));
     } catch (error: any) {
       console.error('Profile photo upload failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Impossible de mettre a jour la photo de profil.';
-      Alert.alert('Erreur', String(message));
+        t('profile.edit.photo.uploadFailed');
+      Alert.alert(t('profile.edit.errorTitle'), String(message));
     } finally {
       setIsPhotoUploading(false);
     }
@@ -224,24 +228,24 @@ export default function ProfileEditScreen() {
       return;
     }
 
-    Alert.alert('Supprimer la photo', 'Voulez-vous supprimer votre photo de profil ?', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('profile.edit.photo.deleteConfirmTitle'), t('profile.edit.photo.deleteConfirmMessage'), [
+      { text: t('profile.logout.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('profile.privacy.delete'),
         style: 'destructive',
         onPress: async () => {
           try {
             setIsPhotoDeleting(true);
             await userService.deleteMyPhoto();
             await refreshUser();
-            Alert.alert('Succes', 'Photo de profil supprimee.');
+            Alert.alert(t('profile.edit.successTitle'), t('profile.edit.photo.deleteSuccess'));
           } catch (error: any) {
             console.error('Profile photo delete failed:', error);
             const message =
               error?.response?.data?.message ||
               error?.message ||
-              'Impossible de supprimer la photo de profil.';
-            Alert.alert('Erreur', String(message));
+              t('profile.edit.photo.deleteFailed');
+            Alert.alert(t('profile.edit.errorTitle'), String(message));
           } finally {
             setIsPhotoDeleting(false);
           }
@@ -262,8 +266,8 @@ export default function ProfileEditScreen() {
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Modifier le profil</Text>
-          <Text style={styles.headerSubtitle}>Edition des informations du profil</Text>
+          <Text style={styles.headerTitle}>{t('profile.edit.title')}</Text>
+          <Text style={styles.headerSubtitle}>{t('profile.edit.subtitle')}</Text>
         </View>
       </View>
 
@@ -290,7 +294,7 @@ export default function ProfileEditScreen() {
                 <>
                   <Ionicons name="image-outline" size={16} color="#fff" />
                   <Text style={styles.avatarActionButtonText}>
-                    {user?.photoR2Key ? 'Changer la photo' : 'Ajouter une photo'}
+                    {user?.photoR2Key ? t('profile.edit.photo.change') : t('profile.edit.photo.add')}
                   </Text>
                 </>
               )}
@@ -309,62 +313,65 @@ export default function ProfileEditScreen() {
                 ) : (
                   <>
                     <Ionicons name="trash-outline" size={16} color="#fff" />
-                    <Text style={styles.avatarActionButtonText}>Supprimer</Text>
+                    <Text style={styles.avatarActionButtonText}>{t('profile.edit.photo.remove')}</Text>
                   </>
                 )}
               </TouchableOpacity>
             ) : null}
           </View>
           <Text style={styles.avatarHint}>
-            Recadrez l image en carre pour centrer la zone a conserver dans l avatar rond.
+            {t('profile.edit.photo.hint')}
           </Text>
         </View>
 
         <FormField
-          label="Prenom"
+          label={t('profile.edit.fields.firstName')}
           value={form.firstName}
-          placeholder="Prenom"
+          placeholder={t('profile.edit.fields.firstNamePlaceholder')}
           autoCapitalize="words"
           onChangeText={(value) => setField('firstName', value)}
           onClear={() => setField('firstName', '')}
+          clearLabel={t('profile.edit.clear')}
           testID="input-firstName"
         />
         <FormField
-          label="Nom"
+          label={t('profile.edit.fields.lastName')}
           value={form.lastName}
-          placeholder="Nom"
+          placeholder={t('profile.edit.fields.lastNamePlaceholder')}
           autoCapitalize="words"
           onChangeText={(value) => setField('lastName', value)}
           onClear={() => setField('lastName', '')}
+          clearLabel={t('profile.edit.clear')}
           testID="input-lastName"
         />
         <FormField
-          label="Telephone"
+          label={t('profile.edit.fields.phone')}
           value={form.phone}
-          placeholder="+33612345678"
+          placeholder={t('profile.edit.fields.phonePlaceholder')}
           keyboardType="phone-pad"
           onChangeText={(value) => setField('phone', value)}
           onClear={() => setField('phone', '')}
+          clearLabel={t('profile.edit.clear')}
           testID="input-phone"
         />
         <FormField
-          label="Langue"
+          label={t('profile.edit.fields.language')}
           value={form.language}
-          placeholder="fr"
+          placeholder={t('profile.edit.fields.languagePlaceholder')}
           onChangeText={(value) => setField('language', value)}
           testID="input-language"
         />
         <FormField
-          label="Fuseau horaire"
+          label={t('profile.edit.fields.timezone')}
           value={form.timezone}
-          placeholder="Europe/Paris"
+          placeholder={t('profile.edit.fields.timezonePlaceholder')}
           onChangeText={(value) => setField('timezone', value)}
           testID="input-timezone"
         />
       </View>
 
       <Text style={styles.helpText}>
-        Les champs optionnels peuvent etre vides. Laisser "Telephone", "Prenom" ou "Nom" vide efface la valeur.
+        {t('profile.edit.helpText')}
       </Text>
 
       <TouchableOpacity
@@ -382,7 +389,7 @@ export default function ProfileEditScreen() {
         ) : (
           <>
             <Ionicons name="save-outline" size={18} color="#fff" />
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
+            <Text style={styles.saveButtonText}>{t('profile.edit.save')}</Text>
           </>
         )}
       </TouchableOpacity>

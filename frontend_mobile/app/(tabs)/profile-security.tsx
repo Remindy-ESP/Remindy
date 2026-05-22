@@ -13,11 +13,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,23 +34,23 @@ export default function ProfileSecurityScreen() {
 
   const validateForm = (): string | null => {
     if (!currentPassword) {
-      return 'Mot de passe actuel requis';
+      return t('profile.security.validation.currentRequired');
     }
 
     if (!newPassword) {
-      return 'Nouveau mot de passe requis';
+      return t('profile.security.validation.newRequired');
     }
 
     if (newPassword.length < 8) {
-      return 'Le nouveau mot de passe doit contenir au moins 8 caracteres';
+      return t('profile.security.validation.newTooShort');
     }
 
     if (newPassword === currentPassword) {
-      return 'Le nouveau mot de passe doit etre different de l ancien';
+      return t('profile.security.validation.sameAsOld');
     }
 
     if (newPassword !== confirmPassword) {
-      return 'Les mots de passe ne correspondent pas';
+      return t('profile.security.validation.mismatch');
     }
 
     return null;
@@ -66,15 +68,15 @@ export default function ProfileSecurityScreen() {
     try {
       setLoading(true);
       await authService.changePassword(currentPassword, newPassword);
-      setSuccess('Mot de passe modifie avec succes.');
+      setSuccess(t('profile.security.successInline'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert('Succes', 'Votre mot de passe a ete modifie.');
+      Alert.alert(t('profile.security.successTitle'), t('profile.security.successAlert'));
     } catch (err) {
-      const message = getErrorMessage(err, 'Impossible de modifier le mot de passe.');
+      const message = getErrorMessage(err, t('profile.security.updateFailed'));
       setError(message);
-      Alert.alert('Erreur', message);
+      Alert.alert(t('profile.security.errorTitle'), message);
     } finally {
       setLoading(false);
     }
@@ -96,15 +98,15 @@ export default function ProfileSecurityScreen() {
             <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>Securite</Text>
-            <Text style={styles.headerSubtitle}>Modifier votre mot de passe</Text>
+            <Text style={styles.headerTitle}>{t('profile.security.title')}</Text>
+            <Text style={styles.headerSubtitle}>{t('profile.security.subtitle')}</Text>
           </View>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Changer le mot de passe</Text>
+          <Text style={styles.cardTitle}>{t('profile.security.cardTitle')}</Text>
           <Text style={styles.cardBody}>
-            Saisissez votre mot de passe actuel puis choisissez un nouveau mot de passe securise.
+            {t('profile.security.cardBody')}
           </Text>
 
           {error ? (
@@ -121,7 +123,7 @@ export default function ProfileSecurityScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Mot de passe actuel"
+            placeholder={t('profile.security.placeholders.current')}
             placeholderTextColor="#9CA0C2"
             secureTextEntry
             value={currentPassword}
@@ -135,7 +137,7 @@ export default function ProfileSecurityScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Nouveau mot de passe"
+            placeholder={t('profile.security.placeholders.new')}
             placeholderTextColor="#9CA0C2"
             secureTextEntry
             value={newPassword}
@@ -149,7 +151,7 @@ export default function ProfileSecurityScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Confirmer le nouveau mot de passe"
+            placeholder={t('profile.security.placeholders.confirm')}
             placeholderTextColor="#9CA0C2"
             secureTextEntry
             value={confirmPassword}
@@ -174,7 +176,7 @@ export default function ProfileSecurityScreen() {
               ) : (
                 <>
                   <Ionicons name="key-outline" size={18} color="#fff" />
-                  <Text style={styles.primaryButtonText}>Mettre a jour</Text>
+                  <Text style={styles.primaryButtonText}>{t('profile.security.submit')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -182,9 +184,9 @@ export default function ProfileSecurityScreen() {
         </View>
 
         <View style={styles.secondaryCard}>
-          <Text style={styles.secondaryTitle}>Mot de passe oublie ?</Text>
+          <Text style={styles.secondaryTitle}>{t('profile.security.forgot.title')}</Text>
           <Text style={styles.secondaryBody}>
-            Si vous ne connaissez plus votre mot de passe actuel, utilisez la reinitialisation par email.
+            {t('profile.security.forgot.body')}
           </Text>
 
           <TouchableOpacity
@@ -194,7 +196,7 @@ export default function ProfileSecurityScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="mail-outline" size={18} color="#DDE1FF" />
-            <Text style={styles.secondaryButtonText}>Demander un lien de reinitialisation</Text>
+            <Text style={styles.secondaryButtonText}>{t('profile.security.forgot.button')}</Text>
           </TouchableOpacity>
         </View>
       </View>

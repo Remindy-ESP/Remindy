@@ -6,12 +6,13 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from '@/context/I18nContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface LegalSection {
     id: string;
-    title: string;
+    titleKey: string;
     icon: string;
     content: LegalParagraph[];
 }
@@ -26,7 +27,7 @@ interface LegalParagraph {
 const LEGAL_SECTIONS: LegalSection[] = [
     {
         id: 'aspects',
-        title: 'Aspects juridiques & corpus applicable',
+        titleKey: 'legal.sections.aspects',
         icon: '⚖️',
         content: [
             { type: 'bold', text: 'Protection des données (UE/FR)' },
@@ -55,7 +56,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
     },
     {
         id: 'alerts',
-        title: 'Alertes & parades de conformité',
+        titleKey: 'legal.sections.alerts',
         icon: '🚨',
         content: [
             { type: 'heading', text: 'Bases légales & info RGPD' },
@@ -117,7 +118,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
     },
     {
         id: 'actions',
-        title: "Plan d'actions conformité",
+        titleKey: 'legal.sections.actions',
         icon: '📋',
         content: [
             { type: 'heading', text: 'Gouvernance RGPD' },
@@ -156,7 +157,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
     },
     {
         id: 'sources',
-        title: 'Sources juridiques & bibliographie',
+        titleKey: 'legal.sections.sources',
         icon: '📚',
         content: [
             { type: 'heading', text: 'Données personnelles / traceurs' },
@@ -192,7 +193,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
     },
     {
         id: 'conclusion',
-        title: 'Conclusion exécutable (priorités 0–90 jours)',
+        titleKey: 'legal.sections.conclusion',
         icon: '🎯',
         content: [
             { type: 'bold', text: '1. Mettre en place la CMP (TCF v2.2) + ATT/UMP et bloquer tout tracking non exempté avant consentement.' },
@@ -209,6 +210,7 @@ const LEGAL_SECTIONS: LegalSection[] = [
 // ─── Collapsible Section Component ──────────────────────────────────────────
 
 function CollapsibleSection({ section }: { section: LegalSection }) {
+    const { t } = useTranslation();
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -222,7 +224,7 @@ function CollapsibleSection({ section }: { section: LegalSection }) {
                 <View style={styles.sectionTitleRow}>
                     <Text style={styles.sectionIcon}>{section.icon}</Text>
                     <Text style={styles.sectionTitle} numberOfLines={2}>
-                        {section.title}
+                        {t(section.titleKey)}
                     </Text>
                 </View>
                 <Text style={styles.chevron}>{expanded ? '▲' : '▼'}</Text>
@@ -268,6 +270,7 @@ function CollapsibleSection({ section }: { section: LegalSection }) {
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export default function LegalScreen() {
+    const { t } = useTranslation();
     return (
         <View style={styles.container}>
             <ScrollView
@@ -277,13 +280,13 @@ export default function LegalScreen() {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Charte juridique</Text>
+                    <Text style={styles.headerTitle}>{t('legal.headerTitle')}</Text>
                     <Text style={styles.headerSubtitle}>
-                        Conformité légale & protection des données
+                        {t('legal.headerSubtitle')}
                     </Text>
                     <View style={styles.headerBadge}>
                         <Text style={styles.headerBadgeText}>
-                            Dernière mise à jour : Nov. 2025
+                            {t('legal.lastUpdate')}
                         </Text>
                     </View>
                 </View>
@@ -291,10 +294,7 @@ export default function LegalScreen() {
                 {/* Introduction */}
                 <View style={styles.introCard}>
                     <Text style={styles.introText}>
-                        Ce document présente l'ensemble des dispositions juridiques applicables
-                        à l'application Remindy, couvrant la protection des données personnelles,
-                        les droits des consommateurs, la sécurité cloud et les intégrations
-                        tierces.
+                        {t('legal.intro')}
                     </Text>
                 </View>
 
