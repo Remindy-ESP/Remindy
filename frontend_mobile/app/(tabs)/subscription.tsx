@@ -173,6 +173,7 @@ export default function SubscriptionScreen() {
         startDate: dateStr || new Date().toISOString().split('T')[0],
         categoryId: categoryId,
         reminderDays: 3,
+        isTrial: false,
       });
       setFormErrors({});
       setModalVisible(true);
@@ -285,6 +286,7 @@ export default function SubscriptionScreen() {
       startDate: new Date().toISOString().split('T')[0],
       categoryId: categories.length > 0 ? categories[0].id : '',
       reminderDays: 3,
+      isTrial: false,
     });
     setFormErrors({});
     setModalVisible(true);
