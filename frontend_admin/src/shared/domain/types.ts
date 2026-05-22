@@ -149,3 +149,84 @@ export interface AuditLogQuery {
   sortBy?: 'createdAt' | 'action' | 'severity';
   sortOrder?: 'ASC' | 'DESC';
 }
+
+// --- Support ---
+
+export enum SupportTicketStatus {
+  OPEN = 'open',
+  PENDING_USER = 'pending_user',
+  RESOLVED = 'resolved',
+  CLOSED = 'closed',
+}
+
+export enum SupportTicketPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
+export enum SupportTicketCategory {
+  TECHNICAL = 'technical',
+  BILLING = 'billing',
+  ACCOUNT = 'account',
+  SUBSCRIPTION = 'subscription',
+  BUG = 'bug',
+  FEATURE_REQUEST = 'feature_request',
+  OTHER = 'other',
+}
+
+export enum SupportTicketAuthorType {
+  USER = 'user',
+  ADMIN = 'admin',
+  SYSTEM = 'system',
+}
+
+export interface SupportTicketUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface SupportTicket {
+  id: string;
+  subject: string;
+  status: SupportTicketStatus;
+  priority: SupportTicketPriority;
+  category: SupportTicketCategory | null;
+  createdAt: string;
+  updatedAt: string;
+  lastReplyAt: string | null;
+  closedAt: string | null;
+  user: SupportTicketUser | null;
+  assignedAdmin: SupportTicketUser | null;
+}
+
+export interface SupportTicketMessage {
+  id: string;
+  authorType: SupportTicketAuthorType;
+  body: string;
+  createdAt: string;
+  author: SupportTicketUser | null;
+}
+
+export interface SupportTicketDetail extends SupportTicket {
+  messages: SupportTicketMessage[];
+}
+
+export interface AdminTicketsQuery {
+  q?: string;
+  status?: SupportTicketStatus;
+  priority?: SupportTicketPriority;
+  category?: SupportTicketCategory;
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'updatedAt' | 'lastReplyAt' | 'priority' | 'status';
+  sortDir?: 'ASC' | 'DESC';
+}
+
+export interface AdminReplyTicketRequest {
+  message: string;
+  status?: SupportTicketStatus;
+}
