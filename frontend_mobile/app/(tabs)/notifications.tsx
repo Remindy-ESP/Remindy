@@ -252,12 +252,6 @@ export default function NotificationsScreen() {
 
         return (
             <Swipeable
-                ref={(ref) => {
-                    // Close previous swipeable when a new one opens
-                    if (ref) {
-                        ref.close;
-                    }
-                }}
                 renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item.id)}
                 renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, item.id)}
                 onSwipeableOpen={() => {
