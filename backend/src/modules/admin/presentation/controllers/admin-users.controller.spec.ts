@@ -136,12 +136,10 @@ describe('AdminUsersController', () => {
       });
       await controller.ban(req, 'u-1', { reason: 'abuse' });
 
-      expect(mockService.ban).toHaveBeenCalledWith(
-        expect.any(Object),
-        'u-1',
-        'abuse',
-        { ipAddress: '9.9.9.9', userAgent: 'custom-agent' },
-      );
+      expect(mockService.ban).toHaveBeenCalledWith(expect.any(Object), 'u-1', 'abuse', {
+        ipAddress: '9.9.9.9',
+        userAgent: 'custom-agent',
+      });
     });
   });
 
@@ -169,11 +167,10 @@ describe('AdminUsersController', () => {
       });
       await controller.unban(req, 'u-1');
 
-      expect(mockService.unban).toHaveBeenCalledWith(
-        expect.any(Object),
-        'u-1',
-        { ipAddress: '5.5.5.5', userAgent: 'another-agent' },
-      );
+      expect(mockService.unban).toHaveBeenCalledWith(expect.any(Object), 'u-1', {
+        ipAddress: '5.5.5.5',
+        userAgent: 'another-agent',
+      });
     });
   });
 
@@ -198,11 +195,10 @@ describe('AdminUsersController', () => {
       const req = makeReq({ ip: '2.2.2.2', get: jest.fn().mockReturnValue('ua-x') });
       await controller.verifyEmail(req, 'u-2');
 
-      expect(mockService.verifyEmail).toHaveBeenCalledWith(
-        expect.any(Object),
-        'u-2',
-        { ipAddress: '2.2.2.2', userAgent: 'ua-x' },
-      );
+      expect(mockService.verifyEmail).toHaveBeenCalledWith(expect.any(Object), 'u-2', {
+        ipAddress: '2.2.2.2',
+        userAgent: 'ua-x',
+      });
     });
   });
 
@@ -227,11 +223,10 @@ describe('AdminUsersController', () => {
       const req = makeReq({ ip: '3.3.3.3', get: jest.fn().mockReturnValue('ua-y') });
       await controller.forceMfa(req, 'u-2');
 
-      expect(mockService.forceMfa).toHaveBeenCalledWith(
-        expect.any(Object),
-        'u-2',
-        { ipAddress: '3.3.3.3', userAgent: 'ua-y' },
-      );
+      expect(mockService.forceMfa).toHaveBeenCalledWith(expect.any(Object), 'u-2', {
+        ipAddress: '3.3.3.3',
+        userAgent: 'ua-y',
+      });
     });
   });
 
@@ -256,11 +251,10 @@ describe('AdminUsersController', () => {
       const req = makeReq({ ip: '4.4.4.4', get: jest.fn().mockReturnValue('ua-z') });
       await controller.revokeSessions(req, 'u-2');
 
-      expect(mockService.revokeSessions).toHaveBeenCalledWith(
-        expect.any(Object),
-        'u-2',
-        { ipAddress: '4.4.4.4', userAgent: 'ua-z' },
-      );
+      expect(mockService.revokeSessions).toHaveBeenCalledWith(expect.any(Object), 'u-2', {
+        ipAddress: '4.4.4.4',
+        userAgent: 'ua-z',
+      });
     });
   });
 
@@ -285,11 +279,10 @@ describe('AdminUsersController', () => {
       const req = makeReq({ ip: '6.6.6.6', get: jest.fn().mockReturnValue('ua-w') });
       await controller.resetPassword(req, 'u-2');
 
-      expect(mockService.resetPassword).toHaveBeenCalledWith(
-        expect.any(Object),
-        'u-2',
-        { ipAddress: '6.6.6.6', userAgent: 'ua-w' },
-      );
+      expect(mockService.resetPassword).toHaveBeenCalledWith(expect.any(Object), 'u-2', {
+        ipAddress: '6.6.6.6',
+        userAgent: 'ua-w',
+      });
     });
   });
 });

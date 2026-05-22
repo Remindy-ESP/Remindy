@@ -184,9 +184,7 @@ describe('EventSeriesController (e2e)', () => {
       ['without token', undefined],
       ['with invalid token', 'bad-token'],
     ])('returns 401 %s', async (_, token) => {
-      const req = request(app.getHttpServer())
-        .post('/event-series')
-        .send(validPayload);
+      const req = request(app.getHttpServer()).post('/event-series').send(validPayload);
 
       if (token) {
         req.set(authHeaderFor(token));
@@ -207,9 +205,7 @@ describe('EventSeriesController (e2e)', () => {
         .send(payload)
         .expect(201);
 
-      expect(findSubscriptionUseCase.findById).toHaveBeenCalledWith(
-        VALID_SUBSCRIPTION_ID,
-      );
+      expect(findSubscriptionUseCase.findById).toHaveBeenCalledWith(VALID_SUBSCRIPTION_ID);
 
       expect(createEventSeriesUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -306,13 +302,9 @@ describe('EventSeriesController (e2e)', () => {
         .set(authHeaderFor('user-token'))
         .expect(200);
 
-      expect(findSubscriptionUseCase.findById).toHaveBeenCalledWith(
-        VALID_SUBSCRIPTION_ID,
-      );
+      expect(findSubscriptionUseCase.findById).toHaveBeenCalledWith(VALID_SUBSCRIPTION_ID);
 
-      expect(findBySubscriptionUseCase.execute).toHaveBeenCalledWith(
-        VALID_SUBSCRIPTION_ID,
-      );
+      expect(findBySubscriptionUseCase.execute).toHaveBeenCalledWith(VALID_SUBSCRIPTION_ID);
 
       expect(response.body).toMatchObject({
         id: VALID_SERIES_ID,

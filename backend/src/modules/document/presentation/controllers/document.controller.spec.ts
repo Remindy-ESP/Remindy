@@ -62,43 +62,60 @@ describe('DocumentController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }]),
-      ],
+      imports: [ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }])],
       controllers: [DocumentController],
       providers: [
-        { provide: JwtAuthGuard,             useValue: { canActivate: () => true } },
-        { provide: UploadDocumentUseCase,    useValue: { execute: jest.fn() } },
-        { provide: FindAllDocumentsUseCase,  useValue: { execute: jest.fn() } },
-        { provide: DeleteDocumentUseCase,    useValue: { execute: jest.fn() } },
-        { provide: ReprocessOcrUseCase,      useValue: { execute: jest.fn() } },
-        { provide: UpdateDocumentUseCase,    useValue: { execute: jest.fn() } },
-        { provide: CloudflareR2Service,      useValue: { uploadFile: jest.fn(), downloadFile: jest.fn(), deleteFile: jest.fn() } },
-        { provide: DOCUMENT_REPOSITORY,      useValue: { findById: jest.fn(), save: jest.fn(), create: jest.fn(), delete: jest.fn() } },
-        { provide: QuotaService,             useValue: { checkUserQuota: jest.fn(), getUserQuotaUsage: jest.fn(), formatBytes: jest.fn() } },
-        { provide: InMemoryQueueService,     useValue: { addDocumentToQueue: jest.fn(), getQueueStats: jest.fn(), getJobStatus: jest.fn() } },
+        { provide: JwtAuthGuard, useValue: { canActivate: () => true } },
+        { provide: UploadDocumentUseCase, useValue: { execute: jest.fn() } },
+        { provide: FindAllDocumentsUseCase, useValue: { execute: jest.fn() } },
+        { provide: DeleteDocumentUseCase, useValue: { execute: jest.fn() } },
+        { provide: ReprocessOcrUseCase, useValue: { execute: jest.fn() } },
+        { provide: UpdateDocumentUseCase, useValue: { execute: jest.fn() } },
+        {
+          provide: CloudflareR2Service,
+          useValue: { uploadFile: jest.fn(), downloadFile: jest.fn(), deleteFile: jest.fn() },
+        },
+        {
+          provide: DOCUMENT_REPOSITORY,
+          useValue: { findById: jest.fn(), save: jest.fn(), create: jest.fn(), delete: jest.fn() },
+        },
+        {
+          provide: QuotaService,
+          useValue: {
+            checkUserQuota: jest.fn(),
+            getUserQuotaUsage: jest.fn(),
+            formatBytes: jest.fn(),
+          },
+        },
+        {
+          provide: InMemoryQueueService,
+          useValue: {
+            addDocumentToQueue: jest.fn(),
+            getQueueStats: jest.fn(),
+            getJobStatus: jest.fn(),
+          },
+        },
       ],
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })
       .compile();
 
-    controller         = module.get(DocumentController);
-    uploadDocumentUseCase   = module.get(UploadDocumentUseCase);
+    controller = module.get(DocumentController);
+    uploadDocumentUseCase = module.get(UploadDocumentUseCase);
     findAllDocumentsUseCase = module.get(FindAllDocumentsUseCase);
-    deleteDocumentUseCase   = module.get(DeleteDocumentUseCase);
-    reprocessOcrUseCase     = module.get(ReprocessOcrUseCase);
-    updateDocumentUseCase   = module.get(UpdateDocumentUseCase);
-    r2Service               = module.get(CloudflareR2Service);
-    documentRepository      = module.get(DOCUMENT_REPOSITORY);
-    quotaService            = module.get(QuotaService);
-    queueService            = module.get(InMemoryQueueService);
+    deleteDocumentUseCase = module.get(DeleteDocumentUseCase);
+    reprocessOcrUseCase = module.get(ReprocessOcrUseCase);
+    updateDocumentUseCase = module.get(UpdateDocumentUseCase);
+    r2Service = module.get(CloudflareR2Service);
+    documentRepository = module.get(DOCUMENT_REPOSITORY);
+    quotaService = module.get(QuotaService);
+    queueService = module.get(InMemoryQueueService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
-
 
   describe('upload', () => {
     // Signature: upload(req, file, userId, subscriptionId?, contractId?, folderId?, userRole?)
@@ -107,7 +124,13 @@ describe('DocumentController', () => {
       uploadDocumentUseCase.execute.mockResolvedValue(mockDocument);
 
       const result = await controller.upload(
-        mockRequest, mockFile, 'user-123', 'sub-123', '1', undefined, 'freemium',
+        mockRequest,
+        mockFile,
+        'user-123',
+        'sub-123',
+        '1',
+        undefined,
+        'freemium',
       );
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
@@ -228,7 +251,6 @@ describe('DocumentController', () => {
     });
   });
 
-
   describe('findAll', () => {
     it('should find all documents with default filters', async () => {
       findAllDocumentsUseCase.execute.mockResolvedValue([mockDocument]);
@@ -252,7 +274,14 @@ describe('DocumentController', () => {
       findAllDocumentsUseCase.execute.mockResolvedValue([mockDocument]);
 
       await controller.findAll(
-        { subscription_id: 'sub-123', contract_id: 1, ocr_status: 'completed', mime_type: 'application/pdf', limit: 50, sort: 'uploaded_at:asc' },
+        {
+          subscription_id: 'sub-123',
+          contract_id: 1,
+          ocr_status: 'completed',
+          mime_type: 'application/pdf',
+          limit: 50,
+          sort: 'uploaded_at:asc',
+        },
         'user-123',
       );
 
@@ -275,10 +304,19 @@ describe('DocumentController', () => {
 
     it('should map multiple documents correctly', async () => {
       const doc2 = new Document({
-        id: 'doc-456', userId: 'user-123', subscriptionId: 'sub-123', contractId: 1,
-        filename: 'another.pdf', r2Key: 'key', r2Bucket: 'bucket', fileHash: 'hash',
-        fileSize: 1024, mimeType: 'application/pdf', ocrStatus: 'completed',
-        uploadedAt: new Date(), updatedAt: new Date(),
+        id: 'doc-456',
+        userId: 'user-123',
+        subscriptionId: 'sub-123',
+        contractId: 1,
+        filename: 'another.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        uploadedAt: new Date(),
+        updatedAt: new Date(),
       });
       findAllDocumentsUseCase.execute.mockResolvedValue([mockDocument, doc2]);
 
@@ -289,7 +327,6 @@ describe('DocumentController', () => {
       expect(result[1].id).toBe('doc-456');
     });
   });
-
 
   describe('findOne', () => {
     it('should return document when found and belongs to user', async () => {
@@ -308,31 +345,48 @@ describe('DocumentController', () => {
 
     it('should throw NotFoundException when document belongs to different user', async () => {
       const otherDoc = new Document({
-        id: 'doc-123', userId: 'other-user', filename: 'test.pdf', r2Key: 'key',
-        r2Bucket: 'bucket', fileHash: 'hash', fileSize: 1024, mimeType: 'application/pdf',
-        ocrStatus: 'completed', uploadedAt: new Date(), updatedAt: new Date(),
+        id: 'doc-123',
+        userId: 'other-user',
+        filename: 'test.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        uploadedAt: new Date(),
+        updatedAt: new Date(),
       });
       documentRepository.findById.mockResolvedValue(otherDoc);
       await expect(controller.findOne('doc-123', 'user-123')).rejects.toThrow(NotFoundException);
     });
   });
 
-
   describe('update', () => {
     it('should update document and return response', async () => {
       const updated = new Document({
-        id: 'doc-123', userId: 'user-123', subscriptionId: 'sub-123', contractId: 1,
-        filename: 'updated.pdf', r2Key: 'documents/test-document.pdf',
-        r2Bucket: 'remindy-documents', fileHash: 'hash123', fileSize: 1024000,
-        mimeType: 'application/pdf', ocrStatus: 'completed',
-        uploadedAt: new Date('2024-01-01T10:00:00Z'), updatedAt: new Date('2024-01-01T10:00:00Z'),
+        id: 'doc-123',
+        userId: 'user-123',
+        subscriptionId: 'sub-123',
+        contractId: 1,
+        filename: 'updated.pdf',
+        r2Key: 'documents/test-document.pdf',
+        r2Bucket: 'remindy-documents',
+        fileHash: 'hash123',
+        fileSize: 1024000,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        uploadedAt: new Date('2024-01-01T10:00:00Z'),
+        updatedAt: new Date('2024-01-01T10:00:00Z'),
       });
       updateDocumentUseCase.execute.mockResolvedValue(updated);
 
       const result = await controller.update('doc-123', { filename: 'updated.pdf' }, 'user-123');
 
       expect(updateDocumentUseCase.execute).toHaveBeenCalledWith(
-        'doc-123', 'user-123', expect.objectContaining({ filename: 'updated.pdf' }),
+        'doc-123',
+        'user-123',
+        expect.objectContaining({ filename: 'updated.pdf' }),
       );
       expect(result.filename).toBe('updated.pdf');
     });
@@ -354,7 +408,6 @@ describe('DocumentController', () => {
     });
   });
 
-
   describe('delete', () => {
     it('should delete a document successfully', async () => {
       deleteDocumentUseCase.execute.mockResolvedValue(undefined);
@@ -369,28 +422,39 @@ describe('DocumentController', () => {
     });
   });
 
-
   describe('reprocessOcr', () => {
     it('should reprocess OCR without force flag', async () => {
       reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
       const result = await controller.reprocessOcr('doc-123', {}, 'user-123');
-      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', { force: false });
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
+        force: false,
+      });
       expect(result.id).toBe('doc-123');
     });
 
     it('should reprocess OCR with force flag', async () => {
       reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
       await controller.reprocessOcr('doc-123', { force: true }, 'user-123');
-      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', { force: true });
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
+        force: true,
+      });
     });
 
     it('should return updated document after reprocessing', async () => {
       const processing = new Document({
-        id: 'doc-123', userId: 'user-123', subscriptionId: 'sub-123', contractId: 1,
-        filename: 'test-document.pdf', r2Key: 'documents/test-document.pdf',
-        r2Bucket: 'remindy-documents', fileHash: 'hash123', fileSize: 1024000,
-        mimeType: 'application/pdf', ocrStatus: 'processing',
-        uploadedAt: new Date('2024-01-01T10:00:00Z'), updatedAt: new Date('2024-01-01T10:00:00Z'),
+        id: 'doc-123',
+        userId: 'user-123',
+        subscriptionId: 'sub-123',
+        contractId: 1,
+        filename: 'test-document.pdf',
+        r2Key: 'documents/test-document.pdf',
+        r2Bucket: 'remindy-documents',
+        fileHash: 'hash123',
+        fileSize: 1024000,
+        mimeType: 'application/pdf',
+        ocrStatus: 'processing',
+        uploadedAt: new Date('2024-01-01T10:00:00Z'),
+        updatedAt: new Date('2024-01-01T10:00:00Z'),
       });
       reprocessOcrUseCase.execute.mockResolvedValue(processing);
       const result = await controller.reprocessOcr('doc-123', {}, 'user-123');
@@ -401,11 +465,12 @@ describe('DocumentController', () => {
       reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
       await controller.reprocessOcr('doc-123', {}, 'different-user-789');
       expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith(
-        'doc-123', 'different-user-789', expect.any(Object),
+        'doc-123',
+        'different-user-789',
+        expect.any(Object),
       );
     });
   });
-
 
   describe('downloadDocument', () => {
     it('should download document and return StreamableFile', async () => {
@@ -421,28 +486,42 @@ describe('DocumentController', () => {
 
     it('should throw NotFoundException when document not found', async () => {
       documentRepository.findById.mockResolvedValue(null);
-      await expect(controller.downloadDocument('doc-999', 'user-123')).rejects.toThrow(NotFoundException);
+      await expect(controller.downloadDocument('doc-999', 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when document belongs to different user', async () => {
       const otherDoc = new Document({
-        id: 'doc-123', userId: 'other-user', filename: 'test.pdf', r2Key: 'key',
-        r2Bucket: 'bucket', fileHash: 'hash', fileSize: 1024, mimeType: 'application/pdf',
-        ocrStatus: 'completed', uploadedAt: new Date(), updatedAt: new Date(),
+        id: 'doc-123',
+        userId: 'other-user',
+        filename: 'test.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        uploadedAt: new Date(),
+        updatedAt: new Date(),
       });
       documentRepository.findById.mockResolvedValue(otherDoc);
-      await expect(controller.downloadDocument('doc-123', 'user-123')).rejects.toThrow(NotFoundException);
+      await expect(controller.downloadDocument('doc-123', 'user-123')).rejects.toThrow(
+        NotFoundException,
+      );
       expect(r2Service.downloadFile).not.toHaveBeenCalled();
     });
   });
 
-
   describe('getQuota', () => {
     it('should return quota usage with formatted values', async () => {
       quotaService.getUserQuotaUsage.mockResolvedValue({
-        documentsCount: 5, maxDocuments: 50,
-        storageUsed: 10 * 1024 * 1024, maxStorage: 100 * 1024 * 1024,
-        storageUsedPercent: 10, documentsUsedPercent: 10,
+        documentsCount: 5,
+        maxDocuments: 50,
+        storageUsed: 10 * 1024 * 1024,
+        maxStorage: 100 * 1024 * 1024,
+        storageUsedPercent: 10,
+        documentsUsedPercent: 10,
       });
       quotaService.formatBytes.mockReturnValue('10.00 MB');
 
@@ -456,8 +535,12 @@ describe('DocumentController', () => {
 
     it('should default to freemium role when no role provided', async () => {
       quotaService.getUserQuotaUsage.mockResolvedValue({
-        documentsCount: 0, maxDocuments: 50, storageUsed: 0,
-        maxStorage: 100 * 1024 * 1024, storageUsedPercent: 0, documentsUsedPercent: 0,
+        documentsCount: 0,
+        maxDocuments: 50,
+        storageUsed: 0,
+        maxStorage: 100 * 1024 * 1024,
+        storageUsedPercent: 0,
+        documentsUsedPercent: 0,
       });
       quotaService.formatBytes.mockReturnValue('0 B');
 
@@ -466,7 +549,6 @@ describe('DocumentController', () => {
       expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', 'freemium');
     });
   });
-
 
   describe('getQueueStats', () => {
     it('should return queue statistics', async () => {
@@ -480,10 +562,15 @@ describe('DocumentController', () => {
     });
   });
 
-
   describe('getJobStatus', () => {
     it('should return job status for valid job', async () => {
-      const jobStatus = { id: 'ocr-job-1', status: 'completed', progress: 100, attempts: 1, result: { documentId: 'doc-123' } };
+      const jobStatus = {
+        id: 'ocr-job-1',
+        status: 'completed',
+        progress: 100,
+        attempts: 1,
+        result: { documentId: 'doc-123' },
+      };
       queueService.getJobStatus.mockResolvedValue(jobStatus);
 
       const result = await controller.getJobStatus('ocr-job-1');
@@ -494,7 +581,9 @@ describe('DocumentController', () => {
 
     it('should throw NotFoundException when job not found', async () => {
       queueService.getJobStatus.mockRejectedValue(new Error('Job not found'));
-      await expect(controller.getJobStatus('invalid-job')).rejects.toThrow('Job invalid-job not found');
+      await expect(controller.getJobStatus('invalid-job')).rejects.toThrow(
+        'Job invalid-job not found',
+      );
     });
   });
 });

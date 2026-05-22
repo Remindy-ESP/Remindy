@@ -20,7 +20,6 @@ import { DeleteReminderUseCase } from '../src/modules/reminder/application/use-c
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
 
-
 const validReminderId = '11111111-1111-4111-8111-111111111111';
 const validSubId = '22222222-2222-4222-8222-222222222222';
 const validUserId = '33333333-3333-4333-8333-333333333333';
@@ -62,7 +61,6 @@ const sampleReminder = {
   updatedAt: new Date('2025-01-01T00:00:00Z'),
   deletedAt: undefined,
 };
-
 
 const authHeader = (token: string) => ({ Authorization: `Bearer ${token}` });
 
@@ -126,10 +124,7 @@ describe('ReminderController (e2e)', () => {
   });
 
   it('GET /reminders — 401 token invalide', async () => {
-    await request(app.getHttpServer())
-      .get('/reminders')
-      .set(authHeader('bad-token'))
-      .expect(401);
+    await request(app.getHttpServer()).get('/reminders').set(authHeader('bad-token')).expect(401);
   });
 
   it('GET /reminders — OK', async () => {

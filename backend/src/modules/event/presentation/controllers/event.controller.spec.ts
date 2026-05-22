@@ -15,7 +15,10 @@ import { Subscription } from 'src/modules/subscription/domain/subscription.entit
 import { EventFilterDto } from '../dto/event-filter.dto';
 import { RescheduleEventDto } from '../dto/reschedule-event.dto';
 import { UpdateEventStatusDto, EventStatusEnum } from '../dto/update-event-status.dto';
-import { UpdateEventPaymentStatusDto, PaymentStatusEnum } from '../dto/update-event-payment-status.dto';
+import {
+  UpdateEventPaymentStatusDto,
+  PaymentStatusEnum,
+} from '../dto/update-event-payment-status.dto';
 
 describe('EventController', () => {
   let controller: EventController;
@@ -307,7 +310,9 @@ describe('EventController', () => {
       findSubscriptionUseCase.findById.mockResolvedValue(otherUserSubscription);
 
       await expect(
-        controller.updatePaymentStatus(mockRequest, 'event-123', { paymentStatus: PaymentStatusEnum.PAID }),
+        controller.updatePaymentStatus(mockRequest, 'event-123', {
+          paymentStatus: PaymentStatusEnum.PAID,
+        }),
       ).rejects.toThrow(`Event with id event-123 not found`);
     });
 

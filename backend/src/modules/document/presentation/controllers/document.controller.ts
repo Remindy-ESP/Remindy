@@ -97,8 +97,7 @@ export class DocumentController {
   ): Promise<DocumentResponseDto> {
     if (!file) throw new BadRequestException('File is required');
     if (file.size === 0) throw new BadRequestException('File is empty (0 bytes)');
-    if (!file.originalname?.trim())
-      throw new BadRequestException('File must have a valid name');
+    if (!file.originalname?.trim()) throw new BadRequestException('File must have a valid name');
 
     const allowedMimeTypes = [
       'application/pdf',
@@ -139,10 +138,7 @@ export class DocumentController {
   @ApiDocumentGetQuota()
   @Get('quota')
   async getQuota(@CurrentUser('id') userId: string, @CurrentUser('role') role?: string) {
-    const usage = await this.quotaService.getUserQuotaUsage(
-      userId,
-      this.normalizeRole(role),
-    );
+    const usage = await this.quotaService.getUserQuotaUsage(userId, this.normalizeRole(role));
 
     return {
       ...usage,

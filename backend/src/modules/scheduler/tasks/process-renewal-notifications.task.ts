@@ -5,7 +5,11 @@ import { Repository } from 'typeorm';
 import type { INotificationRepository } from '../../notification/application/ports/notification-repository.interface';
 import { NOTIFICATION_REPOSITORY } from '../../notification/application/ports/notification-repository.interface';
 import { ExpoPushService } from '../../notification/application/services/expo-push.service';
-import { Notification, NotificationType, NotificationChannel } from '../../notification/domain/notification.entity';
+import {
+  Notification,
+  NotificationType,
+  NotificationChannel,
+} from '../../notification/domain/notification.entity';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { ReminderEntity } from '../../reminder/infrastructure/persistence/reminder.entity';
 import type { PushNotificationPayload } from '../../notification/application/services/expo-push.service';
@@ -175,7 +179,11 @@ export class ProcessRenewalNotificationsTask {
       title,
       body,
       status: 'pending',
-      metadata: { subscriptionId: row.subscriptionId, [dateKey]: dateValue, reminderId: row.reminderId },
+      metadata: {
+        subscriptionId: row.subscriptionId,
+        [dateKey]: dateValue,
+        reminderId: row.reminderId,
+      },
     });
     notification.markAsSent();
     await this.notificationRepository.save(notification);
@@ -243,8 +251,14 @@ export class ProcessRenewalNotificationsTask {
         const title = `Renouvellement`;
         const body = `${row.subscriptionName} — renouvellement dans ${row.daysBefore} jour(s)`;
         await this.persistNotification(
-          row, 'subscription_renewed', 'subscription_renewal', title, body,
-          'nextDueDate', row.nextDueDate, pushPayloads,
+          row,
+          'subscription_renewed',
+          'subscription_renewal',
+          title,
+          body,
+          'nextDueDate',
+          row.nextDueDate,
+          pushPayloads,
         );
         created++;
         this.logger.log(
@@ -316,8 +330,14 @@ export class ProcessRenewalNotificationsTask {
         const title = `Période d'essai`;
         const body = `${row.subscriptionName} — essai gratuit se termine dans ${row.daysBefore} jour(s)`;
         await this.persistNotification(
-          row, 'trial_ending', 'trial_ending', title, body,
-          'trialEndDate', row.trialEndDate, pushPayloads,
+          row,
+          'trial_ending',
+          'trial_ending',
+          title,
+          body,
+          'trialEndDate',
+          row.trialEndDate,
+          pushPayloads,
         );
         created++;
         this.logger.log(
