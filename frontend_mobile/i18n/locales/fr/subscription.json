@@ -1,0 +1,84 @@
+{
+  "loading": "Chargement des opérations...",
+  "headerTitle": "Opérations",
+  "addButton": "+ Ajouter",
+  "totalSuffix": " ({{count}} au total)",
+  "count": {
+    "one": "%{count} opération",
+    "other": "%{count} opérations"
+  },
+  "empty": "Pas d'opérations.",
+  "emptyHint": "Appuyez sur le bouton + pour créer votre premier opération.",
+  "filteredEmpty": "Aucune opération ne correspond aux filtres.",
+  "filteredEmptyHint": "Essayez de modifier les filtres ci-dessus.",
+  "filterFrequencyLabel": "Type de paiement",
+  "filterCategoryLabel": "Catégorie",
+  "filterAll": "Tous",
+  "filterAllCategories": "Toutes",
+  "cycle": {
+    "oneTime": "Achat unique",
+    "weekly": "Hebdomadaire",
+    "monthly": "Mensuel",
+    "quarterly": "Trimestriel",
+    "yearly": "Annuel",
+    "weeklyShort": "Semaine",
+    "monthlyShort": "Mois",
+    "quarterlyShort": "Trimestre"
+  },
+  "card": {
+    "startPrefix": "Début: {{date}}",
+    "naDate": "N/A",
+    "invalidDate": "Invalid Date"
+  },
+  "modal": {
+    "titleAdd": "Ajouter un opération",
+    "titleEdit": "Modifier l'opération",
+    "name": "Nom *",
+    "namePlaceholder": "Ex: Netflix, Spotify",
+    "description": "Description",
+    "descriptionPlaceholder": "Description optionnelle...",
+    "price": "Prix *",
+    "pricePlaceholder": "15.99 ou 15,99",
+    "billingCycle": "Cycle de paiement *",
+    "category": "Catégorie",
+    "noCategory": "Aucune catégorie",
+    "startDate": "Date de début *",
+    "endDate": "Date de fin (optionnel)",
+    "datePlaceholder": "DD/MM/YYYY",
+    "reminder": "Rappel de notifications",
+    "reminderPlaceholder": "3",
+    "cancel": "Annuler",
+    "create": "Créer",
+    "update": "Mettre à jour"
+  },
+  "validation": {
+    "nameRequired": "Le nom est requis",
+    "priceInvalid": "Le prix doit être supérieur à 0 (ex : 15.99 ou 15,99)",
+    "startDateRequired": "La date de début est requis"
+  },
+  "alerts": {
+    "deleteTitle": "Supprimer l'opération",
+    "deleteMessage": "Êtes-vous sûr de vouloir supprimer votre opération \"{{name}}\"?",
+    "deleteCancel": "Annuler",
+    "deleteConfirm": "Supprimer",
+    "invalidPriceFormat": "Invalid price format"
+  },
+  "success": {
+    "created": "Opération créée avec succès",
+    "updated": "Opération modifiée avec succès",
+    "deleted": "Opération supprimée avec succès",
+    "paused": "Opération mise en pause avec succès",
+    "resumed": "Opération reprise avec succès"
+  },
+  "errors": {
+    "loadFailed": "Failed to load subscriptions",
+    "saveFailed": "Échec de l'enregistrement de l'opération",
+    "deleteFailed": "Échec de la suppression de l'opération",
+    "updateFailed": "Échec de la mise à jour de l'opération"
+  },
+  "reminderDaysBefore": {
+    "one": "Rappel %{count} jour(s) avant",
+    "other": "Rappel %{count} jour(s) avant"
+  },
+  "importedFromDocument": "Importé depuis le document {{documentId}}"
+}
