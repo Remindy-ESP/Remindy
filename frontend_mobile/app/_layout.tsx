@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/context/AuthContext';
 import * as NavigationBar from 'expo-navigation-bar';

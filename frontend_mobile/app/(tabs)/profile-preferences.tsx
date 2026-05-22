@@ -111,7 +111,7 @@ export default function ProfilePreferencesScreen() {
       const updated = await userService.updatePreferences({ notificationPush: value });
       setPreferences(updated);
       showSuccess(value ? 'Notifications push activées' : 'Notifications push désactivées');
-    } catch (err: any) {
+    } catch {
       // Rollback
       setPreferences(prev);
       const rollbackToggles: Record<string, boolean> = {};
@@ -151,7 +151,6 @@ export default function ProfilePreferencesScreen() {
     }
   };
 
-  const allCategoriesOn = Object.values(categoryToggles).every((v) => v);
   const globalPushOn = preferences?.notificationPush ?? false;
 
   if (loading) {
