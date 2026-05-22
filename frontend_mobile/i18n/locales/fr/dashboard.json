@@ -1,0 +1,25 @@
+{
+  "loading": "Chargement de la page d'accueil...",
+  "errorPrefix": "Error: {{message}}",
+  "errorHint": "Make sure the backend server is running and your network connection is stable",
+  "categoriesDropdown": "Catégories",
+  "categoriesEmpty": "No categories available. Please add some categories first.",
+  "allCategories": "Toutes les catégories",
+  "expensesTitle": "Détails de vos dépenses",
+  "noExpenses": "Aucune dépense pour cette période",
+  "generalCategory": "Général",
+  "fileTooLargeTitle": "Fichier trop volumineux",
+  "fileTooLargeMessage": "Le fichier ne peut pas dépasser 10 MB. Veuillez choisir un fichier plus petit.",
+  "ocrFailedTitle": "Analyse échouée",
+  "ocrFailedMessage": "L'analyse automatique du document a échoué. Vous pouvez saisir les informations manuellement.",
+  "uploadErrorFallback": "Une erreur est survenue lors de l'upload du document.",
+  "uploading": "Analyse en cours...",
+  "uploadingHint": "Extraction des données par IA",
+  "uploadingHint2": "Cela peut prendre jusqu'à 30 secondes",
+  "periods": {
+    "day": "Ce jour",
+    "week": "Semaine",
+    "month": "Mensuel",
+    "year": "Année"
+  }
+}
