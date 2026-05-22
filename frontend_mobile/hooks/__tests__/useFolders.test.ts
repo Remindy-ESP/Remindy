@@ -119,7 +119,7 @@ describe('useFolders', () => {
         await result.current.fetchFolders();
       });
 
-      expect(result.current.error).toBe('Failed to load folders');
+      expect(result.current.error).toBe('Echec du chargement des dossiers');
     });
 
     it('clears previous error before re-fetching', async () => {

@@ -71,7 +71,7 @@
     "resumed": "Opération reprise avec succès"
   },
   "errors": {
-    "loadFailed": "Failed to load subscriptions",
+    "loadFailed": "Echec du chargement des abonnements",
     "saveFailed": "Échec de l'enregistrement de l'opération",
     "deleteFailed": "Échec de la suppression de l'opération",
     "updateFailed": "Échec de la mise à jour de l'opération"

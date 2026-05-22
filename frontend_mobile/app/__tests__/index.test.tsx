@@ -318,7 +318,7 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Invalid credentials')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Login Failed', 'Invalid credentials');
+      expect(Alert.alert).toHaveBeenCalledWith('Connexion echouee', 'Invalid credentials');
     });
   });
 
@@ -337,7 +337,7 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Email already taken')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Registration Failed', 'Email already taken');
+      expect(Alert.alert).toHaveBeenCalledWith('Inscription echouee', 'Email already taken');
     });
   });
 

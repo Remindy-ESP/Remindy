@@ -123,7 +123,7 @@ describe('useDocuments', () => {
         await result.current.fetchDocuments();
       });
 
-      expect(result.current.error).toBe('Failed to load documents');
+      expect(result.current.error).toBe('Echec du chargement des documents');
     });
 
     it('clears error before fetching', async () => {
