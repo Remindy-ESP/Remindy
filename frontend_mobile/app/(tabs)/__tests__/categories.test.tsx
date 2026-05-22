@@ -194,7 +194,7 @@ describe('CategoriesScreen', () => {
     fireEvent.changeText(inputs[0], 'Nouveau Nom');
     fireEvent.press(getByText('Renommer'));
     await waitFor(() => {
-      expect(mockUpdate).toHaveBeenCalledWith('user-1', { name: 'Nouveau Nom' });
+      expect(mockUpdate).toHaveBeenCalledWith('user-1', { name: 'Nouveau Nom', color: '#6366f1' });
     });
   });
 
