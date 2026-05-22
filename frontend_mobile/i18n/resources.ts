@@ -13,6 +13,7 @@ import frValidation from './locales/fr/validation.json';
 import frErrors from './locales/fr/errors.json';
 import frCoach from './locales/fr/coach.json';
 import frCategory from './locales/fr/category.json';
+import frSupport from './locales/fr/support.json';
 
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
@@ -29,6 +30,7 @@ import enValidation from './locales/en/validation.json';
 import enErrors from './locales/en/errors.json';
 import enCoach from './locales/en/coach.json';
 import enCategory from './locales/en/category.json';
+import enSupport from './locales/en/support.json';
 
 export const resources = {
   fr: {
@@ -47,6 +49,7 @@ export const resources = {
     errors: frErrors,
     coach: frCoach,
     category: frCategory,
+    support: frSupport,
   },
   en: {
     common: enCommon,
@@ -64,6 +67,7 @@ export const resources = {
     errors: enErrors,
     coach: enCoach,
     category: enCategory,
+    support: enSupport,
   },
 } as const;
 
