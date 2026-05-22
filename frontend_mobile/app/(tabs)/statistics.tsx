@@ -7,9 +7,11 @@ import { useExpenseSummary } from '@/hooks/useExpenseSummary';
 import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
 import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
 import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
+import { useCurrencyFormat } from '@/i18n/formatters';
 
 export default function StatisticsScreen() {
   const { t } = useTranslation('statistics');
+  const formatCurrency = useCurrencyFormat('EUR');
   const {
     activePeriod,
     setActivePeriod,
@@ -110,7 +112,7 @@ export default function StatisticsScreen() {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.categoryAmount}>{cat.total.toFixed(2)}€</Text>
+              <Text style={styles.categoryAmount}>{formatCurrency(cat.total)}</Text>
             </View>
           ))
         )}

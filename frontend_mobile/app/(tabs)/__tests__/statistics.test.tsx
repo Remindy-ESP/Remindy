@@ -144,7 +144,7 @@ describe('StatisticsScreen', () => {
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Répartition par catégorie')).toBeTruthy();
     expect(getByText('Streaming')).toBeTruthy();
-    expect(getByText('23.98€')).toBeTruthy();
+    expect(getByText(/23,98\s?€/)).toBeTruthy();
     expect(getByText('Sport')).toBeTruthy();
   });
 

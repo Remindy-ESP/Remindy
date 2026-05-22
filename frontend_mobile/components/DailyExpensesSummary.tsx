@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useCurrencyFormat } from '@/i18n/formatters';
 import type { Event } from '@/services/api';
 
 interface DailyExpensesSummaryProps {
@@ -11,6 +12,7 @@ interface DailyExpensesSummaryProps {
 
 export const DailyExpensesSummary: React.FC<DailyExpensesSummaryProps> = ({ date, events }) => {
     const { t, i18n } = useTranslation('common');
+    const formatCurrency = useCurrencyFormat('EUR');
 
     if (!date) return null;
 
@@ -34,7 +36,7 @@ export const DailyExpensesSummary: React.FC<DailyExpensesSummaryProps> = ({ date
                 <Text style={styles.date}>{formattedDate}</Text>
             </View>
             <View style={styles.amountContainer}>
-                <Text style={styles.amount}>{totalAmount.toFixed(2)}€</Text>
+                <Text style={styles.amount}>{formatCurrency(totalAmount)}</Text>
             </View>
         </View>
     );
