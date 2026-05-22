@@ -1,1 +1,54 @@
-{}
+{
+  "title": "Erreur",
+  "successTitle": "Succes",
+  "notAuthenticated": "Non authentifié",
+  "eventStatus": {
+    "scheduled": "Planifié",
+    "completed": "Terminé",
+    "canceled": "Annulé",
+    "cancelled": "Annulé",
+    "failed": "Échoué"
+  },
+  "paymentStatus": {
+    "pending": "En attente",
+    "paid": "Payé",
+    "failed": "Échoué"
+  },
+  "notifications": {
+    "loadFailed": "Erreur lors du chargement des notifications"
+  },
+  "promotion": {
+    "codeCopiedTitle": "Code promo copie",
+    "codeCopiedBody": "{{brand}} : {{code}}",
+    "linkUnavailableTitle": "Lien indisponible",
+    "linkUnavailableBody": "Impossible d'ouvrir {{url}}",
+    "partnerOpenFailed": "Impossible d ouvrir le site partenaire pour le moment."
+  },
+  "cloud": {
+    "quotaExceededTitle": "Quota dépassé",
+    "quotaExceededBody": "Vous avez atteint la limite de stockage. Supprimez des documents pour en ajouter de nouveaux.",
+    "fileTooLargeTitle": "Fichier trop volumineux",
+    "fileTooLargeBody": "Le fichier ne peut pas dépasser 10 MB.",
+    "notEnoughSpaceTitle": "Espace insuffisant",
+    "notEnoughSpaceBody": "Il n'y a pas assez d'espace de stockage pour ce fichier.",
+    "uploadSuccessTitle": "Succès",
+    "uploadSuccessBody": "Document ajouté avec succès",
+    "uploadFailed": "Impossible d'ajouter le document",
+    "folderNotFoundTitle": "Dossier introuvable",
+    "folderNotFoundBody": "Ce dossier a été supprimé ou n'existe plus.",
+    "actionsMenuPrompt": "Que souhaitez-vous faire ?",
+    "rename": "Renommer",
+    "delete": "Supprimer",
+    "linkLimitTitle": "Limite atteinte",
+    "linkLimitBody": "Maximum 5 documents par transaction.",
+    "viewFailed": "Impossible de visualiser le document",
+    "downloadDialogTitle": "Enregistrer le document",
+    "downloadSuccessTitle": "Téléchargement réussi",
+    "downloadSuccessBody": "{{filename}} a été téléchargé.",
+    "downloadedToCacheTitle": "Document téléchargé",
+    "downloadedToCacheBody": "{{filename}} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur \"Visualiser\".",
+    "shareUnavailable": "Le téléchargement n'est pas disponible sur cet appareil",
+    "downloadFailed": "Impossible de télécharger le document",
+    "downloadTimeout": "Download timeout après 60 secondes"
+  }
+}

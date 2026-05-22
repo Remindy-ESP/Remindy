@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import onboardingService from '@/services/local/onboarding.service';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
 
 export default function ProfileHelpScreen() {
+  const { t } = useTranslation('settings');
   const router = useRouter();
   const [resettingGuide, setResettingGuide] = useState(false);
   const { startTour } = useCoachMarks();
@@ -31,9 +33,9 @@ export default function ProfileHelpScreen() {
     try {
       setResettingGuide(true);
       await onboardingService.resetOnboarding();
-      Alert.alert('Guide reinitialise', 'Le guide sera propose a nouveau a l ouverture de l application.');
+      Alert.alert(t('help.resetSuccessTitle'), t('help.resetSuccessBody'));
     } catch {
-      Alert.alert('Erreur', 'Impossible de reinitialiser le guide pour le moment.');
+      Alert.alert(t('help.errorTitle'), t('help.resetFailed'));
     } finally {
       setResettingGuide(false);
     }
@@ -46,16 +48,15 @@ export default function ProfileHelpScreen() {
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>Aide</Text>
-          <Text style={styles.headerSubtitle}>Guide utilisateur et assistance rapide</Text>
+          <Text style={styles.headerTitle}>{t('help.headerTitle')}</Text>
+          <Text style={styles.headerSubtitle}>{t('help.headerSubtitle')}</Text>
         </View>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Guide de prise en main</Text>
+        <Text style={styles.cardTitle}>{t('help.guideTitle')}</Text>
         <Text style={styles.cardBody}>
-          Retrouvez les principales fonctionnalites de Remindy : dashboard, abonnements, cloud,
-          promotions et securite, avec surbrillance des zones importantes directement dans l app.
+          {t('help.guideBody')}
         </Text>
 
         <TouchableOpacity
@@ -65,7 +66,7 @@ export default function ProfileHelpScreen() {
           activeOpacity={0.85}
         >
           <Ionicons name="compass-outline" size={18} color="#fff" />
-          <Text style={styles.primaryButtonText}>Voir le guide interactif</Text>
+          <Text style={styles.primaryButtonText}>{t('help.viewGuide')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -80,17 +81,16 @@ export default function ProfileHelpScreen() {
           ) : (
             <>
               <Ionicons name="refresh-outline" size={18} color="#DDE1FF" />
-              <Text style={styles.secondaryButtonText}>Reinitialiser le guide de bienvenue</Text>
+              <Text style={styles.secondaryButtonText}>{t('help.resetGuide')}</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Support</Text>
+        <Text style={styles.cardTitle}>{t('help.supportTitle')}</Text>
         <Text style={styles.cardBody}>
-          En cas de probleme, consultez la page A propos pour contacter le support ou reessayez
-          depuis les actions de l application.
+          {t('help.supportBody')}
         </Text>
       </View>
     </ScrollView>

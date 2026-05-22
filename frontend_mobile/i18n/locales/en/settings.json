@@ -1,1 +1,105 @@
-{}
+{
+  "profile": {
+    "loading": "Loading profile...",
+    "defaultUser": "User",
+    "placeholderEmail": "user@remindy.com",
+    "sections": {
+      "profile": "Profile",
+      "parameters": "Settings",
+      "support": "Support"
+    },
+    "edit": "Edit",
+    "menu": {
+      "notifications": "Notifications",
+      "preferences": "Preferences",
+      "security": "Security",
+      "privacy": "Privacy",
+      "help": "Help",
+      "about": "About"
+    },
+    "info": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "language": "Language",
+      "timezone": "Timezone"
+    }
+  },
+  "edit": {
+    "headerTitle": "Edit profile",
+    "headerSubtitle": "Edit profile information",
+    "userNotFound": "User not found.",
+    "successTitle": "Success",
+    "profileUpdated": "Profile updated.",
+    "updateFailed": "Unable to update profile.",
+    "errorTitle": "Error",
+    "clear": "Clear",
+    "save": "Save",
+    "helpText": "Optional fields can be left empty. Leaving \"Phone\", \"First name\" or \"Last name\" empty clears the value.",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "language": "Language",
+      "timezone": "Timezone"
+    },
+    "placeholders": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "+33612345678",
+      "language": "fr",
+      "timezone": "Europe/Paris"
+    },
+    "photo": {
+      "change": "Change photo",
+      "add": "Add a photo",
+      "remove": "Remove",
+      "removeConfirmTitle": "Remove photo",
+      "removeConfirmBody": "Do you want to remove your profile photo?",
+      "uploadedSuccess": "Profile photo updated.",
+      "uploadFailed": "Unable to update profile photo.",
+      "removedSuccess": "Profile photo removed.",
+      "removeFailed": "Unable to remove profile photo.",
+      "emptyFile": "The image file is empty.",
+      "permissionRequiredTitle": "Permission required",
+      "permissionRequiredBody": "Allow access to your photos to select an image.",
+      "cropHint": "Crop the image to a square to center the area kept in the round avatar."
+    }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Profile settings and user options",
+    "message": "Profile preferences will be configured here."
+  },
+  "help": {
+    "headerTitle": "Help",
+    "headerSubtitle": "User guide and quick assistance",
+    "guideTitle": "Getting started guide",
+    "guideBody": "Discover the main features of Remindy — dashboard, subscriptions, cloud, promotions and security — with key areas highlighted directly in the app.",
+    "viewGuide": "View interactive guide",
+    "resetGuide": "Reset the welcome guide",
+    "resetSuccessTitle": "Guide reset",
+    "resetSuccessBody": "The guide will be shown again the next time you open the app.",
+    "resetFailed": "Unable to reset the guide right now.",
+    "errorTitle": "Error",
+    "supportTitle": "Support",
+    "supportBody": "If you run into trouble, see the About page to contact support or retry from the app actions."
+  },
+  "notificationsScreen": {
+    "headerTitle": "Notifications",
+    "headerSubtitle": "Your alerts and reminders",
+    "empty": "No notifications yet"
+  },
+  "about": {
+    "headerTitle": "About",
+    "headerSubtitle": "App information",
+    "appDescription": "App for tracking subscriptions, reminders and managing your everyday services.",
+    "version": "Version",
+    "contact": "Contact",
+    "emailUnavailableTitle": "Email unavailable",
+    "emailUnavailableBody": "Contact us at {{email}}",
+    "emailErrorTitle": "Error",
+    "emailErrorBody": "Unable to open your email app.\n{{email}}"
+  }
+}

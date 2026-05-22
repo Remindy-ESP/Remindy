@@ -7,6 +7,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useFolders } from '@/hooks/useFolders';
 import { useStorageQuota } from '@/hooks/useStorageQuota';
@@ -29,6 +30,8 @@ import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
 export default function CloudScreen() {
+  const { t: tErrors } = useTranslation('errors');
+  const { t: tCommon } = useTranslation('common');
   const { documents, loading: docsLoading, fetchDocuments, uploadDocument, updateDocument, deleteDocument } = useDocuments();
   const { folders, loading: foldersLoading, fetchFolders, createFolder, updateFolder, deleteFolder, moveDocumentToFolder } = useFolders();
   const { quota, fetchQuota } = useStorageQuota();
@@ -112,7 +115,7 @@ export default function CloudScreen() {
   const handleUpload = async () => {
     try {
       if (quota && quota.availableBytes <= 0) {
-        Alert.alert('Quota dépassé', 'Vous avez atteint la limite de stockage. Supprimez des documents pour en ajouter de nouveaux.');
+        Alert.alert(tErrors('cloud.quotaExceededTitle'), tErrors('cloud.quotaExceededBody'));
         return;
       }
 
@@ -128,12 +131,12 @@ export default function CloudScreen() {
       const maxSize = 10 * 1024 * 1024;
 
       if (file.size && file.size > maxSize) {
-        Alert.alert('Fichier trop volumineux', 'Le fichier ne peut pas dépasser 10 MB.');
+        Alert.alert(tErrors('cloud.fileTooLargeTitle'), tErrors('cloud.fileTooLargeBody'));
         return;
       }
 
       if (quota && file.size && file.size > quota.availableBytes) {
-        Alert.alert('Espace insuffisant', 'Il n\'y a pas assez d\'espace de stockage pour ce fichier.');
+        Alert.alert(tErrors('cloud.notEnoughSpaceTitle'), tErrors('cloud.notEnoughSpaceBody'));
         return;
       }
 
@@ -148,11 +151,11 @@ export default function CloudScreen() {
         folderId: currentFolderId || undefined,
       });
       await Promise.all([fetchDocuments(), fetchQuota()]);
-      Alert.alert('Succès', 'Document ajouté avec succès');
+      Alert.alert(tErrors('cloud.uploadSuccessTitle'), tErrors('cloud.uploadSuccessBody'));
     } catch (error: any) {
       console.error('Upload error:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Impossible d'ajouter le document";
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = error?.response?.data?.message || error?.message || tErrors('cloud.uploadFailed');
+      Alert.alert(tErrors('title'), errorMessage);
     } finally {
       setUploading(false);
     }
@@ -164,9 +167,9 @@ export default function CloudScreen() {
       const folderExists = folders.find((f) => f.id === folderId);
       if (!folderExists) {
         Alert.alert(
-          'Dossier introuvable',
-          'Ce dossier a été supprimé ou n\'existe plus.',
-          [{ text: 'OK', onPress: () => {
+          tErrors('cloud.folderNotFoundTitle'),
+          tErrors('cloud.folderNotFoundBody'),
+          [{ text: tCommon('actions.ok'), onPress: () => {
             setCurrentFolderId(null);
             setFolderPath([]);
           }}]
@@ -210,14 +213,14 @@ export default function CloudScreen() {
     setSelectedFolder(folder);
     Alert.alert(
       folder.name,
-      'Que souhaitez-vous faire ?',
+      tErrors('cloud.actionsMenuPrompt'),
       [
-        { text: 'Renommer', onPress: () => setShowRenameFolder(true) },
-        { text: 'Supprimer', onPress: () => {
+        { text: tErrors('cloud.rename'), onPress: () => setShowRenameFolder(true) },
+        { text: tErrors('cloud.delete'), onPress: () => {
           setDeleteTarget({ type: 'folder', item: folder });
           setShowDeleteConfirm(true);
         }, style: 'destructive' },
-        { text: 'Annuler', style: 'cancel' },
+        { text: tCommon('actions.cancel'), style: 'cancel' },
       ]
     );
   };
@@ -263,7 +266,7 @@ export default function CloudScreen() {
       if (subscriptionId) {
         const linkedDocs = documents.filter((d) => d.subscription_id === subscriptionId);
         if (linkedDocs.length >= 5) {
-          Alert.alert('Limite atteinte', 'Maximum 5 documents par transaction.');
+          Alert.alert(tErrors('cloud.linkLimitTitle'), tErrors('cloud.linkLimitBody'));
           return;
         }
       }
@@ -276,7 +279,7 @@ export default function CloudScreen() {
     try {
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert('Erreur', 'Non authentifié');
+        Alert.alert(tErrors('title'), tErrors('notAuthenticated'));
         return;
       }
 
@@ -291,8 +294,8 @@ export default function CloudScreen() {
       setShowDocActions(false);
     } catch (error: any) {
       console.error('View document error:', error);
-      const errorMessage = error?.message || 'Impossible de visualiser le document';
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = error?.message || tErrors('cloud.viewFailed');
+      Alert.alert(tErrors('title'), errorMessage);
     }
   };
 
@@ -302,7 +305,7 @@ export default function CloudScreen() {
       setDownloading(true);
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert('Erreur', 'Non authentifié');
+        Alert.alert(tErrors('title'), tErrors('notAuthenticated'));
         setDownloading(false);
         return;
       }
@@ -323,7 +326,7 @@ export default function CloudScreen() {
       });
 
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Download timeout après 60 secondes')), 60000);
+        setTimeout(() => reject(new Error(tErrors('cloud.downloadTimeout'))), 60000);
       });
 
       const downloadResult = await Promise.race([downloadPromise, timeoutPromise]) as FileSystem.FileSystemDownloadResult;
@@ -348,35 +351,34 @@ export default function CloudScreen() {
               console.log('[CloudScreen] Calling Sharing.shareAsync with URI:', downloadResult.uri);
               const result = await Sharing.shareAsync(downloadResult.uri, {
                 mimeType: document.mime_type,
-                dialogTitle: 'Enregistrer le document',
+                dialogTitle: tErrors('cloud.downloadDialogTitle'),
                 UTI: document.mime_type === 'application/pdf' ? 'com.adobe.pdf' : undefined,
               });
               console.log('[CloudScreen] Share result:', JSON.stringify(result));
 
-              // Show success message after sharing
               Alert.alert(
-                'Téléchargement réussi',
-                `${document.filename} a été téléchargé.`
+                tErrors('cloud.downloadSuccessTitle'),
+                tErrors('cloud.downloadSuccessBody', { filename: document.filename })
               );
             } catch (shareError: any) {
               console.error('[CloudScreen] Share error:', shareError);
               Alert.alert(
-                'Document téléchargé',
-                `${document.filename} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur "Visualiser".`
+                tErrors('cloud.downloadedToCacheTitle'),
+                tErrors('cloud.downloadedToCacheBody', { filename: document.filename })
               );
             }
           }, 100);
         } else {
-          Alert.alert('Erreur', 'Le téléchargement n\'est pas disponible sur cet appareil');
+          Alert.alert(tErrors('title'), tErrors('cloud.shareUnavailable'));
         }
       } else {
         console.error('[CloudScreen] Download failed with status:', downloadResult.status);
-        Alert.alert('Erreur', 'Impossible de télécharger le document');
+        Alert.alert(tErrors('title'), tErrors('cloud.downloadFailed'));
       }
     } catch (error: any) {
       console.error('[CloudScreen] Download document error:', error);
-      const errorMessage = error?.message || 'Impossible de télécharger le document';
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = error?.message || tErrors('cloud.downloadFailed');
+      Alert.alert(tErrors('title'), errorMessage);
       setDownloading(false);
     }
   };

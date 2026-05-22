@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 
@@ -65,22 +66,23 @@ const PROMOS: PromoItem[] = [
 ];
 
 export default function PromotionScreen() {
+  const { t } = useTranslation('errors');
   const handleCopyPromoCode = (promo: PromoItem) => {
     Clipboard.setString(promo.promoCode);
-    Alert.alert('Code promo copie', `${promo.brand} : ${promo.promoCode}`);
+    Alert.alert(t('promotion.codeCopiedTitle'), t('promotion.codeCopiedBody', { brand: promo.brand, code: promo.promoCode }));
   };
 
   const handleOpenPartnerWebsite = async (promo: PromoItem) => {
     try {
       const supported = await Linking.canOpenURL(promo.partnerUrl);
       if (!supported) {
-        Alert.alert('Lien indisponible', `Impossible d'ouvrir ${promo.partnerUrl}`);
+        Alert.alert(t('promotion.linkUnavailableTitle'), t('promotion.linkUnavailableBody', { url: promo.partnerUrl }));
         return;
       }
 
       await Linking.openURL(promo.partnerUrl);
     } catch {
-      Alert.alert('Erreur', 'Impossible d ouvrir le site partenaire pour le moment.');
+      Alert.alert(t('title'), t('promotion.partnerOpenFailed'));
     }
   };
 

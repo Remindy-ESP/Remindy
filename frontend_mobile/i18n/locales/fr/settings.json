@@ -1,1 +1,105 @@
-{}
+{
+  "profile": {
+    "loading": "Chargement du profil...",
+    "defaultUser": "Utilisateur",
+    "placeholderEmail": "utilisateur@remindy.com",
+    "sections": {
+      "profile": "Profil",
+      "parameters": "Parametres",
+      "support": "Support"
+    },
+    "edit": "Modifier",
+    "menu": {
+      "notifications": "Notifications",
+      "preferences": "Preferences",
+      "security": "Securite",
+      "privacy": "Confidentialite",
+      "help": "Aide",
+      "about": "A propos"
+    },
+    "info": {
+      "firstName": "Prenom",
+      "lastName": "Nom",
+      "email": "Email",
+      "phone": "Telephone",
+      "language": "Langue",
+      "timezone": "Fuseau horaire"
+    }
+  },
+  "edit": {
+    "headerTitle": "Modifier le profil",
+    "headerSubtitle": "Edition des informations du profil",
+    "userNotFound": "Utilisateur introuvable.",
+    "successTitle": "Succes",
+    "profileUpdated": "Profil mis a jour.",
+    "updateFailed": "Impossible de mettre a jour le profil.",
+    "errorTitle": "Erreur",
+    "clear": "Effacer",
+    "save": "Enregistrer",
+    "helpText": "Les champs optionnels peuvent etre vides. Laisser \"Telephone\", \"Prenom\" ou \"Nom\" vide efface la valeur.",
+    "fields": {
+      "firstName": "Prenom",
+      "lastName": "Nom",
+      "phone": "Telephone",
+      "language": "Langue",
+      "timezone": "Fuseau horaire"
+    },
+    "placeholders": {
+      "firstName": "Prenom",
+      "lastName": "Nom",
+      "phone": "+33612345678",
+      "language": "fr",
+      "timezone": "Europe/Paris"
+    },
+    "photo": {
+      "change": "Changer la photo",
+      "add": "Ajouter une photo",
+      "remove": "Supprimer",
+      "removeConfirmTitle": "Supprimer la photo",
+      "removeConfirmBody": "Voulez-vous supprimer votre photo de profil ?",
+      "uploadedSuccess": "Photo de profil mise a jour.",
+      "uploadFailed": "Impossible de mettre a jour la photo de profil.",
+      "removedSuccess": "Photo de profil supprimee.",
+      "removeFailed": "Impossible de supprimer la photo de profil.",
+      "emptyFile": "Le fichier image est vide.",
+      "permissionRequiredTitle": "Permission requise",
+      "permissionRequiredBody": "Autorisez l acces a vos photos pour choisir une image.",
+      "cropHint": "Recadrez l image en carre pour centrer la zone a conserver dans l avatar rond."
+    }
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Reglages de profil et options utilisateur",
+    "message": "Les preferences de profil seront configurees ici."
+  },
+  "help": {
+    "headerTitle": "Aide",
+    "headerSubtitle": "Guide utilisateur et assistance rapide",
+    "guideTitle": "Guide de prise en main",
+    "guideBody": "Retrouvez les principales fonctionnalites de Remindy : dashboard, abonnements, cloud, promotions et securite, avec surbrillance des zones importantes directement dans l app.",
+    "viewGuide": "Voir le guide interactif",
+    "resetGuide": "Reinitialiser le guide de bienvenue",
+    "resetSuccessTitle": "Guide reinitialise",
+    "resetSuccessBody": "Le guide sera propose a nouveau a l ouverture de l application.",
+    "resetFailed": "Impossible de reinitialiser le guide pour le moment.",
+    "errorTitle": "Erreur",
+    "supportTitle": "Support",
+    "supportBody": "En cas de probleme, consultez la page A propos pour contacter le support ou reessayez depuis les actions de l application."
+  },
+  "notificationsScreen": {
+    "headerTitle": "Notifications",
+    "headerSubtitle": "Vos alertes et rappels",
+    "empty": "Pas de notifications pour le moment"
+  },
+  "about": {
+    "headerTitle": "A propos",
+    "headerSubtitle": "Informations sur l application",
+    "appDescription": "Application de suivi des abonnements, rappels et gestion de vos services du quotidien.",
+    "version": "Version",
+    "contact": "Contact",
+    "emailUnavailableTitle": "Email indisponible",
+    "emailUnavailableBody": "Contactez-nous a {{email}}",
+    "emailErrorTitle": "Erreur",
+    "emailErrorBody": "Impossible d'ouvrir votre application email.\n{{email}}"
+  }
+}

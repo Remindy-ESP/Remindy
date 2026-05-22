@@ -1,10 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function NotificationsScreen() {
+    const { t, i18n } = useTranslation('settings');
+    const { t: tCommon } = useTranslation('common');
+    const { t: tErrors } = useTranslation('errors');
     const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
@@ -18,12 +22,12 @@ export default function NotificationsScreen() {
             setNotifications(data || []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
-            setError(err.response?.data?.message || 'Erreur lors du chargement des notifications');
+            setError(err.response?.data?.message || tErrors('notifications.loadFailed'));
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [tErrors]);
 
     useEffect(() => {
         if (user) {
@@ -70,7 +74,7 @@ export default function NotificationsScreen() {
 
     const renderNotificationItem = ({ item }: { item: Notification }) => {
         const isRead = !!item.readAt;
-        const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString('fr-FR', {
+        const date = item.createdAt ? new Date(item.createdAt).toLocaleDateString(i18n.language, {
             day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
         }) : '';
 
@@ -113,23 +117,23 @@ export default function NotificationsScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Notifications</Text>
+                <Text style={styles.headerTitle}>{t('notificationsScreen.headerTitle')}</Text>
                 <Text style={styles.headerSubtitle}>
-                    Vos alertes et rappels
+                    {t('notificationsScreen.headerSubtitle')}
                 </Text>
             </View>
-            
+
             {error ? (
                 <View style={styles.centered}>
                     <Text style={styles.errorText}>{error}</Text>
                     <TouchableOpacity style={styles.retryButton} onPress={fetchNotifications}>
-                        <Text style={styles.retryText}>Réessayer</Text>
+                        <Text style={styles.retryText}>{tCommon('actions.retry')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : notifications.length === 0 ? (
                 <View style={styles.emptyContainer}>
                     <Ionicons name="notifications-off-outline" size={64} color="#555" />
-                    <Text style={styles.emptyText}>Pas de notifications pour le moment</Text>
+                    <Text style={styles.emptyText}>{t('notificationsScreen.empty')}</Text>
                 </View>
             ) : (
                 <FlatList

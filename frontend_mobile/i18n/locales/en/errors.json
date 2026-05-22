@@ -1,1 +1,54 @@
-{}
+{
+  "title": "Error",
+  "successTitle": "Success",
+  "notAuthenticated": "Not authenticated",
+  "eventStatus": {
+    "scheduled": "Scheduled",
+    "completed": "Completed",
+    "canceled": "Canceled",
+    "cancelled": "Canceled",
+    "failed": "Failed"
+  },
+  "paymentStatus": {
+    "pending": "Pending",
+    "paid": "Paid",
+    "failed": "Failed"
+  },
+  "notifications": {
+    "loadFailed": "Error loading notifications"
+  },
+  "promotion": {
+    "codeCopiedTitle": "Promo code copied",
+    "codeCopiedBody": "{{brand}}: {{code}}",
+    "linkUnavailableTitle": "Link unavailable",
+    "linkUnavailableBody": "Unable to open {{url}}",
+    "partnerOpenFailed": "Unable to open the partner site right now."
+  },
+  "cloud": {
+    "quotaExceededTitle": "Storage limit reached",
+    "quotaExceededBody": "You have reached your storage limit. Delete documents to add new ones.",
+    "fileTooLargeTitle": "File too large",
+    "fileTooLargeBody": "The file cannot exceed 10 MB.",
+    "notEnoughSpaceTitle": "Not enough space",
+    "notEnoughSpaceBody": "There is not enough storage space for this file.",
+    "uploadSuccessTitle": "Success",
+    "uploadSuccessBody": "Document added successfully",
+    "uploadFailed": "Unable to add the document",
+    "folderNotFoundTitle": "Folder not found",
+    "folderNotFoundBody": "This folder has been deleted or no longer exists.",
+    "actionsMenuPrompt": "What would you like to do?",
+    "rename": "Rename",
+    "delete": "Delete",
+    "linkLimitTitle": "Limit reached",
+    "linkLimitBody": "Maximum 5 documents per transaction.",
+    "viewFailed": "Unable to view the document",
+    "downloadDialogTitle": "Save document",
+    "downloadSuccessTitle": "Download successful",
+    "downloadSuccessBody": "{{filename}} was downloaded.",
+    "downloadedToCacheTitle": "Document downloaded",
+    "downloadedToCacheBody": "{{filename}} was downloaded to the app cache. You can view it by pressing \"View\".",
+    "shareUnavailable": "Downloading is not available on this device",
+    "downloadFailed": "Unable to download the document",
+    "downloadTimeout": "Download timeout after 60 seconds"
+  }
+}

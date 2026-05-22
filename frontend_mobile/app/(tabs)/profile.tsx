@@ -57,6 +57,7 @@ function InfoRow({ label, value }: InfoRowProps) {
 export default function ProfileScreen() {
   const { t } = useTranslation('auth');
   const { t: tCommon } = useTranslation('common');
+  const { t: tSettings } = useTranslation('settings');
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -87,19 +88,20 @@ export default function ProfileScreen() {
   };
 
   const userName = useMemo(() => {
+    const defaultName = tSettings('profile.defaultUser');
     if (!user) {
-      return 'Utilisateur';
+      return defaultName;
     }
 
     const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
-    return fullName || 'Utilisateur';
-  }, [user]);
+    return fullName || defaultName;
+  }, [user, tSettings]);
 
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={styles.loadingText}>Chargement du profil...</Text>
+        <Text style={styles.loadingText}>{tSettings('profile.loading')}</Text>
       </View>
     );
   }
@@ -116,7 +118,7 @@ export default function ProfileScreen() {
         />
 
         <Text style={styles.name}>{userName}</Text>
-        <Text style={styles.email}>{user?.email || 'utilisateur@remindy.com'}</Text>
+        <Text style={styles.email}>{user?.email || tSettings('profile.placeholderEmail')}</Text>
 
         <View style={styles.rolePill}>
           <Text style={styles.rolePillText}>{user?.role || 'user'}</Text>
@@ -125,7 +127,7 @@ export default function ProfileScreen() {
 
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Profil</Text>
+          <Text style={styles.sectionTitle}>{tSettings('profile.sections.profile')}</Text>
           <TouchableOpacity
             testID="edit-profile-item"
             style={styles.editButton}
@@ -133,60 +135,60 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="create-outline" size={16} color="#E5E7FF" />
-            <Text style={styles.editButtonText}>Modifier</Text>
+            <Text style={styles.editButtonText}>{tSettings('profile.edit')}</Text>
           </TouchableOpacity>
         </View>
 
-        <InfoRow label="Prenom" value={user?.firstName} />
-        <InfoRow label="Nom" value={user?.lastName} />
-        <InfoRow label="Email" value={user?.email} />
-        <InfoRow label="Telephone" value={user?.phone} />
-        <InfoRow label="Langue" value={user?.language} />
-        <InfoRow label="Fuseau horaire" value={user?.timezone} />
+        <InfoRow label={tSettings('profile.info.firstName')} value={user?.firstName} />
+        <InfoRow label={tSettings('profile.info.lastName')} value={user?.lastName} />
+        <InfoRow label={tSettings('profile.info.email')} value={user?.email} />
+        <InfoRow label={tSettings('profile.info.phone')} value={user?.phone} />
+        <InfoRow label={tSettings('profile.info.language')} value={user?.language} />
+        <InfoRow label={tSettings('profile.info.timezone')} value={user?.timezone} />
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Parametres</Text>
+        <Text style={styles.sectionTitle}>{tSettings('profile.sections.parameters')}</Text>
 
         <MenuItem
           testID="notifications-item"
           icon="notifications-outline"
-          label="Notifications"
+          label={tSettings('profile.menu.notifications')}
           onPress={() => router.push('/(tabs)/notifications' as any)}
         />
         <MenuItem
           testID="preferences-item"
           icon="settings-outline"
-          label="Preferences"
+          label={tSettings('profile.menu.preferences')}
           onPress={() => router.push('/(tabs)/profile-preferences' as any)}
         />
         <MenuItem
           testID="security-item"
           icon="shield-checkmark-outline"
-          label="Securite"
+          label={tSettings('profile.menu.security')}
           onPress={() => router.push('/(tabs)/profile-security' as any)}
         />
         <MenuItem
           testID="privacy-item"
           icon="lock-closed-outline"
-          label="Confidentialite"
+          label={tSettings('profile.menu.privacy')}
           onPress={() => router.push('/(tabs)/profile-privacy' as any)}
         />
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Support</Text>
+        <Text style={styles.sectionTitle}>{tSettings('profile.sections.support')}</Text>
 
         <MenuItem
           testID="help-item"
           icon="help-circle-outline"
-          label="Aide"
+          label={tSettings('profile.menu.help')}
           onPress={() => router.push('/(tabs)/profile-help' as any)}
         />
         <MenuItem
           testID="about-item"
           icon="information-circle-outline"
-          label="A propos"
+          label={tSettings('profile.menu.about')}
           onPress={() => router.push('/(tabs)/profile-about' as any)}
         />
       </View>
