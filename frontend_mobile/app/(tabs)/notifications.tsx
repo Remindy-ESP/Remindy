@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { formatDate } from '@/utils/format';
 
 export default function NotificationsScreen() {
+    const router = useRouter();
     const { user } = useAuth();
     const { t, language } = useTranslation();
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -121,6 +123,9 @@ export default function NotificationsScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.push('/(stack)/profile' as any)} activeOpacity={0.8}>
+                    <Ionicons name='chevron-back' size={20} color='#fff' />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>{t('notifications.headerTitle')}</Text>
                 <Text style={styles.headerSubtitle}>
                     {t('notifications.headerSubtitle')}
@@ -174,6 +179,15 @@ const styles = StyleSheet.create({
     header: {
         padding: 20,
         backgroundColor: '#1a1a3e',
+    },
+    backButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 12,
+        backgroundColor: '#373848',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
     },
     headerTitle: {
         fontSize: 28,

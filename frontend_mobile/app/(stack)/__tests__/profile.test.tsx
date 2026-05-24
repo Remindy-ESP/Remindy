@@ -140,13 +140,13 @@ describe('ProfileScreen', () => {
   it('navigates to profile edit page when edit button is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('edit-profile-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-edit');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-edit');
   });
 
   it('navigates to profile security page when security item is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('security-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-security');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-security');
   });
 
   // ── Missing coverage ────────────────────────────────────────────────────────
@@ -239,25 +239,25 @@ describe('ProfileScreen', () => {
   it('navigates to preferences when preferences item is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('preferences-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-preferences');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-preferences');
   });
 
   it('navigates to privacy when privacy item is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('privacy-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-privacy');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-privacy');
   });
 
   it('navigates to help when help item is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('help-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-help');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-help');
   });
 
   it('navigates to about when about item is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('about-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/profile-about');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-about');
   });
 
   it('shows alert dialog and dismisses when cancel is pressed', () => {

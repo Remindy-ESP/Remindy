@@ -130,7 +130,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             testID="edit-profile-item"
             style={styles.editButton}
-            onPress={() => router.push('/(tabs)/profile-edit' as any)}
+            onPress={() => router.push('/(stack)/profile-edit' as any)}
             activeOpacity={0.8}
           >
             <Ionicons name="create-outline" size={16} color="#E5E7FF" />
@@ -159,19 +159,19 @@ export default function ProfileScreen() {
           testID="preferences-item"
           icon="settings-outline"
           label={t('profile.menu.preferences')}
-          onPress={() => router.push('/(tabs)/profile-preferences' as any)}
+          onPress={() => router.push('/(stack)/profile-preferences' as any)}
         />
         <MenuItem
           testID="security-item"
           icon="shield-checkmark-outline"
           label={t('profile.menu.security')}
-          onPress={() => router.push('/(tabs)/profile-security' as any)}
+          onPress={() => router.push('/(stack)/profile-security' as any)}
         />
         <MenuItem
           testID="privacy-item"
           icon="lock-closed-outline"
           label={t('profile.menu.privacy')}
-          onPress={() => router.push('/(tabs)/profile-privacy' as any)}
+          onPress={() => router.push('/(stack)/profile-privacy' as any)}
         />
       </View>
 
@@ -182,13 +182,13 @@ export default function ProfileScreen() {
           testID="help-item"
           icon="help-circle-outline"
           label={t('profile.menu.help')}
-          onPress={() => router.push('/(tabs)/profile-help' as any)}
+          onPress={() => router.push('/(stack)/profile-help' as any)}
         />
         <MenuItem
           testID="about-item"
           icon="information-circle-outline"
           label={t('profile.menu.about')}
-          onPress={() => router.push('/(tabs)/profile-about' as any)}
+          onPress={() => router.push('/(stack)/profile-about' as any)}
         />
       </View>
 

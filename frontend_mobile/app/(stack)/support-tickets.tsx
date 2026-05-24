@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketSummary, SupportTicketStatus } from '@/services/api/support.service';
 import { useTranslation } from '@/context/I18nContext';
@@ -73,7 +73,7 @@ export default function SupportTicketsScreen() {
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
 
   return (
     <View style={styles.container}>
@@ -87,7 +87,7 @@ export default function SupportTicketsScreen() {
         </View>
         <TouchableOpacity
           style={styles.iconButton}
-          onPress={() => router.push('/(tabs)/support-new')}
+          onPress={() => router.push('/(stack)/support-new')}
           activeOpacity={0.8}
         >
           <Ionicons name='add' size={22} color='#fff' />
@@ -118,7 +118,7 @@ export default function SupportTicketsScreen() {
           renderItem={({ item }) => (
             <TicketRow
               ticket={item}
-              onPress={() => router.push(`/(tabs)/support-ticket-detail?id=${item.id}`)}
+              onPress={() => router.push(`/(stack)/support-ticket-detail?id=${item.id}`)}
             />
           )}
           ListEmptyComponent={
@@ -127,7 +127,7 @@ export default function SupportTicketsScreen() {
               <Text style={styles.emptyText}>{t('support.tickets.empty')}</Text>
               <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={() => router.push('/(tabs)/support-new')}
+                onPress={() => router.push('/(stack)/support-new')}
                 activeOpacity={0.85}
               >
                 <Ionicons name='add' size={18} color='#fff' />

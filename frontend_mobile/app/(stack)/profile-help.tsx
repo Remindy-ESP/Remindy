@@ -95,7 +95,7 @@ export default function ProfileHelpScreen() {
 
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={() => router.push('/(tabs)/support-new')}
+          onPress={() => router.push('/(stack)/support-new')}
           activeOpacity={0.85}
         >
           <Ionicons name="create-outline" size={18} color="#fff" />
@@ -104,7 +104,7 @@ export default function ProfileHelpScreen() {
 
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={() => router.push('/(tabs)/support-tickets')}
+          onPress={() => router.push('/(stack)/support-tickets')}
           activeOpacity={0.85}
         >
           <Ionicons name="list-outline" size={18} color="#DDE1FF" />

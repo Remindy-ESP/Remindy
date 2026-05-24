@@ -6,6 +6,8 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useTranslation } from '@/context/I18nContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -270,6 +272,7 @@ function CollapsibleSection({ section }: { section: LegalSection }) {
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export default function LegalScreen() {
+    const router = useRouter();
     const { t } = useTranslation();
     return (
         <View style={styles.container}>
@@ -280,6 +283,9 @@ export default function LegalScreen() {
             >
                 {/* Header */}
                 <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
+                        <Ionicons name='chevron-back' size={20} color='#fff' />
+                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>{t('legal.headerTitle')}</Text>
                     <Text style={styles.headerSubtitle}>
                         {t('legal.headerSubtitle')}
@@ -326,6 +332,15 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 16,
         backgroundColor: '#1a1a3e',
+    },
+    backButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 12,
+        backgroundColor: '#373848',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
     },
     headerTitle: {
         fontSize: 28,
