@@ -120,7 +120,6 @@ export default function SupportTicketDetailScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
       {/* Header */}
       <View style={styles.headerRow}>
