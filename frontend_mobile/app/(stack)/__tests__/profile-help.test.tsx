@@ -24,15 +24,7 @@ jest.mock('@/features/coach-marks/CoachMarksContext', () => ({
   }),
 }));
 
-const mockResetOnboarding = jest.fn();
-jest.mock('@/services/local/onboarding.service', () => ({
-  __esModule: true,
-  default: {
-    hasSeenOnboarding: jest.fn(() => Promise.resolve(true)),
-    setHasSeenOnboarding: jest.fn(() => Promise.resolve()),
-    resetOnboarding: (...args: any[]) => mockResetOnboarding(...args),
-  },
-}));
+const mockResetOnboarding = global.__mockOnboardingReset as jest.Mock;
 
 jest.spyOn(Alert, 'alert');
 

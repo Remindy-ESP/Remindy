@@ -3,15 +3,8 @@ import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import AuthScreen from '../index';
 
-// Mock expo-router
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    push: mockPush,
-  }),
-}));
+const mockReplace = global.__mockRouterReplace as jest.Mock;
+const mockPush = global.__mockRouterPush as jest.Mock;
 
 const mockLogin = jest.fn();
 const mockRegister = jest.fn();
@@ -32,15 +25,7 @@ jest.mock('@/context/AuthContext', () => ({
   }),
 }));
 
-const mockHasSeenOnboarding = jest.fn(() => Promise.resolve(true));
-jest.mock('@/services/local/onboarding.service', () => ({
-  __esModule: true,
-  default: {
-    hasSeenOnboarding: (...args: any[]) => mockHasSeenOnboarding.apply(undefined, args),
-    setHasSeenOnboarding: jest.fn(() => Promise.resolve()),
-    resetOnboarding: jest.fn(() => Promise.resolve()),
-  },
-}));
+const mockHasSeenOnboarding = global.__mockOnboardingHasSeen as jest.Mock;
 
 jest.mock('@/services/api', () => ({
   getErrorMessage: (error: any, fallback: string) => error?.message || fallback,
