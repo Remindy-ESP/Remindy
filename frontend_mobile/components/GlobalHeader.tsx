@@ -43,7 +43,7 @@ export default function GlobalHeader() {
 
     const traverseToProfile = () => {
         closeProfileMenu();
-        router.push('/(tabs)/profile');
+        router.push('/(stack)/profile');
     };
 
     return (
@@ -115,7 +115,7 @@ export default function GlobalHeader() {
                                 style={styles.menuItem}
                                 onPress={() => {
                                     closeProfileMenu();
-                                    router.push('/(tabs)/categories' as any);
+                                    router.push('/(stack)/categories' as any);
                                 }}
                             >
                                 <Text style={styles.menuItemText}>{t('common.headerMenu.categories')}</Text>

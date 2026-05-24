@@ -7,6 +7,7 @@ const mockPush = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack, push: mockPush, replace: jest.fn() }),
+  useFocusEffect: (cb: () => void) => { require('react').useEffect(cb, []); },
 }));
 
 const mockListMine = jest.fn();
@@ -95,7 +96,7 @@ describe('SupportTicketsScreen', () => {
     const { TouchableOpacity } = require('react-native');
     const touchables = UNSAFE_getAllByType(TouchableOpacity);
     fireEvent.press(touchables[1]);
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/support-new');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/support-new');
   });
 
   it('navigates back when back button is pressed', async () => {
@@ -113,6 +114,6 @@ describe('SupportTicketsScreen', () => {
 
     fireEvent.press(getByText('My billing issue'));
 
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/support-ticket-detail?id=ticket-1');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/support-ticket-detail?id=ticket-1');
   });
 });

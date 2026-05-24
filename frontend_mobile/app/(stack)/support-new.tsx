@@ -55,8 +55,11 @@ export default function SupportNewScreen() {
         message: message.trim(),
         category: category || undefined,
       });
+      setSubject('');
+      setMessage('');
+      setCategory('');
       Alert.alert(t('support.new.successTitle'), t('support.new.successMessage'), [
-        { text: 'OK', onPress: () => router.replace('/(tabs)/support-tickets') },
+        { text: 'OK', onPress: () => router.back() },
       ]);
     } catch {
       Alert.alert(t('support.new.errorTitle'), t('support.new.errorMessage'));

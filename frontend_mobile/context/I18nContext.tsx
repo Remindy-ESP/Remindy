@@ -44,6 +44,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<SupportedLanguage>('fr');
   const [ready, setReady] = useState(false);
   const lastBackendSyncRef = useRef<SupportedLanguage | null>(null);
+  const hydratedFromBackendRef = useRef(false);
 
   const applyLocale = useCallback((lang: SupportedLanguage) => {
     i18n.locale = lang;
@@ -74,15 +75,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     };
   }, [applyLocale]);
 
-  // Hydrate from authenticated user.language (login on new device)
+  // Hydrate from authenticated user.language once per login (new device sync)
   useEffect(() => {
     if (!ready || !user?.language) return;
     if (!isSupportedLanguage(user.language)) return;
+    if (hydratedFromBackendRef.current) return;
+    hydratedFromBackendRef.current = true;
     if (user.language === language) return;
     applyLocale(user.language);
     lastBackendSyncRef.current = user.language;
     AsyncStorage.setItem(STORAGE_KEY, user.language).catch(() => undefined);
-  }, [ready, user?.language, language, applyLocale]);
+  }, [ready, user?.language, applyLocale]);
 
   const setLanguage = useCallback(
     async (lang: SupportedLanguage) => {

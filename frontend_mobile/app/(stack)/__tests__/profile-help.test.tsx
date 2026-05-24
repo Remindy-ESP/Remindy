@@ -78,13 +78,13 @@ describe('ProfileHelpScreen', () => {
   it('navigates to support-new when new ticket button is pressed', () => {
     const { getByText } = render(<ProfileHelpScreen />);
     fireEvent.press(getByText('Nouveau ticket'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/support-new');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/support-new');
   });
 
   it('navigates to support-tickets when my tickets button is pressed', () => {
     const { getByText } = render(<ProfileHelpScreen />);
     fireEvent.press(getByText('Mes tickets'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/support-tickets');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/support-tickets');
   });
 
   it('navigates back when back button is pressed', () => {
