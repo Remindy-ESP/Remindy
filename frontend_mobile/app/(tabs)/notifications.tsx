@@ -191,21 +191,19 @@ export default function NotificationsScreen() {
         }
     };
 
-    const renderRightActions = (
+    const renderSwipeAction = (
         progress: Animated.AnimatedInterpolation<number>,
-        _dragX: Animated.AnimatedInterpolation<number>,
         id: string,
+        fromRight: boolean,
     ) => {
         const translateX = progress.interpolate({
             inputRange: [0, 1],
-            outputRange: [80, 0],
+            outputRange: [fromRight ? 80 : -80, 0],
         });
-
         const opacity = progress.interpolate({
             inputRange: [0, 0.5, 1],
             outputRange: [0, 0.5, 1],
         });
-
         return (
             <Animated.View style={[styles.deleteAction, { transform: [{ translateX }], opacity }]}>
                 <TouchableOpacity
@@ -220,34 +218,11 @@ export default function NotificationsScreen() {
         );
     };
 
-    const renderLeftActions = (
-        progress: Animated.AnimatedInterpolation<number>,
-        _dragX: Animated.AnimatedInterpolation<number>,
-        id: string,
-    ) => {
-        const translateX = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [-80, 0],
-        });
+    const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, _dragX: Animated.AnimatedInterpolation<number>, id: string) =>
+        renderSwipeAction(progress, id, true);
 
-        const opacity = progress.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [0, 0.5, 1],
-        });
-
-        return (
-            <Animated.View style={[styles.deleteAction, { transform: [{ translateX }], opacity }]}>
-                <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(id)}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="trash-outline" size={22} color="#fff" />
-                    <Text style={styles.deleteText}>Supprimer</Text>
-                </TouchableOpacity>
-            </Animated.View>
-        );
-    };
+    const renderLeftActions = (progress: Animated.AnimatedInterpolation<number>, _dragX: Animated.AnimatedInterpolation<number>, id: string) =>
+        renderSwipeAction(progress, id, false);
 
     const renderNotificationItem = ({ item }: { item: Notification }) => {
         const isRead = !!item.readAt;
