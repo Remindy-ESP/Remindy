@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketCategory } from '@/services/api/support.service';
 import { useTranslation } from '@/context/I18nContext';
+import ScreenHeader from '@/components/ScreenHeader';
 
 const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
   technical: 'Technique / Technical',
@@ -37,7 +38,7 @@ export default function SupportNewScreen() {
   const [showCategories, setShowCategories] = useState(false);
 
   useEffect(() => {
-    supportService.getCategories().then(setCategories).catch(() => {});
+    void supportService.getCategories().then(setCategories).catch(() => {});
   }, []);
 
   const handleSubmit = async () => {
@@ -70,15 +71,7 @@ export default function SupportNewScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps='handled'>
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name='chevron-back' size={20} color='#fff' />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>{t('support.new.title')}</Text>
-          <Text style={styles.headerSubtitle}>{t('support.new.subtitle')}</Text>
-        </View>
-      </View>
+      <ScreenHeader title={t('support.new.title')} subtitle={t('support.new.subtitle')} />
 
       <View style={styles.card}>
         <Text style={styles.label}>{t('support.new.subjectLabel')}</Text>
@@ -168,19 +161,6 @@ export default function SupportNewScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#11112A' },
   content: { padding: 16, paddingBottom: 32 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  headerTextWrap: { flex: 1 },
-  headerTitle: { color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  headerSubtitle: { color: '#B8BBD6', fontSize: 13 },
   card: { backgroundColor: '#373848', borderRadius: 16, padding: 16, marginBottom: 16 },
   label: { color: '#B8BBD6', fontSize: 13, fontWeight: '600', marginBottom: 8 },
   input: {

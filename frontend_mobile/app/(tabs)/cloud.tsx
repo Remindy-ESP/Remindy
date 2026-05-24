@@ -61,8 +61,8 @@ export default function CloudScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      loadData();
-      initializeDefaultFolders();
+      void loadData();
+      void initializeDefaultFolders();
     }, [currentFolderId])
   );
 

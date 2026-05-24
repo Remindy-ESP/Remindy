@@ -17,6 +17,7 @@ import { useTranslation } from '@/context/I18nContext';
 import { userService } from '@/services/api';
 import type { UpdateUserRequest } from '@/services/api';
 import UserAvatar from '@/components/profile/UserAvatar';
+import ScreenHeader from '@/components/ScreenHeader';
 
 type FieldKey = 'firstName' | 'lastName' | 'phone' | 'language' | 'timezone';
 
@@ -256,20 +257,7 @@ export default function ProfileEditScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => router.back()}
-          activeOpacity={0.8}
-          testID="back-button"
-        >
-          <Ionicons name="chevron-back" size={20} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>{t('profile.edit.title')}</Text>
-          <Text style={styles.headerSubtitle}>{t('profile.edit.subtitle')}</Text>
-        </View>
-      </View>
+      <ScreenHeader title={t('profile.edit.title')} subtitle={t('profile.edit.subtitle')} testID="back-button" />
 
       <View style={styles.card}>
         <View style={styles.avatarSection}>
@@ -405,33 +393,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 28,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  headerTextWrap: {
-    flex: 1,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    color: '#B8BBD6',
-    fontSize: 13,
   },
   card: {
     backgroundColor: '#373848',

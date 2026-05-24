@@ -131,7 +131,7 @@ export default function SubscriptionScreen() {
   };
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   useEffect(() => {
@@ -196,9 +196,8 @@ export default function SubscriptionScreen() {
   }, [openAdd, categories]);
 
   useEffect(() => {
-    // Re-fetch when filters change
     if (!loading) {
-      fetchData();
+      void fetchData();
     }
   }, [filterFrequency, filterCategoryId]);
 

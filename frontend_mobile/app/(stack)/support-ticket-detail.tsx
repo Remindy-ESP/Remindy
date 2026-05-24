@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketDetail, SupportTicketMessage } from '@/services/api/support.service';
+import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/context/I18nContext';
 
 function MessageBubble({ message }: { message: SupportTicketMessage }) {
@@ -49,20 +50,6 @@ function MessageBubble({ message }: { message: SupportTicketMessage }) {
     </View>
   );
 }
-
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Ouvert',
-  pending_user: 'En attente',
-  resolved: 'Résolu',
-  closed: 'Fermé',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  open: '#E8A838',
-  pending_user: '#4B9BE8',
-  resolved: '#4CAF82',
-  closed: '#6B6E8A',
-};
 
 export default function SupportTicketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

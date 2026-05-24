@@ -369,7 +369,7 @@ describe('useFolders', () => {
         );
       });
 
-      expect(result.current.error).toBe('Failed to move document');
+      expect(result.current.error).toBe('Echec du deplacement du document');
     });
   });
 });

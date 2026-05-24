@@ -1,19 +1,16 @@
 import React from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useTranslation } from '@/context/I18nContext';
+import ScreenHeader from '@/components/ScreenHeader';
 
 const APP_VERSION = '1.0.0';
 const SUPPORT_EMAIL = 'support@remindy.com';
 
 export default function ProfileAboutScreen() {
-  const router = useRouter();
   const { t } = useTranslation();
 
   const handleContactPress = async () => {
     const emailUrl = `mailto:${SUPPORT_EMAIL}`;
-
     try {
       const canOpen = await Linking.canOpenURL(emailUrl);
       if (!canOpen) {
@@ -23,7 +20,6 @@ export default function ProfileAboutScreen() {
         );
         return;
       }
-
       await Linking.openURL(emailUrl);
     } catch {
       Alert.alert(
@@ -35,15 +31,7 @@ export default function ProfileAboutScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={20} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>{t('profile.about.title')}</Text>
-          <Text style={styles.headerSubtitle}>{t('profile.about.subtitle')}</Text>
-        </View>
-      </View>
+      <ScreenHeader title={t('profile.about.title')} subtitle={t('profile.about.subtitle')} />
 
       <View style={styles.card}>
         <Text style={styles.appName}>{t('profile.about.appName')}</Text>
@@ -75,33 +63,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 28,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  headerTextWrap: {
-    flex: 1,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    color: '#B8BBD6',
-    fontSize: 13,
   },
   card: {
     backgroundColor: '#373848',
