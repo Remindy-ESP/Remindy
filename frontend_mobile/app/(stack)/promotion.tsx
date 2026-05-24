@@ -8,10 +8,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import { useTranslation } from '@/context/I18nContext';
@@ -67,6 +69,7 @@ const PROMOS: PromoItem[] = [
 
 export default function PromotionScreen() {
   const { t } = useTranslation();
+  const router = useRouter();
 
   const handleCopyPromoCode = (promo: PromoItem) => {
     Clipboard.setString(promo.promoCode);
@@ -97,6 +100,9 @@ export default function PromotionScreen() {
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
           <Text style={styles.title}>{t('promotion.title')}</Text>
           <Text style={styles.subtitle}>{t('promotion.subtitle')}</Text>
         </View>
@@ -187,6 +193,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 2,
     paddingBottom: 10,
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#373848',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   title: {
     color: '#F6F7FB',
