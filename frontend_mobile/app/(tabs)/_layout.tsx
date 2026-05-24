@@ -85,6 +85,9 @@ export default function TabLayout() {
                 <Tabs.Screen name="profile-help" options={{ href: null }} />
                 <Tabs.Screen name="profile-about" options={{ href: null }} />
                 <Tabs.Screen name="categories" options={{ href: null }} />
+                <Tabs.Screen name="support-new" options={{ href: null }} />
+                <Tabs.Screen name="support-tickets" options={{ href: null }} />
+                <Tabs.Screen name="support-ticket-detail" options={{ href: null }} />
             </Tabs>
         </SafeAreaView>
     );
