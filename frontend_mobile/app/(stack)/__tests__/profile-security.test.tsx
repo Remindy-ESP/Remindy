@@ -3,15 +3,8 @@ import { Alert } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import ProfileSecurityScreen from '../profile-security';
 
-const mockBack = jest.fn();
-const mockPush = jest.fn();
-
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    back: mockBack,
-    push: mockPush,
-  }),
-}));
+const mockBack = global.__mockRouterBack as jest.Mock;
+const mockPush = global.__mockRouterPush as jest.Mock;
 
 const mockChangePassword = jest.fn();
 jest.mock('@/services/api', () => ({

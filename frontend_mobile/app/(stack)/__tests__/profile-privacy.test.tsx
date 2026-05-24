@@ -3,14 +3,8 @@ import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ProfilePrivacyScreen from '../profile-privacy';
 
-const mockReplace = jest.fn();
-const mockBack = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    back: mockBack,
-  }),
-}));
+const mockReplace = global.__mockRouterReplace as jest.Mock;
+const mockBack = global.__mockRouterBack as jest.Mock;
 
 const mockLogout = jest.fn();
 jest.mock('@/context/AuthContext', () => ({

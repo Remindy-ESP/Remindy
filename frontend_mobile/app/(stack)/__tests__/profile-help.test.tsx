@@ -3,16 +3,8 @@ import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ProfileHelpScreen from '../profile-help';
 
-const mockBack = jest.fn();
-const mockPush = jest.fn();
-
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    back: mockBack,
-    push: mockPush,
-    replace: jest.fn(),
-  }),
-}));
+const mockBack = global.__mockRouterBack as jest.Mock;
+const mockPush = global.__mockRouterPush as jest.Mock;
 
 const mockStartTour = jest.fn();
 jest.mock('@/features/coach-marks/CoachMarksContext', () => ({
