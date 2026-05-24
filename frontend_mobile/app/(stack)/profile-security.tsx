@@ -17,6 +17,7 @@ import { useTranslation } from '@/context/I18nContext';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import ScreenHeader from '@/components/ScreenHeader';
+import { profileCardStyles as shared } from '@/styles/profileCard';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
@@ -86,14 +87,14 @@ export default function ProfileSecurityScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={shared.container}
     >
       <View style={styles.content}>
         <ScreenHeader title={t('profile.security.title')} subtitle={t('profile.security.subtitle')} testID="security-back-button" />
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('profile.security.cardTitle')}</Text>
-          <Text style={styles.cardBody}>
+        <View style={shared.card}>
+          <Text style={shared.cardTitle}>{t('profile.security.cardTitle')}</Text>
+          <Text style={shared.cardBody}>
             {t('profile.security.cardBody')}
           </Text>
 
@@ -153,7 +154,7 @@ export default function ProfileSecurityScreen() {
 
           <CoachMarkTarget targetKey={COACH_MARK_TARGETS.profileSecurityChangePassword}>
             <TouchableOpacity
-              style={[styles.primaryButton, loading && styles.buttonDisabled]}
+              style={[shared.primaryButton, loading && shared.buttonDisabled]}
               onPress={handleChangePassword}
               disabled={loading}
               testID="change-password-button"
@@ -164,7 +165,7 @@ export default function ProfileSecurityScreen() {
               ) : (
                 <>
                   <Ionicons name="key-outline" size={18} color="#fff" />
-                  <Text style={styles.primaryButtonText}>{t('profile.security.submit')}</Text>
+                  <Text style={shared.primaryButtonText}>{t('profile.security.submit')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -193,31 +194,9 @@ export default function ProfileSecurityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#11112A',
-  },
   content: {
     flex: 1,
     padding: 16,
-  },
-  card: {
-    backgroundColor: '#373848',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-  },
-  cardTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  cardBody: {
-    color: '#D3D6E8',
-    fontSize: 13,
-    lineHeight: 19,
-    marginBottom: 14,
   },
   input: {
     backgroundColor: '#1F2140',
@@ -228,21 +207,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#4E5498',
     fontSize: 14,
-  },
-  primaryButton: {
-    backgroundColor: '#4B4FC9',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
   },
   secondaryCard: {
     backgroundColor: '#1B1D42',
@@ -301,8 +265,5 @@ const styles = StyleSheet.create({
   successText: {
     color: '#D3FFEA',
     fontSize: 13,
-  },
-  buttonDisabled: {
-    opacity: 0.65,
   },
 });

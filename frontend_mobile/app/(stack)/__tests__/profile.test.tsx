@@ -3,13 +3,6 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ProfileScreen from '../profile';
 
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-}));
-
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 
@@ -23,21 +16,22 @@ jest.mock('expo-router', () => ({
 jest.spyOn(Alert, 'alert');
 
 const mockLogout = jest.fn();
+const defaultAuthUser = () => ({
+  id: 'test-user-id',
+  email: 'utilisateur@remindy.com',
+  firstName: 'Test',
+  lastName: 'User',
+  photoR2Key: 'users/test-user/profile-photo/avatar.jpg',
+  photoUrl: 'https://cdn.example.com/avatar.jpg',
+  role: 'user_freemium',
+  status: 'active',
+  timezone: 'Europe/Paris',
+  language: 'fr',
+  emailVerified: true,
+  createdAt: '2026-02-22T00:00:00.000Z',
+});
 const mockUseAuth = jest.fn(() => ({
-  user: {
-    id: 'test-user-id',
-    email: 'utilisateur@remindy.com',
-    firstName: 'Test',
-    lastName: 'User',
-    photoR2Key: 'users/test-user/profile-photo/avatar.jpg',
-    photoUrl: 'https://cdn.example.com/avatar.jpg',
-    role: 'user_freemium',
-    status: 'active',
-    timezone: 'Europe/Paris',
-    language: 'fr',
-    emailVerified: true,
-    createdAt: '2026-02-22T00:00:00.000Z',
-  },
+  user: defaultAuthUser(),
   logout: mockLogout,
   isLoading: false,
 }));
@@ -53,20 +47,7 @@ describe('ProfileScreen', () => {
     mockLogout.mockClear();
     (Alert.alert as jest.Mock).mockClear();
     mockUseAuth.mockReturnValue({
-      user: {
-        id: 'test-user-id',
-        email: 'utilisateur@remindy.com',
-        firstName: 'Test',
-        lastName: 'User',
-        photoR2Key: 'users/test-user/profile-photo/avatar.jpg',
-        photoUrl: 'https://cdn.example.com/avatar.jpg',
-        role: 'user_freemium',
-        status: 'active',
-        timezone: 'Europe/Paris',
-        language: 'fr',
-        emailVerified: true,
-        createdAt: '2026-02-22T00:00:00.000Z',
-      },
+      user: defaultAuthUser(),
       logout: mockLogout,
       isLoading: false,
     });

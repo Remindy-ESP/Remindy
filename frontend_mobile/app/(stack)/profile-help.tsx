@@ -14,6 +14,7 @@ import onboardingService from '@/services/local/onboarding.service';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
 import { useTranslation } from '@/context/I18nContext';
 import ScreenHeader from '@/components/ScreenHeader';
+import { profileCardStyles as shared } from '@/styles/profileCard';
 
 export default function ProfileHelpScreen() {
   const router = useRouter();
@@ -40,26 +41,26 @@ export default function ProfileHelpScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={shared.container} contentContainerStyle={shared.contentContainer}>
       <ScreenHeader title={t('profile.help.title')} subtitle={t('profile.help.subtitle')} />
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('profile.help.guide.title')}</Text>
-        <Text style={styles.cardBody}>{t('profile.help.guide.body')}</Text>
+      <View style={shared.card}>
+        <Text style={shared.cardTitle}>{t('profile.help.guide.title')}</Text>
+        <Text style={shared.cardBody}>{t('profile.help.guide.body')}</Text>
 
         <TouchableOpacity
           testID="open-onboarding-guide-button"
-          style={styles.primaryButton}
+          style={shared.primaryButton}
           onPress={handleOpenGuide}
           activeOpacity={0.85}
         >
           <Ionicons name="compass-outline" size={18} color="#fff" />
-          <Text style={styles.primaryButtonText}>{t('profile.help.guide.openButton')}</Text>
+          <Text style={shared.primaryButtonText}>{t('profile.help.guide.openButton')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           testID="reset-onboarding-guide-button"
-          style={[styles.secondaryButton, resettingGuide && styles.buttonDisabled]}
+          style={[styles.secondaryButton, resettingGuide && shared.buttonDisabled]}
           onPress={() => void handleResetGuide()}
           disabled={resettingGuide}
           activeOpacity={0.85}
@@ -75,17 +76,17 @@ export default function ProfileHelpScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('profile.help.support.title')}</Text>
-        <Text style={styles.cardBody}>{t('profile.help.support.body')}</Text>
+      <View style={shared.card}>
+        <Text style={shared.cardTitle}>{t('profile.help.support.title')}</Text>
+        <Text style={shared.cardBody}>{t('profile.help.support.body')}</Text>
 
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={shared.primaryButton}
           onPress={() => router.push('/(stack)/support-new')}
           activeOpacity={0.85}
         >
           <Ionicons name="create-outline" size={18} color="#fff" />
-          <Text style={styles.primaryButtonText}>{t('profile.help.support.newButton')}</Text>
+          <Text style={shared.primaryButtonText}>{t('profile.help.support.newButton')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -102,47 +103,6 @@ export default function ProfileHelpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#11112A',
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 28,
-  },
-  card: {
-    backgroundColor: '#373848',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-  },
-  cardTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  cardBody: {
-    color: '#D3D6E8',
-    fontSize: 13,
-    lineHeight: 19,
-    marginBottom: 14,
-  },
-  primaryButton: {
-    backgroundColor: '#4B4FC9',
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 10,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
   secondaryButton: {
     backgroundColor: '#1F2140',
     borderRadius: 12,
@@ -158,8 +118,5 @@ const styles = StyleSheet.create({
     color: '#DDE1FF',
     fontSize: 13,
     fontWeight: '700',
-  },
-  buttonDisabled: {
-    opacity: 0.65,
   },
 });

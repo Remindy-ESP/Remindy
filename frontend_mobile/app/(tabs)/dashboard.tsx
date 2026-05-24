@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Localization from 'expo-localization';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
@@ -42,9 +41,7 @@ export default function DashboardScreen() {
     fetchDashboardData,
   } = useDashboard();
 
-  const { token } = useAuth();
   const [uploadingDocument, setUploadingDocument] = React.useState(false);
-  console.log("Current token : ", token);
 
   useFocusEffect(
     React.useCallback(() => {
