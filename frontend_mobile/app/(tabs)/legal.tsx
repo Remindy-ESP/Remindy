@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useTranslation } from '@/context/I18nContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -272,7 +271,6 @@ function CollapsibleSection({ section }: { section: LegalSection }) {
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
 export default function LegalScreen() {
-    const router = useRouter();
     const { t } = useTranslation();
     return (
         <View style={styles.container}>
@@ -283,19 +281,14 @@ export default function LegalScreen() {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
-                        <Ionicons name='chevron-back' size={20} color='#fff' />
-                    </TouchableOpacity>
-                    <View style={styles.headerTextWrap}>
-                        <Text style={styles.headerTitle}>{t('legal.headerTitle')}</Text>
-                        <Text style={styles.headerSubtitle}>
-                            {t('legal.headerSubtitle')}
+                    <Text style={styles.headerTitle}>{t('legal.headerTitle')}</Text>
+                    <Text style={styles.headerSubtitle}>
+                        {t('legal.headerSubtitle')}
+                    </Text>
+                    <View style={styles.headerBadge}>
+                        <Text style={styles.headerBadgeText}>
+                            {t('legal.lastUpdate')}
                         </Text>
-                        <View style={styles.headerBadge}>
-                            <Text style={styles.headerBadgeText}>
-                                {t('legal.lastUpdate')}
-                            </Text>
-                        </View>
                     </View>
                 </View>
 
@@ -331,23 +324,9 @@ const styles = StyleSheet.create({
 
     // Header
     header: {
-        flexDirection: 'row',
-        alignItems: 'center',
         padding: 20,
         paddingTop: 16,
         backgroundColor: '#1a1a3e',
-    },
-    backButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        backgroundColor: '#373848',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    headerTextWrap: {
-        flex: 1,
     },
     headerTitle: {
         fontSize: 28,
