@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation, type SupportedLanguage } from '@/context/I18nContext';
 import ScreenHeader from '@/components/ScreenHeader';
+import { profileCardStyles as shared } from '@/styles/profileCard';
 
 export default function ProfilePreferencesScreen() {
   const { t, language, setLanguage } = useTranslation();
@@ -27,11 +28,11 @@ export default function ProfilePreferencesScreen() {
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={shared.container} contentContainerStyle={shared.contentContainer}>
       <ScreenHeader title={t('profile.preferences.title')} subtitle={t('profile.preferences.subtitle')} />
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('profile.preferences.language')}</Text>
+      <View style={shared.card}>
+        <Text style={shared.cardTitle}>{t('profile.preferences.language')}</Text>
         <Text style={styles.cardText}>{t('profile.preferences.message')}</Text>
 
         {languageOptions.map((option) => {
@@ -66,27 +67,6 @@ export default function ProfilePreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#11112A',
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 28,
-  },
-  card: {
-    backgroundColor: '#373848',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-  },
-  cardTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-    paddingHorizontal: 2,
-  },
   cardText: {
     color: '#D3D6E8',
     fontSize: 14,

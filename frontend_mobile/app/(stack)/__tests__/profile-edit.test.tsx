@@ -18,35 +18,28 @@ jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
 }));
 
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  multiRemove: jest.fn(),
-}));
-
 const mockBack = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ back: mockBack }),
 }));
 
 // ----- Mutable auth state -----
-let mockUser: any = {
+const defaultUser = () => ({
   id: 'user-1',
   email: 'user@test.com',
   firstName: 'John',
   lastName: 'Doe',
   phone: '+33612345678',
-  photoR2Key: undefined,
-  photoUrl: undefined,
+  photoR2Key: undefined as any,
+  photoUrl: undefined as any,
   role: 'user_freemium',
   status: 'active',
   timezone: 'Europe/Paris',
   language: 'fr',
   emailVerified: true,
   createdAt: '2026-02-22T00:00:00.000Z',
-};
+});
+let mockUser: any = defaultUser();
 
 const mockRefreshUser = jest.fn(() => Promise.resolve());
 
@@ -91,21 +84,7 @@ describe('ProfileEditScreen', () => {
     jest.clearAllMocks();
 
     // Reset to default user
-    mockUser = {
-      id: 'user-1',
-      email: 'user@test.com',
-      firstName: 'John',
-      lastName: 'Doe',
-      phone: '+33612345678',
-      photoR2Key: undefined,
-      photoUrl: undefined,
-      role: 'user_freemium',
-      status: 'active',
-      timezone: 'Europe/Paris',
-      language: 'fr',
-      emailVerified: true,
-      createdAt: '2026-02-22T00:00:00.000Z',
-    };
+    mockUser = defaultUser();
 
     mockUpdateMe.mockResolvedValue(undefined);
     mockRefreshUser.mockResolvedValue(undefined);

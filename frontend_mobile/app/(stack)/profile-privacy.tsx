@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { userService } from '@/services/api';
 import ScreenHeader from '@/components/ScreenHeader';
+import { profileCardStyles as shared } from '@/styles/profileCard';
 
 export default function ProfilePrivacyScreen() {
   const router = useRouter();
@@ -84,18 +85,18 @@ export default function ProfilePrivacyScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView style={shared.container} contentContainerStyle={shared.contentContainer}>
       <ScreenHeader title={t('profile.privacy.title')} subtitle={t('profile.privacy.subtitle')} />
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{t('profile.privacy.data.title')}</Text>
-        <Text style={styles.cardBody}>
+      <View style={shared.card}>
+        <Text style={shared.cardTitle}>{t('profile.privacy.data.title')}</Text>
+        <Text style={shared.cardBody}>
           {t('profile.privacy.data.body')}
         </Text>
 
         <TouchableOpacity
           testID="export-data-button"
-          style={[styles.actionButton, isExporting && styles.buttonDisabled]}
+          style={[styles.actionButton, isExporting && shared.buttonDisabled]}
           onPress={handleExportData}
           disabled={isExporting || isDeleting}
           activeOpacity={0.85}
@@ -119,7 +120,7 @@ export default function ProfilePrivacyScreen() {
 
         <TouchableOpacity
           testID="delete-account-button"
-          style={[styles.deleteButton, isDeleting && styles.buttonDisabled]}
+          style={[styles.deleteButton, isDeleting && shared.buttonDisabled]}
           onPress={handleDeleteAccount}
           disabled={isDeleting || isExporting}
           activeOpacity={0.85}
@@ -139,32 +140,6 @@ export default function ProfilePrivacyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#11112A',
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 28,
-  },
-  card: {
-    backgroundColor: '#373848',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 14,
-  },
-  cardTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  cardBody: {
-    color: '#D3D6E8',
-    fontSize: 13,
-    lineHeight: 19,
-    marginBottom: 14,
-  },
   actionButton: {
     backgroundColor: '#4B4FC9',
     borderRadius: 12,
@@ -212,8 +187,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
-  },
-  buttonDisabled: {
-    opacity: 0.65,
   },
 });
