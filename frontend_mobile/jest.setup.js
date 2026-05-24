@@ -114,6 +114,23 @@ jest.mock('expo-router', () => ({
   Link: 'Link',
 }));
 
+// Mock onboarding service — persistent named fns so tests can control behavior
+const _onboardingHasSeen = jest.fn(() => Promise.resolve(true));
+const _onboardingSetSeen = jest.fn(() => Promise.resolve());
+const _onboardingReset = jest.fn(() => Promise.resolve());
+global.__mockOnboardingHasSeen = _onboardingHasSeen;
+global.__mockOnboardingSetSeen = _onboardingSetSeen;
+global.__mockOnboardingReset = _onboardingReset;
+
+jest.mock('@/services/local/onboarding.service', () => ({
+  __esModule: true,
+  default: {
+    hasSeenOnboarding: (...args) => global.__mockOnboardingHasSeen(...args),
+    setHasSeenOnboarding: (...args) => global.__mockOnboardingSetSeen(...args),
+    resetOnboarding: (...args) => global.__mockOnboardingReset(...args),
+  },
+}));
+
 // Mock expo-localization (used by I18nProvider for device detection)
 jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'fr', regionCode: 'FR' }],
