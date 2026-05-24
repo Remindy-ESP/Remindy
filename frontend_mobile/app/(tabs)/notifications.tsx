@@ -120,7 +120,7 @@ export default function NotificationsScreen() {
     const handleMarkAllAsRead = async () => {
         try {
             await notificationService.markAllAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+            setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() })));
         } catch (err) {
             console.error('Failed to mark all as read', err);
         }
@@ -149,7 +149,7 @@ export default function NotificationsScreen() {
         );
     };
 
-    const hasUnread = filteredNotifications.some(n => !n.readAt);
+    const hasUnread = filteredNotifications.some(n => !n.read_at);
     const hasNotifications = filteredNotifications.length > 0;
 
     const getIconName = (type: NotificationType): keyof typeof Ionicons.glyphMap => {
@@ -224,9 +224,9 @@ export default function NotificationsScreen() {
         renderSwipeAction(progress, id, false);
 
     const renderNotificationItem = ({ item }: { item: Notification }) => {
-        const isRead = !!item.readAt;
-        const date = item.createdAt
-            ? formatDate(item.createdAt, language, {
+        const isRead = !!item.read_at;
+        const date = item.created_at
+            ? formatDate(item.created_at, language, {
                   day: '2-digit',
                   month: 'short',
                   hour: '2-digit',
