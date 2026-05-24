@@ -4,26 +4,28 @@ import { View, Text, StyleSheet } from 'react-native';
 interface FormFeedbackProps {
   error?: string;
   success?: string;
+  variant?: 'dark' | 'light';
 }
 
-export default function FormFeedback({ error, success }: FormFeedbackProps) {
+export default function FormFeedback({ error, success, variant = 'dark' }: FormFeedbackProps) {
+  const s = variant === 'light' ? light : dark;
   return (
     <>
       {error ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorText}>{error}</Text>
+        <View style={s.errorBox}>
+          <Text style={s.errorText}>{error}</Text>
         </View>
       ) : null}
       {success ? (
-        <View style={styles.successBox}>
-          <Text style={styles.successText}>{success}</Text>
+        <View style={s.successBox}>
+          <Text style={s.successText}>{success}</Text>
         </View>
       ) : null}
     </>
   );
 }
 
-const styles = StyleSheet.create({
+const dark = StyleSheet.create({
   errorBox: {
     backgroundColor: '#4B242C',
     borderRadius: 10,
@@ -47,5 +49,28 @@ const styles = StyleSheet.create({
   successText: {
     color: '#D3FFEA',
     fontSize: 13,
+  },
+});
+
+const light = StyleSheet.create({
+  errorBox: {
+    backgroundColor: '#fee2e2',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#991b1b',
+    fontSize: 14,
+  },
+  successBox: {
+    backgroundColor: '#dcfce7',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  successText: {
+    color: '#166534',
+    fontSize: 14,
   },
 });

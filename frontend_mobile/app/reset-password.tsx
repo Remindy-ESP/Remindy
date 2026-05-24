@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
 import { authFormStyles as styles } from '@/styles/authForm';
+import FormFeedback from '@/components/FormFeedback';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -89,17 +90,7 @@ export default function ResetPasswordScreen() {
           {t('auth.reset.subtitle')}
         </Text>
 
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
-
-        {success ? (
-          <View style={styles.successBox}>
-            <Text style={styles.successText}>{success}</Text>
-          </View>
-        ) : null}
+        <FormFeedback error={error} success={success} variant="light" />
 
         <TextInput
           style={styles.input}
