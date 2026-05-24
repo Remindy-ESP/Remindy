@@ -19,7 +19,7 @@ interface BackendErrorResponse {
  * Handles both string and array messages from NestJS ValidationPipe
  */
 export function getErrorMessage(error: unknown, defaultMessage?: string): string {
-  const fallback = defaultMessage ?? i18n.t('errors.generic');
+  const fallback: string = defaultMessage ?? (i18n.t('errors.generic') as string);
   if (!error) return fallback;
 
   // Handle Axios errors
