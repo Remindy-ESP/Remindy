@@ -41,6 +41,20 @@ global.fetch = jest.fn(() =>
 
 jest.spyOn(Alert, 'alert');
 
+// Helper to fill the register form (used by many tests)
+const fillRegisterForm = (
+  getByTestId: (id: string) => any,
+  { confirmPassword = 'password123', skip = [] as string[] } = {},
+) => {
+  fireEvent.press(getByTestId('toggle-auth-mode'));
+  if (!skip.includes('email')) fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
+  if (!skip.includes('password')) fireEvent.changeText(getByTestId('password-input'), 'password123');
+  if (!skip.includes('firstName')) fireEvent.changeText(getByTestId('firstName-input'), 'John');
+  if (!skip.includes('lastName')) fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+  if (!skip.includes('confirmPassword'))
+    fireEvent.changeText(getByTestId('confirm-password-input'), confirmPassword);
+};
+
 describe('AuthScreen', () => {
   beforeEach(() => {
     (global.fetch as jest.Mock).mockClear();
@@ -135,20 +149,9 @@ describe('AuthScreen', () => {
     const { getByTestId } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
 
-    // Switch to register mode
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-
-    // Fill inputs
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+    fillRegisterForm(getByTestId, { skip: ['email'] });
     fireEvent.changeText(getByTestId('email-input'), 'john@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('confirm-password-input'), 'password123');
-
-    const submitButton = getByTestId('submit-button');
-
-    expect(submitButton).toBeTruthy();
-    fireEvent.press(submitButton);
+    fireEvent.press(getByTestId('submit-button'));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(
@@ -244,10 +247,7 @@ describe('AuthScreen', () => {
   it('shows error when lastName is empty in register mode', async () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
+    fillRegisterForm(getByTestId, { skip: ['lastName', 'confirmPassword'] });
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Le nom est requis')).toBeTruthy();
   });
@@ -255,11 +255,7 @@ describe('AuthScreen', () => {
   it('shows error when confirmPassword is empty in register mode', async () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+    fillRegisterForm(getByTestId, { skip: ['confirmPassword'] });
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Veuillez confirmer votre mot de passe')).toBeTruthy();
   });
@@ -267,12 +263,7 @@ describe('AuthScreen', () => {
   it('shows error when passwords do not match in register mode', async () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
-    fireEvent.changeText(getByTestId('confirm-password-input'), 'different');
+    fillRegisterForm(getByTestId, { confirmPassword: 'different' });
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Les mots de passe ne correspondent pas')).toBeTruthy();
   });
@@ -313,12 +304,7 @@ describe('AuthScreen', () => {
     mockRegister.mockRejectedValue({ message: 'Email already taken' });
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
-    fireEvent.changeText(getByTestId('confirm-password-input'), 'password123');
+    fillRegisterForm(getByTestId);
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Email already taken')).toBeTruthy();
     await waitFor(() => {
