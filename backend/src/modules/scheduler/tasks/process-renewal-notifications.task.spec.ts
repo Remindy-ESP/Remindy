@@ -15,13 +15,17 @@ describe('ProcessRenewalNotificationsTask', () => {
 
   beforeEach(async () => {
     subscriptionRepository = {
-      createQueryBuilder: jest.fn().mockReturnThis(),
-      select: jest.fn().mockReturnThis(),
-      innerJoin: jest.fn().mockReturnThis(),
-      leftJoin: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      getRawMany: jest.fn().mockResolvedValue([]),
+      createQueryBuilder: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+        getRawMany: jest.fn().mockResolvedValue([]),
+      }),
     };
 
     notificationRepository = {
@@ -61,20 +65,19 @@ describe('ProcessRenewalNotificationsTask', () => {
   });
 
   describe('handleCron', () => {
-    it('should query due notifications and log if 0 found', async () => {
-      subscriptionRepository.getRawMany.mockResolvedValue([]);
-
+    it('should query both renewal and trial ending notifications and log if 0 found', async () => {
       await task.handleCron();
 
-      expect(subscriptionRepository.createQueryBuilder).toHaveBeenCalledWith('s');
-      expect(subscriptionRepository.getRawMany).toHaveBeenCalled();
-      expect(loggerSpy).toHaveBeenCalledWith('Found 0 due notification(s) to create');
+      // createQueryBuilder is called three times: once for trial transitions, once for renewals, once for trial endings
+      expect(subscriptionRepository.createQueryBuilder).toHaveBeenCalledTimes(3);
+      expect(loggerSpy).toHaveBeenCalledWith('Found 0 renewal notification(s) to create');
+      expect(loggerSpy).toHaveBeenCalledWith('Found 0 trial ending notification(s) to create');
       expect(notificationRepository.save).not.toHaveBeenCalled();
       expect(expoPushService.sendToUsers).not.toHaveBeenCalled();
     });
 
-    it('should create notifications and queue push if due notifications found', async () => {
-      const mockRow = {
+    it('should create renewal notifications and queue push', async () => {
+      const mockRenewalRow = {
         subscriptionId: 'sub-123',
         subscriptionName: 'Netflix',
         subscriptionAmount: 15.99,
@@ -86,7 +89,19 @@ describe('ProcessRenewalNotificationsTask', () => {
         daysBefore: 3,
       };
 
-      subscriptionRepository.getRawMany.mockResolvedValue([mockRow]);
+      // First call returns renewal rows, second call returns empty (no trial endings)
+      const qbMock = {
+        select: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+        getRawMany: jest.fn().mockResolvedValueOnce([mockRenewalRow]).mockResolvedValueOnce([]),
+      };
+      subscriptionRepository.createQueryBuilder.mockReturnValue(qbMock);
       expoPushService.sendToUsers.mockResolvedValue(new Map([['user-123', true]]));
 
       await task.handleCron();
@@ -96,18 +111,118 @@ describe('ProcessRenewalNotificationsTask', () => {
       expect(expoPushService.sendToUsers).toHaveBeenCalledWith([
         {
           userId: 'user-123',
-          title: 'Renouvellement Netflix dans 3 jour(s)',
-          body: expect.stringContaining('15.99EUR sera renouvelé le'),
-          data: expect.any(Object),
+          title: 'Renouvellement',
+          body: expect.stringContaining('Netflix — renouvellement dans 3 jour(s)'),
+          data: expect.objectContaining({ type: 'subscription_renewal' }),
         },
       ]);
-      expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining('Created: 1, Push sent: 1'));
+    });
+
+    it('should create trial ending notifications and queue push', async () => {
+      const mockTrialRow = {
+        subscriptionId: 'sub-456',
+        subscriptionName: 'Spotify',
+        subscriptionAmount: 9.99,
+        subscriptionCurrency: 'EUR',
+        trialEndDate: '2025-05-18',
+        userId: 'user-456',
+        reminderId: 'rem-456',
+        reminderChannel: 'push',
+        daysBefore: 3,
+      };
+
+      // First call returns empty (no renewals), second call returns trial rows
+      const qbMock = {
+        select: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+        getRawMany: jest.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([mockTrialRow]),
+      };
+      subscriptionRepository.createQueryBuilder.mockReturnValue(qbMock);
+      expoPushService.sendToUsers.mockResolvedValue(new Map([['user-456', true]]));
+
+      await task.handleCron();
+
+      expect(notificationRepository.save).toHaveBeenCalledTimes(1);
+      expect(expoPushService.sendToUsers).toHaveBeenCalledTimes(1);
+      expect(expoPushService.sendToUsers).toHaveBeenCalledWith([
+        {
+          userId: 'user-456',
+          title: "Période d'essai",
+          body: expect.stringContaining('Spotify — essai gratuit se termine dans 3 jour(s)'),
+          data: expect.objectContaining({ type: 'trial_ending' }),
+        },
+      ]);
+    });
+
+    it('should process both renewal and trial ending in one run', async () => {
+      const mockRenewalRow = {
+        subscriptionId: 'sub-123',
+        subscriptionName: 'Netflix',
+        subscriptionAmount: 15.99,
+        subscriptionCurrency: 'EUR',
+        nextDueDate: '2025-05-15',
+        userId: 'user-123',
+        reminderId: 'rem-123',
+        reminderChannel: 'push',
+        daysBefore: 3,
+      };
+
+      const mockTrialRow = {
+        subscriptionId: 'sub-456',
+        subscriptionName: 'Spotify',
+        subscriptionAmount: 9.99,
+        subscriptionCurrency: 'EUR',
+        trialEndDate: '2025-05-18',
+        userId: 'user-456',
+        reminderId: 'rem-456',
+        reminderChannel: 'push',
+        daysBefore: 3,
+      };
+
+      const qbMock = {
+        select: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+        getRawMany: jest
+          .fn()
+          .mockResolvedValueOnce([mockRenewalRow])
+          .mockResolvedValueOnce([mockTrialRow]),
+      };
+      subscriptionRepository.createQueryBuilder.mockReturnValue(qbMock);
+      expoPushService.sendToUsers.mockResolvedValue(
+        new Map([
+          ['user-123', true],
+          ['user-456', true],
+        ]),
+      );
+
+      await task.handleCron();
+
+      expect(notificationRepository.save).toHaveBeenCalledTimes(2);
+      expect(expoPushService.sendToUsers).toHaveBeenCalledTimes(1);
+      // Both payloads should be sent in a single batch
+      expect(expoPushService.sendToUsers).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ userId: 'user-123' }),
+          expect.objectContaining({ userId: 'user-456' }),
+        ]),
+      );
     });
   });
 
   describe('triggerManually', () => {
     it('should return processed statistics', async () => {
-      subscriptionRepository.getRawMany.mockResolvedValue([]);
       const result = await task.triggerManually();
 
       expect(result).toEqual({

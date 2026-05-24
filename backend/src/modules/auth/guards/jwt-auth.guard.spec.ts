@@ -104,9 +104,9 @@ describe('domain JwtAuthGuard', () => {
     });
 
     it('throws UnauthorizedException when user is missing', () => {
-      expect(() =>
-        guard.handleRequest(null, null, { message: 'missing' }, buildContext()),
-      ).toThrow(UnauthorizedException);
+      expect(() => guard.handleRequest(null, null, { message: 'missing' }, buildContext())).toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('rethrows original error when provided', () => {

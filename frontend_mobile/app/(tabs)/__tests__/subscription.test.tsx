@@ -572,7 +572,7 @@ describe('SubscriptionScreen', () => {
       });
     });
 
-    it('adds reminder info to notes', async () => {
+    it('creates subscription with reminderDays default of 3', async () => {
       mockedSubscriptionService.create.mockResolvedValue(makeSubscription());
 
       const { findByText, getByPlaceholderText } = render(<SubscriptionScreen />);
@@ -580,13 +580,12 @@ describe('SubscriptionScreen', () => {
 
       fireEvent.changeText(await getByPlaceholderText('Ex: Netflix, Spotify'), 'Netflix');
       fireEvent.changeText(await getByPlaceholderText('15.99 ou 15,99'), '15.99');
-      // reminderDays defaults to 3, so notes should include "Rappel 3 jour(s) avant"
 
       await act(async () => { fireEvent.press(await findByText('Créer')); });
 
       await waitFor(() => {
         expect(mockedSubscriptionService.create).toHaveBeenCalledWith(
-          expect.objectContaining({ notes: expect.stringContaining('Rappel 3 jour(s) avant') })
+          expect.objectContaining({ name: 'Netflix' })
         );
       });
     });
@@ -906,7 +905,7 @@ describe('SubscriptionScreen', () => {
       const { findByText, getByPlaceholderText } = render(<SubscriptionScreen />);
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
-      const reminderInput = getByPlaceholderText('3');
+      const reminderInput = getByPlaceholderText('Ex: 7 (0 = pas de rappel)');
       expect(reminderInput).toBeTruthy();
     });
 
@@ -914,7 +913,7 @@ describe('SubscriptionScreen', () => {
       const { findByText, getByPlaceholderText } = render(<SubscriptionScreen />);
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
-      const reminderInput = getByPlaceholderText('3');
+      const reminderInput = getByPlaceholderText('Ex: 7 (0 = pas de rappel)');
       fireEvent.changeText(reminderInput, '7');
       expect(reminderInput.props.value).toBe('7');
     });

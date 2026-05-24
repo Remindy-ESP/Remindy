@@ -10,7 +10,6 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { Public } from '../../modules/auth/presentation/decorators/public.decorator';
 import { CategoryResponseDto } from '../../modules/category/presentation/dto/category-response.dto';
 
 export const ApiCategoryCreate = () =>
@@ -25,7 +24,6 @@ export const ApiCategoryCreate = () =>
 export const ApiCategoryFindAll = () =>
   applyDecorators(
     Get(),
-    Public(),
     ApiOperation({ summary: 'Get all categories (system + user custom)' }),
     ApiQuery({ name: 'userId', required: false, description: 'Filter by user ID' }),
     ApiQuery({ name: 'name', required: false, description: 'Filter by name (partial match)' }),

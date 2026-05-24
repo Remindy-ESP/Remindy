@@ -158,13 +158,9 @@ describe('SubscriptionController (e2e)', () => {
     updateSubscriptionUseCase.execute.mockResolvedValue(sample);
     deleteSubscriptionUseCase.execute.mockResolvedValue(undefined);
 
-    pauseSubscriptionUseCase.execute.mockResolvedValue(
-      makeSubscription({ status: 'paused' }),
-    );
+    pauseSubscriptionUseCase.execute.mockResolvedValue(makeSubscription({ status: 'paused' }));
 
-    resumeSubscriptionUseCase.execute.mockResolvedValue(
-      makeSubscription({ status: 'active' }),
-    );
+    resumeSubscriptionUseCase.execute.mockResolvedValue(makeSubscription({ status: 'active' }));
 
     findSubscriptionEventsUseCase.execute.mockResolvedValue([
       { id: 'event-1', subscriptionId: SUB_ID, title: 'Netflix - Jan' },

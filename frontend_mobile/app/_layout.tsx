@@ -1,7 +1,8 @@
 import { Stack } from 'expo-router';
 import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/context/AuthContext';
 import { I18nProvider } from '@/context/I18nContext';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -30,18 +31,10 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Configure la barre de navigation système pour Android
     if (Platform.OS === 'android') {
-      // Active le mode immersif - la barre se cache et réapparaît avec un geste de balayage
       NavigationBar.setBehaviorAsync('overlay-swipe');
-
-      // Cache la barre de navigation
       NavigationBar.setVisibilityAsync('hidden');
-
-      // Optionnel : définit la couleur de la barre quand elle apparaît
       NavigationBar.setBackgroundColorAsync('#11112A');
-
-      // Optionnel : définit le style des boutons (light ou dark)
       NavigationBar.setButtonStyleAsync('light');
     }
   }, []);
@@ -51,7 +44,7 @@ export default function RootLayout() {
       <I18nProvider>
         <CoachMarksProvider>
           <StatusBar style="light" />
-          <View style={{ flex: 1 }}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
             <Stack
               screenOptions={{
                 headerShown: false,
@@ -96,7 +89,7 @@ export default function RootLayout() {
               />
             </Stack>
             <CoachMarksOverlay />
-          </View>
+          </GestureHandlerRootView>
         </CoachMarksProvider>
       </I18nProvider>
     </AuthProvider>

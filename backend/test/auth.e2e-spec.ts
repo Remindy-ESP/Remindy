@@ -17,8 +17,7 @@ class TestJwtRefreshGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
 
     req.cookies ??= {};
-    req.cookies.refreshToken =
-      req.cookies.refreshToken ?? 'refresh-token-123';
+    req.cookies.refreshToken = req.cookies.refreshToken ?? 'refresh-token-123';
     return true;
   }
 }
@@ -94,7 +93,7 @@ describe('AuthController (e2e)', () => {
         return next();
       }
 
-      req.cookies = (cookieHeader.split(';').reduce as any)((acc: Record<string, string>, part: string) => {
+      req.cookies = cookieHeader.split(';').reduce((acc: Record<string, string>, part: string) => {
         const [key, ...valueParts] = part.trim().split('=');
         acc[key] = valueParts.join('=');
         return acc;
@@ -156,7 +155,7 @@ describe('AuthController (e2e)', () => {
   it('POST /auth/login', async () => {
     const payload = {
       email: 'user@example.com',
-      password: TEST_USER_CREDENTIAL ,
+      password: TEST_USER_CREDENTIAL,
     };
 
     loginUseCase.execute.mockResolvedValue({

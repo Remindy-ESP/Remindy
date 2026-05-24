@@ -226,27 +226,27 @@ export interface StorageQuota {
   availableFormatted: string;
 }
 
-export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewal' | 'document_expiry' | 'system';
+export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewed' | 'trial_ending' | 'document_processed' | 'subscription_renewal' | 'document_expiry' | 'system';
 export type NotificationChannel = 'email' | 'push' | 'sms';
 export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'snoozed';
 
 export interface Notification {
   id: string;
-  userId: string;
-  eventId?: string;
-  reminderId?: string;
+  user_id: string;
+  event_id?: string;
+  reminder_id?: string;
   type: NotificationType;
   channel: NotificationChannel;
   title: string;
   body: string;
-  sentAt?: string;
-  readAt?: string;
+  sent_at?: string;
+  read_at?: string;
   status: NotificationStatus;
-  snoozedUntil?: string;
-  errorMessage?: string;
+  snoozed_until?: string;
+  error_message?: string;
   metadata?: any;
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface NotificationFilter {
@@ -265,4 +265,30 @@ export interface NotificationResponse {
     page: number;
     limit: number;
   };
+}
+
+// User Preferences
+export type ThemePreference = 'light' | 'dark' | 'auto';
+
+export interface UserPreferences {
+  userId: string;
+  theme: ThemePreference;
+  notificationEmail: boolean;
+  notificationPush: boolean;
+  notificationSms: boolean;
+  defaultReminderDelay: number;
+  currency: string;
+  showOnlineStatus: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateUserPreferencesRequest {
+  theme?: ThemePreference;
+  notificationEmail?: boolean;
+  notificationPush?: boolean;
+  notificationSms?: boolean;
+  defaultReminderDelay?: number;
+  currency?: string;
+  showOnlineStatus?: boolean;
 }

@@ -13,11 +13,13 @@ import {
   ScrollView,
   RefreshControl,
   Platform,
+  Switch,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
+import { reminderService } from '../../services/api/reminder.service';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '../../services/api';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
@@ -33,6 +35,8 @@ interface SubscriptionFormData {
   endDate?: string;
   categoryId: string;
   reminderDays: number;
+  isTrial: boolean;
+  trialEndDate?: string;
 }
 
 export default function SubscriptionScreen() {
@@ -68,6 +72,7 @@ export default function SubscriptionScreen() {
   // Date picker state
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showTrialEndDatePicker, setShowTrialEndDatePicker] = useState(false);
 
   const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
@@ -77,6 +82,7 @@ export default function SubscriptionScreen() {
     startDate: new Date().toISOString().split('T')[0],
     categoryId: '',
     reminderDays: 3,
+    isTrial: false,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -111,13 +117,16 @@ export default function SubscriptionScreen() {
   };
 
   const handleEndDateChange = (event: any, selectedDate?: Date) => {
-    setShowEndDatePicker(Platform.OS === 'ios');
+    setShowEndDatePicker(false);
     if (selectedDate) {
-      const year = selectedDate.getFullYear();
-      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-      const day = String(selectedDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      setFormData({ ...formData, endDate: dateString });
+      setFormData({ ...formData, endDate: selectedDate.toISOString().split('T')[0] });
+    }
+  };
+
+  const handleTrialEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowTrialEndDatePicker(false);
+    if (selectedDate) {
+      setFormData({ ...formData, trialEndDate: selectedDate.toISOString().split('T')[0] });
     }
   };
 
@@ -167,6 +176,7 @@ export default function SubscriptionScreen() {
         startDate: dateStr || new Date().toISOString().split('T')[0],
         categoryId: categoryId,
         reminderDays: 3,
+        isTrial: false,
       });
       setFormErrors({});
       setModalVisible(true);
@@ -279,12 +289,13 @@ export default function SubscriptionScreen() {
       startDate: new Date().toISOString().split('T')[0],
       categoryId: categories.length > 0 ? categories[0].id : '',
       reminderDays: 3,
+      isTrial: false,
     });
     setFormErrors({});
     setModalVisible(true);
   };
 
-  const openEditModal = (subscription: Subscription) => {
+  const openEditModal = async (subscription: Subscription) => {
     setEditingSubscription(subscription);
     setPriceInput(subscription.amount?.toString() || '0');
 
@@ -296,6 +307,17 @@ export default function SubscriptionScreen() {
       'yearly': 'YEARLY',
     };
 
+    // Fetch existing reminder for this subscription
+    let existingReminderDays = 3;
+    try {
+      const reminders = await reminderService.getBySubscription(subscription.id);
+      if (reminders.length > 0) {
+        existingReminderDays = reminders[0].days_before;
+      }
+    } catch (err) {
+      console.warn('Could not fetch reminders for subscription:', err);
+    }
+
     setFormData({
       name: subscription.name,
       description: subscription.notes || '',
@@ -304,7 +326,9 @@ export default function SubscriptionScreen() {
       startDate: subscription.startDate ? subscription.startDate.split('T')[0] : new Date().toISOString().split('T')[0],
       endDate: subscription.endDate ? subscription.endDate.split('T')[0] : undefined,
       categoryId: subscription.categoryId || '',
-      reminderDays: 0,
+      reminderDays: existingReminderDays,
+      isTrial: subscription.status === 'trial' || !!subscription.trialEndDate,
+      trialEndDate: subscription.trialEndDate ? subscription.trialEndDate.split('T')[0] : undefined,
     });
     setFormErrors({});
     setModalVisible(true);
@@ -344,20 +368,19 @@ export default function SubscriptionScreen() {
         frequency: mapBillingCycleToFrequency(formData.billingCycle),
         startDate: formData.startDate,
         currency: 'EUR',
-        status: 'active',
+        status: formData.isTrial ? 'trial' : 'active',
       };
+
+      if (formData.isTrial && formData.trialEndDate) {
+        requestData.trialStartDate = formData.startDate; // Usually starts at subscription start
+        requestData.trialEndDate = formData.trialEndDate;
+      }
 
       if (formData.endDate) {
         requestData.endDate = formData.endDate;
       }
       if (formData.description) {
         requestData.notes = formData.description;
-        requestData.notes = formData.description;
-      }
-      if (formData.reminderDays && requestData.notes) {
-        requestData.notes = `${requestData.notes}\n${t('subscription.reminderDaysBefore', { count: formData.reminderDays })}`;
-      } else if (formData.reminderDays) {
-        requestData.notes = t('subscription.reminderDaysBefore', { count: formData.reminderDays });
       }
 
       // Add categoryId if selected
@@ -367,9 +390,66 @@ export default function SubscriptionScreen() {
 
       if (editingSubscription) {
         await subscriptionService.update(editingSubscription.id, requestData);
+
+        // Update or create reminder for this subscription
+        if (formData.reminderDays > 0) {
+          try {
+            const existingReminders = await reminderService.getBySubscription(editingSubscription.id);
+            if (existingReminders.length > 0) {
+              await reminderService.update(existingReminders[0].id, {
+                days_before: formData.reminderDays,
+                enabled: true,
+                channel: 'push',
+              });
+            } else {
+              await reminderService.create({
+                subscription_id: editingSubscription.id,
+                type: 'subscription_renewal',
+                days_before: formData.reminderDays,
+                enabled: true,
+                channel: 'push',
+              });
+            }
+          } catch (reminderErr) {
+            console.warn('Failed to update reminder, subscription was saved:', reminderErr);
+          }
+        }
+
         showSuccess(t('subscription.success.updated'));
       } else {
-        await subscriptionService.create(requestData);
+        const created = await subscriptionService.create(requestData);
+
+        // Create reminders for the new subscription
+        try {
+          const reminderPromises = [];
+
+          if (formData.reminderDays > 0) {
+            reminderPromises.push(reminderService.create({
+              subscription_id: created.id,
+              type: 'subscription_renewal',
+              days_before: formData.reminderDays,
+              enabled: true,
+              channel: 'push',
+            }));
+          }
+
+          if (formData.isTrial && formData.reminderDays > 0) {
+            reminderPromises.push(reminderService.create({
+              subscription_id: created.id,
+              type: 'trial_ending',
+              days_before: formData.reminderDays,
+              enabled: true,
+              channel: 'push',
+            }));
+          }
+
+          if (reminderPromises.length > 0) {
+            await Promise.all(reminderPromises);
+          }
+        } catch (reminderErr) {
+          console.warn('Failed to create reminders, subscription was created:', reminderErr);
+        }
+
         showSuccess(t('subscription.success.created'));
       }
       setModalVisible(false);
@@ -743,6 +823,42 @@ export default function SubscriptionScreen() {
                 </View>
               </View>
 
+              <View style={styles.formGroup}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <Text style={styles.label}>Période d'essai</Text>
+                  <Switch
+                    value={formData.isTrial}
+                    onValueChange={(value) => {
+                      const updates: Partial<SubscriptionFormData> = { isTrial: value };
+                      if (value && !formData.trialEndDate) {
+                        // Default trial end to M+1
+                        const defaultEnd = new Date();
+                        defaultEnd.setMonth(defaultEnd.getMonth() + 1);
+                        updates.trialEndDate = defaultEnd.toISOString().split('T')[0];
+                      }
+                      setFormData({ ...formData, ...updates });
+                    }}
+                    trackColor={{ false: '#3d3d6f', true: '#6366f1' }}
+                    thumbColor={formData.isTrial ? '#fff' : '#9ca3af'}
+                  />
+                </View>
+                
+                {formData.isTrial && (
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={[styles.label, { fontSize: 13, color: '#9ca3af' }]}>Date de fin de période d'essai</Text>
+                    <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setShowTrialEndDatePicker(true)}
+                    >
+                      <Text style={styles.dateButtonText}>
+                        {formData.trialEndDate ? formatDateForDisplay(formData.trialEndDate) : 'Sélectionner une date'}
+                      </Text>
+                      <Text style={styles.dateIcon}>📅</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
               <View style={styles.formRow}>
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
                   <Text style={styles.label}>{t('subscription.modal.startDate')}</Text>
@@ -799,17 +915,31 @@ export default function SubscriptionScreen() {
                   onChange={handleEndDateChange}
                 />
               )}
+              {showTrialEndDatePicker && (
+                <DateTimePicker
+                  value={formData.trialEndDate ? new Date(formData.trialEndDate) : new Date()}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleTrialEndDateChange}
+                />
+              )}
 
               <View style={styles.formGroup}>
                 <Text style={styles.label}>{t('subscription.modal.reminder')}</Text>
                 <TextInput
                   style={styles.input}
-                  value={formData.reminderDays?.toString() || '3'}
-                  onChangeText={(text) => setFormData({ ...formData, reminderDays: parseInt(text) || 3 })}
+                  value={formData.reminderDays > 0 ? formData.reminderDays.toString() : ''}
+                  onChangeText={(text) => {
+                    const parsed = parseInt(text);
+                    setFormData({ ...formData, reminderDays: isNaN(parsed) ? 0 : Math.min(Math.max(parsed, 0), 365) });
+                  }}
                   placeholder={t('subscription.modal.reminderPlaceholder')}
                   placeholderTextColor="#9ca3af"
                   keyboardType="number-pad"
                 />
+                <Text style={{ color: '#9ca3af', fontSize: 11, marginTop: 4 }}>
+                  Nombre de jours avant le renouvellement pour recevoir une notification push
+                </Text>
               </View>
 
               <View style={styles.modalActions}>

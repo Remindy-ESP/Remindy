@@ -129,7 +129,6 @@ describe('NotificationController (e2e)', () => {
     });
   });
 
-
   it('GET /notifications — 401 sans token', async () => {
     await request(app.getHttpServer()).get('/notifications').expect(401);
   });
@@ -193,7 +192,6 @@ describe('NotificationController (e2e)', () => {
     );
   });
 
-
   it('PUT /notifications/:id/snooze — OK', async () => {
     const payload = { snoozed_until: '2025-11-10T10:00:00Z' };
 
@@ -228,7 +226,6 @@ describe('NotificationController (e2e)', () => {
       .send({ snoozed_until: '2025-11-10T10:00:00Z' })
       .expect(401);
   });
-
 
   it('PUT /notifications/:id/mark-read — OK', async () => {
     const res = await request(app.getHttpServer())
