@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/context/I18nContext';
+import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -281,7 +282,7 @@ export default function LegalScreen() {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>{t('legal.headerTitle')}</Text>
+                    <Text style={shared.headerTitle}>{t('legal.headerTitle')}</Text>
                     <Text style={styles.headerSubtitle}>
                         {t('legal.headerSubtitle')}
                     </Text>
@@ -327,12 +328,6 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 16,
         backgroundColor: '#1a1a3e',
-    },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 8,
     },
     headerSubtitle: {
         fontSize: 16,
