@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { formatDate } from '@/utils/format';
 import Button from '@/components/Button';
+import CategoryDropdown from '@/components/CategoryDropdown';
 
 export default function NotificationsScreen() {
     const router = useRouter();
@@ -234,7 +235,7 @@ export default function NotificationsScreen() {
         });
 
         return (
-            <Animated.View style={[styles.deleteActionLeft, { transform: [{ translateX }], opacity }]}>
+            <Animated.View style={[styles.deleteAction, { transform: [{ translateX }], opacity }]}>
                 <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => handleDelete(id)}
@@ -343,41 +344,13 @@ export default function NotificationsScreen() {
             />
 
             {categoriesOpen && (
-                <View style={styles.categoriesContainer}>
-                    {categories.length === 0 ? (
-                        <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
-                            {t('notifications.noCategories')}
-                        </Text>
-                    ) : (
-                        <>
-                            <TouchableOpacity
-                                style={styles.categoryItem}
-                                onPress={() => {
-                                    setSelectedCategory(null);
-                                    setCategoriesOpen(false);
-                                }}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.categoryText}>{t('notifications.allCategories')}</Text>
-                            </TouchableOpacity>
-                            {categories.map((category: Category) => (
-                                <TouchableOpacity
-                                    key={category.id}
-                                    style={styles.categoryItem}
-                                    onPress={() => {
-                                        setSelectedCategory(category.name);
-                                        setCategoriesOpen(false);
-                                    }}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text style={styles.categoryText}>
-                                        {category.name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </>
-                    )}
-                </View>
+                <CategoryDropdown
+                    categories={categories}
+                    emptyLabel={t('notifications.noCategories')}
+                    allLabel={t('notifications.allCategories')}
+                    onSelectAll={() => { setSelectedCategory(null); setCategoriesOpen(false); }}
+                    onSelect={(name) => { setSelectedCategory(name); setCategoriesOpen(false); }}
+                />
             )}
 
             {error ? (
@@ -579,13 +552,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: 'hidden',
     },
-    deleteActionLeft: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
     deleteButton: {
         backgroundColor: '#FF5252',
         justifyContent: 'center',
@@ -601,35 +567,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    // Category Filter Styles
-    categoriesContainer: {
-        position: 'absolute',
-        top: 120,
-        alignSelf: 'center',
-        minWidth: 146,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-        overflow: 'hidden',
-        zIndex: 1000,
-    },
-    categoryItem: {
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    categoryText: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#1F1F39',
-        textAlign: 'center',
-    },
 });

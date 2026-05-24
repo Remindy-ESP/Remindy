@@ -18,6 +18,7 @@ import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import ScreenHeader from '@/components/ScreenHeader';
 import { profileCardStyles as shared } from '@/styles/profileCard';
+import FormFeedback from '@/components/FormFeedback';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
@@ -98,17 +99,7 @@ export default function ProfileSecurityScreen() {
             {t('profile.security.cardBody')}
           </Text>
 
-          {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
-
-          {success ? (
-            <View style={styles.successBox}>
-              <Text style={styles.successText}>{success}</Text>
-            </View>
-          ) : null}
+          <FormFeedback error={error} success={success} />
 
           <TextInput
             style={styles.input}
@@ -241,29 +232,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     flex: 1,
-  },
-  errorBox: {
-    backgroundColor: '#4B242C',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#A6475A',
-  },
-  errorText: {
-    color: '#FFD7DE',
-    fontSize: 13,
-  },
-  successBox: {
-    backgroundColor: '#1E4732',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#3C9B6A',
-  },
-  successText: {
-    color: '#D3FFEA',
-    fontSize: 13,
   },
 });

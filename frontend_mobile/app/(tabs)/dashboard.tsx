@@ -15,6 +15,7 @@ import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
+import CategoryDropdown from '@/components/CategoryDropdown';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -276,41 +277,13 @@ export default function DashboardScreen() {
         />
 
         {categoriesOpen && (
-          <View style={styles.categoriesContainer}>
-            {categories.length === 0 ? (
-              <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
-                {t('dashboard.categoriesEmpty')}
-              </Text>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.categoryItem}
-                  onPress={() => {
-                    setSelectedCategory(null);
-                    setCategoriesOpen(false);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.categoryText}>{t('dashboard.allCategories')}</Text>
-                </TouchableOpacity>
-                {categories.map((category: Category) => (
-                  <TouchableOpacity
-                    key={category.id}
-                    style={styles.categoryItem}
-                    onPress={() => {
-                      setSelectedCategory(category.name);
-                      setCategoriesOpen(false);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.categoryText}>
-                      {category.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-          </View>
+          <CategoryDropdown
+            categories={categories}
+            emptyLabel={t('dashboard.categoriesEmpty')}
+            allLabel={t('dashboard.allCategories')}
+            onSelectAll={() => { setSelectedCategory(null); setCategoriesOpen(false); }}
+            onSelect={(name) => { setSelectedCategory(name); setCategoriesOpen(false); }}
+          />
         )}
 
         <CoachMarkTarget targetKey={COACH_MARK_TARGETS.dashboardCalendar}>
@@ -556,36 +529,6 @@ const styles = StyleSheet.create({
     color: '#6366f1',
     textAlign: 'center',
     marginVertical: 20,
-  },
-  categoriesContainer: {
-    position: 'absolute',
-    top: 64,
-    alignSelf: 'center',
-    minWidth: 146,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    overflow: 'hidden',
-    zIndex: 1000,
-  },
-  categoryItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F1F39',
-    textAlign: 'center',
   },
   expenseItem: {
     flexDirection: 'row',
