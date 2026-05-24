@@ -103,8 +103,10 @@ export default function PromotionScreen() {
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
             <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.title}>{t('promotion.title')}</Text>
-          <Text style={styles.subtitle}>{t('promotion.subtitle')}</Text>
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.title}>{t('promotion.title')}</Text>
+            <Text style={styles.subtitle}>{t('promotion.subtitle')}</Text>
+          </View>
         </View>
 
         <View style={styles.listCard}>
@@ -190,19 +192,22 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 2,
     paddingBottom: 10,
   },
   backButton: {
-    alignSelf: 'flex-start',
     width: 36,
     height: 36,
     borderRadius: 12,
     backgroundColor: '#373848',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginRight: 12,
+  },
+  headerTextWrap: {
+    flex: 1,
   },
   title: {
     color: '#F6F7FB',

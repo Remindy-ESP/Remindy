@@ -452,8 +452,10 @@ export default function CloudScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
           <Ionicons name="chevron-back" size={20} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.pageTitle}>{t('cloud.page.title')}</Text>
-        <Text style={styles.pageSubtitle}>{t('cloud.page.subtitle')}</Text>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.pageTitle}>{t('cloud.page.title')}</Text>
+          <Text style={styles.pageSubtitle}>{t('cloud.page.subtitle')}</Text>
+        </View>
       </View>
 
       <View style={styles.quotaContainer}>
@@ -611,6 +613,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#06071D',
   },
   pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
@@ -623,7 +627,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#373848',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginRight: 12,
+  },
+  headerTextWrap: {
+    flex: 1,
   },
   pageTitle: {
     fontSize: 28,
