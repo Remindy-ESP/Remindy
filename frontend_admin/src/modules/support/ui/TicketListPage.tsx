@@ -78,9 +78,15 @@ export function TicketListPage() {
     sortDir: 'DESC',
   });
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<SupportTicketStatus | ''>('');
-  const [priorityFilter, setPriorityFilter] = useState<SupportTicketPriority | ''>('');
-  const [categoryFilter, setCategoryFilter] = useState<SupportTicketCategory | ''>('');
+  const [statusFilter, setStatusFilter] = useState<SupportTicketStatus | ''>(
+    ''
+  );
+  const [priorityFilter, setPriorityFilter] = useState<
+    SupportTicketPriority | ''
+  >('');
+  const [categoryFilter, setCategoryFilter] = useState<
+    SupportTicketCategory | ''
+  >('');
 
   const { data, isLoading, isError, refetch, isFetching } = useAdminTickets({
     ...filters,
@@ -122,16 +128,26 @@ export function TicketListPage() {
       width: 200,
       renderCell: ({ row }) =>
         row.user ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
             <Typography variant='body2'>{row.user.email}</Typography>
             {(row.user.firstName || row.user.lastName) && (
               <Typography variant='caption' color='text.secondary'>
-                {[row.user.firstName, row.user.lastName].filter(Boolean).join(' ')}
+                {[row.user.firstName, row.user.lastName]
+                  .filter(Boolean)
+                  .join(' ')}
               </Typography>
             )}
           </Box>
         ) : (
-          <Typography variant='body2' color='text.secondary'>—</Typography>
+          <Typography variant='body2' color='text.secondary'>
+            —
+          </Typography>
         ),
     },
     {
@@ -171,7 +187,9 @@ export function TicketListPage() {
             variant='outlined'
           />
         ) : (
-          <Typography variant='body2' color='text.secondary'>—</Typography>
+          <Typography variant='body2' color='text.secondary'>
+            —
+          </Typography>
         ),
     },
     {

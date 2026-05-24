@@ -11,7 +11,6 @@ import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
 import { documentService, folderService } from '@/services/api';

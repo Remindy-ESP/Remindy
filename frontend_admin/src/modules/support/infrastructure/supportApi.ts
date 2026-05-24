@@ -21,8 +21,6 @@ export const supportApi = {
   },
 
   reply(id: string, body: AdminReplyTicketRequest) {
-    return apiClient
-      .post(`/admin/tickets/${id}/reply`, body)
-      .then(r => r.data);
+    return apiClient.post(`/admin/tickets/${id}/reply`, body).then(r => r.data);
   },
 };

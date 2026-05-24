@@ -6,7 +6,6 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '@/context/I18nContext';
 import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 

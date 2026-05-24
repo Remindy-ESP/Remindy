@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { categoryService } from '../../services/api/category.service';
 import { subscriptionService } from '../../services/api/subscription.service';
@@ -25,7 +25,6 @@ import CategoryDropdown from '@/components/CategoryDropdown';
 import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
 export default function NotificationsScreen() {
-    const router = useRouter();
     const { user } = useAuth();
     const { t, language } = useTranslation();
     const [notifications, setNotifications] = useState<Notification[]>([]);
