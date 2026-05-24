@@ -45,15 +45,9 @@ describe('ProfileAboutScreen', () => {
   });
 
   it('navigates back when back button is pressed', () => {
-    const { getByText } = render(<ProfileAboutScreen />);
-    // The back button is an icon button - find it via the chevron area
-    const { getAllByRole } = render(<ProfileAboutScreen />);
-    // Just trigger mockBack via the back button touchable
     const { UNSAFE_getAllByType } = render(<ProfileAboutScreen />);
     const { TouchableOpacity } = require('react-native');
-    const touchables = UNSAFE_getAllByType(TouchableOpacity);
-    // First touchable is the back button
-    fireEvent.press(touchables[0]);
+    fireEvent.press(UNSAFE_getAllByType(TouchableOpacity)[0]);
     expect(mockBack).toHaveBeenCalled();
   });
 

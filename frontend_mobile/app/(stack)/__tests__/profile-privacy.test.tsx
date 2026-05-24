@@ -2,6 +2,7 @@ import React from 'react';
 import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ProfilePrivacyScreen from '../profile-privacy';
+import { mockAlertPressButton } from './test-utils';
 
 const mockReplace = global.__mockRouterReplace as jest.Mock;
 const mockBack = global.__mockRouterBack as jest.Mock;
@@ -45,12 +46,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('deletes account after confirmation', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (buttons && buttons[1] && buttons[1].onPress) {
-        buttons[1].onPress();
-      }
-    });
-
+    mockAlertPressButton(1);
     mockDeleteMe.mockResolvedValue(undefined);
     mockLogout.mockResolvedValue(undefined);
 
@@ -88,12 +84,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('cancels account deletion when cancel button is pressed', async () => {
-    // Alert returns 'Annuler' button — simulate pressing it (index 0)
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (buttons && buttons[0] && buttons[0].onPress) {
-        buttons[0].onPress();
-      }
-    });
+    mockAlertPressButton(0);
 
     const { getByTestId } = render(<ProfilePrivacyScreen />);
     fireEvent.press(getByTestId('delete-account-button'));
@@ -110,11 +101,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('shows error alert when account deletion API call fails', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (Array.isArray(buttons) && buttons[1]?.onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     mockDeleteMe.mockRejectedValue(new Error('Suppression echouee'));
     mockLogout.mockResolvedValue(undefined);
@@ -129,11 +116,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('shows error alert when deletion fails with response data message', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (Array.isArray(buttons) && buttons[1]?.onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     const apiError = { response: { data: { message: 'Compte introuvable' } } };
     mockDeleteMe.mockRejectedValue(apiError);
@@ -162,11 +145,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('shows fallback error message for delete when error has only message property', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (Array.isArray(buttons) && buttons[1]?.onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     // Error with message but no response — exercises second branch
     mockDeleteMe.mockRejectedValue({ message: 'Network error' });
@@ -180,11 +159,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('uses error.message for delete when response.data.message is empty', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (Array.isArray(buttons) && buttons[1]?.onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     // response.data.message is falsy, falls through to error.message
     const apiError = { response: { data: { message: '' } }, message: 'Fallback message' };
@@ -211,11 +186,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('uses error.message for delete when response exists but data is null', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (Array.isArray(buttons) && buttons[1]?.onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     // response exists but data is null — so data?.message is undefined, falls to error.message
     const apiError = { response: { data: null }, message: 'Null data message' };

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ProfileScreen from '../profile';
+import { defaultProfileUser, mockAlertPressButton } from './test-utils';
 
 const mockReplace = global.__mockRouterReplace as jest.Mock;
 const mockPush = global.__mockRouterPush as jest.Mock;
@@ -9,20 +10,7 @@ const mockPush = global.__mockRouterPush as jest.Mock;
 jest.spyOn(Alert, 'alert');
 
 const mockLogout = jest.fn();
-const defaultAuthUser = () => ({
-  id: 'test-user-id',
-  email: 'utilisateur@remindy.com',
-  firstName: 'Test',
-  lastName: 'User',
-  photoR2Key: 'users/test-user/profile-photo/avatar.jpg',
-  photoUrl: 'https://cdn.example.com/avatar.jpg',
-  role: 'user_freemium',
-  status: 'active',
-  timezone: 'Europe/Paris',
-  language: 'fr',
-  emailVerified: true,
-  createdAt: '2026-02-22T00:00:00.000Z',
-});
+const defaultAuthUser = defaultProfileUser;
 const mockUseAuth = jest.fn(() => ({
   user: defaultAuthUser(),
   logout: mockLogout,
@@ -79,11 +67,7 @@ describe('ProfileScreen', () => {
 
   it('calls logout handler when logout button is pressed', async () => {
     mockLogout.mockResolvedValue(undefined);
-    (Alert.alert as jest.Mock).mockImplementation((_title, _message, buttons) => {
-      if (buttons && buttons[1] && buttons[1].onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('logout-button'));
@@ -177,11 +161,7 @@ describe('ProfileScreen', () => {
 
   it('shows error alert when logout throws', async () => {
     mockLogout.mockRejectedValue(new Error('network'));
-    (Alert.alert as jest.Mock).mockImplementation((_title, _message, buttons) => {
-      if (buttons && buttons[1] && buttons[1].onPress) {
-        buttons[1].onPress();
-      }
-    });
+    mockAlertPressButton(1);
 
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('logout-button'));
@@ -235,12 +215,7 @@ describe('ProfileScreen', () => {
   });
 
   it('shows alert dialog and dismisses when cancel is pressed', () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _message, buttons) => {
-      // press Annuler (index 0)
-      if (buttons && buttons[0] && buttons[0].onPress) {
-        buttons[0].onPress();
-      }
-    });
+    mockAlertPressButton(0);
 
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('logout-button'));
