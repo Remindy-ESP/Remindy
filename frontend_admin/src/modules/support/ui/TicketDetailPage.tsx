@@ -62,7 +62,11 @@ function MessageBubble({ message }: { message: SupportTicketMessage }) {
         mb: 2,
       }}
     >
-      <Typography variant='caption' color='text.secondary' sx={{ mb: 0.5, px: 0.5 }}>
+      <Typography
+        variant='caption'
+        color='text.secondary'
+        sx={{ mb: 0.5, px: 0.5 }}
+      >
         {authorLabel} · {new Date(message.createdAt).toLocaleString('fr-FR')}
       </Typography>
       <Box
@@ -117,7 +121,10 @@ export function TicketDetailPage() {
   if (isLoading) return <FullPageLoader />;
   if (isError || !ticket) {
     return (
-      <ErrorState message='Impossible de charger le ticket.' onRetry={refetch} />
+      <ErrorState
+        message='Impossible de charger le ticket.'
+        onRetry={refetch}
+      />
     );
   }
 
@@ -141,11 +148,19 @@ export function TicketDetailPage() {
               color={STATUS_COLORS[ticket.status]}
             />
             {ticket.user && (
-              <Typography variant='caption' color='text.secondary' sx={{ alignSelf: 'center' }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ alignSelf: 'center' }}
+              >
                 {ticket.user.email}
               </Typography>
             )}
-            <Typography variant='caption' color='text.secondary' sx={{ alignSelf: 'center' }}>
+            <Typography
+              variant='caption'
+              color='text.secondary'
+              sx={{ alignSelf: 'center' }}
+            >
               Créé le {new Date(ticket.createdAt).toLocaleString('fr-FR')}
             </Typography>
           </Box>
@@ -205,7 +220,9 @@ export function TicketDetailPage() {
                   label='Changer le statut'
                   value={replyStatus}
                   onChange={e =>
-                    setReplyStatus((e.target.value as SupportTicketStatus) || '')
+                    setReplyStatus(
+                      (e.target.value as SupportTicketStatus) || ''
+                    )
                   }
                   sx={{ minWidth: 180 }}
                 >

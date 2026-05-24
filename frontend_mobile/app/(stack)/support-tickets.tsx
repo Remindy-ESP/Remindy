@@ -14,7 +14,6 @@ import { supportService } from '@/services/api/support.service';
 import type { SupportTicketSummary } from '@/services/api/support.service';
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/context/I18nContext';
-import ScreenHeader from '@/components/ScreenHeader';
 import { supportScreenStyles as shared } from '@/styles/supportScreen';
 
 function TicketRow({ ticket, onPress }: { ticket: SupportTicketSummary; onPress: () => void }) {
