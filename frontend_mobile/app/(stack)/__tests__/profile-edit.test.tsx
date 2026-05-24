@@ -75,6 +75,25 @@ jest.spyOn(Alert, 'alert');
 
 const renderScreen = () => render(<ProfileEditScreen />);
 
+const getLastAlertButton = (text: string) => {
+  const calls = (Alert.alert as jest.Mock).mock.calls;
+  const buttons = calls[calls.length - 1][2];
+  return buttons.find((b: any) => b.text === text);
+};
+
+const mockImageAsset = (
+  uri: string,
+  fileName: string,
+  mimeType: string | undefined,
+  fileSize: number,
+) =>
+  mockLaunchImageLibraryAsync.mockResolvedValue({
+    canceled: false,
+    assets: [{ uri, fileName, mimeType, fileSize }],
+  });
+
+const mockJpeg = (fileSize = 50000) => mockImageAsset('file://photo.jpg', 'photo.jpg', 'image/jpeg', fileSize);
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -414,22 +433,11 @@ describe('ProfileEditScreen', () => {
   });
 
   it('uploads photo successfully', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.jpg',
-        fileName: 'photo.jpg',
-        mimeType: 'image/jpeg',
-        fileSize: 50000,
-      }],
-    });
+    mockJpeg();
     mockUploadMyPhoto.mockResolvedValue(undefined);
 
     const { getByTestId } = renderScreen();
-
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(mockUploadMyPhoto).toHaveBeenCalledWith(
       expect.objectContaining({ uri: 'file://photo.jpg', type: 'image/jpeg' })
@@ -439,86 +447,41 @@ describe('ProfileEditScreen', () => {
   });
 
   it('shows error alert when photo upload fails', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.jpg',
-        fileName: 'photo.jpg',
-        mimeType: 'image/jpeg',
-        fileSize: 50000,
-      }],
-    });
+    mockJpeg();
     mockUploadMyPhoto.mockRejectedValue(new Error('Upload failed'));
 
     const { getByTestId } = renderScreen();
-
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Upload failed');
   });
 
   it('shows server error when photo upload fails with response message', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.jpg',
-        fileName: 'photo.jpg',
-        mimeType: 'image/jpeg',
-        fileSize: 50000,
-      }],
-    });
-    mockUploadMyPhoto.mockRejectedValue({
-      response: { data: { message: 'File type not supported' } },
-    });
+    mockJpeg();
+    mockUploadMyPhoto.mockRejectedValue({ response: { data: { message: 'File type not supported' } } });
 
     const { getByTestId } = renderScreen();
-
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'File type not supported');
   });
 
   it('shows error for empty file (fileSize <= 0)', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://empty.jpg',
-        fileName: 'empty.jpg',
-        mimeType: 'image/jpeg',
-        fileSize: 0,
-      }],
-    });
+    mockImageAsset('file://empty.jpg', 'empty.jpg', 'image/jpeg', 0);
 
     const { getByTestId } = renderScreen();
-
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Le fichier image est vide.');
     expect(mockUploadMyPhoto).not.toHaveBeenCalled();
   });
 
   it('handles PNG mime type correctly in buildPhotoFilePayload', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.png',
-        fileName: 'photo.png',
-        mimeType: 'image/png',
-        fileSize: 30000,
-      }],
-    });
+    mockImageAsset('file://photo.png', 'photo.png', 'image/png', 30000);
     mockUploadMyPhoto.mockResolvedValue(undefined);
 
     const { getByTestId } = renderScreen();
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(mockUploadMyPhoto).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'image/png', name: 'photo.png' })
@@ -526,21 +489,11 @@ describe('ProfileEditScreen', () => {
   });
 
   it('handles WebP mime type correctly in buildPhotoFilePayload', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.webp',
-        fileName: 'photo.webp',
-        mimeType: 'image/webp',
-        fileSize: 30000,
-      }],
-    });
+    mockImageAsset('file://photo.webp', 'photo.webp', 'image/webp', 30000);
     mockUploadMyPhoto.mockResolvedValue(undefined);
 
     const { getByTestId } = renderScreen();
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(mockUploadMyPhoto).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'image/webp', name: 'photo.webp' })
@@ -548,21 +501,11 @@ describe('ProfileEditScreen', () => {
   });
 
   it('infers mime type from URI extension when mimeType is missing', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.jpg',
-        fileName: undefined,
-        mimeType: undefined,
-        fileSize: 30000,
-      }],
-    });
+    mockImageAsset('file://photo.jpg', undefined as any, undefined, 30000);
     mockUploadMyPhoto.mockResolvedValue(undefined);
 
     const { getByTestId } = renderScreen();
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(mockUploadMyPhoto).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'image/jpeg' })
@@ -570,21 +513,11 @@ describe('ProfileEditScreen', () => {
   });
 
   it('generates a filename when no fileName is provided', async () => {
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://photo.png',
-        fileName: undefined,
-        mimeType: 'image/png',
-        fileSize: 30000,
-      }],
-    });
+    mockImageAsset('file://photo.png', undefined as any, 'image/png', 30000);
     mockUploadMyPhoto.mockResolvedValue(undefined);
 
     const { getByTestId } = renderScreen();
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
     expect(mockUploadMyPhoto).toHaveBeenCalledWith(
       expect.objectContaining({ name: expect.stringMatching(/^profile-photo-\d+\.png$/) })
@@ -592,24 +525,11 @@ describe('ProfileEditScreen', () => {
   });
 
   it('shows error when mimeType is not an image type', async () => {
-    // A PDF or unknown type should fail the mimeType.startsWith('image/') check
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{
-        uri: 'file://doc.pdf',
-        fileName: 'doc.pdf',
-        // No mimeType and extension doesn't match jpg/png/webp → mimeType undefined → throws
-        mimeType: undefined,
-        fileSize: 30000,
-      }],
-    });
+    mockImageAsset('file://doc.pdf', 'doc.pdf', undefined, 30000);
 
     const { getByTestId } = renderScreen();
-    await act(async () => {
-      fireEvent.press(getByTestId('choose-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
-    // Should show error (Unsupported image type)
     expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
   });
 
@@ -617,10 +537,7 @@ describe('ProfileEditScreen', () => {
     let resolveUpload!: () => void;
     const slowUpload = new Promise<void>(resolve => { resolveUpload = resolve; });
 
-    mockLaunchImageLibraryAsync.mockResolvedValue({
-      canceled: false,
-      assets: [{ uri: 'file://p.jpg', fileName: 'p.jpg', mimeType: 'image/jpeg', fileSize: 100 }],
-    });
+    mockImageAsset('file://p.jpg', 'p.jpg', 'image/jpeg', 100);
     mockUploadMyPhoto.mockReturnValue(slowUpload);
 
     const { getByTestId } = renderScreen();
@@ -665,13 +582,7 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('remove-photo-button'));
     });
 
-    // Find the destructive "Supprimer" button in the Alert
-    const alertCalls = (Alert.alert as jest.Mock).mock.calls;
-    const lastCall = alertCalls[alertCalls.length - 1];
-    const buttons = lastCall[2];
-    const deleteButton = buttons.find((b: any) => b.text === 'Supprimer');
-
-    await act(async () => { deleteButton.onPress(); });
+    await act(async () => { getLastAlertButton('Supprimer').onPress(); });
 
     expect(mockDeleteMyPhoto).toHaveBeenCalled();
     expect(mockRefreshUser).toHaveBeenCalled();
@@ -682,16 +593,9 @@ describe('ProfileEditScreen', () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
     const { getByTestId } = renderScreen();
 
-    await act(async () => {
-      fireEvent.press(getByTestId('remove-photo-button'));
-    });
+    await act(async () => { fireEvent.press(getByTestId('remove-photo-button')); });
 
-    const alertCalls = (Alert.alert as jest.Mock).mock.calls;
-    const lastCall = alertCalls[alertCalls.length - 1];
-    const buttons = lastCall[2];
-    const cancelButton = buttons.find((b: any) => b.text === 'Annuler');
-
-    // Cancel is style 'cancel', pressing it should not call deleteMyPhoto
+    const cancelButton = getLastAlertButton('Annuler');
     if (cancelButton?.onPress) {
       await act(async () => { cancelButton.onPress(); });
     }
@@ -704,17 +608,8 @@ describe('ProfileEditScreen', () => {
     mockDeleteMyPhoto.mockRejectedValue(new Error('Delete error'));
 
     const { getByTestId } = renderScreen();
-
-    await act(async () => {
-      fireEvent.press(getByTestId('remove-photo-button'));
-    });
-
-    const alertCalls = (Alert.alert as jest.Mock).mock.calls;
-    const lastCall = alertCalls[alertCalls.length - 1];
-    const buttons = lastCall[2];
-    const deleteButton = buttons.find((b: any) => b.text === 'Supprimer');
-
-    await act(async () => { deleteButton.onPress(); });
+    await act(async () => { fireEvent.press(getByTestId('remove-photo-button')); });
+    await act(async () => { getLastAlertButton('Supprimer').onPress(); });
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Delete error');
@@ -723,18 +618,11 @@ describe('ProfileEditScreen', () => {
 
   it('shows server error message when photo deletion fails with response', async () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
-    mockDeleteMyPhoto.mockRejectedValue({
-      response: { data: { message: 'Photo not found' } },
-    });
+    mockDeleteMyPhoto.mockRejectedValue({ response: { data: { message: 'Photo not found' } } });
 
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('remove-photo-button')); });
-
-    const alertCalls = (Alert.alert as jest.Mock).mock.calls;
-    const lastCall = alertCalls[alertCalls.length - 1];
-    const buttons = lastCall[2];
-    const deleteButton = buttons.find((b: any) => b.text === 'Supprimer');
-    await act(async () => { deleteButton.onPress(); });
+    await act(async () => { getLastAlertButton('Supprimer').onPress(); });
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Photo not found');
