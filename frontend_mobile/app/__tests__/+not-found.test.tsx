@@ -14,20 +14,8 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('@/components/system/AppStatusScreen', () => {
-  const React = require('react');
-  const { View, Text, TouchableOpacity } = require('react-native');
-  return ({ code, title, message, actions }: any) => (
-    <View>
-      <Text>{code}</Text>
-      <Text>{title}</Text>
-      <Text>{message}</Text>
-      {actions.map((action: any) => (
-        <TouchableOpacity key={action.label} testID={action.testID} onPress={action.onPress}>
-          <Text>{action.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+  const { AppStatusScreenMock } = require('./testUtils');
+  return AppStatusScreenMock;
 });
 
 describe('NotFoundScreen', () => {
