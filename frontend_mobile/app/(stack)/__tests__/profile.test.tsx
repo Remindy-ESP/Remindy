@@ -3,15 +3,8 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ProfileScreen from '../profile';
 
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    push: mockPush,
-  }),
-}));
+const mockReplace = global.__mockRouterReplace as jest.Mock;
+const mockPush = global.__mockRouterPush as jest.Mock;
 
 jest.spyOn(Alert, 'alert');
 

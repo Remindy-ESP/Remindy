@@ -3,18 +3,11 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 import ProfileAboutScreen from '../profile-about';
 
-const mockBack = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    back: mockBack,
-    push: jest.fn(),
-    replace: jest.fn(),
-  }),
-}));
-
 jest.spyOn(Alert, 'alert');
 jest.spyOn(Linking, 'canOpenURL');
 jest.spyOn(Linking, 'openURL');
+
+const mockBack = global.__mockRouterBack as jest.Mock;
 
 describe('ProfileAboutScreen', () => {
   beforeEach(() => {

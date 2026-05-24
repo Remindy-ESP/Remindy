@@ -94,15 +94,23 @@ jest.mock('@react-native-async-storage/async-storage', () => {
   };
 });
 
-// Mock expo-router
+// Mock expo-router — persistent named fns so tests can spy without re-mocking
+const _routerBack = jest.fn();
+const _routerPush = jest.fn();
+const _routerReplace = jest.fn();
+global.__mockRouterBack = _routerBack;
+global.__mockRouterPush = _routerPush;
+global.__mockRouterReplace = _routerReplace;
+
 jest.mock('expo-router', () => ({
   useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
+    back: global.__mockRouterBack,
+    push: global.__mockRouterPush,
+    replace: global.__mockRouterReplace,
     setParams: jest.fn(),
   }),
   useLocalSearchParams: () => ({}),
+  useFocusEffect: jest.fn((cb) => { require('react').useEffect(cb, []); }),
   Link: 'Link',
 }));
 

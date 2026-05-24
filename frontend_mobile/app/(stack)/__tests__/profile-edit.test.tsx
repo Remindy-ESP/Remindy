@@ -18,10 +18,7 @@ jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
 }));
 
-const mockBack = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack }),
-}));
+const mockBack = global.__mockRouterBack as jest.Mock;
 
 // ----- Mutable auth state -----
 const defaultUser = () => ({
