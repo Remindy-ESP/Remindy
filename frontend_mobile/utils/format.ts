@@ -43,40 +43,50 @@ export function formatNumber(value: number, language: SupportedLanguage): string
   return new Intl.NumberFormat(LOCALE_TAG[language]).format(value);
 }
 
-const FR_CALENDAR = {
-  monthNames: [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
-  ],
-  monthNamesShort: [
-    'Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.',
-  ],
-  dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-  dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
-  today: "Aujourd'hui",
-};
+interface CalendarLocale {
+  monthNames: string[];
+  monthNamesShort: string[];
+  dayNames: string[];
+  dayNamesShort: string[];
+  today: string;
+}
 
-const EN_CALENDAR = {
-  monthNames: [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ],
-  monthNamesShort: [
-    'Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.',
-    'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.',
-  ],
-  dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-  dayNamesShort: ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'],
-  today: 'Today',
+const CALENDAR_LOCALES: Record<SupportedLanguage, CalendarLocale> = {
+  fr: {
+    monthNames: [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    ],
+    monthNamesShort: [
+      'Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.',
+    ],
+    dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+    dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
+    today: "Aujourd'hui",
+  },
+  en: {
+    monthNames: [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ],
+    monthNamesShort: [
+      'Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'Jun.',
+      'Jul.', 'Aug.', 'Sep.', 'Oct.', 'Nov.', 'Dec.',
+    ],
+    dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    dayNamesShort: ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.'],
+    today: 'Today',
+  },
 };
 
 let calendarLocalesRegistered = false;
 
 export function registerCalendarLocales(): void {
   if (calendarLocalesRegistered) return;
-  LocaleConfig.locales.fr = FR_CALENDAR;
-  LocaleConfig.locales.en = EN_CALENDAR;
+  for (const [lang, locale] of Object.entries(CALENDAR_LOCALES)) {
+    LocaleConfig.locales[lang] = locale;
+  }
   calendarLocalesRegistered = true;
 }
 
