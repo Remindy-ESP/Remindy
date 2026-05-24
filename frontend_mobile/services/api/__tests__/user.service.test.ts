@@ -268,7 +268,7 @@ describe('UserService', () => {
     it('updates user preferences', async () => {
       const preferences = {
         notifications: false,
-        theme: 'light',
+        theme: 'light' as const,
         reminderDays: [1, 7],
       };
 
@@ -283,7 +283,7 @@ describe('UserService', () => {
     });
 
     it('updates single preference field', async () => {
-      const preferences = { theme: 'dark' };
+      const preferences = { theme: 'dark' as const };
 
       mockApiClient.put.mockResolvedValue({ data: preferences });
 
@@ -296,7 +296,7 @@ describe('UserService', () => {
       const error = new Error('Invalid preference value');
       mockApiClient.put.mockRejectedValue(error);
 
-      await expect(userService.updatePreferences({ theme: 'invalid' })).rejects.toThrow('Invalid preference value');
+      await expect(userService.updatePreferences({ theme: 'invalid' as any })).rejects.toThrow('Invalid preference value');
     });
   });
 

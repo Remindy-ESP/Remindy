@@ -80,7 +80,10 @@ describe('AdminRbacController', () => {
       mockService.createRole.mockResolvedValue({});
 
       await controller.createRole(makeReq(Role.USER_ADMIN) as any, { key: 'x', label: 'X' });
-      expect(mockService.createRole).toHaveBeenCalledWith({ role: Role.USER_ADMIN }, expect.any(Object));
+      expect(mockService.createRole).toHaveBeenCalledWith(
+        { role: Role.USER_ADMIN },
+        expect.any(Object),
+      );
     });
   });
 
@@ -92,7 +95,11 @@ describe('AdminRbacController', () => {
       const body = { label: 'Updated' };
       const result = await controller.updateRole(makeReq() as any, 'custom', body);
 
-      expect(mockService.updateRole).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'custom', body);
+      expect(mockService.updateRole).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'custom',
+        body,
+      );
       expect(result).toEqual(updated);
     });
 
@@ -100,7 +107,11 @@ describe('AdminRbacController', () => {
       mockService.updateRole.mockResolvedValue({});
 
       await controller.updateRole(makeReq(Role.USER_ADMIN) as any, 'custom', {});
-      expect(mockService.updateRole).toHaveBeenCalledWith({ role: Role.USER_ADMIN }, 'custom', expect.any(Object));
+      expect(mockService.updateRole).toHaveBeenCalledWith(
+        { role: Role.USER_ADMIN },
+        'custom',
+        expect.any(Object),
+      );
     });
   });
 
@@ -123,7 +134,10 @@ describe('AdminRbacController', () => {
 
   describe('addPermission()', () => {
     it('delegates to service.addPermission', async () => {
-      mockService.addPermission.mockResolvedValue({ key: 'custom', permissions: ['admin.users.read'] });
+      mockService.addPermission.mockResolvedValue({
+        key: 'custom',
+        permissions: ['admin.users.read'],
+      });
 
       const body = { permission: 'admin.users.read' };
       const result = await controller.addPermission(makeReq() as any, 'custom', body);
@@ -139,8 +153,14 @@ describe('AdminRbacController', () => {
     it('forwards USER_ADMIN role', async () => {
       mockService.addPermission.mockResolvedValue({});
 
-      await controller.addPermission(makeReq(Role.USER_ADMIN) as any, 'custom', { permission: 'p' });
-      expect(mockService.addPermission).toHaveBeenCalledWith({ role: Role.USER_ADMIN }, 'custom', 'p');
+      await controller.addPermission(makeReq(Role.USER_ADMIN) as any, 'custom', {
+        permission: 'p',
+      });
+      expect(mockService.addPermission).toHaveBeenCalledWith(
+        { role: Role.USER_ADMIN },
+        'custom',
+        'p',
+      );
     });
   });
 
@@ -162,8 +182,14 @@ describe('AdminRbacController', () => {
     it('forwards USER_ADMIN role', async () => {
       mockService.removePermission.mockResolvedValue({});
 
-      await controller.removePermission(makeReq(Role.USER_ADMIN) as any, 'custom', { permission: 'p' });
-      expect(mockService.removePermission).toHaveBeenCalledWith({ role: Role.USER_ADMIN }, 'custom', 'p');
+      await controller.removePermission(makeReq(Role.USER_ADMIN) as any, 'custom', {
+        permission: 'p',
+      });
+      expect(mockService.removePermission).toHaveBeenCalledWith(
+        { role: Role.USER_ADMIN },
+        'custom',
+        'p',
+      );
     });
   });
 });

@@ -1,6 +1,9 @@
 import { validate } from 'class-validator';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './user-preferences.dto';
-import { UserPreferenceEntity, Theme } from 'src/infrastructure/database/entities/user-preference.entity';
+import {
+  UserPreferenceEntity,
+  Theme,
+} from 'src/infrastructure/database/entities/user-preference.entity';
 
 describe('UpdateUserPreferencesDto', () => {
   describe('validation', () => {

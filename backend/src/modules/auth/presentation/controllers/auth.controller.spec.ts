@@ -11,8 +11,8 @@ import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import type { Request, Response } from 'express';
-const TEST_IP = 'test-ip-address' 
-const TEST_IP_2 = 'another-test-ip'
+const TEST_IP = 'test-ip-address';
+const TEST_IP_2 = 'another-test-ip';
 describe('AuthController', () => {
   let controller: AuthController;
   let registerUserUseCase: jest.Mocked<RegisterUserUseCase>;
@@ -462,7 +462,7 @@ describe('AuthController', () => {
       await controller.refreshToken(
         reqWithInvalidCookie as Request,
         mockResponse as unknown as Response,
-        { refreshToken: 'body_token' }
+        { refreshToken: 'body_token' },
       );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
@@ -485,9 +485,9 @@ describe('AuthController', () => {
       });
 
       await controller.refreshToken(
-  reqWithoutUserAgent as Request,
-  mockResponse as unknown as Response
-);
+        reqWithoutUserAgent as Request,
+        mockResponse as unknown as Response,
+      );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'cookie_token',

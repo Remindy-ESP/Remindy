@@ -2,6 +2,10 @@
 // (React Native renders + many setupFiles inflate per-test cost).
 jest.setTimeout(30000);
 
+// Provide the native gesture-handler mock so GestureHandlerRootView doesn't throw
+// "install is not a function" in the Jest/jsdom environment.
+require('react-native-gesture-handler/jestSetup');
+
 // Mock axios globally to prevent its fetch adapter from conflicting with
 // expo's ReadableStream polyfill in the Jest/jsdom environment.
 // All service-level tests mock their own dependencies (apiClient) explicitly.

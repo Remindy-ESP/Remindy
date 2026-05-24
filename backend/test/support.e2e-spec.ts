@@ -113,11 +113,7 @@ describe('Support Module (e2e)', () => {
   const authenticatedPost = (url: string, token = 'user-token') =>
     request(httpServer()).post(url).set(authHeaderFor(token));
 
-  const expectUnauthorized = async (
-    method: 'get' | 'post',
-    url: string,
-    body?: unknown,
-  ) => {
+  const expectUnauthorized = async (method: 'get' | 'post', url: string, body?: unknown) => {
     const req = request(httpServer())[method](url);
 
     if (body) {
@@ -127,14 +123,8 @@ describe('Support Module (e2e)', () => {
     await req.expect(401);
   };
 
-  const expectInvalidToken = async (
-    method: 'get' | 'post',
-    url: string,
-    body?: unknown,
-  ) => {
-    const req = request(httpServer())[method](url).set(
-      authHeaderFor('bad-token'),
-    );
+  const expectInvalidToken = async (method: 'get' | 'post', url: string, body?: unknown) => {
+    const req = request(httpServer())[method](url).set(authHeaderFor('bad-token'));
 
     if (body) {
       req.send(body);
@@ -221,21 +211,13 @@ describe('Support Module (e2e)', () => {
 
       expect(Array.isArray(response.body)).toBe(true);
 
-      expect(response.body).toContain(
-        SupportTicketCategory.TECHNICAL,
-      );
+      expect(response.body).toContain(SupportTicketCategory.TECHNICAL);
 
-      expect(response.body).toContain(
-        SupportTicketCategory.BILLING,
-      );
+      expect(response.body).toContain(SupportTicketCategory.BILLING);
 
-      expect(response.body).toContain(
-        SupportTicketCategory.BUG,
-      );
+      expect(response.body).toContain(SupportTicketCategory.BUG);
 
-      expect(response.body.length).toBe(
-        Object.values(SupportTicketCategory).length,
-      );
+      expect(response.body.length).toBe(Object.values(SupportTicketCategory).length);
     });
 
     it('returns 401 without auth token', async () => {
@@ -255,9 +237,7 @@ describe('Support Module (e2e)', () => {
         category: SupportTicketCategory.TECHNICAL,
       };
 
-      const response = await authenticatedPost(ROUTES.tickets)
-        .send(payload)
-        .expect(201);
+      const response = await authenticatedPost(ROUTES.tickets).send(payload).expect(201);
 
       expect(createSupportTicketUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: validUserId }),
@@ -279,8 +259,7 @@ describe('Support Module (e2e)', () => {
       const response = await authenticatedPost(ROUTES.tickets)
         .send({
           subject: 'Question générale',
-          message:
-            'Je voudrais savoir comment accéder à mes données.',
+          message: 'Je voudrais savoir comment accéder à mes données.',
         })
         .expect(201);
 
@@ -299,8 +278,7 @@ describe('Support Module (e2e)', () => {
       await authenticatedPost(ROUTES.tickets)
         .send({
           subject: 'Hi',
-          message:
-            'Un message de test suffisamment long.',
+          message: 'Un message de test suffisamment long.',
         })
         .expect(400);
     });
@@ -340,13 +318,9 @@ describe('Support Module (e2e)', () => {
 
   describe(`GET ${ROUTES.myTickets}`, () => {
     it('returns my tickets list without filters', async () => {
-      const response = await authenticatedGet(
-        ROUTES.myTickets,
-      ).expect(200);
+      const response = await authenticatedGet(ROUTES.myTickets).expect(200);
 
-      expect(
-        listMySupportTicketsUseCase.execute,
-      ).toHaveBeenCalledWith(
+      expect(listMySupportTicketsUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: validUserId }),
         expect.objectContaining({
           page: 1,
@@ -366,9 +340,7 @@ describe('Support Module (e2e)', () => {
         })
         .expect(200);
 
-      expect(
-        listMySupportTicketsUseCase.execute,
-      ).toHaveBeenCalledWith(
+      expect(listMySupportTicketsUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: validUserId }),
         expect.objectContaining({
           status: SupportTicketStatus.OPEN,
@@ -385,9 +357,7 @@ describe('Support Module (e2e)', () => {
         })
         .expect(200);
 
-      expect(
-        listMySupportTicketsUseCase.execute,
-      ).toHaveBeenCalledWith(
+      expect(listMySupportTicketsUseCase.execute).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({
           page: 2,
@@ -411,13 +381,9 @@ describe('Support Module (e2e)', () => {
 
   describe('GET /support/tickets/:id', () => {
     it('returns ticket details for a valid UUID', async () => {
-      const response = await authenticatedGet(
-        `${ROUTES.tickets}/${validTicketId}`,
-      ).expect(200);
+      const response = await authenticatedGet(`${ROUTES.tickets}/${validTicketId}`).expect(200);
 
-      expect(
-        getMySupportTicketByIdUseCase.execute,
-      ).toHaveBeenCalledWith(
+      expect(getMySupportTicketByIdUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: validUserId }),
         validTicketId,
       );
@@ -433,48 +399,33 @@ describe('Support Module (e2e)', () => {
         new NotFoundException('Support ticket not found'),
       );
 
-      await authenticatedGet(
-        `${ROUTES.tickets}/${validTicketId}`,
-      ).expect(404);
+      await authenticatedGet(`${ROUTES.tickets}/${validTicketId}`).expect(404);
     });
 
     it('returns 400 for a non-UUID id param', async () => {
-      await authenticatedGet(
-        `${ROUTES.tickets}/not-a-uuid`,
-      ).expect(400);
+      await authenticatedGet(`${ROUTES.tickets}/not-a-uuid`).expect(400);
     });
 
     it('returns 401 without auth token', async () => {
-      await expectUnauthorized(
-        'get',
-        `${ROUTES.tickets}/${validTicketId}`,
-      );
+      await expectUnauthorized('get', `${ROUTES.tickets}/${validTicketId}`);
     });
 
     it('returns 401 with invalid token', async () => {
-      await expectInvalidToken(
-        'get',
-        `${ROUTES.tickets}/${validTicketId}`,
-      );
+      await expectInvalidToken('get', `${ROUTES.tickets}/${validTicketId}`);
     });
   });
 
   describe('POST /support/tickets/:id/reply', () => {
     it('submits a reply to an existing ticket', async () => {
       const replyBody = {
-        message:
-          'Merci, voici des précisions supplémentaires.',
+        message: 'Merci, voici des précisions supplémentaires.',
       };
 
-      const response = await authenticatedPost(
-        `${ROUTES.tickets}/${validTicketId}/reply`,
-      )
+      const response = await authenticatedPost(`${ROUTES.tickets}/${validTicketId}/reply`)
         .send(replyBody)
         .expect(201);
 
-      expect(
-        replyToMySupportTicketUseCase.execute,
-      ).toHaveBeenCalledWith(
+      expect(replyToMySupportTicketUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ id: validUserId }),
         validTicketId,
         expect.objectContaining({
@@ -493,9 +444,7 @@ describe('Support Module (e2e)', () => {
         new NotFoundException('Support ticket not found'),
       );
 
-      await authenticatedPost(
-        `${ROUTES.tickets}/${validTicketId}/reply`,
-      )
+      await authenticatedPost(`${ROUTES.tickets}/${validTicketId}/reply`)
         .send({
           message: 'Une réponse.',
         })
@@ -503,17 +452,11 @@ describe('Support Module (e2e)', () => {
     });
 
     it('returns 400 for missing message', async () => {
-      await authenticatedPost(
-        `${ROUTES.tickets}/${validTicketId}/reply`,
-      )
-        .send({})
-        .expect(400);
+      await authenticatedPost(`${ROUTES.tickets}/${validTicketId}/reply`).send({}).expect(400);
     });
 
     it('returns 400 for non-UUID id param', async () => {
-      await authenticatedPost(
-        `${ROUTES.tickets}/not-a-uuid/reply`,
-      )
+      await authenticatedPost(`${ROUTES.tickets}/not-a-uuid/reply`)
         .send({
           message: 'Une réponse valide.',
         })
@@ -521,23 +464,15 @@ describe('Support Module (e2e)', () => {
     });
 
     it('returns 401 without auth token', async () => {
-      await expectUnauthorized(
-        'post',
-        `${ROUTES.tickets}/${validTicketId}/reply`,
-        {
-          message: 'Une réponse valide.',
-        },
-      );
+      await expectUnauthorized('post', `${ROUTES.tickets}/${validTicketId}/reply`, {
+        message: 'Une réponse valide.',
+      });
     });
 
     it('returns 401 with invalid token', async () => {
-      await expectInvalidToken(
-        'post',
-        `${ROUTES.tickets}/${validTicketId}/reply`,
-        {
-          message: 'Une réponse valide.',
-        },
-      );
+      await expectInvalidToken('post', `${ROUTES.tickets}/${validTicketId}/reply`, {
+        message: 'Une réponse valide.',
+      });
     });
   });
 });

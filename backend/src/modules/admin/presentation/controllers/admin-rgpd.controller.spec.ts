@@ -67,11 +67,9 @@ describe('AdminRgpdController', () => {
 
       await controller.requestExport(makeReq({ ip: '192.168.1.1' }), 'user-2');
 
-      expect(mockService.requestExport).toHaveBeenCalledWith(
-        expect.any(Object),
-        'user-2',
-        { ipAddress: '192.168.1.1' },
-      );
+      expect(mockService.requestExport).toHaveBeenCalledWith(expect.any(Object), 'user-2', {
+        ipAddress: '192.168.1.1',
+      });
     });
 
     it('forwards USER_ADMIN role', async () => {
@@ -136,11 +134,9 @@ describe('AdminRgpdController', () => {
 
       await controller.deleteUserData(makeReq({ ip: '172.16.0.1' }), 'user-4');
 
-      expect(mockService.deleteUserData).toHaveBeenCalledWith(
-        expect.any(Object),
-        'user-4',
-        { ipAddress: '172.16.0.1' },
-      );
+      expect(mockService.deleteUserData).toHaveBeenCalledWith(expect.any(Object), 'user-4', {
+        ipAddress: '172.16.0.1',
+      });
     });
 
     it('forwards USER_ADMIN role', async () => {

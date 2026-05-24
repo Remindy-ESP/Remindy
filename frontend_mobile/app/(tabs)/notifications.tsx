@@ -1,11 +1,26 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    FlatList,
+    TouchableOpacity,
+    ActivityIndicator,
+    RefreshControl,
+    Animated,
+    Alert,
+} from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { notificationService, Notification, NotificationType } from '../../services/api';
+import { categoryService } from '../../services/api/category.service';
+import { subscriptionService } from '../../services/api/subscription.service';
+import type { Category, Subscription } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { formatDate } from '@/utils/format';
+import Button from '@/components/Button';
 
 export default function NotificationsScreen() {
     const router = useRouter();
@@ -15,12 +30,25 @@ export default function NotificationsScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const openSwipeableRef = useRef<Swipeable | null>(null);
+
+    // Category filter state
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [categoriesOpen, setCategoriesOpen] = useState(false);
 
     const fetchNotifications = useCallback(async () => {
         try {
             setError(null);
-            const data = await notificationService.getNotifications({ limit: 50 });
+            const [data, cats, subs] = await Promise.all([
+                notificationService.getNotifications({ limit: 50 }),
+                categoryService.getAll().catch(() => []),
+                subscriptionService.getAll().catch(() => []),
+            ]);
             setNotifications(data || []);
+            setCategories(cats || []);
+            setSubscriptions(subs || []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
             setError(err.response?.data?.message || t('notifications.loadError'));
@@ -30,11 +58,37 @@ export default function NotificationsScreen() {
         }
     }, [t]);
 
-    useEffect(() => {
-        if (user) {
-            fetchNotifications();
+    useFocusEffect(
+        React.useCallback(() => {
+            if (user) {
+                fetchNotifications();
+            }
+        }, [user, fetchNotifications])
+    );
+
+    // Build subscriptionId -> categoryName map
+    const subscriptionCategoryMap = React.useMemo(() => {
+        const map: Record<string, string> = {};
+        for (const sub of subscriptions) {
+            if (sub.categoryId) {
+                const cat = categories.find(c => c.id === sub.categoryId);
+                if (cat) {
+                    map[sub.id] = cat.name;
+                }
+            }
         }
-    }, [user, fetchNotifications]);
+        return map;
+    }, [subscriptions, categories]);
+
+    // Filter notifications by selected category
+    const filteredNotifications = React.useMemo(() => {
+        if (!selectedCategory) return notifications;
+        return notifications.filter(n => {
+            const subId = n.metadata?.subscriptionId;
+            if (!subId) return false;
+            return subscriptionCategoryMap[subId] === selectedCategory;
+        });
+    }, [notifications, selectedCategory, subscriptionCategoryMap]);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -44,7 +98,6 @@ export default function NotificationsScreen() {
     const handleMarkAsRead = async (id: string) => {
         try {
             await notificationService.markAsRead(id);
-            // Mettre à jour localement
             setNotifications(prev => prev.map(n =>
                 n.id === id ? { ...n, readAt: new Date().toISOString() } : n
             ));
@@ -53,11 +106,59 @@ export default function NotificationsScreen() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        try {
+            await notificationService.deleteNotification(id);
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        } catch (err) {
+            console.error('Failed to delete notification', err);
+            Alert.alert('Erreur', 'Impossible de supprimer la notification');
+        }
+    };
+
+    const handleMarkAllAsRead = async () => {
+        try {
+            await notificationService.markAllAsRead();
+            setNotifications(prev => prev.map(n => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+        } catch (err) {
+            console.error('Failed to mark all as read', err);
+        }
+    };
+
+    const handleDeleteAll = () => {
+        Alert.alert(
+            t('notifications.deleteAllTitle'),
+            t('notifications.deleteAllMessage'),
+            [
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: t('common.delete'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await notificationService.deleteAllNotifications();
+                            setNotifications([]);
+                        } catch (err) {
+                            console.error('Failed to delete all notifications', err);
+                            Alert.alert('Erreur', 'Impossible de supprimer les notifications');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const hasUnread = filteredNotifications.some(n => !n.readAt);
+    const hasNotifications = filteredNotifications.length > 0;
+
     const getIconName = (type: NotificationType): keyof typeof Ionicons.glyphMap => {
         switch (type) {
-            case 'subscription_renewal': return 'calendar-outline';
+            case 'subscription_renewal':
+            case 'subscription_renewed': return 'calendar-outline';
             case 'payment_overdue': return 'alert-circle-outline';
-            case 'document_expiry': return 'document-text-outline';
+            case 'trial_ending': return 'hourglass-outline';
+            case 'document_expiry':
+            case 'document_processed': return 'document-text-outline';
             case 'reminder': return 'time-outline';
             case 'system': return 'information-circle-outline';
             default: return 'notifications-outline';
@@ -67,10 +168,83 @@ export default function NotificationsScreen() {
     const getIconColor = (type: NotificationType): string => {
         switch (type) {
             case 'payment_overdue': return '#FF5252';
-            case 'subscription_renewal': return '#4CAF50';
-            case 'document_expiry': return '#FF9800';
+            case 'subscription_renewal':
+            case 'subscription_renewed': return '#4CAF50';
+            case 'trial_ending': return '#FF9800';
+            case 'document_expiry':
+            case 'document_processed': return '#2196F3';
             default: return '#E0E0E0';
         }
+    };
+
+    const getCardBackground = (type: NotificationType): string => {
+        switch (type) {
+            case 'subscription_renewal':
+            case 'subscription_renewed': return 'rgba(76, 175, 80, 0.08)';
+            case 'trial_ending': return 'rgba(255, 152, 0, 0.08)';
+            case 'payment_overdue': return 'rgba(255, 82, 82, 0.08)';
+            case 'document_expiry':
+            case 'document_processed': return 'rgba(33, 150, 243, 0.08)';
+            default: return 'rgba(255, 255, 255, 0.05)';
+        }
+    };
+
+    const renderRightActions = (
+        progress: Animated.AnimatedInterpolation<number>,
+        _dragX: Animated.AnimatedInterpolation<number>,
+        id: string,
+    ) => {
+        const translateX = progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [80, 0],
+        });
+
+        const opacity = progress.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 0.5, 1],
+        });
+
+        return (
+            <Animated.View style={[styles.deleteAction, { transform: [{ translateX }], opacity }]}>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(id)}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="trash-outline" size={22} color="#fff" />
+                    <Text style={styles.deleteText}>Supprimer</Text>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
+
+    const renderLeftActions = (
+        progress: Animated.AnimatedInterpolation<number>,
+        _dragX: Animated.AnimatedInterpolation<number>,
+        id: string,
+    ) => {
+        const translateX = progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-80, 0],
+        });
+
+        const opacity = progress.interpolate({
+            inputRange: [0, 0.5, 1],
+            outputRange: [0, 0.5, 1],
+        });
+
+        return (
+            <Animated.View style={[styles.deleteActionLeft, { transform: [{ translateX }], opacity }]}>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(id)}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="trash-outline" size={22} color="#fff" />
+                    <Text style={styles.deleteText}>Supprimer</Text>
+                </TouchableOpacity>
+            </Animated.View>
+        );
     };
 
     const renderNotificationItem = ({ item }: { item: Notification }) => {
@@ -85,30 +259,45 @@ export default function NotificationsScreen() {
             : '';
 
         return (
-            <TouchableOpacity
-                style={[styles.notificationCard, isRead && styles.notificationCardRead]}
-                onPress={() => !isRead && handleMarkAsRead(item.id)}
-                activeOpacity={0.7}
+            <Swipeable
+                renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item.id)}
+                renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, item.id)}
+                onSwipeableOpen={() => {
+                    if (openSwipeableRef.current) {
+                        openSwipeableRef.current.close();
+                    }
+                }}
+                overshootRight={false}
+                overshootLeft={false}
+                friction={2}
+                rightThreshold={40}
+                leftThreshold={40}
             >
-                <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
-                    <Ionicons name={getIconName(item.type)} size={24} color={getIconColor(item.type)} />
-                </View>
-
-                <View style={styles.notificationContent}>
-                    <View style={styles.notificationHeader}>
-                        <Text style={[styles.notificationTitle, !isRead && styles.textUnread]} numberOfLines={1}>
-                            {item.title}
-                        </Text>
-                        <Text style={styles.notificationDate}>{date}</Text>
+                <TouchableOpacity
+                    style={[styles.notificationCard, { backgroundColor: getCardBackground(item.type) }, isRead && styles.notificationCardRead]}
+                    onPress={() => !isRead && handleMarkAsRead(item.id)}
+                    activeOpacity={0.7}
+                >
+                    <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
+                        <Ionicons name={getIconName(item.type)} size={24} color={getIconColor(item.type)} />
                     </View>
-                    <Text style={[styles.notificationBody, !isRead && styles.textUnread]} numberOfLines={2}>
-                        {item.body}
-                    </Text>
-                    {!isRead && (
-                        <View style={styles.unreadDot} />
-                    )}
-                </View>
-            </TouchableOpacity>
+
+                    <View style={styles.notificationContent}>
+                        <View style={styles.notificationHeader}>
+                            <Text style={[styles.notificationTitle, !isRead && styles.textUnread]} numberOfLines={1}>
+                                {item.title}
+                            </Text>
+                            <Text style={styles.notificationDate}>{date}</Text>
+                        </View>
+                        <Text style={[styles.notificationBody, !isRead && styles.textUnread]} numberOfLines={3}>
+                            {item.body}
+                        </Text>
+                        {!isRead && (
+                            <View style={styles.unreadDot} />
+                        )}
+                    </View>
+                </TouchableOpacity>
+            </Swipeable>
         );
     };
 
@@ -123,14 +312,73 @@ export default function NotificationsScreen() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.push('/(stack)/profile' as any)} activeOpacity={0.8}>
-                    <Ionicons name='chevron-back' size={20} color='#fff' />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>{t('notifications.headerTitle')}</Text>
-                <Text style={styles.headerSubtitle}>
-                    {t('notifications.headerSubtitle')}
-                </Text>
+                <View style={styles.headerTop}>
+                    <View>
+                        <Text style={styles.headerTitle}>{t('notifications.headerTitle')}</Text>
+                        <Text style={styles.headerSubtitle}>
+                            {t('notifications.headerSubtitle')}
+                        </Text>
+                    </View>
+                    <View style={styles.headerActions}>
+                        {hasUnread && (
+                            <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllAsRead}>
+                                <Ionicons name="checkmark-done-outline" size={18} color="#4CAF50" />
+                                <Text style={styles.markAllText}>{t('notifications.markAllRead')}</Text>
+                            </TouchableOpacity>
+                        )}
+                        {hasNotifications && (
+                            <TouchableOpacity style={styles.deleteAllButton} onPress={handleDeleteAll}>
+                                <Ionicons name="trash-outline" size={18} color="#FF5252" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </View>
             </View>
+
+            {/* Category Filter */}
+            <Button
+                onPress={() => setCategoriesOpen(!categoriesOpen)}
+                label={selectedCategory || t('notifications.allCategories')}
+                isOpen={categoriesOpen}
+            />
+
+            {categoriesOpen && (
+                <View style={styles.categoriesContainer}>
+                    {categories.length === 0 ? (
+                        <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
+                            {t('notifications.noCategories')}
+                        </Text>
+                    ) : (
+                        <>
+                            <TouchableOpacity
+                                style={styles.categoryItem}
+                                onPress={() => {
+                                    setSelectedCategory(null);
+                                    setCategoriesOpen(false);
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.categoryText}>{t('notifications.allCategories')}</Text>
+                            </TouchableOpacity>
+                            {categories.map((category: Category) => (
+                                <TouchableOpacity
+                                    key={category.id}
+                                    style={styles.categoryItem}
+                                    onPress={() => {
+                                        setSelectedCategory(category.name);
+                                        setCategoriesOpen(false);
+                                    }}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.categoryText}>
+                                        {category.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </>
+                    )}
+                </View>
+            )}
 
             {error ? (
                 <View style={styles.centered}>
@@ -139,14 +387,18 @@ export default function NotificationsScreen() {
                         <Text style={styles.retryText}>{t('notifications.retry')}</Text>
                     </TouchableOpacity>
                 </View>
-            ) : notifications.length === 0 ? (
+            ) : filteredNotifications.length === 0 ? (
                 <View style={styles.emptyContainer}>
                     <Ionicons name="notifications-off-outline" size={64} color="#555" />
-                    <Text style={styles.emptyText}>{t('notifications.empty')}</Text>
+                    <Text style={styles.emptyText}>
+                        {selectedCategory
+                            ? t('notifications.emptyForCategory', { category: selectedCategory })
+                            : t('notifications.empty')}
+                    </Text>
                 </View>
             ) : (
                 <FlatList
-                    data={notifications}
+                    data={filteredNotifications}
                     keyExtractor={(item) => item.id}
                     renderItem={renderNotificationItem}
                     contentContainerStyle={styles.listContainer}
@@ -180,15 +432,6 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#1a1a3e',
     },
-    backButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        backgroundColor: '#373848',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-    },
     headerTitle: {
         fontSize: 28,
         fontWeight: 'bold',
@@ -198,6 +441,39 @@ const styles = StyleSheet.create({
     headerSubtitle: {
         fontSize: 16,
         color: '#e0e0e0',
+    },
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 4,
+    },
+    markAllButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(76, 175, 80, 0.15)',
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 6,
+    },
+    markAllText: {
+        color: '#4CAF50',
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    deleteAllButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255, 82, 82, 0.15)',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
     },
     listContainer: {
         padding: 16,
@@ -293,5 +569,67 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         backgroundColor: '#FF5252',
+    },
+
+    // Swipe Delete Styles
+    deleteAction: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    deleteActionLeft: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    deleteButton: {
+        backgroundColor: '#FF5252',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 80,
+        height: '100%',
+        borderRadius: 12,
+        gap: 4,
+    },
+    deleteText: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '600',
+    },
+
+    // Category Filter Styles
+    categoriesContainer: {
+        position: 'absolute',
+        top: 120,
+        alignSelf: 'center',
+        minWidth: 146,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 5,
+        overflow: 'hidden',
+        zIndex: 1000,
+    },
+    categoryItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    categoryText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#1F1F39',
+        textAlign: 'center',
     },
 });

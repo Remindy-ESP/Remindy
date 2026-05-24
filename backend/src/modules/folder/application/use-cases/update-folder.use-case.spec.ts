@@ -356,25 +356,29 @@ describe('UpdateFolderUseCase', () => {
       if (callCount === 1) {
         callCount++;
         // fetch the proposed parent
-        return Promise.resolve(new Folder({
-          id: 'folder-0',
-          userId: 'user-123',
-          name: 'Chain 0',
-          isDefault: false,
-          parentId: 'folder-1',
-        }));
+        return Promise.resolve(
+          new Folder({
+            id: 'folder-0',
+            userId: 'user-123',
+            name: 'Chain 0',
+            isDefault: false,
+            parentId: 'folder-1',
+          }),
+        );
       }
       // Walk up: each folder's parent is folder-{callCount}
       const depth = callCount;
       callCount++;
       const parentId = depth < MAX_DEPTH + 2 ? `folder-${depth}` : undefined;
-      return Promise.resolve(new Folder({
-        id: `folder-${depth - 1}`,
-        userId: 'user-123',
-        name: `Chain ${depth - 1}`,
-        isDefault: false,
-        parentId,
-      }));
+      return Promise.resolve(
+        new Folder({
+          id: `folder-${depth - 1}`,
+          userId: 'user-123',
+          name: `Chain ${depth - 1}`,
+          isDefault: false,
+          parentId,
+        }),
+      );
     });
 
     const dto: UpdateFolderAppDto = { parentId: 'folder-0' };

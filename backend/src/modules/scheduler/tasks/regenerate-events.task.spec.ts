@@ -70,7 +70,10 @@ describe('RegenerateEventsTask', () => {
         mockSubscription,
         { ...mockSubscription, id: 'sub-456', name: 'Spotify' },
       ]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent] as any);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
+        mockEvent,
+        mockEvent,
+      ] as any);
 
       await task.handleCron();
 
@@ -145,7 +148,10 @@ describe('RegenerateEventsTask', () => {
 
     it('should log when events are generated for subscription', async () => {
       subscriptionRepository.findAll.mockResolvedValue([mockSubscription]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent] as any);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
+        mockEvent,
+        mockEvent,
+      ] as any);
 
       await task.handleCron();
 
@@ -161,7 +167,10 @@ describe('RegenerateEventsTask', () => {
         mockSubscription,
         { ...mockSubscription, id: 'sub-456', name: 'Spotify' },
       ]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent] as any);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
+        mockEvent,
+        mockEvent,
+      ] as any);
 
       const result = await task.triggerManually();
 

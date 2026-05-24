@@ -45,8 +45,15 @@ export class CategoryController {
   }
 
   @ApiCategoryFindAll()
-  async findAll(@Query() filters: CategoryFilterDto): Promise<CategoryResponseDto[]> {
-    const appFilters = CategoryPresentationMapper.toFilterAppDto(filters);
+  async findAll(
+    @Req() req: Request,
+    @Query() filters: CategoryFilterDto,
+  ): Promise<CategoryResponseDto[]> {
+    const { user } = req as Request & { user: { userId: string; role: string } };
+    const appFilters = CategoryPresentationMapper.toFilterAppDto({
+      ...filters,
+      userId: user.role === 'admin' && filters.userId ? filters.userId : user.userId,
+    });
     const categories = await this.findAllCategoriesUseCase.execute(appFilters);
     return CategoryPresentationMapper.toResponseDtoArray(categories);
   }

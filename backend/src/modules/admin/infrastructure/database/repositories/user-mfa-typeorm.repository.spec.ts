@@ -8,9 +8,9 @@ const mockUsers = {
 };
 
 const mockCrypto = {
-  encrypt: jest.fn() as jest.Mock,
-  decrypt: jest.fn() as jest.Mock,
-  isEncrypted: jest.fn() as jest.Mock,
+  encrypt: jest.fn(),
+  decrypt: jest.fn(),
+  isEncrypted: jest.fn(),
 };
 
 const makeRepo = () => new UserMfaTypeOrmRepository(mockUsers as any, mockCrypto as any);
@@ -52,7 +52,7 @@ describe('UserMfaTypeOrmRepository.findByIdForMfa()', () => {
 
 describe('UserMfaTypeOrmRepository.setSecret()', () => {
   it('encrypts the secret and updates the user', async () => {
-    mockCrypto.encrypt!.mockReturnValue('encrypted-secret');
+    mockCrypto.encrypt.mockReturnValue('encrypted-secret');
     mockUsers.update.mockResolvedValue({});
 
     await makeRepo().setSecret('user-1', 'raw-secret');
@@ -93,7 +93,7 @@ describe('UserMfaTypeOrmRepository.getDecryptedSecret()', () => {
 
   it('decrypts and returns the secret when mfaSecret is set', async () => {
     mockUsers.findOne.mockResolvedValue(makeUser({ mfaSecret: 'encrypted-secret' }));
-    mockCrypto.decrypt!.mockReturnValue('raw-secret');
+    mockCrypto.decrypt.mockReturnValue('raw-secret');
 
     const result = await makeRepo().getDecryptedSecret('user-1');
     expect(mockCrypto.decrypt).toHaveBeenCalledWith('encrypted-secret');
@@ -131,7 +131,7 @@ describe('UserMfaTypeOrmRepository.ensureEncryptedSecret()', () => {
 
   it('does nothing when secret is already encrypted', async () => {
     mockUsers.findOne.mockResolvedValue(makeUser({ mfaSecret: 'already.encrypted.secret' }));
-    mockCrypto.isEncrypted!.mockReturnValue(true);
+    mockCrypto.isEncrypted.mockReturnValue(true);
 
     await makeRepo().ensureEncryptedSecret('user-1');
 
@@ -141,8 +141,8 @@ describe('UserMfaTypeOrmRepository.ensureEncryptedSecret()', () => {
 
   it('encrypts and updates when secret is not encrypted', async () => {
     mockUsers.findOne.mockResolvedValue(makeUser({ mfaSecret: 'plain-secret' }));
-    mockCrypto.isEncrypted!.mockReturnValue(false);
-    mockCrypto.encrypt!.mockReturnValue('now.encrypted.secret');
+    mockCrypto.isEncrypted.mockReturnValue(false);
+    mockCrypto.encrypt.mockReturnValue('now.encrypted.secret');
     mockUsers.update.mockResolvedValue({});
 
     await makeRepo().ensureEncryptedSecret('user-1');
