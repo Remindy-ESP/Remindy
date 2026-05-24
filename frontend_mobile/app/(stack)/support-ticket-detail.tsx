@@ -18,6 +18,7 @@ import { supportService } from '@/services/api/support.service';
 import type { SupportTicketDetail, SupportTicketMessage } from '@/services/api/support.service';
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/context/I18nContext';
+import { supportScreenStyles as shared } from '@/styles/supportScreen';
 
 function MessageBubble({ message }: { message: SupportTicketMessage }) {
   const isUser = message.authorType === 'user';
@@ -109,8 +110,8 @@ export default function SupportTicketDetailScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <Text style={styles.errorText}>{t('support.detail.notFound')}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Text style={styles.retryText}>{t('support.detail.back')}</Text>
+        <TouchableOpacity style={shared.retryButton} onPress={() => router.back()} activeOpacity={0.8}>
+          <Text style={shared.retryText}>{t('support.detail.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -123,7 +124,7 @@ export default function SupportTicketDetailScreen() {
     >
       {/* Header */}
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
+        <TouchableOpacity style={shared.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
           <Ionicons name='chevron-back' size={20} color='#fff' />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
@@ -204,14 +205,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2A2C45',
   },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   headerTextWrap: { flex: 1 },
   headerTitle: { color: '#fff', fontSize: 17, fontWeight: '700', marginBottom: 4 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -235,13 +228,6 @@ const styles = StyleSheet.create({
   bubbleTextUser: { color: '#fff' },
   emptyText: { color: '#6B6E8A', fontSize: 14, textAlign: 'center', marginTop: 40 },
   errorText: { color: '#E57373', fontSize: 14, marginBottom: 16 },
-  retryButton: {
-    backgroundColor: '#373848',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  retryText: { color: '#DDE1FF', fontSize: 14, fontWeight: '600' },
   replyBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',

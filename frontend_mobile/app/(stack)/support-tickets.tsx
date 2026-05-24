@@ -15,6 +15,7 @@ import type { SupportTicketSummary } from '@/services/api/support.service';
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/context/I18nContext';
 import ScreenHeader from '@/components/ScreenHeader';
+import { supportScreenStyles as shared } from '@/styles/supportScreen';
 
 function TicketRow({ ticket, onPress }: { ticket: SupportTicketSummary; onPress: () => void }) {
   return (
@@ -66,7 +67,7 @@ export default function SupportTicketsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
+        <TouchableOpacity style={shared.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
           <Ionicons name='chevron-back' size={20} color='#fff' />
         </TouchableOpacity>
         <View style={styles.headerTextWrap}>
@@ -74,7 +75,7 @@ export default function SupportTicketsScreen() {
           <Text style={styles.headerSubtitle}>{t('support.tickets.subtitle')}</Text>
         </View>
         <TouchableOpacity
-          style={styles.iconButton}
+          style={shared.iconButton}
           onPress={() => router.push('/(stack)/support-new')}
           activeOpacity={0.8}
         >
@@ -87,8 +88,8 @@ export default function SupportTicketsScreen() {
       ) : error ? (
         <View style={styles.center}>
           <Text style={styles.errorText}>{t('support.tickets.error')}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => void load()} activeOpacity={0.8}>
-            <Text style={styles.retryText}>{t('support.tickets.retry')}</Text>
+          <TouchableOpacity style={shared.retryButton} onPress={() => void load()} activeOpacity={0.8}>
+            <Text style={shared.retryText}>{t('support.tickets.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -138,14 +139,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     gap: 12,
   },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   headerTextWrap: { flex: 1 },
   headerTitle: { color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 2 },
   headerSubtitle: { color: '#B8BBD6', fontSize: 13 },
@@ -174,13 +167,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyText: { color: '#B8BBD6', fontSize: 14, marginTop: 12, marginBottom: 20, textAlign: 'center' },
   errorText: { color: '#E57373', fontSize: 14, marginBottom: 16, textAlign: 'center' },
-  retryButton: {
-    backgroundColor: '#373848',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  retryText: { color: '#DDE1FF', fontSize: 14, fontWeight: '600' },
   primaryButton: {
     backgroundColor: '#4B4FC9',
     borderRadius: 12,

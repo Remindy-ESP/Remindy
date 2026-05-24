@@ -7,11 +7,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useTranslation, type SupportedLanguage } from '@/context/I18nContext';
+import ScreenHeader from '@/components/ScreenHeader';
 
 export default function ProfilePreferencesScreen() {
-  const router = useRouter();
   const { t, language, setLanguage } = useTranslation();
 
   const languageOptions: { code: SupportedLanguage; label: string; testID: string }[] = [
@@ -29,15 +28,7 @@ export default function ProfilePreferencesScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name='chevron-back' size={20} color='#fff' />
-        </TouchableOpacity>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t('profile.preferences.title')}</Text>
-          <Text style={styles.headerSubtitle}>{t('profile.preferences.subtitle')}</Text>
-        </View>
-      </View>
+      <ScreenHeader title={t('profile.preferences.title')} subtitle={t('profile.preferences.subtitle')} />
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('profile.preferences.language')}</Text>
@@ -82,33 +73,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 28,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 6,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#B8BBD6',
   },
   card: {
     backgroundColor: '#373848',
