@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -32,7 +31,6 @@ import { useTranslation } from '@/context/I18nContext';
 
 export default function CloudScreen() {
   const { t } = useTranslation();
-  const router = useRouter();
   const { documents, loading: docsLoading, fetchDocuments, uploadDocument, updateDocument, deleteDocument } = useDocuments();
   const { folders, loading: foldersLoading, fetchFolders, createFolder, updateFolder, deleteFolder, moveDocumentToFolder } = useFolders();
   const { quota, fetchQuota } = useStorageQuota();
@@ -449,13 +447,8 @@ export default function CloudScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.pageHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={20} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.pageTitle}>{t('cloud.page.title')}</Text>
-          <Text style={styles.pageSubtitle}>{t('cloud.page.subtitle')}</Text>
-        </View>
+        <Text style={styles.pageTitle}>{t('cloud.page.title')}</Text>
+        <Text style={styles.pageSubtitle}>{t('cloud.page.subtitle')}</Text>
       </View>
 
       <View style={styles.quotaContainer}>
@@ -613,24 +606,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#06071D',
   },
   pageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
     backgroundColor: '#06071D',
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  headerTextWrap: {
-    flex: 1,
   },
   pageTitle: {
     fontSize: 28,
