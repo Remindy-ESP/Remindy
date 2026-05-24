@@ -22,6 +22,7 @@ import { useTranslation } from '@/context/I18nContext';
 import { formatDate } from '@/utils/format';
 import Button from '@/components/Button';
 import CategoryDropdown from '@/components/CategoryDropdown';
+import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
 export default function NotificationsScreen() {
     const router = useRouter();
@@ -315,7 +316,7 @@ export default function NotificationsScreen() {
             <View style={styles.header}>
                 <View style={styles.headerTop}>
                     <View>
-                        <Text style={styles.headerTitle}>{t('notifications.headerTitle')}</Text>
+                        <Text style={shared.headerTitle}>{t('notifications.headerTitle')}</Text>
                         <Text style={styles.headerSubtitle}>
                             {t('notifications.headerSubtitle')}
                         </Text>
@@ -404,12 +405,6 @@ const styles = StyleSheet.create({
     header: {
         padding: 20,
         backgroundColor: '#1a1a3e',
-    },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 8,
     },
     headerSubtitle: {
         fontSize: 16,

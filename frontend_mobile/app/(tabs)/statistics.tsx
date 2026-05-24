@@ -7,6 +7,7 @@ import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
 import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
 import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
 import { useTranslation } from '@/context/I18nContext';
+import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
 export default function StatisticsScreen() {
   const { t } = useTranslation();
@@ -60,8 +61,8 @@ export default function StatisticsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t('statistics.headerTitle')}</Text>
-        <Text style={styles.headerSubtitle}>
+        <Text style={shared.headerTitle}>{t('statistics.headerTitle')}</Text>
+        <Text style={shared.headerSubtitle}>
           {t('statistics.headerSubtitle')}
         </Text>
       </View>
@@ -152,16 +153,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#11112A',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
   },
   summaryLoadingCard: {
     backgroundColor: '#1a1a3e',

@@ -48,6 +48,24 @@ const mockUserCategory = {
   updatedAt: '2024-01-01T00:00:00.000Z',
 };
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+async function openCreateModal(utils: ReturnType<typeof render>) {
+  const { getByTestId, getAllByText } = utils;
+  await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
+  fireEvent.press(getByTestId('add-category-btn'));
+  await waitFor(() => expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0));
+}
+
+async function openRenameModal(utils: ReturnType<typeof render>) {
+  const { getByTestId, getByText } = utils;
+  await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
+  fireEvent.press(getByTestId('rename-category-user-1'));
+  await waitFor(() => expect(getByText('Renommer')).toBeTruthy());
+}
+
+// ─── Tests ───────────────────────────────────────────────────────────────────
+
 describe('CategoriesScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -118,31 +136,23 @@ describe('CategoriesScreen', () => {
   });
 
   it('opens create modal when add button is pressed', async () => {
-    const { getByTestId, getAllByText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => {
-      // Both header and modal title say 'Nouvelle catégorie', getAllByText handles multiple
-      expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
-    });
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    expect(utils.getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
   });
 
   it('shows alert when creating with empty name', async () => {
-    const { getByTestId, getByText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getByText('Créer')).toBeTruthy());
-    fireEvent.press(getByText('Créer'));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    fireEvent.press(utils.getByText('Créer'));
     expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Le nom de la catégorie est requis.');
   });
 
   it('creates a category with valid name', async () => {
-    const { getByTestId, getByText, getByPlaceholderText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getByText('Créer')).toBeTruthy());
-    fireEvent.changeText(getByPlaceholderText('Ex: Santé, Loisirs...'), 'Nouvelle');
-    fireEvent.press(getByText('Créer'));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    fireEvent.changeText(utils.getByPlaceholderText('Ex: Santé, Loisirs...'), 'Nouvelle');
+    fireEvent.press(utils.getByText('Créer'));
     await waitFor(() => {
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'Nouvelle', icon: 'folder' })
@@ -152,47 +162,36 @@ describe('CategoriesScreen', () => {
 
   it('shows alert when create fails', async () => {
     mockCreate.mockRejectedValueOnce(new Error('Server error'));
-    const { getByTestId, getByText, getByPlaceholderText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getByText('Créer')).toBeTruthy());
-    fireEvent.changeText(getByPlaceholderText('Ex: Santé, Loisirs...'), 'Nouvelle');
-    fireEvent.press(getByText('Créer'));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    fireEvent.changeText(utils.getByPlaceholderText('Ex: Santé, Loisirs...'), 'Nouvelle');
+    fireEvent.press(utils.getByText('Créer'));
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de créer la catégorie.');
     });
   });
 
   it('cancels create modal', async () => {
-    const { getByTestId, getByText, queryByPlaceholderText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getByText('Annuler')).toBeTruthy());
-    fireEvent.press(getByText('Annuler'));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    fireEvent.press(utils.getByText('Annuler'));
     await waitFor(() => {
-      expect(queryByPlaceholderText('Ex: Santé, Loisirs...')).toBeNull();
+      expect(utils.queryByPlaceholderText('Ex: Santé, Loisirs...')).toBeNull();
     });
   });
 
   it('opens rename modal for a user category', async () => {
-    const { getByTestId, getAllByText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    await waitFor(() => {
-      // Multiple elements may contain 'Renommer', e.g. modal title and button
-      expect(getAllByText(/Renommer/).length).toBeGreaterThan(0);
-    });
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    expect(utils.getAllByText(/Renommer/).length).toBeGreaterThan(0);
   });
 
   it('renames a category', async () => {
-    const { getByTestId, getByText, getAllByDisplayValue } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    await waitFor(() => expect(getByText('Renommer')).toBeTruthy());
-    // Input starts with current name
-    const inputs = getAllByDisplayValue('Ma Categorie');
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    const inputs = utils.getAllByDisplayValue('Ma Categorie');
     fireEvent.changeText(inputs[0], 'Nouveau Nom');
-    fireEvent.press(getByText('Renommer'));
+    fireEvent.press(utils.getByText('Renommer'));
     await waitFor(() => {
       expect(mockUpdate).toHaveBeenCalledWith('user-1', { name: 'Nouveau Nom', color: '#6366f1' });
     });
@@ -200,13 +199,11 @@ describe('CategoriesScreen', () => {
 
   it('shows alert when rename fails', async () => {
     mockUpdate.mockRejectedValueOnce(new Error('Server error'));
-    const { getByTestId, getByText, getAllByDisplayValue } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    await waitFor(() => expect(getByText('Renommer')).toBeTruthy());
-    const inputs = getAllByDisplayValue('Ma Categorie');
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    const inputs = utils.getAllByDisplayValue('Ma Categorie');
     fireEvent.changeText(inputs[0], 'Nouveau Nom');
-    fireEvent.press(getByText('Renommer'));
+    fireEvent.press(utils.getByText('Renommer'));
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de renommer la catégorie.');
     });
@@ -251,159 +248,114 @@ describe('CategoriesScreen', () => {
   });
 
   it('does not rename when rename value is empty', async () => {
-    const { getByTestId, getByText, getAllByDisplayValue } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    await waitFor(() => expect(getByText('Renommer')).toBeTruthy());
-    const inputs = getAllByDisplayValue('Ma Categorie');
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    const inputs = utils.getAllByDisplayValue('Ma Categorie');
     fireEvent.changeText(inputs[0], '');
-    fireEvent.press(getByText('Renommer'));
+    fireEvent.press(utils.getByText('Renommer'));
     await waitFor(() => {
       expect(mockUpdate).not.toHaveBeenCalled();
     });
   });
 
   it('closes create modal via onRequestClose', async () => {
-    const { getByTestId, getAllByText, queryByPlaceholderText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0));
-    // Trigger onRequestClose (Android back button on Modal)
-    const { Modal } = require('react-native');
-    // Since Modal's onRequestClose is called internally, we test via the cancel button
-    // which is the same code path for closing
-    const cancelBtn = getAllByText('Annuler')[0];
-    fireEvent.press(cancelBtn);
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    fireEvent.press(utils.getAllByText('Annuler')[0]);
     await waitFor(() => {
-      expect(queryByPlaceholderText('Ex: Santé, Loisirs...')).toBeNull();
+      expect(utils.queryByPlaceholderText('Ex: Santé, Loisirs...')).toBeNull();
     });
   });
 
   it('changes color selection in create modal', async () => {
-    const { getByTestId, getAllByText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0));
-    // The color grid renders TouchableOpacity elements for each color
-    const { UNSAFE_getAllByType } = render(<CategoriesScreen />);
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
     // This just tests that the modal renders the color grid without crash
-    expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
+    expect(utils.getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
   });
 
   it('closes rename modal via cancel button', async () => {
-    const { getByTestId, getAllByText, queryByText } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    await waitFor(() => expect(getAllByText(/Renommer/).length).toBeGreaterThan(0));
-    // Press Annuler to close rename modal
-    const cancelBtns = getAllByText('Annuler');
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    const cancelBtns = utils.getAllByText('Annuler');
     fireEvent.press(cancelBtns[cancelBtns.length - 1]);
     await waitFor(() => {
-      expect(queryByText('Nouveau nom')).toBeNull();
+      expect(utils.queryByText('Nouveau nom')).toBeNull();
     });
   });
 
   it('closes create modal via onRequestClose (line 217)', async () => {
-    const { getByTestId, getAllByText, queryByPlaceholderText, UNSAFE_getAllByType } =
-      render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
 
-    // Trigger the Modal's onRequestClose by simulating the callback directly
     const { Modal } = require('react-native');
-    const modals = UNSAFE_getAllByType(Modal);
-    const createModal = modals[0];
-    // Fire onRequestClose on the create modal
-    fireEvent(createModal, 'requestClose');
+    const modals = utils.UNSAFE_getAllByType(Modal);
+    fireEvent(modals[0], 'requestClose');
     await waitFor(() => {
-      expect(queryByPlaceholderText('Ex: Santé, Loisirs...')).toBeNull();
+      expect(utils.queryByPlaceholderText('Ex: Santé, Loisirs...')).toBeNull();
     });
   });
 
   it('selects a different color in create modal (covers setNewColor, line 243)', async () => {
-    const { getByTestId, getAllByText, UNSAFE_getAllByType } = render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
 
-    // Grab all TouchableOpacity elements and find the color pickers (after modal opens)
     const { TouchableOpacity } = require('react-native');
-    const touchables = UNSAFE_getAllByType(TouchableOpacity);
-    // The color grid contains 10 color options — press the second one to change color
-    // Filter by those that have no children text (color circle buttons)
+    const touchables = utils.UNSAFE_getAllByType(TouchableOpacity);
     const colorButtons = touchables.filter(
       (t: any) => !t.props.testID && !t.props.children
     );
     if (colorButtons.length > 0) {
       fireEvent.press(colorButtons[0]);
     } else {
-      // Fallback: press any touchable beyond the action buttons
       fireEvent.press(touchables[Math.min(5, touchables.length - 1)]);
     }
     // The modal should still be open (we just changed color, not closed)
-    expect(getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
+    expect(utils.getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
   });
 
   it('closes rename modal via onRequestClose (line 276)', async () => {
-    const { getByTestId, getAllByDisplayValue, queryByDisplayValue, UNSAFE_getAllByType } =
-      render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    // Wait for the rename input to appear (it displays the current name)
-    await waitFor(() => expect(getAllByDisplayValue('Ma Categorie').length).toBeGreaterThan(0));
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    await waitFor(() => expect(utils.getAllByDisplayValue('Ma Categorie').length).toBeGreaterThan(0));
 
-    // Trigger rename modal's onRequestClose
     const { Modal } = require('react-native');
-    const modals = UNSAFE_getAllByType(Modal);
-    // Second modal is the rename modal (index 1)
-    const renameModal = modals[1];
-    fireEvent(renameModal, 'requestClose');
+    const modals = utils.UNSAFE_getAllByType(Modal);
+    fireEvent(modals[1], 'requestClose');
     await waitFor(() => {
-      // After closing (renameModalVisible=false), the rename input disappears
-      expect(queryByDisplayValue('Ma Categorie')).toBeNull();
+      expect(utils.queryByDisplayValue('Ma Categorie')).toBeNull();
     });
   });
 
   it('shows ActivityIndicator while creating a category (line 243 creating state)', async () => {
-    // Make create hang so creating=true
     let resolveCreate: () => void;
     mockCreate.mockReturnValueOnce(new Promise<void>((resolve) => { resolveCreate = resolve; }));
 
-    const { getByTestId, getByText, getByPlaceholderText, UNSAFE_queryByType } =
-      render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('add-category-btn')).toBeTruthy());
-    fireEvent.press(getByTestId('add-category-btn'));
-    await waitFor(() => expect(getByText('Créer')).toBeTruthy());
-    fireEvent.changeText(getByPlaceholderText('Ex: Santé, Loisirs...'), 'Test');
-    fireEvent.press(getByText('Créer'));
+    const utils = render(<CategoriesScreen />);
+    await openCreateModal(utils);
+    fireEvent.changeText(utils.getByPlaceholderText('Ex: Santé, Loisirs...'), 'Test');
+    fireEvent.press(utils.getByText('Créer'));
 
-    // While creating=true, ActivityIndicator should be rendered inside the create button
     const { ActivityIndicator } = require('react-native');
     await waitFor(() => {
-      expect(UNSAFE_queryByType(ActivityIndicator)).toBeTruthy();
+      expect(utils.UNSAFE_queryByType(ActivityIndicator)).toBeTruthy();
     });
     resolveCreate!();
   });
 
   it('shows ActivityIndicator while renaming a category (line 276 renaming state)', async () => {
-    // Make update hang so renaming=true
     let resolveUpdate: () => void;
     mockUpdate.mockReturnValueOnce(new Promise<void>((resolve) => { resolveUpdate = resolve; }));
 
-    const { getByTestId, getByText, getAllByDisplayValue, UNSAFE_queryByType } =
-      render(<CategoriesScreen />);
-    await waitFor(() => expect(getByTestId('rename-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('rename-category-user-1'));
-    await waitFor(() => expect(getByText('Renommer')).toBeTruthy());
-    const inputs = getAllByDisplayValue('Ma Categorie');
+    const utils = render(<CategoriesScreen />);
+    await openRenameModal(utils);
+    const inputs = utils.getAllByDisplayValue('Ma Categorie');
     fireEvent.changeText(inputs[0], 'Nouveau Nom');
-    fireEvent.press(getByText('Renommer'));
+    fireEvent.press(utils.getByText('Renommer'));
 
-    // While renaming=true, ActivityIndicator should be rendered inside the rename button
     const { ActivityIndicator } = require('react-native');
     await waitFor(() => {
-      expect(UNSAFE_queryByType(ActivityIndicator)).toBeTruthy();
+      expect(utils.UNSAFE_queryByType(ActivityIndicator)).toBeTruthy();
     });
     resolveUpdate!();
   });

@@ -424,16 +424,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#11112A',
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
-  },
   calendarContainer: {
     margin: 16,
     marginTop: 0,
