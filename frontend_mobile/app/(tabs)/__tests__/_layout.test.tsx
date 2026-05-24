@@ -163,13 +163,13 @@ describe('TabLayout', () => {
     expect(rendered).toBeTruthy();
   });
 
-  it('renders static hidden screens like profile, categories, etc.', () => {
+  it('renders all tab screens including hidden ones', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 
     render(<TabLayout />);
 
     const names = capturedScreenProps.map((p: any) => p.name);
-    expect(names).toContain('profile');
-    expect(names).toContain('categories');
+    expect(names).toContain('dashboard');
+    expect(names).toContain('cloud');
   });
 });

@@ -11,22 +11,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
-import type { SupportTicketSummary, SupportTicketStatus } from '@/services/api/support.service';
+import type { SupportTicketSummary } from '@/services/api/support.service';
+import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/context/I18nContext';
-
-const STATUS_LABELS: Record<SupportTicketStatus, string> = {
-  open: 'Ouvert',
-  pending_user: 'En attente',
-  resolved: 'Résolu',
-  closed: 'Fermé',
-};
-
-const STATUS_COLORS: Record<SupportTicketStatus, string> = {
-  open: '#E8A838',
-  pending_user: '#4B9BE8',
-  resolved: '#4CAF82',
-  closed: '#6B6E8A',
-};
+import ScreenHeader from '@/components/ScreenHeader';
 
 function TicketRow({ ticket, onPress }: { ticket: SupportTicketSummary; onPress: () => void }) {
   return (

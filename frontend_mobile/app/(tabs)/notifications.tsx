@@ -61,7 +61,7 @@ export default function NotificationsScreen() {
     useFocusEffect(
         React.useCallback(() => {
             if (user) {
-                fetchNotifications();
+                void fetchNotifications();
             }
         }, [user, fetchNotifications])
     );
@@ -92,7 +92,7 @@ export default function NotificationsScreen() {
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchNotifications();
+        void fetchNotifications();
     };
 
     const handleMarkAsRead = async (id: string) => {

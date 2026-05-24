@@ -16,6 +16,7 @@ import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
+import ScreenHeader from '@/components/ScreenHeader';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
@@ -88,20 +89,7 @@ export default function ProfileSecurityScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => router.back()}
-            activeOpacity={0.8}
-            testID="security-back-button"
-          >
-            <Ionicons name="chevron-back" size={20} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>{t('profile.security.title')}</Text>
-            <Text style={styles.headerSubtitle}>{t('profile.security.subtitle')}</Text>
-          </View>
-        </View>
+        <ScreenHeader title={t('profile.security.title')} subtitle={t('profile.security.subtitle')} testID="security-back-button" />
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t('profile.security.cardTitle')}</Text>
@@ -212,33 +200,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  headerTextWrap: {
-    flex: 1,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    color: '#B8BBD6',
-    fontSize: 13,
   },
   card: {
     backgroundColor: '#373848',

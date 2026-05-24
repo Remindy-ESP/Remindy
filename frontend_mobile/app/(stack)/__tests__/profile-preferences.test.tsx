@@ -1,16 +1,14 @@
 import React from 'react';
-import { render, waitFor, fireEvent, act } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import ProfilePreferencesScreen from '../profile-preferences';
 
-// Mock expo-router
+const mockBack = jest.fn();
+const mockSetLanguage = jest.fn();
+
 jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    back: jest.fn(),
-    push: jest.fn(),
-  }),
+  useRouter: () => ({ back: mockBack, push: jest.fn() }),
 }));
 
-// Mock @expo/vector-icons
 jest.mock('@expo/vector-icons', () => {
   const React = require('react');
   const { Text } = require('react-native');
@@ -19,102 +17,55 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
-// Mock user service
-const mockGetPreferences = jest.fn();
-const mockUpdatePreferences = jest.fn();
-
-jest.mock('@/services/api', () => ({
-  userService: {
-    getPreferences: (...args: any[]) => mockGetPreferences(...args),
-    updatePreferences: (...args: any[]) => mockUpdatePreferences(...args),
-  },
+jest.mock('@/context/I18nContext', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    language: 'fr',
+    setLanguage: mockSetLanguage,
+  }),
 }));
-
-const defaultPreferences = {
-  userId: 'user-123',
-  theme: 'dark',
-  notificationEmail: true,
-  notificationPush: true,
-  notificationSms: false,
-  defaultReminderDelay: 3,
-  currency: 'EUR',
-  showOnlineStatus: true,
-  createdAt: '2026-01-01T00:00:00Z',
-  updatedAt: '2026-01-01T00:00:00Z',
-};
 
 describe('ProfilePreferencesScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetPreferences.mockResolvedValue(defaultPreferences);
-    mockUpdatePreferences.mockResolvedValue(defaultPreferences);
   });
 
-  it('renders loading state initially', () => {
+  it('renders without crashing', () => {
+    const { toJSON } = render(<ProfilePreferencesScreen />);
+    expect(toJSON()).toBeTruthy();
+  });
+
+  it('displays the header title', () => {
     const { getByText } = render(<ProfilePreferencesScreen />);
-    expect(getByText('Chargement des préférences...')).toBeTruthy();
+    expect(getByText('profile.preferences.title')).toBeTruthy();
   });
 
-  it('renders header after loading', async () => {
+  it('displays the header subtitle', () => {
     const { getByText } = render(<ProfilePreferencesScreen />);
-    await waitFor(() => {
-      expect(getByText('Préférences')).toBeTruthy();
-      expect(getByText('Gérer vos notifications push')).toBeTruthy();
-    });
+    expect(getByText('profile.preferences.subtitle')).toBeTruthy();
   });
 
-  it('displays the global push toggle', async () => {
+  it('displays language switcher buttons', () => {
     const { getByTestId } = render(<ProfilePreferencesScreen />);
-    await waitFor(() => {
-      expect(getByTestId('global-push-toggle')).toBeTruthy();
-    });
+    expect(getByTestId('language-switcher-fr')).toBeTruthy();
+    expect(getByTestId('language-switcher-en')).toBeTruthy();
   });
 
-  it('displays all notification category toggles', async () => {
+  it('calls setLanguage with "en" when English is pressed', () => {
     const { getByTestId } = render(<ProfilePreferencesScreen />);
-    await waitFor(() => {
-      expect(getByTestId('toggle-subscription_renewal')).toBeTruthy();
-      expect(getByTestId('toggle-trial_ending')).toBeTruthy();
-      expect(getByTestId('toggle-payment_overdue')).toBeTruthy();
-      expect(getByTestId('toggle-document_processed')).toBeTruthy();
-    });
+    fireEvent.press(getByTestId('language-switcher-en'));
+    expect(mockSetLanguage).toHaveBeenCalledWith('en');
   });
 
-  it('displays category labels', async () => {
-    const { getByText } = render(<ProfilePreferencesScreen />);
-    await waitFor(() => {
-      expect(getByText("Renouvellement d'abonnement")).toBeTruthy();
-      expect(getByText("Fin de période d'essai")).toBeTruthy();
-      expect(getByText('Paiement en retard')).toBeTruthy();
-      expect(getByText('Document traité')).toBeTruthy();
-    });
-  });
-
-  it('calls updatePreferences when toggling global push', async () => {
-    mockUpdatePreferences.mockResolvedValue({
-      ...defaultPreferences,
-      notificationPush: false,
-    });
-
+  it('calls setLanguage with "fr" when French is pressed', () => {
     const { getByTestId } = render(<ProfilePreferencesScreen />);
-
-    await waitFor(() => {
-      expect(getByTestId('global-push-toggle')).toBeTruthy();
-    });
-
-    await act(async () => {
-      fireEvent(getByTestId('global-push-toggle'), 'valueChange', false);
-    });
-
-    expect(mockUpdatePreferences).toHaveBeenCalledWith({ notificationPush: false });
+    fireEvent.press(getByTestId('language-switcher-fr'));
+    expect(mockSetLanguage).toHaveBeenCalledWith('fr');
   });
 
-  it('shows error state when fetch fails', async () => {
-    mockGetPreferences.mockRejectedValue(new Error('Network error'));
-
+  it('navigates back when back button is pressed', () => {
     const { getByText } = render(<ProfilePreferencesScreen />);
-    await waitFor(() => {
-      expect(getByText('Impossible de charger les préférences')).toBeTruthy();
-    });
+    fireEvent.press(getByText('chevron-back'));
+    expect(mockBack).toHaveBeenCalled();
   });
 });

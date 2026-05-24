@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import onboardingService from '@/services/local/onboarding.service';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
 import { useTranslation } from '@/context/I18nContext';
+import ScreenHeader from '@/components/ScreenHeader';
 
 export default function ProfileHelpScreen() {
   const router = useRouter();
@@ -26,10 +27,7 @@ export default function ProfileHelpScreen() {
   };
 
   const handleResetGuide = async () => {
-    if (resettingGuide) {
-      return;
-    }
-
+    if (resettingGuide) return;
     try {
       setResettingGuide(true);
       await onboardingService.resetOnboarding();
@@ -43,21 +41,11 @@ export default function ProfileHelpScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.iconButton} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={20} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.headerTextWrap}>
-          <Text style={styles.headerTitle}>{t('profile.help.title')}</Text>
-          <Text style={styles.headerSubtitle}>{t('profile.help.subtitle')}</Text>
-        </View>
-      </View>
+      <ScreenHeader title={t('profile.help.title')} subtitle={t('profile.help.subtitle')} />
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('profile.help.guide.title')}</Text>
-        <Text style={styles.cardBody}>
-          {t('profile.help.guide.body')}
-        </Text>
+        <Text style={styles.cardBody}>{t('profile.help.guide.body')}</Text>
 
         <TouchableOpacity
           testID="open-onboarding-guide-button"
@@ -89,9 +77,7 @@ export default function ProfileHelpScreen() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('profile.help.support.title')}</Text>
-        <Text style={styles.cardBody}>
-          {t('profile.help.support.body')}
-        </Text>
+        <Text style={styles.cardBody}>{t('profile.help.support.body')}</Text>
 
         <TouchableOpacity
           style={styles.primaryButton}
@@ -123,33 +109,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     paddingBottom: 28,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: '#373848',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  headerTextWrap: {
-    flex: 1,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    color: '#B8BBD6',
-    fontSize: 13,
   },
   card: {
     backgroundColor: '#373848',
