@@ -22,8 +22,10 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-c
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case';
 import { IEmailService } from './infrastructure/services/email.service';
-import { BrevoEmailService } from './infrastructure/services/sendgrid-email.service';
+import { GmailEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
+import { SendVerificationEmailUseCase } from './application/use-cases/send-verification-email.use-case';
+import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 import { UsersModule } from '../user/user.module';
 import { JwtRefreshGuard } from './presentation/guards/jwt-refresh.guard';
@@ -72,6 +74,8 @@ describe('AuthModule', () => {
         LogoutUseCase,
         ForgotPasswordUseCase,
         ResetPasswordUseCase,
+        SendVerificationEmailUseCase,
+        VerifyEmailUseCase,
         JwtTokenService,
         JwtRefreshStrategy,
         JwtStrategy,
@@ -107,7 +111,7 @@ describe('AuthModule', () => {
         }),
         expect.objectContaining({
           provide: IEmailService,
-          useClass: BrevoEmailService,
+          useClass: GmailEmailService,
         }),
       ]),
     );
@@ -117,8 +121,10 @@ describe('AuthModule', () => {
     expect(exportsMetadata).toEqual([
       JwtTokenService,
       ITokenService,
+      IEmailService,
       UserMfaTypeOrmRepository,
       TotpService,
+      ForgotPasswordUseCase,
     ]);
   });
 

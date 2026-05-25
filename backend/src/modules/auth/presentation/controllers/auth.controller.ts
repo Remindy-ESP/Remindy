@@ -5,6 +5,8 @@ import {
   Res,
   UnauthorizedException,
   Post,
+  Get,
+  Query,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
@@ -20,6 +22,7 @@ import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-passwo
 import { ForgotPasswordRequestDto } from '../../application/dto/forgot-password-request.dto';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
 import { ResetPasswordRequestDto } from '../../application/dto/reset-password-request.dto';
+import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import {
   ApiAuthLogout,
   ApiAuthResetPassword,
@@ -39,6 +42,7 @@ export class AuthController {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly verifyEmailUseCase: VerifyEmailUseCase,
   ) {}
 
   @Public()
@@ -48,14 +52,8 @@ export class AuthController {
     description: 'Registration successful',
     type: RegisterUserResponseDto,
   })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid data',
-  })
-  @ApiResponse({
-    status: HttpStatus.CONFLICT,
-    description: 'Email already in use',
-  })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid data' })
+  @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Email already in use' })
   async register(
     @Req() req: Request,
     @Body() dto: RegisterRequestDto,
@@ -77,29 +75,14 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
-    return {
-      success: true,
-      userId: user.getId(),
-      accessToken,
-      refreshToken,
-    };
+    return { success: true, userId: user.getId(), accessToken, refreshToken };
   }
 
   @Public()
   @Post('login')
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Connexion réussie',
-    type: LoginResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Email ou mot de passe incorrect',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Données invalides',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Connexion réussie', type: LoginResponseDto })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Email ou mot de passe incorrect' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Données invalides' })
   async login(
     @Req() req: Request,
     @Body() dto: LoginRequestDto,
@@ -184,5 +167,14 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordRequestDto) {
     await this.resetPasswordUseCase.execute({ token: dto.token, newPassword: dto.newPassword });
     return { success: true, message: 'Password successfully reset' };
+  }
+
+  @Public()
+  @Get('verify-email')
+  @ApiResponse({ status: HttpStatus.OK, description: 'Email verified successfully' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Invalid or expired token' })
+  async verifyEmail(@Query('token') token: string) {
+    await this.verifyEmailUseCase.execute(token);
+    return { success: true, message: 'Email successfully verified' };
   }
 }
