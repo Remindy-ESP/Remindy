@@ -103,6 +103,22 @@ export class BudgetService {
     await this.budgetRepository.delete(id);
   }
 
+  async getBudgetsWithSpending(
+    filters: BudgetFilterAppDto,
+  ): Promise<Array<{ budget: Budget; spending: BudgetSpending }>> {
+    const budgets = await this.budgetRepository.findAll(filters);
+    if (budgets.length === 0) {
+      return [];
+    }
+
+    return Promise.all(
+      budgets.map(async budget => ({
+        budget,
+        spending: await this.calculateSpendingForBudget(budget),
+      })),
+    );
+  }
+
   async calculateSpendingForBudget(budget: Budget): Promise<BudgetSpending> {
     const windowStart = budget.startDate;
     const windowEnd = budget.computeEndDate();
