@@ -68,14 +68,21 @@ export class GmailEmailService implements IEmailService {
   async sendMonthlyReport(params: { to: string; data: MonthlyReportData }): Promise<void> {
     const { to, data } = params;
 
-    const trendIcon = data.trend === 'up' ? '↑' : data.trend === 'down' ? '↓' : '→';
-    const trendText =
-      data.trend === 'stable'
-        ? 'stable par rapport au mois précédent'
-        : `${Math.abs(data.percentageChange)}% ${data.trend === 'up' ? 'de plus' : 'de moins'} que le mois précédent`;
+    let trendIcon = '→';
+    if (data.trend === 'up') trendIcon = '↑';
+    else if (data.trend === 'down') trendIcon = '↓';
+
+    let trendText = 'stable par rapport au mois précédent';
+    if (data.trend !== 'stable') {
+      const direction = data.trend === 'up' ? 'de plus' : 'de moins';
+      trendText = `${Math.abs(data.percentageChange)}% ${direction} que le mois précédent`;
+    }
 
     const categoryRows = data.categorySummary
-      .map(c => `<tr><td style="padding:4px 8px">${c.name}</td><td style="padding:4px 8px;text-align:right">${c.total.toFixed(2)} ${data.currency}</td></tr>`)
+      .map(
+        c =>
+          `<tr><td style="padding:4px 8px">${c.name}</td><td style="padding:4px 8px;text-align:right">${c.total.toFixed(2)} ${data.currency}</td></tr>`,
+      )
       .join('');
 
     const topCategoryHtml = data.topCategory

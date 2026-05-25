@@ -132,6 +132,31 @@ describe('GmailEmailService', () => {
     );
   });
 
+  it('sends the monthly report email with trend down', async () => {
+    await service.sendMonthlyReport({
+      to: 'user@example.com',
+      data: {
+        userName: 'Alice',
+        month: 'mars 2026',
+        totalExpenses: 30,
+        previousTotalExpenses: 50,
+        percentageChange: -40,
+        trend: 'down',
+        categorySummary: [{ name: 'Streaming', total: 30 }],
+        topCategory: { name: 'Streaming', total: 30 },
+        activeSubscriptionsCount: 2,
+        currency: 'EUR',
+      },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'user@example.com',
+        html: expect.stringContaining('de moins'),
+      }),
+    );
+  });
+
   it('logs the error and rethrows when sending monthly report fails', async () => {
     const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     const error = new Error('SMTP timeout');
