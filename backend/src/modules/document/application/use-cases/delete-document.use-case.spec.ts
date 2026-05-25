@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DeleteDocumentUseCase } from './delete-document.use-case';
 import type { IDocumentRepository } from '../ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../ports/document-repository.interface';
@@ -10,6 +11,7 @@ describe('DeleteDocumentUseCase', () => {
   let useCase: DeleteDocumentUseCase;
   let repository: jest.Mocked<IDocumentRepository>;
   let r2Service: jest.Mocked<CloudflareR2Service>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<IDocumentRepository>> = {
@@ -21,17 +23,23 @@ describe('DeleteDocumentUseCase', () => {
       deleteFile: jest.fn(),
     };
 
+    const mockEventEmitter: Partial<jest.Mocked<EventEmitter2>> = {
+      emit: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteDocumentUseCase,
         { provide: DOCUMENT_REPOSITORY, useValue: mockRepository },
         { provide: CloudflareR2Service, useValue: mockR2Service },
+        { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
 
     useCase = module.get<DeleteDocumentUseCase>(DeleteDocumentUseCase);
     repository = module.get(DOCUMENT_REPOSITORY);
     r2Service = module.get(CloudflareR2Service);
+    eventEmitter = module.get(EventEmitter2);
   });
 
   it('should delete document successfully', async () => {
@@ -145,5 +153,64 @@ describe('DeleteDocumentUseCase', () => {
     // Should NOT throw - R2 errors are swallowed
     await expect(useCase.execute(documentId, userId)).resolves.toBeUndefined();
     expect(repository.softDelete).toHaveBeenCalledWith(documentId);
+  });
+
+  it('should emit document.deleted event on successful delete', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'test.pdf',
+      r2Key: 'users/user-123/documents/test.pdf',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: 1024,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.softDelete.mockResolvedValue(true);
+    r2Service.deleteFile.mockResolvedValue(undefined);
+
+    await useCase.execute(documentId, userId);
+
+    expect(eventEmitter.emit).toHaveBeenCalledWith('document.deleted', {
+      documentId,
+      userId,
+      fileSize: 1024,
+      r2Key: mockDocument.r2Key,
+      r2Deleted: true,
+    });
+  });
+
+  it('should emit document.deleted with r2Deleted=false when R2 fails', async () => {
+    const documentId = 'doc-123';
+    const userId = 'user-123';
+
+    const mockDocument = new Document({
+      id: documentId,
+      userId,
+      filename: 'test.pdf',
+      r2Key: 'users/user-123/documents/test.pdf',
+      r2Bucket: 'remindy-documents',
+      fileHash: 'hash',
+      fileSize: 2048,
+      mimeType: 'application/pdf',
+      ocrStatus: 'completed',
+    });
+
+    repository.findById.mockResolvedValue(mockDocument);
+    repository.softDelete.mockResolvedValue(true);
+    r2Service.deleteFile.mockRejectedValue(new Error('R2 unavailable'));
+
+    await useCase.execute(documentId, userId);
+
+    expect(eventEmitter.emit).toHaveBeenCalledWith(
+      'document.deleted',
+      expect.objectContaining({ r2Deleted: false, fileSize: 2048 }),
+    );
   });
 });
