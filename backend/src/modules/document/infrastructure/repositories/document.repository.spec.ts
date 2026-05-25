@@ -118,7 +118,7 @@ describe('DocumentRepository', () => {
       expect(result).toBeInstanceOf(Document);
       expect(result?.id).toBe(documentId);
       expect(typeOrmRepository.findOne).toHaveBeenCalledWith({
-        where: { id: documentId },
+        where: { id: documentId, deletedAt: null },
       });
     });
 
