@@ -260,4 +260,134 @@ describe('Budgets Module (e2e)', () => {
       });
     });
   });
+
+  describe('POST /budgets', () => {
+    const validBody = {
+      name: 'Streaming',
+      amount: 50,
+      currency: 'EUR',
+      period: 'monthly' as const,
+      startDate: '2026-01-01T00:00:00.000Z',
+    };
+
+    it('creates a budget and returns 201', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send(validBody)
+        .expect(201);
+
+      expect(budgetService.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: USER_ID,
+          name: 'Streaming',
+          amount: 50,
+          currency: 'EUR',
+          period: 'monthly',
+        }),
+      );
+      expect(response.body).toMatchObject({ id: BUDGET_ID, name: 'Streaming' });
+    });
+
+    it('coerces currency to upper case', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({ ...validBody, currency: 'usd' })
+        .expect(201);
+
+      expect(budgetService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: 'USD' }),
+      );
+    });
+
+    it('persists explicit endDate', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({ ...validBody, endDate: '2026-03-01T00:00:00.000Z' })
+        .expect(201);
+
+      const passed = budgetService.create.mock.calls[0][0];
+      expect(passed.endDate).toEqual(new Date('2026-03-01T00:00:00.000Z'));
+    });
+
+    it('persists categoryId when provided', async () => {
+      const categoryId = '11111111-2222-4333-8444-555555555555';
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({ ...validBody, categoryId })
+        .expect(201);
+
+      expect(budgetService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ categoryId }),
+      );
+    });
+  });
+
+  describe('PATCH /budgets/:id', () => {
+    it('updates a budget and returns 200', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('user-token'))
+        .send({ name: 'Updated', amount: 75 })
+        .expect(200);
+
+      expect(budgetService.update).toHaveBeenCalledWith(
+        BUDGET_ID,
+        expect.objectContaining({ name: 'Updated', amount: 75 }),
+        USER_ID,
+      );
+      expect(response.body).toMatchObject({ name: 'Updated' });
+    });
+
+    it('supports nulling the endDate by passing null', async () => {
+      await request(app.getHttpServer())
+        .patch(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('user-token'))
+        .send({ endDate: null })
+        .expect(200);
+
+      expect(budgetService.update).toHaveBeenCalledWith(
+        BUDGET_ID,
+        expect.objectContaining({ endDate: null }),
+        USER_ID,
+      );
+    });
+
+    it('passes userId from JWT for ownership check', async () => {
+      await request(app.getHttpServer())
+        .patch(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('other-token'))
+        .send({ name: 'Hijacked' })
+        .expect(200);
+
+      expect(budgetService.update).toHaveBeenCalledWith(
+        BUDGET_ID,
+        expect.objectContaining({ name: 'Hijacked' }),
+        OTHER_USER_ID,
+      );
+    });
+  });
+
+  describe('DELETE /budgets/:id', () => {
+    it('deletes a budget and returns 204', async () => {
+      await request(app.getHttpServer())
+        .delete(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('user-token'))
+        .expect(204);
+
+      expect(budgetService.remove).toHaveBeenCalledWith(BUDGET_ID, USER_ID);
+    });
+
+    it('passes userId from JWT for ownership check', async () => {
+      await request(app.getHttpServer())
+        .delete(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('other-token'))
+        .expect(204);
+
+      expect(budgetService.remove).toHaveBeenCalledWith(BUDGET_ID, OTHER_USER_ID);
+    });
+  });
 });
