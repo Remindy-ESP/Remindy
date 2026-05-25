@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Localization from 'expo-localization';
 import { useDashboard } from '@/hooks/useDashboard';
+import type { AggregatedEvent } from '@/hooks/useDashboard';
 import { useTranslation } from '@/context/I18nContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
@@ -42,6 +44,7 @@ export default function DashboardScreen() {
   } = useDashboard();
 
   const [uploadingDocument, setUploadingDocument] = React.useState(false);
+  const [selectedExpense, setSelectedExpense] = React.useState<AggregatedEvent | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -367,7 +370,12 @@ export default function DashboardScreen() {
               showsVerticalScrollIndicator={true}
             >
               {getEventsForPeriod(activePeriod, selected, selectedCategory).map((event) => (
-                <View key={event.id} style={styles.expenseItem}>
+                <TouchableOpacity
+                  key={event.id}
+                  style={styles.expenseItem}
+                  activeOpacity={0.6}
+                  onPress={() => setSelectedExpense(event)}
+                >
                   <View style={styles.expenseLeft}>
                     <View style={styles.expenseIconPlaceholder} />
                     <View>
@@ -382,7 +390,7 @@ export default function DashboardScreen() {
                   <Text style={styles.expenseAmount}>
                     {parseFloat(event.totalAmount.toFixed(2))}€
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           )}
@@ -410,6 +418,142 @@ export default function DashboardScreen() {
           </View>
         </View>
       )}
+
+      {/* Subscription Detail Modal */}
+      <Modal
+        visible={selectedExpense !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedExpense(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedExpense(null)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+            {/* Close button */}
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setSelectedExpense(null)}
+            >
+              <Ionicons name="close" size={24} color="#999" />
+            </TouchableOpacity>
+
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalIconCircle}>
+                <Ionicons name="card-outline" size={28} color="#6366f1" />
+              </View>
+              <Text style={styles.modalTitle}>
+                {selectedExpense?.subscription?.name || selectedExpense?.title || ''}
+              </Text>
+              <Text style={styles.modalPrice}>
+                {selectedExpense?.subscription?.amount?.toFixed(2) ?? selectedExpense?.totalAmount?.toFixed(2) ?? '0.00'}
+                {' '}
+                {selectedExpense?.subscription?.currency || '€'}
+              </Text>
+            </View>
+
+            {/* Separator */}
+            <View style={styles.modalSeparator} />
+
+            {/* Details */}
+            <View style={styles.modalDetails}>
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="pricetag-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Catégorie</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {selectedExpense?.subscription?.category?.name || 'Général'}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="repeat-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Type de paiement</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {(() => {
+                    const freq = selectedExpense?.subscription?.frequency;
+                    switch (freq) {
+                      case 'one-time': return 'Achat unique';
+                      case 'weekly': return 'Hebdomadaire';
+                      case 'monthly': return 'Mensuel';
+                      case 'quarterly': return 'Trimestriel';
+                      case 'yearly': return 'Annuel';
+                      default: return freq || '—';
+                    }
+                  })()}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="calendar-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Date de début</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {selectedExpense?.subscription?.startDate
+                    ? new Date(selectedExpense.subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : '—'}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="calendar-clear-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Date de fin</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {selectedExpense?.subscription?.endDate
+                    ? new Date(selectedExpense.subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : 'Aucune'}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="pulse-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Statut</Text>
+                </View>
+                <View style={[
+                  styles.modalStatusBadge,
+                  { backgroundColor:
+                    selectedExpense?.subscription?.status === 'active' ? 'rgba(76, 175, 80, 0.15)' :
+                    selectedExpense?.subscription?.status === 'trial' ? 'rgba(255, 193, 7, 0.15)' :
+                    selectedExpense?.subscription?.status === 'paused' ? 'rgba(255, 152, 0, 0.15)' :
+                    'rgba(244, 67, 54, 0.15)'
+                  },
+                ]}>
+                  <Text style={[
+                    styles.modalStatusText,
+                    { color:
+                      selectedExpense?.subscription?.status === 'active' ? '#4CAF50' :
+                      selectedExpense?.subscription?.status === 'trial' ? '#FFC107' :
+                      selectedExpense?.subscription?.status === 'paused' ? '#FF9800' :
+                      '#F44336'
+                    },
+                  ]}>
+                    {(() => {
+                      const status = selectedExpense?.subscription?.status;
+                      switch (status) {
+                        case 'active': return 'Actif';
+                        case 'trial': return 'Essai';
+                        case 'paused': return 'En pause';
+                        case 'cancelled': return 'Annulé';
+                        default: return status || '—';
+                      }
+                    })()}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -587,5 +731,93 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     fontStyle: 'italic',
+  },
+  // ─── Subscription Detail Modal ─────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalContent: {
+    backgroundColor: '#1e1e42',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    position: 'relative',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    padding: 4,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingTop: 8,
+  },
+  modalIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  modalPrice: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#6366f1',
+    marginTop: 4,
+  },
+  modalSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginVertical: 16,
+  },
+  modalDetails: {
+    gap: 14,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalLabel: {
+    color: '#aaa',
+    fontSize: 14,
+  },
+  modalValue: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    maxWidth: '50%',
+    textAlign: 'right',
+  },
+  modalStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  modalStatusText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
