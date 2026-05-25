@@ -5,12 +5,28 @@ import { BUDGET_REPOSITORY } from '../ports/budget.repository.interface';
 import { CreateBudgetAppDto } from '../dto/create-budget-app.dto';
 import { UpdateBudgetAppDto } from '../dto/update-budget-app.dto';
 import { BudgetFilterAppDto } from '../dto/budget-filter-app.dto';
+import { EVENT_REPOSITORY } from '../../../event/application/ports/event-repository.interface';
+import type { IEventRepository } from '../../../event/application/ports/event-repository.interface';
+import { FindAllSubscriptionsUseCase } from '../../../subscription/application/use-cases/find-all-subscriptions.use-case';
+import { Subscription } from '../../../subscription/domain/subscription.entity';
+
+export interface BudgetSpending {
+  spent: number;
+  remaining: number;
+  progress: number;
+  isOverBudget: boolean;
+  windowStart: Date;
+  windowEnd: Date;
+}
 
 @Injectable()
 export class BudgetService {
   constructor(
     @Inject(BUDGET_REPOSITORY)
     private readonly budgetRepository: IBudgetRepository,
+    @Inject(EVENT_REPOSITORY)
+    private readonly eventRepository: IEventRepository,
+    private readonly findAllSubscriptionsUseCase: FindAllSubscriptionsUseCase,
   ) {}
 
   async create(dto: CreateBudgetAppDto): Promise<Budget> {
@@ -86,4 +102,74 @@ export class BudgetService {
     }
     await this.budgetRepository.delete(id);
   }
+
+  async calculateSpendingForBudget(budget: Budget): Promise<BudgetSpending> {
+    const windowStart = budget.startDate;
+    const windowEnd = budget.computeEndDate();
+
+    const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({
+      userId: budget.userId,
+    });
+
+    const allowedSubscriptionIds = filterSubscriptionIdsForBudget(
+      userSubscriptions,
+      budget.categoryId ?? null,
+    );
+
+    if (allowedSubscriptionIds.size === 0) {
+      return buildSpending(0, budget.amount, windowStart, windowEnd);
+    }
+
+    const events = await this.eventRepository.findAll({
+      start: windowStart,
+      end: windowEnd,
+    });
+
+    const spent = events.reduce((total, event) => {
+      if (!allowedSubscriptionIds.has(event.subscriptionId)) return total;
+      if (event.status === 'canceled') return total;
+      return total + event.amount;
+    }, 0);
+
+    return buildSpending(spent, budget.amount, windowStart, windowEnd);
+  }
+}
+
+function filterSubscriptionIdsForBudget(
+  subscriptions: Subscription[],
+  categoryId: string | null,
+): Set<string> {
+  const ids = new Set<string>();
+  for (const sub of subscriptions) {
+    if (!sub.id) continue;
+    if (categoryId && sub.categoryId !== categoryId) continue;
+    ids.add(sub.id);
+  }
+  return ids;
+}
+
+function buildSpending(
+  spent: number,
+  amount: number,
+  windowStart: Date,
+  windowEnd: Date,
+): BudgetSpending {
+  const remaining = round2(amount - spent);
+  const progress = amount > 0 ? round4(spent / amount) : 0;
+  return {
+    spent: round2(spent),
+    remaining,
+    progress,
+    isOverBudget: spent > amount,
+    windowStart,
+    windowEnd,
+  };
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function round4(n: number): number {
+  return Math.round(n * 10000) / 10000;
 }
