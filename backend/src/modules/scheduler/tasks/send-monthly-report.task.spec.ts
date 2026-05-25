@@ -302,11 +302,153 @@ describe('SendMonthlyReportTask', () => {
         }),
       });
     });
+
+    it('should convert weekly subscription to monthly amount', async () => {
+      preferencesRepository.find.mockResolvedValue([{ userId: 'user-1' }]);
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
+        ]),
+      };
+      userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      subscriptionRepository.find.mockResolvedValue([
+        {
+          id: 'sub-1',
+          userId: 'user-1',
+          name: 'Weekly',
+          amount: 10,
+          currency: 'EUR',
+          frequency: 'weekly',
+          status: 'active',
+          startDate: new Date('2024-01-01'),
+          category: { name: 'Hebdo' },
+        },
+      ]);
+
+      emailService.sendMonthlyReport.mockResolvedValue(undefined);
+      await task.triggerManually();
+
+      const call = (emailService.sendMonthlyReport as jest.Mock).mock.calls[0][0];
+      expect(call.data.totalExpenses).toBeCloseTo(43.3, 1);
+    });
+
+    it('should convert quarterly subscription to monthly amount', async () => {
+      preferencesRepository.find.mockResolvedValue([{ userId: 'user-1' }]);
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
+        ]),
+      };
+      userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      subscriptionRepository.find.mockResolvedValue([
+        {
+          id: 'sub-1',
+          userId: 'user-1',
+          name: 'Quarterly',
+          amount: 90,
+          currency: 'EUR',
+          frequency: 'quarterly',
+          status: 'active',
+          startDate: new Date('2024-01-01'),
+          category: { name: 'Trim' },
+        },
+      ]);
+
+      emailService.sendMonthlyReport.mockResolvedValue(undefined);
+      await task.triggerManually();
+
+      const call = (emailService.sendMonthlyReport as jest.Mock).mock.calls[0][0];
+      expect(call.data.totalExpenses).toBe(30);
+    });
+
+    it('should handle one-time subscription with default frequency', async () => {
+      preferencesRepository.find.mockResolvedValue([{ userId: 'user-1' }]);
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
+        ]),
+      };
+      userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      subscriptionRepository.find.mockResolvedValue([
+        {
+          id: 'sub-1',
+          userId: 'user-1',
+          name: 'One-time purchase',
+          amount: 50,
+          currency: 'EUR',
+          frequency: 'one-time',
+          status: 'active',
+          startDate: new Date('2024-01-01'),
+          category: { name: 'Achat' },
+        },
+      ]);
+
+      emailService.sendMonthlyReport.mockResolvedValue(undefined);
+      await task.triggerManually();
+
+      const call = (emailService.sendMonthlyReport as jest.Mock).mock.calls[0][0];
+      expect(call.data.totalExpenses).toBe(50);
+    });
+
+    it('should report trend up when previous month had no expenses', async () => {
+      preferencesRepository.find.mockResolvedValue([{ userId: 'user-1' }]);
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([
+          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
+        ]),
+      };
+      userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const now = new Date();
+      const recentStart = new Date(now.getFullYear(), now.getMonth() - 1, 5);
+
+      subscriptionRepository.find.mockResolvedValue([
+        {
+          id: 'sub-1',
+          userId: 'user-1',
+          name: 'New Sub',
+          amount: 20,
+          currency: 'EUR',
+          frequency: 'monthly',
+          status: 'active',
+          startDate: recentStart,
+          category: { name: 'New' },
+        },
+      ]);
+
+      emailService.sendMonthlyReport.mockResolvedValue(undefined);
+      await task.triggerManually();
+
+      const call = (emailService.sendMonthlyReport as jest.Mock).mock.calls[0][0];
+      expect(call.data.trend).toBe('up');
+      expect(call.data.percentageChange).toBe(100);
+    });
   });
 
   describe('handleCron', () => {
     it('should call processMonthlyReports and log result', async () => {
       preferencesRepository.find.mockResolvedValue([]);
+
+      await expect(task.handleCron()).resolves.not.toThrow();
+    });
+
+    it('should catch and log errors without throwing', async () => {
+      preferencesRepository.find.mockRejectedValue(new Error('DB connection lost'));
 
       await expect(task.handleCron()).resolves.not.toThrow();
     });
