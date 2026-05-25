@@ -156,4 +156,59 @@ describe('BudgetService', () => {
       ).rejects.toThrow('End date must be after start date');
     });
   });
+
+  describe('findAll', () => {
+    it('forwards filters to the repository', async () => {
+      const list = [makeBudget(), makeBudget({ id: 'budget-2' })];
+      budgetRepository.findAll.mockResolvedValue(list);
+
+      const result = await service.findAll({ userId: USER_ID, isActive: true });
+
+      expect(result).toBe(list);
+      expect(budgetRepository.findAll).toHaveBeenCalledWith({ userId: USER_ID, isActive: true });
+    });
+
+    it('returns an empty list when none exist', async () => {
+      budgetRepository.findAll.mockResolvedValue([]);
+      const result = await service.findAll({ userId: USER_ID });
+      expect(result).toEqual([]);
+    });
+
+    it('forwards categoryId when provided', async () => {
+      budgetRepository.findAll.mockResolvedValue([]);
+      await service.findAll({ userId: USER_ID, categoryId: 'cat-1' });
+      expect(budgetRepository.findAll).toHaveBeenCalledWith({
+        userId: USER_ID,
+        categoryId: 'cat-1',
+      });
+    });
+  });
+
+  describe('findOne', () => {
+    it('returns the budget when found and owned by the user', async () => {
+      const budget = makeBudget();
+      budgetRepository.findById.mockResolvedValue(budget);
+
+      const result = await service.findOne('budget-1', USER_ID);
+
+      expect(result).toBe(budget);
+    });
+
+    it('throws NotFoundException when the budget does not exist', async () => {
+      budgetRepository.findById.mockResolvedValue(null);
+
+      await expect(service.findOne('missing', USER_ID)).rejects.toThrow(
+        'Budget with ID missing not found',
+      );
+    });
+
+    it('throws ForbiddenException when the budget belongs to another user', async () => {
+      const budget = makeBudget({ userId: 'other-user' });
+      budgetRepository.findById.mockResolvedValue(budget);
+
+      await expect(service.findOne('budget-1', USER_ID)).rejects.toThrow(
+        'You can only access your own budgets',
+      );
+    });
+  });
 });
