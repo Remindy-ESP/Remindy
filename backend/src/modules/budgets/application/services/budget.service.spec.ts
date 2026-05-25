@@ -6,6 +6,8 @@ import type { IEventRepository } from '../../../event/application/ports/event-re
 import { FindAllSubscriptionsUseCase } from '../../../subscription/application/use-cases/find-all-subscriptions.use-case';
 import { Budget } from '../../domain/budget.entity';
 import { CreateBudgetAppDto } from '../dto/create-budget-app.dto';
+import { Subscription } from '../../../subscription/domain/subscription.entity';
+import { Event } from '../../../event/domain/event.entity';
 
 describe('BudgetService', () => {
   let service: BudgetService;
@@ -284,6 +286,166 @@ describe('BudgetService', () => {
       await expect(service.update('budget-1', { name: 'x' }, USER_ID)).rejects.toThrow(
         'Budget with ID budget-1 not found',
       );
+    });
+  });
+
+  describe('calculateSpendingForBudget', () => {
+    function makeSubscription(id: string, categoryId?: string): Subscription {
+      return new Subscription({
+        id,
+        userId: USER_ID,
+        name: `Sub ${id}`,
+        amount: 10,
+        currency: 'EUR',
+        frequency: 'monthly',
+        startDate: new Date('2025-01-01T00:00:00Z'),
+        nextDueDate: new Date('2026-01-01T00:00:00Z'),
+        status: 'active',
+        categoryId,
+      });
+    }
+
+    function makeEvent(subscriptionId: string, amount: number, opts: { canceled?: boolean } = {}): Event {
+      return new Event({
+        id: `event-${subscriptionId}-${amount}`,
+        subscriptionId,
+        title: 'charge',
+        amount,
+        startsAt: new Date('2026-01-15T00:00:00Z'),
+        status: opts.canceled ? 'canceled' : 'completed',
+      });
+    }
+
+    it('returns zero spending when user has no subscriptions', async () => {
+      const budget = makeBudget();
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([]);
+
+      const result = await service.calculateSpendingForBudget(budget);
+
+      expect(result.spent).toBe(0);
+      expect(result.remaining).toBe(50);
+      expect(result.progress).toBe(0);
+      expect(result.isOverBudget).toBe(false);
+      expect(eventRepository.findAll).not.toHaveBeenCalled();
+    });
+
+    it('sums all completed event amounts when budget has no category filter', async () => {
+      const budget = makeBudget();
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([
+        makeSubscription('sub-1'),
+        makeSubscription('sub-2'),
+      ]);
+      eventRepository.findAll.mockResolvedValue([
+        makeEvent('sub-1', 12.5),
+        makeEvent('sub-2', 7.25),
+      ]);
+
+      const result = await service.calculateSpendingForBudget(budget);
+
+      expect(result.spent).toBe(19.75);
+      expect(result.remaining).toBe(30.25);
+      expect(result.progress).toBe(0.395);
+      expect(result.isOverBudget).toBe(false);
+    });
+
+    it('filters spending to events from subscriptions in the budget category', async () => {
+      const budget = makeBudget({ categoryId: 'cat-1' });
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([
+        makeSubscription('sub-1', 'cat-1'),
+        makeSubscription('sub-2', 'cat-other'),
+      ]);
+      eventRepository.findAll.mockResolvedValue([
+        makeEvent('sub-1', 10),
+        makeEvent('sub-2', 100),
+      ]);
+
+      const result = await service.calculateSpendingForBudget(budget);
+
+      expect(result.spent).toBe(10);
+      expect(result.remaining).toBe(40);
+    });
+
+    it('ignores canceled events', async () => {
+      const budget = makeBudget();
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([makeSubscription('sub-1')]);
+      eventRepository.findAll.mockResolvedValue([
+        makeEvent('sub-1', 10),
+        makeEvent('sub-1', 5, { canceled: true }),
+      ]);
+
+      const result = await service.calculateSpendingForBudget(budget);
+
+      expect(result.spent).toBe(10);
+    });
+
+    it('flags isOverBudget when spent exceeds amount', async () => {
+      const budget = makeBudget({ amount: 30 });
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([makeSubscription('sub-1')]);
+      eventRepository.findAll.mockResolvedValue([makeEvent('sub-1', 35)]);
+
+      const result = await service.calculateSpendingForBudget(budget);
+
+      expect(result.spent).toBe(35);
+      expect(result.remaining).toBe(-5);
+      expect(result.isOverBudget).toBe(true);
+    });
+
+    it('queries events using the budget window derived from period', async () => {
+      const budget = makeBudget({
+        startDate: new Date('2026-04-01T00:00:00Z'),
+        endDate: null,
+        period: 'monthly',
+      });
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([makeSubscription('sub-1')]);
+      eventRepository.findAll.mockResolvedValue([]);
+
+      await service.calculateSpendingForBudget(budget);
+
+      expect(eventRepository.findAll).toHaveBeenCalledWith({
+        start: new Date('2026-04-01T00:00:00Z'),
+        end: new Date('2026-05-01T00:00:00Z'),
+      });
+    });
+
+    it('uses explicit endDate when provided instead of the computed one', async () => {
+      const budget = makeBudget({
+        startDate: new Date('2026-04-01T00:00:00Z'),
+        endDate: new Date('2026-06-30T00:00:00Z'),
+        period: 'monthly',
+      });
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([makeSubscription('sub-1')]);
+      eventRepository.findAll.mockResolvedValue([]);
+
+      await service.calculateSpendingForBudget(budget);
+
+      expect(eventRepository.findAll).toHaveBeenCalledWith({
+        start: new Date('2026-04-01T00:00:00Z'),
+        end: new Date('2026-06-30T00:00:00Z'),
+      });
+    });
+  });
+
+  describe('getBudgetsWithSpending', () => {
+    it('returns an empty list when no budgets', async () => {
+      budgetRepository.findAll.mockResolvedValue([]);
+      const result = await service.getBudgetsWithSpending({ userId: USER_ID });
+      expect(result).toEqual([]);
+    });
+
+    it('attaches spending for each budget', async () => {
+      const b1 = makeBudget({ id: 'b1', amount: 50 });
+      const b2 = makeBudget({ id: 'b2', amount: 100 });
+      budgetRepository.findAll.mockResolvedValue([b1, b2]);
+      findAllSubscriptionsUseCase.execute.mockResolvedValue([]);
+
+      const result = await service.getBudgetsWithSpending({ userId: USER_ID });
+
+      expect(result).toHaveLength(2);
+      expect(result[0].budget.id).toBe('b1');
+      expect(result[0].spending.spent).toBe(0);
+      expect(result[0].spending.remaining).toBe(50);
+      expect(result[1].budget.id).toBe('b2');
+      expect(result[1].spending.remaining).toBe(100);
     });
   });
 
