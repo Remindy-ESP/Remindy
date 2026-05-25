@@ -22,4 +22,6 @@ export abstract class ITokenService {
   abstract verifyRefreshToken(token: string): JwtRefreshPayload;
 
   abstract generatePasswordResetToken(payload: { sub: string }): string;
+
+  abstract generateEmailVerificationToken(payload: { sub: string }): string;
 }

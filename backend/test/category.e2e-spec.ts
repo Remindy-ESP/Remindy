@@ -231,8 +231,11 @@ describe('Category Module (e2e)', () => {
       .expect(400);
   });
 
-  it('GET /categories - returns all categories (public endpoint, no auth required)', async () => {
-    const response = await request(app.getHttpServer()).get('/categories').expect(200);
+  it('GET /categories - returns all categories (authenticated)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/categories')
+      .set(authHeaderFor('user-token'))
+      .expect(200);
 
     expect(findAllCategoriesUseCase.execute).toHaveBeenCalled();
     expect(response.body).toHaveLength(2);
@@ -243,6 +246,7 @@ describe('Category Module (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .get('/categories')
+      .set(authHeaderFor('user-token'))
       .query({ userId: USER_ID })
       .expect(200);
 
@@ -253,7 +257,11 @@ describe('Category Module (e2e)', () => {
   });
 
   it('GET /categories - passes name filter when provided', async () => {
-    await request(app.getHttpServer()).get('/categories').query({ name: 'Stream' }).expect(200);
+    await request(app.getHttpServer())
+      .get('/categories')
+      .set(authHeaderFor('user-token'))
+      .query({ name: 'Stream' })
+      .expect(200);
 
     expect(findAllCategoriesUseCase.execute).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'Stream' }),
@@ -265,6 +273,7 @@ describe('Category Module (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .get('/categories')
+      .set(authHeaderFor('user-token'))
       .query({ isSystem: 'true' })
       .expect(200);
 

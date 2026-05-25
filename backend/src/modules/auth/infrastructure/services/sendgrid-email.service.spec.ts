@@ -1,90 +1,162 @@
-import axios from 'axios';
+import * as nodemailer from 'nodemailer';
 import { Logger } from '@nestjs/common';
-import { BrevoEmailService } from './sendgrid-email.service';
+import { GmailEmailService } from './sendgrid-email.service';
 
-jest.mock('axios');
+jest.mock('nodemailer');
 
-describe('BrevoEmailService', () => {
-  let service: BrevoEmailService;
-  const mockedAxios = axios as jest.Mocked<typeof axios>;
+describe('GmailEmailService', () => {
+  let service: GmailEmailService;
+  const sendMailMock = jest.fn();
   const envBackup = { ...process.env };
 
   beforeEach(() => {
-    service = new BrevoEmailService();
-    process.env.MAIL_FROM = 'noreply@example.com';
-    process.env.SENDGRID_API_KEY = 'brevo-api-key';
+    service = new GmailEmailService();
+    process.env.MAIL_USER = 'remindy@gmail.com';
+    process.env.MAIL_APP_PASSWORD = 'test-app-password';
+    (nodemailer.createTransport as jest.Mock).mockReturnValue({ sendMail: sendMailMock });
+    sendMailMock.mockResolvedValue({ messageId: 'test-id' });
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
     jest.clearAllMocks();
     process.env = { ...envBackup };
   });
-
-  it('sends the password reset email with the expected Brevo payload', async () => {
-    mockedAxios.post.mockResolvedValue({ data: {} } as any);
-
+  it('sends the password reset email via Gmail SMTP', async () => {
     await service.sendPasswordResetEmail({
       to: 'user@example.com',
-      resetLink: 'https://example.com/reset?token=abc',
+      resetLink: 'frontendmobile://reset-password?token=abc',
     });
 
-    expect(mockedAxios.post).toHaveBeenCalledWith(
-      'https://api.brevo.com/v3/smtp/email',
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'remindy@gmail.com', pass: 'test-app-password' },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        sender: {
-          email: 'noreply@example.com',
-          name: 'Remindy',
-        },
-        to: [{ email: 'user@example.com' }],
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
         subject: 'Réinitialisation de votre mot de passe',
-        htmlContent: expect.stringContaining('https://example.com/reset?token=abc'),
+        html: expect.stringContaining('frontendmobile://reset-password?token=abc'),
       }),
-      {
-        headers: {
-          'api-key': 'brevo-api-key',
-          'Content-Type': 'application/json',
-        },
+    );
+  });
+
+  it('logs the error and rethrows when sending password reset email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP connection refused');
+    sendMailMock.mockRejectedValue(error);
+
+    await expect(
+      service.sendPasswordResetEmail({
+        to: 'user@example.com',
+        resetLink: 'frontendmobile://reset-password?token=abc',
+      }),
+    ).rejects.toBe(error);
+
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send password reset email to user@example.com',
+      error,
+    );
+  });
+  it('sends the verification email via Gmail SMTP', async () => {
+    await service.sendVerificationEmail({
+      to: 'user@example.com',
+      verificationLink: 'http://localhost:3000/verify-email?token=xyz',
+    });
+
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'remindy@gmail.com', pass: 'test-app-password' },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Confirmez votre adresse email',
+        html: expect.stringContaining('http://localhost:3000/verify-email?token=xyz'),
+      }),
+    );
+  });
+
+  it('logs the error and rethrows when sending verification email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP connection refused');
+    sendMailMock.mockRejectedValue(error);
+
+    await expect(
+      service.sendVerificationEmail({
+        to: 'user@example.com',
+        verificationLink: 'http://localhost:3000/verify-email?token=xyz',
+      }),
+    ).rejects.toBe(error);
+
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send verification email to user@example.com',
+      error,
+    );
+  });
+
+  it('sends the monthly report email via Gmail SMTP', async () => {
+    await service.sendMonthlyReport({
+      to: 'user@example.com',
+      data: {
+        userName: 'John',
+        month: 'avril 2026',
+        totalExpenses: 55.97,
+        previousTotalExpenses: 45.98,
+        percentageChange: 21.7,
+        trend: 'up',
+        categorySummary: [
+          { name: 'Streaming', total: 25.98 },
+          { name: 'Sport', total: 30 },
+        ],
+        topCategory: { name: 'Sport', total: 30 },
+        activeSubscriptionsCount: 3,
+        currency: 'EUR',
       },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Récapitulatif mensuel — avril 2026',
+        html: expect.stringContaining('55.97'),
+      }),
     );
   });
 
-  it('logs Brevo response data and rethrows the error when the request fails', async () => {
+  it('logs the error and rethrows when sending monthly report fails', async () => {
     const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-    const error = {
-      response: { data: { message: 'Brevo failure' } },
-    };
-
-    mockedAxios.post.mockRejectedValue(error as any);
+    const error = new Error('SMTP timeout');
+    sendMailMock.mockRejectedValue(error);
 
     await expect(
-      service.sendPasswordResetEmail({
+      service.sendMonthlyReport({
         to: 'user@example.com',
-        resetLink: 'https://example.com/reset?token=abc',
+        data: {
+          userName: 'John',
+          month: 'avril 2026',
+          totalExpenses: 0,
+          previousTotalExpenses: 0,
+          percentageChange: 0,
+          trend: 'stable',
+          categorySummary: [],
+          topCategory: null,
+          activeSubscriptionsCount: 0,
+          currency: 'EUR',
+        },
       }),
     ).rejects.toBe(error);
 
     expect(loggerSpy).toHaveBeenCalledWith(
-      'Failed to send password reset email to user@example.com',
-      { message: 'Brevo failure' },
-    );
-  });
-
-  it('logs the raw error when no response payload is available', async () => {
-    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-    const error = new Error('network down');
-
-    mockedAxios.post.mockRejectedValue(error);
-
-    await expect(
-      service.sendPasswordResetEmail({
-        to: 'user@example.com',
-        resetLink: 'https://example.com/reset?token=abc',
-      }),
-    ).rejects.toBe(error);
-
-    expect(loggerSpy).toHaveBeenCalledWith(
-      'Failed to send password reset email to user@example.com',
+      'Failed to send monthly report to user@example.com',
       error,
     );
   });
