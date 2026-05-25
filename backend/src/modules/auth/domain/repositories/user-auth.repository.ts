@@ -14,4 +14,6 @@ export abstract class IUserAuthRepository {
   abstract resetFailedLoginCount(userId: string): Promise<void>;
 
   abstract updateLastLoginAt(userId: string, date: Date): Promise<void>;
+
+  abstract markEmailAsVerified(userId: string): Promise<void>;
 }

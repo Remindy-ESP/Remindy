@@ -57,6 +57,7 @@ describe('UserController (e2e)', () => {
     currency: 'EUR',
     defaultReminderDelay: 15,
     showOnlineStatus: true,
+    monthlyReportEnabled: true,
   };
 
   const updatedPreferencesEntity = {

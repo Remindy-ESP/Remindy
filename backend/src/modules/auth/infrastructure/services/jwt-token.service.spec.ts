@@ -360,3 +360,58 @@ describe('JwtTokenService constructor branch coverage', () => {
     expect(instance).toBeDefined();
   });
 });
+
+describe('JwtTokenService - generateEmailVerificationToken', () => {
+  let service: JwtTokenService;
+  let jwtService: jest.Mocked<JwtService>;
+  let configService: jest.Mocked<ConfigService>;
+
+  beforeEach(async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        JwtTokenService,
+        { provide: JwtService, useValue: { sign: jest.fn(), verify: jest.fn() } },
+        { provide: ConfigService, useValue: { get: jest.fn() } },
+      ],
+    }).compile();
+
+    service = module.get(JwtTokenService);
+    jwtService = module.get(JwtService);
+    configService = module.get(ConfigService);
+  });
+
+  it('should generate email verification token with correct payload and 24h expiration', () => {
+    const payload = { sub: 'user-123' };
+    const secret = 'email-verification-secret';
+    configService.get.mockReturnValue(secret);
+    jwtService.sign.mockReturnValue('verify-token-xyz');
+
+    const result = service.generateEmailVerificationToken(payload);
+
+    expect(result).toBe('verify-token-xyz');
+    expect(configService.get).toHaveBeenCalledWith('JWT_EMAIL_VERIFICATION_SECRET');
+    expect(jwtService.sign).toHaveBeenCalledWith({ sub: 'user-123' }, { secret, expiresIn: '24h' });
+  });
+
+  it('should use 24h expiration for email verification token', () => {
+    configService.get.mockReturnValue('secret');
+    jwtService.sign.mockReturnValue('token');
+
+    service.generateEmailVerificationToken({ sub: 'user-456' });
+
+    expect(jwtService.sign.mock.calls[0][1]).toHaveProperty('expiresIn', '24h');
+  });
+
+  it('should still call sign even if email verification secret is undefined', () => {
+    configService.get.mockReturnValue(undefined);
+    jwtService.sign.mockReturnValue('token-with-undefined-secret');
+
+    const result = service.generateEmailVerificationToken({ sub: 'user-123' });
+
+    expect(result).toBe('token-with-undefined-secret');
+    expect(jwtService.sign).toHaveBeenCalledWith(
+      { sub: 'user-123' },
+      { secret: undefined, expiresIn: '24h' },
+    );
+  });
+});
