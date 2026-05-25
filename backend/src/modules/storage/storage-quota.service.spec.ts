@@ -2,22 +2,22 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { StorageQuotaService } from './storage-quota.service';
 import type { IDocumentRepository } from '../document/application/ports/document-repository.interface';
 import { DOCUMENT_REPOSITORY } from '../document/application/ports/document-repository.interface';
-import { Document } from '../document/domain/document.entity';
 import { Role } from '../auth/domain/value-objects/role.enum';
-
-// ── Helper ─────────────────────────────────────────────────────────────────
-
-const makeDocument = (fileSize: number): Partial<Document> => ({ fileSize });
-
-// ── Tests ──────────────────────────────────────────────────────────────────
 
 describe('StorageQuotaService', () => {
   let service: StorageQuotaService;
   let documentRepo: jest.Mocked<IDocumentRepository>;
 
+  const mockStorage = (totalBytes: number, count: number = 1) => {
+    documentRepo.sumFileSizeByUserId.mockResolvedValue(totalBytes);
+    documentRepo.countByUserId.mockResolvedValue(count);
+  };
+
   beforeEach(async () => {
     const mockDocumentRepo: Partial<jest.Mocked<IDocumentRepository>> = {
       findByUserId: jest.fn(),
+      sumFileSizeByUserId: jest.fn(),
+      countByUserId: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -35,15 +35,10 @@ describe('StorageQuotaService', () => {
     expect(service).toBeDefined();
   });
 
-  // ── getQuota() ─────────────────────────────────────────────────────────
-
   describe('getQuota()', () => {
     it('should compute quota for freemium user correctly', async () => {
-      const freemiumTotal = 100 * 1024 * 1024; // 100 MB
-      documentRepo.findByUserId.mockResolvedValue([
-        makeDocument(10 * 1024 * 1024) as Document,
-        makeDocument(20 * 1024 * 1024) as Document,
-      ]);
+      const freemiumTotal = 100 * 1024 * 1024;
+      mockStorage(30 * 1024 * 1024, 2);
 
       const quota = await service.getQuota('user-1', Role.USER_FREEMIUM);
 
@@ -58,8 +53,8 @@ describe('StorageQuotaService', () => {
     });
 
     it('should compute quota for premium user', async () => {
-      const premiumTotal = 10 * 1024 * 1024 * 1024; // 10 GB
-      documentRepo.findByUserId.mockResolvedValue([]);
+      const premiumTotal = 10 * 1024 * 1024 * 1024;
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', Role.USER_PREMIUM);
 
@@ -71,8 +66,8 @@ describe('StorageQuotaService', () => {
     });
 
     it('should compute quota for admin user', async () => {
-      const adminTotal = 50 * 1024 * 1024 * 1024; // 50 GB
-      documentRepo.findByUserId.mockResolvedValue([]);
+      const adminTotal = 50 * 1024 * 1024 * 1024;
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', Role.USER_ADMIN);
 
@@ -80,8 +75,8 @@ describe('StorageQuotaService', () => {
     });
 
     it('should compute quota for super_admin', async () => {
-      const superTotal = 50 * 1024 * 1024 * 1024; // 50 GB
-      documentRepo.findByUserId.mockResolvedValue([]);
+      const superTotal = 50 * 1024 * 1024 * 1024;
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', Role.SUPER_ADMIN);
 
@@ -90,7 +85,7 @@ describe('StorageQuotaService', () => {
 
     it('should default to freemium quota for unknown role', async () => {
       const freemiumTotal = 100 * 1024 * 1024;
-      documentRepo.findByUserId.mockResolvedValue([]);
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', 'unknown_role');
 
@@ -99,7 +94,7 @@ describe('StorageQuotaService', () => {
 
     it('should default to freemium quota when role is undefined', async () => {
       const freemiumTotal = 100 * 1024 * 1024;
-      documentRepo.findByUserId.mockResolvedValue([]);
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', undefined);
 
@@ -107,10 +102,7 @@ describe('StorageQuotaService', () => {
     });
 
     it('should cap availableBytes at 0 when usedBytes exceeds total', async () => {
-      // Simulate over-quota scenario
-      documentRepo.findByUserId.mockResolvedValue([
-        makeDocument(200 * 1024 * 1024) as Document, // 200 MB used (freemium is 100 MB)
-      ]);
+      mockStorage(200 * 1024 * 1024, 1);
 
       const quota = await service.getQuota('user-1', Role.USER_FREEMIUM);
 
@@ -118,17 +110,16 @@ describe('StorageQuotaService', () => {
     });
 
     it('should propagate errors from document repository', async () => {
-      documentRepo.findByUserId.mockRejectedValue(new Error('DB error'));
+      documentRepo.sumFileSizeByUserId.mockRejectedValue(new Error('DB error'));
+      documentRepo.countByUserId.mockResolvedValue(0);
 
       await expect(service.getQuota('user-1', Role.USER_FREEMIUM)).rejects.toThrow('DB error');
     });
   });
 
-  // ── canUpload() ───────────────────────────────────────────────────────────
-
   describe('canUpload()', () => {
     it('should return true when there is enough space', async () => {
-      documentRepo.findByUserId.mockResolvedValue([]);
+      mockStorage(0, 0);
 
       const result = await service.canUpload('user-1', 1024, Role.USER_FREEMIUM);
 
@@ -136,10 +127,7 @@ describe('StorageQuotaService', () => {
     });
 
     it('should return false when there is not enough space', async () => {
-      // Fill up quota completely
-      documentRepo.findByUserId.mockResolvedValue([
-        makeDocument(100 * 1024 * 1024) as Document, // 100 MB = full freemium quota
-      ]);
+      mockStorage(100 * 1024 * 1024, 1);
 
       const result = await service.canUpload('user-1', 1, Role.USER_FREEMIUM);
 
@@ -147,7 +135,8 @@ describe('StorageQuotaService', () => {
     });
 
     it('should propagate errors', async () => {
-      documentRepo.findByUserId.mockRejectedValue(new Error('DB error'));
+      documentRepo.sumFileSizeByUserId.mockRejectedValue(new Error('DB error'));
+      documentRepo.countByUserId.mockResolvedValue(0);
 
       await expect(service.canUpload('user-1', 1024, Role.USER_FREEMIUM)).rejects.toThrow(
         'DB error',
@@ -155,11 +144,9 @@ describe('StorageQuotaService', () => {
     });
   });
 
-  // ── getAvailableSpace() ────────────────────────────────────────────────────
-
   describe('getAvailableSpace()', () => {
     it('should return the available bytes', async () => {
-      documentRepo.findByUserId.mockResolvedValue([makeDocument(10 * 1024 * 1024) as Document]);
+      mockStorage(10 * 1024 * 1024, 1);
 
       const available = await service.getAvailableSpace('user-1', Role.USER_FREEMIUM);
 
@@ -167,15 +154,14 @@ describe('StorageQuotaService', () => {
     });
 
     it('should propagate errors', async () => {
-      documentRepo.findByUserId.mockRejectedValue(new Error('DB error'));
+      documentRepo.sumFileSizeByUserId.mockRejectedValue(new Error('DB error'));
+      documentRepo.countByUserId.mockResolvedValue(0);
 
       await expect(service.getAvailableSpace('user-1', Role.USER_FREEMIUM)).rejects.toThrow(
         'DB error',
       );
     });
   });
-
-  // ── getQuotaForRole() ──────────────────────────────────────────────────────
 
   describe('getQuotaForRole()', () => {
     it('should return correct quota for freemium', () => {
@@ -191,20 +177,17 @@ describe('StorageQuotaService', () => {
     });
   });
 
-  // ── formatBytes() — tested indirectly through getQuota ────────────────────
-
   describe('formatBytes (via getQuota)', () => {
     it('should format 0 bytes as "0 Bytes"', async () => {
-      documentRepo.findByUserId.mockResolvedValue([]);
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', Role.USER_FREEMIUM);
 
-      // usedBytes is 0
       expect(quota.usedFormatted).toBe('0 Bytes');
     });
 
     it('should format KB-range values correctly', async () => {
-      documentRepo.findByUserId.mockResolvedValue([makeDocument(512) as Document]);
+      mockStorage(512, 1);
 
       const quota = await service.getQuota('user-1', Role.USER_FREEMIUM);
 
@@ -212,7 +195,7 @@ describe('StorageQuotaService', () => {
     });
 
     it('should format GB-range values', async () => {
-      documentRepo.findByUserId.mockResolvedValue([]);
+      mockStorage(0, 0);
 
       const quota = await service.getQuota('user-1', Role.USER_PREMIUM);
 
