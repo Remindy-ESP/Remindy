@@ -22,6 +22,8 @@ import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.u
 import { IEmailService } from './infrastructure/services/email.service';
 import { GmailEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
+import { SendVerificationEmailUseCase } from './application/use-cases/send-verification-email.use-case';
+import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 import { UsersModule } from '../user/user.module';
 import { JwtRefreshGuard } from './presentation/guards/jwt-refresh.guard';
@@ -47,6 +49,8 @@ import { AdminModule } from '../admin/admin.module';
     LogoutUseCase,
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
+    SendVerificationEmailUseCase,
+    VerifyEmailUseCase,
     JwtTokenService,
     JwtRefreshStrategy,
     JwtStrategy,
