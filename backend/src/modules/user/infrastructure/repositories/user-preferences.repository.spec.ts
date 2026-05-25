@@ -116,6 +116,7 @@ describe('UserPreferencesRepository', () => {
         defaultReminderDelay: 3,
         currency: 'EUR',
         showOnlineStatus: true,
+        monthlyReportEnabled: true,
       });
       expect(typeOrmRepository.save).toHaveBeenCalledWith(defaultPrefs);
     });
