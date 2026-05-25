@@ -158,7 +158,7 @@ describe('UploadDocumentUseCase', () => {
     expect(result).toEqual(mockDocument);
     expect(quotaService.checkUserQuota).toHaveBeenCalledWith(
       dto.userId,
-      'freemium', // Default role when not specified
+      '', // Default role (empty) when not specified; resolved to freemium by QuotaService
       dto.fileSize,
     );
     expect(repository.create).toHaveBeenCalled();

@@ -130,7 +130,7 @@ describe('DocumentController', () => {
         'sub-123',
         '1',
         undefined,
-        'freemium',
+        'user_freemium',
       );
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
@@ -144,7 +144,7 @@ describe('DocumentController', () => {
           contractId: 1,
           folderId: undefined,
         },
-        'freemium',
+        'user_freemium',
       );
 
       expect(result).toEqual(
@@ -181,7 +181,7 @@ describe('DocumentController', () => {
           contractId: undefined,
           folderId: undefined,
         }),
-        'freemium',
+        undefined,
       );
       expect(result.subscription_id).toBeUndefined();
       expect(result.contract_id).toBeUndefined();
@@ -200,7 +200,7 @@ describe('DocumentController', () => {
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ contractId: 42 }),
-        'freemium',
+        undefined,
       );
     });
 
@@ -211,7 +211,7 @@ describe('DocumentController', () => {
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ contractId: undefined }),
-        'freemium',
+        undefined,
       );
     });
 
@@ -546,7 +546,7 @@ describe('DocumentController', () => {
 
       await controller.getQuota('user-123', undefined);
 
-      expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', 'freemium');
+      expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', '');
     });
   });
 
