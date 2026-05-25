@@ -1,0 +1,11 @@
+{
+  "title": "Promos",
+  "subtitle": "Offres partenaires et codes promo disponibles",
+  "copiedTitle": "Code promo copie",
+  "copiedMessage": "{{brand}} : {{code}}",
+  "linkUnavailableTitle": "Lien indisponible",
+  "linkUnavailableMessage": "Impossible d'ouvrir {{url}}",
+  "openErrorMessage": "Impossible d ouvrir le site partenaire pour le moment.",
+  "copyAccessibility": "Copier le code promo {{brand}}",
+  "openAccessibility": "Ouvrir le site {{brand}}"
+}

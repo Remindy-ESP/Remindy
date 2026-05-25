@@ -12,16 +12,21 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router';
 import { notificationService, Notification, NotificationType } from '../../services/api';
 import { categoryService } from '../../services/api/category.service';
 import { subscriptionService } from '../../services/api/subscription.service';
 import type { Category, Subscription } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
+import { formatDate } from '@/utils/format';
 import Button from '@/components/Button';
+import CategoryDropdown from '@/components/CategoryDropdown';
+import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
 export default function NotificationsScreen() {
     const { user } = useAuth();
+    const { t, language } = useTranslation();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -47,17 +52,17 @@ export default function NotificationsScreen() {
             setSubscriptions(subs || []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
-            setError(err.response?.data?.message || 'Erreur lors du chargement des notifications');
+            setError(err.response?.data?.message || t('notifications.loadError'));
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [t]);
 
     useFocusEffect(
         React.useCallback(() => {
             if (user) {
-                fetchNotifications();
+                void fetchNotifications();
             }
         }, [user, fetchNotifications])
     );
@@ -88,15 +93,14 @@ export default function NotificationsScreen() {
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchNotifications();
+        void fetchNotifications();
     };
 
     const handleMarkAsRead = async (id: string) => {
         try {
             await notificationService.markAsRead(id);
-            // Mettre à jour localement
-            setNotifications(prev => prev.map(n => 
-                n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+            setNotifications(prev => prev.map(n =>
+                n.id === id ? { ...n, readAt: new Date().toISOString() } : n
             ));
         } catch (err) {
             console.error('Failed to mark notification as read', err);
@@ -124,12 +128,12 @@ export default function NotificationsScreen() {
 
     const handleDeleteAll = () => {
         Alert.alert(
-            'Tout supprimer',
-            'Voulez-vous vraiment supprimer toutes vos notifications ?',
+            t('notifications.deleteAllTitle'),
+            t('notifications.deleteAllMessage'),
             [
-                { text: 'Annuler', style: 'cancel' },
-                { 
-                    text: 'Supprimer', 
+                { text: t('common.cancel'), style: 'cancel' },
+                {
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -186,21 +190,19 @@ export default function NotificationsScreen() {
         }
     };
 
-    const renderRightActions = (
+    const renderSwipeAction = (
         progress: Animated.AnimatedInterpolation<number>,
-        _dragX: Animated.AnimatedInterpolation<number>,
         id: string,
+        fromRight: boolean,
     ) => {
         const translateX = progress.interpolate({
             inputRange: [0, 1],
-            outputRange: [80, 0],
+            outputRange: [fromRight ? 80 : -80, 0],
         });
-
         const opacity = progress.interpolate({
             inputRange: [0, 0.5, 1],
             outputRange: [0, 0.5, 1],
         });
-
         return (
             <Animated.View style={[styles.deleteAction, { transform: [{ translateX }], opacity }]}>
                 <TouchableOpacity
@@ -215,47 +217,28 @@ export default function NotificationsScreen() {
         );
     };
 
-    const renderLeftActions = (
-        progress: Animated.AnimatedInterpolation<number>,
-        _dragX: Animated.AnimatedInterpolation<number>,
-        id: string,
-    ) => {
-        const translateX = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [-80, 0],
-        });
+    const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, _dragX: Animated.AnimatedInterpolation<number>, id: string) =>
+        renderSwipeAction(progress, id, true);
 
-        const opacity = progress.interpolate({
-            inputRange: [0, 0.5, 1],
-            outputRange: [0, 0.5, 1],
-        });
-
-        return (
-            <Animated.View style={[styles.deleteActionLeft, { transform: [{ translateX }], opacity }]}>
-                <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(id)}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="trash-outline" size={22} color="#fff" />
-                    <Text style={styles.deleteText}>Supprimer</Text>
-                </TouchableOpacity>
-            </Animated.View>
-        );
-    };
+    const renderLeftActions = (progress: Animated.AnimatedInterpolation<number>, _dragX: Animated.AnimatedInterpolation<number>, id: string) =>
+        renderSwipeAction(progress, id, false);
 
     const renderNotificationItem = ({ item }: { item: Notification }) => {
         const isRead = !!item.read_at;
-        const date = item.created_at ? new Date(item.created_at).toLocaleDateString('fr-FR', {
-            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-        }) : '';
+        const date = item.created_at
+            ? formatDate(item.created_at, language, {
+                  day: '2-digit',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+              })
+            : '';
 
         return (
             <Swipeable
                 renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item.id)}
                 renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, item.id)}
                 onSwipeableOpen={() => {
-                    // Close previous open swipeable
                     if (openSwipeableRef.current) {
                         openSwipeableRef.current.close();
                     }
@@ -266,7 +249,7 @@ export default function NotificationsScreen() {
                 rightThreshold={40}
                 leftThreshold={40}
             >
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.notificationCard, { backgroundColor: getCardBackground(item.type) }, isRead && styles.notificationCardRead]}
                     onPress={() => !isRead && handleMarkAsRead(item.id)}
                     activeOpacity={0.7}
@@ -274,7 +257,7 @@ export default function NotificationsScreen() {
                     <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
                         <Ionicons name={getIconName(item.type)} size={24} color={getIconColor(item.type)} />
                     </View>
-                    
+
                     <View style={styles.notificationContent}>
                         <View style={styles.notificationHeader}>
                             <Text style={[styles.notificationTitle, !isRead && styles.textUnread]} numberOfLines={1}>
@@ -307,16 +290,16 @@ export default function NotificationsScreen() {
             <View style={styles.header}>
                 <View style={styles.headerTop}>
                     <View>
-                        <Text style={styles.headerTitle}>Notifications</Text>
+                        <Text style={shared.headerTitle}>{t('notifications.headerTitle')}</Text>
                         <Text style={styles.headerSubtitle}>
-                            Vos alertes et rappels
+                            {t('notifications.headerSubtitle')}
                         </Text>
                     </View>
                     <View style={styles.headerActions}>
                         {hasUnread && (
                             <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllAsRead}>
                                 <Ionicons name="checkmark-done-outline" size={18} color="#4CAF50" />
-                                <Text style={styles.markAllText}>Tout lu</Text>
+                                <Text style={styles.markAllText}>{t('notifications.markAllRead')}</Text>
                             </TouchableOpacity>
                         )}
                         {hasNotifications && (
@@ -331,53 +314,25 @@ export default function NotificationsScreen() {
             {/* Category Filter */}
             <Button
                 onPress={() => setCategoriesOpen(!categoriesOpen)}
-                label={selectedCategory || "Catégories"}
+                label={selectedCategory || t('notifications.allCategories')}
                 isOpen={categoriesOpen}
             />
 
             {categoriesOpen && (
-                <View style={styles.categoriesContainer}>
-                    {categories.length === 0 ? (
-                        <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
-                            Aucune catégorie disponible
-                        </Text>
-                    ) : (
-                        <>
-                            <TouchableOpacity
-                                style={styles.categoryItem}
-                                onPress={() => {
-                                    setSelectedCategory(null);
-                                    setCategoriesOpen(false);
-                                }}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.categoryText}>Toutes les catégories</Text>
-                            </TouchableOpacity>
-                            {categories.map((category: Category) => (
-                                <TouchableOpacity
-                                    key={category.id}
-                                    style={styles.categoryItem}
-                                    onPress={() => {
-                                        setSelectedCategory(category.name);
-                                        setCategoriesOpen(false);
-                                    }}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text style={styles.categoryText}>
-                                        {category.name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </>
-                    )}
-                </View>
+                <CategoryDropdown
+                    categories={categories}
+                    emptyLabel={t('notifications.noCategories')}
+                    allLabel={t('notifications.allCategories')}
+                    onSelectAll={() => { setSelectedCategory(null); setCategoriesOpen(false); }}
+                    onSelect={(name) => { setSelectedCategory(name); setCategoriesOpen(false); }}
+                />
             )}
-            
+
             {error ? (
                 <View style={styles.centered}>
                     <Text style={styles.errorText}>{error}</Text>
                     <TouchableOpacity style={styles.retryButton} onPress={fetchNotifications}>
-                        <Text style={styles.retryText}>Réessayer</Text>
+                        <Text style={styles.retryText}>{t('notifications.retry')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : filteredNotifications.length === 0 ? (
@@ -385,8 +340,8 @@ export default function NotificationsScreen() {
                     <Ionicons name="notifications-off-outline" size={64} color="#555" />
                     <Text style={styles.emptyText}>
                         {selectedCategory
-                            ? `Aucune notification pour "${selectedCategory}"`
-                            : 'Pas de notifications pour le moment'}
+                            ? t('notifications.emptyForCategory', { category: selectedCategory })
+                            : t('notifications.empty')}
                     </Text>
                 </View>
             ) : (
@@ -424,12 +379,6 @@ const styles = StyleSheet.create({
     header: {
         padding: 20,
         backgroundColor: '#1a1a3e',
-    },
-    headerTitle: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 8,
     },
     headerSubtitle: {
         fontSize: 16,
@@ -500,7 +449,7 @@ const styles = StyleSheet.create({
         color: '#FF5252',
         fontWeight: 'bold',
     },
-    
+
     // Notification Item Styles
     notificationCard: {
         flexDirection: 'row',
@@ -572,13 +521,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: 'hidden',
     },
-    deleteActionLeft: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-        borderRadius: 12,
-        overflow: 'hidden',
-    },
     deleteButton: {
         backgroundColor: '#FF5252',
         justifyContent: 'center',
@@ -594,35 +536,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    // Category Filter Styles
-    categoriesContainer: {
-        position: 'absolute',
-        top: 120,
-        alignSelf: 'center',
-        minWidth: 146,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-        overflow: 'hidden',
-        zIndex: 1000,
-    },
-    categoryItem: {
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    categoryText: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#1F1F39',
-        textAlign: 'center',
-    },
 });

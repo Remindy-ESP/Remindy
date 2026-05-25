@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BaseSelectionModal from './BaseSelectionModal';
 import type { Subscription } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 interface LinkToSubscriptionModalProps {
   readonly visible: boolean;
@@ -19,6 +20,7 @@ export default function LinkToSubscriptionModal({
   onClose,
   onSubmit,
 }: LinkToSubscriptionModalProps) {
+  const { t } = useTranslation();
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -34,8 +36,8 @@ export default function LinkToSubscriptionModal({
   return (
     <BaseSelectionModal
       visible={visible}
-      title="Lier à un abonnement"
-      submitText="Lier"
+      title={t('cloud.modals.linkToSubscription.title')}
+      submitText={t('cloud.modals.linkToSubscription.submit')}
       onClose={handleClose}
       onSubmit={handleSubmit}
     >
@@ -45,8 +47,8 @@ export default function LinkToSubscriptionModal({
         activeOpacity={0.7}
       >
         <View style={styles.subscriptionInfo}>
-          <Text style={styles.subscriptionName}>Aucun abonnement</Text>
-          <Text style={styles.subscriptionSubtext}>Dissocier ce document</Text>
+          <Text style={styles.subscriptionName}>{t('cloud.modals.linkToSubscription.noSubscription')}</Text>
+          <Text style={styles.subscriptionSubtext}>{t('cloud.modals.linkToSubscription.unlinkSubtext')}</Text>
         </View>
         {selectedSubscriptionId === null && <Ionicons name="checkmark" size={20} color="#6366f1" />}
       </TouchableOpacity>

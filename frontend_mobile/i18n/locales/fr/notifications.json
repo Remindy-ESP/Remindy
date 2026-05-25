@@ -1,0 +1,7 @@
+{
+  "headerTitle": "Notifications",
+  "headerSubtitle": "Vos alertes et rappels",
+  "loadError": "Erreur lors du chargement des notifications",
+  "retry": "Réessayer",
+  "empty": "Pas de notifications pour le moment"
+}

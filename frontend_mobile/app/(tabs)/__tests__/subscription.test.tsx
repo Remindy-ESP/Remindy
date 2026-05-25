@@ -905,7 +905,7 @@ describe('SubscriptionScreen', () => {
       const { findByText, getByPlaceholderText } = render(<SubscriptionScreen />);
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
-      const reminderInput = getByPlaceholderText('Ex: 7 (0 = pas de rappel)');
+      const reminderInput = getByPlaceholderText('3');
       expect(reminderInput).toBeTruthy();
     });
 
@@ -913,7 +913,7 @@ describe('SubscriptionScreen', () => {
       const { findByText, getByPlaceholderText } = render(<SubscriptionScreen />);
       fireEvent.press(await findByText('+ Ajouter'));
       await findByText('Ajouter un opération');
-      const reminderInput = getByPlaceholderText('Ex: 7 (0 = pas de rappel)');
+      const reminderInput = getByPlaceholderText('3');
       fireEvent.changeText(reminderInput, '7');
       expect(reminderInput.props.value).toBe('7');
     });

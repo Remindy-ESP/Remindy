@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Pressable,
 } from 'react-native';
+import { useTranslation } from '@/context/I18nContext';
 
 interface AddOperationModalProps {
   readonly visible: boolean;
@@ -21,6 +22,7 @@ export default function AddOperationModal({
   onManualEntry,
   onPdfInsert,
 }: AddOperationModalProps) {
+  const { t } = useTranslation();
   return (
     <Modal
       visible={visible}
@@ -39,7 +41,7 @@ export default function AddOperationModal({
           </TouchableOpacity>
 
           {/* Title */}
-          <Text style={styles.title}>Nouvelle opération</Text>
+          <Text style={styles.title}>{t('common.addOperation.title')}</Text>
 
           {/* Manual Entry Button */}
           <TouchableOpacity
@@ -47,11 +49,11 @@ export default function AddOperationModal({
             onPress={onManualEntry}
             activeOpacity={0.7}
           >
-            <Text style={styles.manualButtonText}>Saisir manuellement</Text>
+            <Text style={styles.manualButtonText}>{t('common.addOperation.manual')}</Text>
           </TouchableOpacity>
 
           {/* Divider */}
-          <Text style={styles.divider}>OU</Text>
+          <Text style={styles.divider}>{t('common.or')}</Text>
 
           {/* PDF Insert Button */}
           <TouchableOpacity
@@ -59,7 +61,7 @@ export default function AddOperationModal({
             onPress={onPdfInsert}
             activeOpacity={0.7}
           >
-            <Text style={styles.pdfButtonText}>Insérer PDF</Text>
+            <Text style={styles.pdfButtonText}>{t('common.addOperation.pdf')}</Text>
             <View style={styles.plusIcon}>
               <View style={styles.plusHorizontal} />
               <View style={styles.plusVertical} />

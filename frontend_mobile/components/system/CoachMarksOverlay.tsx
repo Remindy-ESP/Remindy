@@ -12,10 +12,12 @@ import {
 import { usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
+import { useTranslation } from '@/context/I18nContext';
 
 export default function CoachMarksOverlay() {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useTranslation();
   const {
     isActive,
     currentIndex,
@@ -165,7 +167,7 @@ export default function CoachMarksOverlay() {
             <View style={styles.stepPill}>
               <Ionicons name="sparkles-outline" size={14} color="#E6E8FF" />
               <Text style={styles.stepPillText}>
-                Etape {currentIndex + 1}/{steps.length}
+                {t('coach.step', { current: currentIndex + 1, total: steps.length })}
               </Text>
             </View>
             <TouchableOpacity
@@ -178,16 +180,16 @@ export default function CoachMarksOverlay() {
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.title}>{currentStep.title}</Text>
-          <Text style={styles.message}>{currentStep.message}</Text>
+          <Text style={styles.title}>{t(currentStep.titleKey)}</Text>
+          <Text style={styles.message}>{t(currentStep.messageKey)}</Text>
 
           {!isOnExpectedRoute || !target ? (
             <View style={styles.routeInfo}>
               <ActivityIndicator size="small" color="#C8CEFF" />
               <Text style={styles.routeInfoText}>
                 {!isOnExpectedRoute
-                  ? 'Ouverture de la page correspondante...'
-                  : 'Recherche de la zone a mettre en avant...'}
+                  ? t('coach.openingRoute')
+                  : t('coach.searchingTarget')}
               </Text>
             </View>
           ) : null}
@@ -199,7 +201,7 @@ export default function CoachMarksOverlay() {
               activeOpacity={0.85}
             >
               <Text style={styles.secondaryButtonText}>
-                {currentIndex === 0 ? 'Passer' : 'Precedent'}
+                {currentIndex === 0 ? t('coach.skip') : t('coach.previous')}
               </Text>
             </TouchableOpacity>
 
@@ -216,7 +218,7 @@ export default function CoachMarksOverlay() {
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.primaryButtonText}>{isLastStep ? 'Terminer' : 'Suivant'}</Text>
+              <Text style={styles.primaryButtonText}>{isLastStep ? t('coach.finish') : t('coach.next')}</Text>
             </TouchableOpacity>
           </View>
         </View>

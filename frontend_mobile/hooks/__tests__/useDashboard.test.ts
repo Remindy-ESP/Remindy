@@ -163,7 +163,7 @@ describe('useDashboard', () => {
 
       await act(async () => {});
 
-      expect(result.current.error).toBe('Failed to load dashboard data');
+      expect(result.current.error).toBe('Echec du chargement du tableau de bord');
     });
   });
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Folder } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 interface FolderCardProps {
   readonly folder: Folder;
@@ -10,7 +11,9 @@ interface FolderCardProps {
 }
 
 export default function FolderCard({ folder, onPress, onMenuPress }: FolderCardProps) {
+  const { t } = useTranslation();
   const folderColor = folder.color || '#6366f1';
+  const count = folder.documentCount || 0;
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
@@ -22,7 +25,7 @@ export default function FolderCard({ folder, onPress, onMenuPress }: FolderCardP
           {folder.name}
         </Text>
         <Text style={styles.count}>
-          {folder.documentCount || 0} document{(folder.documentCount || 0) !== 1 ? 's' : ''}
+          {t('cloud.documentCount', { count })}
         </Text>
       </View>
       {!folder.isDefault && (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { documentService } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
+import i18n from '@/i18n';
 
 export function useDocuments() {
   const [documents, setDocuments] = useState<DocumentResponse[]>([]);
@@ -22,7 +23,7 @@ export function useDocuments() {
       setDocuments(data);
     } catch (err) {
       console.error('Error fetching documents:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load documents');
+      setError(err instanceof Error ? err.message : i18n.t('errors.documentsLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -47,7 +48,7 @@ export function useDocuments() {
       return document;
     } catch (err) {
       console.error('Error uploading document:', err);
-      setError(err instanceof Error ? err.message : 'Failed to upload document');
+      setError(err instanceof Error ? err.message : i18n.t('errors.documentUploadFailed'));
       throw err;
     } finally {
       setLoading(false);
@@ -67,7 +68,7 @@ export function useDocuments() {
       return updated;
     } catch (err) {
       console.error('Error updating document:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update document');
+      setError(err instanceof Error ? err.message : i18n.t('errors.documentUpdateFailed'));
       throw err;
     } finally {
       setLoading(false);
@@ -82,7 +83,7 @@ export function useDocuments() {
       setDocuments((prev) => prev.filter((doc) => doc.id !== id));
     } catch (err) {
       console.error('Error deleting document:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete document');
+      setError(err instanceof Error ? err.message : i18n.t('errors.documentDeleteFailed'));
       throw err;
     } finally {
       setLoading(false);
@@ -98,7 +99,7 @@ export function useDocuments() {
       return updated;
     } catch (err) {
       console.error('Error reprocessing OCR:', err);
-      setError(err instanceof Error ? err.message : 'Failed to reprocess OCR');
+      setError(err instanceof Error ? err.message : i18n.t('errors.ocrReprocessFailed'));
       throw err;
     } finally {
       setLoading(false);

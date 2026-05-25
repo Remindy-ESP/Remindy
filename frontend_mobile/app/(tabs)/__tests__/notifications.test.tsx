@@ -12,10 +12,10 @@ jest.mock('../../../context/AuthContext', () => ({
   }),
 }));
 
-jest.mock('@react-navigation/native', () => {
+jest.mock('expo-router', () => {
   const mockReact = require('react');
   return {
-    ...jest.requireActual('@react-navigation/native'),
+    useRouter: () => ({ back: jest.fn(), push: jest.fn(), replace: jest.fn() }),
     useFocusEffect: (cb: () => void) => {
       mockReact.useEffect(() => { cb(); }, []);
     },

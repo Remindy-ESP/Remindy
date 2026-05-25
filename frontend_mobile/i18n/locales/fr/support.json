@@ -1,0 +1,38 @@
+{
+  "new": {
+    "title": "Nouveau ticket",
+    "subtitle": "Decrivez votre probleme en detail",
+    "subjectLabel": "Sujet",
+    "subjectPlaceholder": "Decrivez brievement votre probleme",
+    "categoryLabel": "Categorie",
+    "categoryPlaceholder": "Choisir une categorie (optionnel)",
+    "categoryNone": "Aucune categorie",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Decrivez votre probleme en detail...",
+    "submitButton": "Envoyer",
+    "validationTitle": "Champs requis",
+    "validationMessage": "Le sujet et le message sont obligatoires.",
+    "successTitle": "Ticket envoye",
+    "successMessage": "Votre ticket a ete cree. Notre equipe vous repondra rapidement.",
+    "errorTitle": "Erreur",
+    "errorMessage": "Impossible de creer le ticket. Veuillez reessayer."
+  },
+  "tickets": {
+    "title": "Mes tickets",
+    "subtitle": "Suivez vos demandes de support",
+    "empty": "Aucun ticket pour l instant.\nCreez-en un si vous avez besoin d aide.",
+    "newButton": "Nouveau ticket",
+    "error": "Impossible de charger vos tickets.",
+    "retry": "Reessayer"
+  },
+  "detail": {
+    "noMessages": "Aucun message",
+    "replyPlaceholder": "Votre message...",
+    "closed": "Ce ticket est ferme",
+    "errorTitle": "Erreur",
+    "errorMessage": "Impossible de charger le ticket.",
+    "sendErrorMessage": "Impossible d envoyer le message.",
+    "notFound": "Ticket introuvable.",
+    "back": "Retour"
+  }
+}

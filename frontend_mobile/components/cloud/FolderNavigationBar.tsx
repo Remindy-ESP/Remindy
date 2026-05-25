@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Folder } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 interface FolderNavigationBarProps {
   readonly currentFolder: Folder | null;
@@ -10,12 +11,13 @@ interface FolderNavigationBarProps {
 }
 
 export default function FolderNavigationBar({ currentFolder: _currentFolder, folderPath, onNavigate }: FolderNavigationBarProps) {
+  const { t } = useTranslation();
   return (
     <View style={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.item} onPress={() => onNavigate(null)} activeOpacity={0.7}>
           <Ionicons name="home" size={16} color="#6366f1" />
-          <Text style={styles.itemText}>Accueil</Text>
+          <Text style={styles.itemText}>{t('cloud.navigation.home')}</Text>
         </TouchableOpacity>
         {folderPath.map((folder) => (
           <View key={folder.id} style={styles.itemWrapper}>

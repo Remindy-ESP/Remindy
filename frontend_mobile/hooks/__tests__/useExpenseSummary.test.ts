@@ -68,7 +68,7 @@ describe('useExpenseSummary', () => {
     const { result } = renderHook(() => useExpenseSummary('month'));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(result.current.error).toBe('Failed to load expense summary');
+    expect(result.current.error).toBe('Echec du chargement du resume des depenses');
   });
 
   it('refetch() triggers another request', async () => {

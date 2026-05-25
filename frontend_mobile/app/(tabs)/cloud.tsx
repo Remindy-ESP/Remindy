@@ -27,8 +27,10 @@ import type { Folder, Subscription } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
+import { useTranslation } from '@/context/I18nContext';
 
 export default function CloudScreen() {
+  const { t } = useTranslation();
   const { documents, loading: docsLoading, fetchDocuments, uploadDocument, updateDocument, deleteDocument } = useDocuments();
   const { folders, loading: foldersLoading, fetchFolders, createFolder, updateFolder, deleteFolder, moveDocumentToFolder } = useFolders();
   const { quota, fetchQuota } = useStorageQuota();
@@ -59,8 +61,8 @@ export default function CloudScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
-      loadData();
-      initializeDefaultFolders();
+      void loadData();
+      void initializeDefaultFolders();
     }, [currentFolderId])
   );
 
@@ -89,8 +91,10 @@ export default function CloudScreen() {
         const locale = Localization.getLocales()[0];
         const isFrench = locale?.languageCode === 'fr';
 
-        const rootFolderName = isFrench ? 'Abonnements' : 'Subscriptions';
-        const subFolderName = 'Documents';
+        const rootFolderName = isFrench
+          ? t('cloud.defaultFolders.subscriptionsRoot')
+          : 'Subscriptions';
+        const subFolderName = t('cloud.defaultFolders.documentsSub');
 
         const rootFolder = await createFolder({ name: rootFolderName, color: '#6366f1' });
         if (rootFolder) {
@@ -112,7 +116,7 @@ export default function CloudScreen() {
   const handleUpload = async () => {
     try {
       if (quota && quota.availableBytes <= 0) {
-        Alert.alert('Quota dépassé', 'Vous avez atteint la limite de stockage. Supprimez des documents pour en ajouter de nouveaux.');
+        Alert.alert(t('cloud.alerts.quotaExceededTitle'), t('cloud.alerts.quotaExceededMessage'));
         return;
       }
 
@@ -128,12 +132,12 @@ export default function CloudScreen() {
       const maxSize = 10 * 1024 * 1024;
 
       if (file.size && file.size > maxSize) {
-        Alert.alert('Fichier trop volumineux', 'Le fichier ne peut pas dépasser 10 MB.');
+        Alert.alert(t('cloud.alerts.fileTooLargeTitle'), t('cloud.alerts.fileTooLargeMessage'));
         return;
       }
 
       if (quota && file.size && file.size > quota.availableBytes) {
-        Alert.alert('Espace insuffisant', 'Il n\'y a pas assez d\'espace de stockage pour ce fichier.');
+        Alert.alert(t('cloud.alerts.insufficientSpaceTitle'), t('cloud.alerts.insufficientSpaceMessage'));
         return;
       }
 
@@ -148,11 +152,11 @@ export default function CloudScreen() {
         folderId: currentFolderId || undefined,
       });
       await Promise.all([fetchDocuments(), fetchQuota()]);
-      Alert.alert('Succès', 'Document ajouté avec succès');
+      Alert.alert(t('common.success'), t('cloud.alerts.uploadSuccessMessage'));
     } catch (error: any) {
       console.error('Upload error:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Impossible d'ajouter le document";
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = error?.response?.data?.message || error?.message || t('cloud.alerts.uploadErrorMessage');
+      Alert.alert(t('common.error'), errorMessage);
     } finally {
       setUploading(false);
     }
@@ -164,9 +168,9 @@ export default function CloudScreen() {
       const folderExists = folders.find((f) => f.id === folderId);
       if (!folderExists) {
         Alert.alert(
-          'Dossier introuvable',
-          'Ce dossier a été supprimé ou n\'existe plus.',
-          [{ text: 'OK', onPress: () => {
+          t('cloud.alerts.folderNotFoundTitle'),
+          t('cloud.alerts.folderNotFoundMessage'),
+          [{ text: t('common.ok'), onPress: () => {
             setCurrentFolderId(null);
             setFolderPath([]);
           }}]
@@ -210,14 +214,14 @@ export default function CloudScreen() {
     setSelectedFolder(folder);
     Alert.alert(
       folder.name,
-      'Que souhaitez-vous faire ?',
+      t('cloud.folderMenu.message'),
       [
-        { text: 'Renommer', onPress: () => setShowRenameFolder(true) },
-        { text: 'Supprimer', onPress: () => {
+        { text: t('cloud.folderMenu.rename'), onPress: () => setShowRenameFolder(true) },
+        { text: t('cloud.folderMenu.delete'), onPress: () => {
           setDeleteTarget({ type: 'folder', item: folder });
           setShowDeleteConfirm(true);
         }, style: 'destructive' },
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('cloud.folderMenu.cancel'), style: 'cancel' },
       ]
     );
   };
@@ -263,7 +267,7 @@ export default function CloudScreen() {
       if (subscriptionId) {
         const linkedDocs = documents.filter((d) => d.subscription_id === subscriptionId);
         if (linkedDocs.length >= 5) {
-          Alert.alert('Limite atteinte', 'Maximum 5 documents par transaction.');
+          Alert.alert(t('cloud.alerts.limitReachedTitle'), t('cloud.alerts.limitReachedMessage'));
           return;
         }
       }
@@ -276,7 +280,7 @@ export default function CloudScreen() {
     try {
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert('Erreur', 'Non authentifié');
+        Alert.alert(t('common.error'), t('cloud.alerts.notAuthenticated'));
         return;
       }
 
@@ -291,8 +295,8 @@ export default function CloudScreen() {
       setShowDocActions(false);
     } catch (error: any) {
       console.error('View document error:', error);
-      const errorMessage = error?.message || 'Impossible de visualiser le document';
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = error?.message || t('cloud.alerts.viewError');
+      Alert.alert(t('common.error'), errorMessage);
     }
   };
 
@@ -302,7 +306,7 @@ export default function CloudScreen() {
       setDownloading(true);
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert('Erreur', 'Non authentifié');
+        Alert.alert(t('common.error'), t('cloud.alerts.notAuthenticated'));
         setDownloading(false);
         return;
       }
@@ -323,7 +327,7 @@ export default function CloudScreen() {
       });
 
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Download timeout après 60 secondes')), 60000);
+        setTimeout(() => reject(new Error(t('cloud.alerts.downloadTimeout'))), 60000);
       });
 
       const downloadResult = await Promise.race([downloadPromise, timeoutPromise]) as FileSystem.FileSystemDownloadResult;
@@ -348,35 +352,35 @@ export default function CloudScreen() {
               console.log('[CloudScreen] Calling Sharing.shareAsync with URI:', downloadResult.uri);
               const result = await Sharing.shareAsync(downloadResult.uri, {
                 mimeType: document.mime_type,
-                dialogTitle: 'Enregistrer le document',
+                dialogTitle: t('cloud.modals.pdfViewer.shareDialogTitle'),
                 UTI: document.mime_type === 'application/pdf' ? 'com.adobe.pdf' : undefined,
               });
               console.log('[CloudScreen] Share result:', JSON.stringify(result));
 
               // Show success message after sharing
               Alert.alert(
-                'Téléchargement réussi',
-                `${document.filename} a été téléchargé.`
+                t('cloud.alerts.downloadSuccessTitle'),
+                t('cloud.alerts.downloadSuccessMessage', { filename: document.filename })
               );
             } catch (shareError: any) {
               console.error('[CloudScreen] Share error:', shareError);
               Alert.alert(
-                'Document téléchargé',
-                `${document.filename} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur "Visualiser".`
+                t('cloud.alerts.downloadFallbackTitle'),
+                t('cloud.alerts.downloadFallbackMessage', { filename: document.filename })
               );
             }
           }, 100);
         } else {
-          Alert.alert('Erreur', 'Le téléchargement n\'est pas disponible sur cet appareil');
+          Alert.alert(t('common.error'), t('cloud.alerts.sharingUnavailable'));
         }
       } else {
         console.error('[CloudScreen] Download failed with status:', downloadResult.status);
-        Alert.alert('Erreur', 'Impossible de télécharger le document');
+        Alert.alert(t('common.error'), t('cloud.alerts.downloadError'));
       }
     } catch (error: any) {
       console.error('[CloudScreen] Download document error:', error);
-      const errorMessage = error?.message || 'Impossible de télécharger le document';
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = error?.message || t('cloud.alerts.downloadError');
+      Alert.alert(t('common.error'), errorMessage);
       setDownloading(false);
     }
   };
@@ -421,13 +425,13 @@ export default function CloudScreen() {
     if (deleteTarget.type === 'document') {
       if (deleteTarget.item.subscription_id) {
         const linkedSub = subscriptions.find(s => s.id === deleteTarget.item.subscription_id);
-        const subName = linkedSub ? `"${linkedSub.name}"` : 'un abonnement';
-        return `Ce document est lié à ${subName}. Êtes-vous sûr de vouloir le supprimer ? Le document restera accessible depuis l'abonnement.`;
+        const subName = linkedSub ? `"${linkedSub.name}"` : t('cloud.delete.linkedFallback');
+        return t('cloud.delete.documentLinkedMessage', { subscription: subName });
       }
-      return 'Êtes-vous sûr de vouloir supprimer ce document ?';
+      return t('cloud.delete.documentMessage');
     }
 
-    return 'Êtes-vous sûr de vouloir supprimer ce dossier ? Son contenu sera déplacé vers le dossier parent.';
+    return t('cloud.delete.folderMessage');
   };
 
   const currentFolders = folders.filter((f) => f.parentId === currentFolderId);
@@ -443,8 +447,8 @@ export default function CloudScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.pageHeader}>
-        <Text style={styles.pageTitle}>Mes Documents</Text>
-        <Text style={styles.pageSubtitle}>Gérez votre stockage cloud</Text>
+        <Text style={styles.pageTitle}>{t('cloud.page.title')}</Text>
+        <Text style={styles.pageSubtitle}>{t('cloud.page.subtitle')}</Text>
       </View>
 
       <View style={styles.quotaContainer}>
@@ -475,12 +479,12 @@ export default function CloudScreen() {
       <View style={styles.actionButtons}>
         <TouchableOpacity style={styles.createFolderButton} onPress={() => setShowCreateFolder(true)} activeOpacity={0.8}>
           <Ionicons name="folder-outline" size={20} color="#6366f1" />
-          <Text style={styles.createFolderText}>Nouveau dossier</Text>
+          <Text style={styles.createFolderText}>{t('cloud.actions.newFolder')}</Text>
         </TouchableOpacity>
         <CoachMarkTarget targetKey={COACH_MARK_TARGETS.cloudUploadButton}>
           <TouchableOpacity style={styles.uploadButton} onPress={handleUpload} activeOpacity={0.8}>
             <Ionicons name="add-circle" size={20} color="#fff" />
-            <Text style={styles.uploadText}>Ajouter un document</Text>
+            <Text style={styles.uploadText}>{t('cloud.actions.addDocument')}</Text>
           </TouchableOpacity>
         </CoachMarkTarget>
       </View>
@@ -532,7 +536,7 @@ export default function CloudScreen() {
 
       <DeleteConfirmationModal
         visible={showDeleteConfirm}
-        title={deleteTarget?.type === 'document' ? 'Supprimer le document' : 'Supprimer le dossier'}
+        title={deleteTarget?.type === 'document' ? t('cloud.delete.documentTitle') : t('cloud.delete.folderTitle')}
         message={getDeleteMessage()}
         onClose={() => {
           setShowDeleteConfirm(false);
@@ -579,7 +583,7 @@ export default function CloudScreen() {
         <View style={styles.uploadOverlay}>
           <View style={styles.uploadContainer}>
             <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={styles.uploadingText}>Ajout du document...</Text>
+            <Text style={styles.uploadingText}>{t('cloud.actions.uploading')}</Text>
           </View>
         </View>
       )}
@@ -588,7 +592,7 @@ export default function CloudScreen() {
         <View style={styles.uploadOverlay}>
           <View style={styles.uploadContainer}>
             <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={styles.uploadingText}>Chargement...</Text>
+            <Text style={styles.uploadingText}>{t('cloud.actions.loading')}</Text>
           </View>
         </View>
       )}

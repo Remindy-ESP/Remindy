@@ -16,15 +16,7 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({})),
 }));
 
-const mockSetHasSeenOnboarding = jest.fn();
-jest.mock('@/services/local/onboarding.service', () => ({
-  __esModule: true,
-  default: {
-    hasSeenOnboarding: jest.fn(() => Promise.resolve(true)),
-    setHasSeenOnboarding: (...args: any[]) => mockSetHasSeenOnboarding(...args),
-    resetOnboarding: jest.fn(() => Promise.resolve()),
-  },
-}));
+const mockSetHasSeenOnboarding = global.__mockOnboardingSetSeen as jest.Mock;
 
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: any) => {

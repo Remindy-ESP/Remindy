@@ -4,21 +4,23 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/context/AuthContext';
+import { I18nProvider } from '@/context/I18nContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
 import AppStatusScreen from '@/components/system/AppStatusScreen';
 import { CoachMarksProvider } from '@/features/coach-marks/CoachMarksContext';
 import CoachMarksOverlay from '@/components/system/CoachMarksOverlay';
+import i18n from '@/i18n';
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   return (
     <AppStatusScreen
       code="500"
-      title="Une erreur est survenue"
-      message="Un probleme inattendu a empeche l affichage de cette page. Vous pouvez reessayer."
+      title={i18n.t('common.errorBoundary.title')}
+      message={i18n.t('common.errorBoundary.message')}
       actions={[
         {
-          label: 'Reessayer',
+          label: i18n.t('common.errorBoundary.action'),
           onPress: retry,
           testID: 'error-500-retry-button',
         },
@@ -29,67 +31,67 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Configure la barre de navigation système pour Android
     if (Platform.OS === 'android') {
-      // Active le mode immersif - la barre se cache et réapparaît avec un geste de balayage
       NavigationBar.setBehaviorAsync('overlay-swipe');
-
-      // Cache la barre de navigation
       NavigationBar.setVisibilityAsync('hidden');
-
-      // Optionnel : définit la couleur de la barre quand elle apparaît
       NavigationBar.setBackgroundColorAsync('#11112A');
-
-      // Optionnel : définit le style des boutons (light ou dark)
       NavigationBar.setButtonStyleAsync('light');
     }
   }, []);
 
   return (
     <AuthProvider>
-      <CoachMarksProvider>
-        <StatusBar style="light" />
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: '#fff' },
-            }}
-          >
-            <Stack.Screen
-              name="index"
-              options={{
+      <I18nProvider>
+        <CoachMarksProvider>
+          <StatusBar style="light" />
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <Stack
+              screenOptions={{
                 headerShown: false,
+                contentStyle: { backgroundColor: '#fff' },
               }}
-            />
-            <Stack.Screen
-              name="(tabs)"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="onboarding"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="forgot-password"
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="reset-password"
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack>
-          <CoachMarksOverlay />
-        </GestureHandlerRootView>
-      </CoachMarksProvider>
+            >
+              <Stack.Screen
+                name="index"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="(stack)"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="onboarding"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="forgot-password"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="reset-password"
+                options={{
+                  headerShown: false,
+                }}
+              />
+            </Stack>
+            <CoachMarksOverlay />
+          </GestureHandlerRootView>
+        </CoachMarksProvider>
+      </I18nProvider>
     </AuthProvider>
   );
 }

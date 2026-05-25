@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {AppRoute} from "@/navigation/MenuConfig";
+import { useTranslation } from '@/context/I18nContext';
 
 interface BurgerMenuProps {
     isVisible: boolean;
@@ -16,6 +17,7 @@ const { width } = Dimensions.get('window');
 export default function BurgerMenu({ isVisible, onClose, items }: BurgerMenuProps) {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const { t } = useTranslation();
 
     const handleNavigation = (route: string | null) => {
         if (route) {
@@ -45,7 +47,7 @@ export default function BurgerMenu({ isVisible, onClose, items }: BurgerMenuProp
                             style={styles.menuItem}
                             onPress={() => handleNavigation(item.route)}
                         >
-                            <Text style={styles.menuItemText}>{item.label}</Text>
+                            <Text style={styles.menuItemText}>{t(item.labelKey)}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>

@@ -11,6 +11,8 @@ import { DashboardPage } from '@/modules/dashboard/ui/DashboardPage';
 import { UserListPage } from '@/modules/users/ui/UserListPage';
 import { UserDetailPage } from '@/modules/users/ui/UserDetailPage';
 import { AuditLogsPage } from '@/modules/audit/ui/AuditLogsPage';
+import { TicketListPage } from '@/modules/support/ui/TicketListPage';
+import { TicketDetailPage } from '@/modules/support/ui/TicketDetailPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +51,8 @@ function AppRoutes() {
         <Route path='/users' element={<UserListPage />} />
         <Route path='/users/:id' element={<UserDetailPage />} />
         <Route path='/audit' element={<AuditLogsPage />} />
+        <Route path='/support' element={<TicketListPage />} />
+        <Route path='/support/:id' element={<TicketDetailPage />} />
       </Route>
       <Route path='/login' element={<Navigate to='/dashboard' replace />} />
       <Route path='*' element={<Navigate to='/dashboard' replace />} />

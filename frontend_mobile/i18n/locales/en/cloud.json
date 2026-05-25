@@ -1,0 +1,139 @@
+{
+  "page": {
+    "title": "My Documents",
+    "subtitle": "Manage your cloud storage"
+  },
+  "defaultFolders": {
+    "subscriptionsRoot": "Subscriptions",
+    "documentsSub": "Documents"
+  },
+  "list": {
+    "empty": "No document",
+    "emptySubtext": "Start by adding a document",
+    "sectionFolders": "Folders",
+    "sectionDocuments": "Documents"
+  },
+  "actions": {
+    "newFolder": "New folder",
+    "addDocument": "Add a document",
+    "uploading": "Uploading document...",
+    "loading": "Loading..."
+  },
+  "folderMenu": {
+    "message": "What would you like to do?",
+    "rename": "Rename",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "delete": {
+    "documentTitle": "Delete document",
+    "folderTitle": "Delete folder",
+    "documentMessage": "Are you sure you want to delete this document?",
+    "documentLinkedMessage": "This document is linked to {{subscription}}. Are you sure you want to delete it? The document will remain accessible from the subscription.",
+    "folderMessage": "Are you sure you want to delete this folder? Its contents will be moved to the parent folder.",
+    "linkedFallback": "a subscription"
+  },
+  "alerts": {
+    "quotaExceededTitle": "Quota exceeded",
+    "quotaExceededMessage": "You have reached the storage limit. Delete documents to add new ones.",
+    "fileTooLargeTitle": "File too large",
+    "fileTooLargeMessage": "The file cannot exceed 10 MB.",
+    "insufficientSpaceTitle": "Insufficient space",
+    "insufficientSpaceMessage": "There is not enough storage space for this file.",
+    "uploadSuccessMessage": "Document added successfully",
+    "uploadErrorMessage": "Could not add the document",
+    "limitReachedTitle": "Limit reached",
+    "limitReachedMessage": "Maximum 5 documents per transaction.",
+    "folderNotFoundTitle": "Folder not found",
+    "folderNotFoundMessage": "This folder has been deleted or no longer exists.",
+    "notAuthenticated": "Not authenticated",
+    "viewError": "Could not view the document",
+    "downloadError": "Could not download the document",
+    "downloadTimeout": "Download timeout after 60 seconds",
+    "sharingUnavailable": "Downloading is not available on this device",
+    "downloadSuccessTitle": "Download successful",
+    "downloadSuccessMessage": "{{filename}} has been downloaded.",
+    "downloadFallbackTitle": "Document downloaded",
+    "downloadFallbackMessage": "{{filename}} has been downloaded to the app cache. You can view it by tapping \"View\"."
+  },
+  "navigation": {
+    "home": "Home"
+  },
+  "quota": {
+    "title": "Storage",
+    "usedSuffix": "% used"
+  },
+  "documentCount": {
+    "one": "%{count} document",
+    "other": "%{count} documents"
+  },
+  "documentActions": {
+    "view": "View",
+    "download": "Download",
+    "info": "Information",
+    "rename": "Rename",
+    "move": "Move",
+    "link": "Link to a transaction",
+    "delete": "Delete"
+  },
+  "modals": {
+    "common": {
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "createFolder": {
+      "title": "New folder",
+      "placeholder": "Folder name",
+      "submit": "Create",
+      "colorLabel": "Color"
+    },
+    "renameFolder": {
+      "title": "Rename folder",
+      "placeholder": "Folder name",
+      "submit": "Rename"
+    },
+    "renameDocument": {
+      "title": "Rename document",
+      "placeholder": "Document name",
+      "submit": "Rename"
+    },
+    "moveToFolder": {
+      "title": "Move to",
+      "submit": "Move",
+      "root": "Root"
+    },
+    "linkToSubscription": {
+      "title": "Link to a subscription",
+      "submit": "Link",
+      "noSubscription": "No subscription",
+      "unlinkSubtext": "Unlink this document"
+    },
+    "documentDetails": {
+      "title": "Document details",
+      "filename": "File name",
+      "size": "Size",
+      "type": "Type",
+      "uploadedAt": "Date added",
+      "ocrStatus": "OCR status",
+      "ocrText": "Extracted text",
+      "parsedData": "Parsed data",
+      "providerLabel": "Provider:",
+      "amountLabel": "Amount:",
+      "dateLabel": "Date:",
+      "frequencyLabel": "Frequency:",
+      "retry": "Retry",
+      "status": {
+        "completed": "Completed",
+        "processing": "Processing",
+        "failed": "Failed",
+        "pending": "Pending"
+      }
+    },
+    "pdfViewer": {
+      "loading": "Loading PDF...",
+      "loadError": "Could not load the PDF",
+      "webviewError": "Error while loading the PDF",
+      "shareDialogTitle": "Save the document"
+    }
+  }
+}

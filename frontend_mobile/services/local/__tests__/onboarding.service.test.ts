@@ -1,4 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// jest.setup.js mocks this module globally; unmock here to test the real implementation.
+jest.unmock('@/services/local/onboarding.service');
 import onboardingService from '../onboarding.service';
 
 const ONBOARDING_KEY = '@remindy_has_seen_onboarding';

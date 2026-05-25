@@ -1,0 +1,31 @@
+{
+  "loading": "Loading categories…",
+  "errorLoad": "Could not load categories.",
+  "errorTitle": "Error",
+  "errorCreate": "Could not create the category.",
+  "errorRename": "Could not rename the category.",
+  "errorDelete": "Could not delete the category.",
+  "nameRequired": "Category name is required.",
+  "systemSection": "System categories",
+  "userSection": "My categories",
+  "systemEmpty": "No system category.",
+  "userEmpty": "No personal category.",
+  "systemBadge": "SYSTEM",
+  "addNew": "New category",
+  "createModal": {
+    "title": "New category",
+    "name": "Name",
+    "namePlaceholder": "e.g. Health, Hobbies…",
+    "color": "Color",
+    "submit": "Create"
+  },
+  "renameModal": {
+    "title": "Rename \"{{name}}\"",
+    "newName": "New name",
+    "submit": "Rename"
+  },
+  "deleteModal": {
+    "title": "Delete category",
+    "message": "Delete \"{{name}}\"?"
+  }
+}

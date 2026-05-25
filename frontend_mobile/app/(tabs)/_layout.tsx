@@ -32,8 +32,8 @@ export default function TabLayout() {
 
     if (!isAuthenticated) return null;
 
-    const footerRoutes = APP_ROUTES.filter(r => r.showInFooter);
-    const hiddenRoutes = APP_ROUTES.filter(r => !r.showInFooter);
+    const footerRoutes = APP_ROUTES.filter(r => r.showInFooter && r.route.startsWith('/(tabs)/'));
+    const hiddenRoutes = APP_ROUTES.filter(r => !r.showInFooter && r.route.startsWith('/(tabs)/'));
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
@@ -77,14 +77,6 @@ export default function TabLayout() {
                         options={{ href: null }}
                     />
                 ))}
-                <Tabs.Screen name="profile" options={{ href: null }} />
-                <Tabs.Screen name="profile-edit" options={{ href: null }} />
-                <Tabs.Screen name="profile-security" options={{ href: null }} />
-                <Tabs.Screen name="profile-preferences" options={{ href: null }} />
-                <Tabs.Screen name="profile-privacy" options={{ href: null }} />
-                <Tabs.Screen name="profile-help" options={{ href: null }} />
-                <Tabs.Screen name="profile-about" options={{ href: null }} />
-                <Tabs.Screen name="categories" options={{ href: null }} />
             </Tabs>
         </SafeAreaView>
     );

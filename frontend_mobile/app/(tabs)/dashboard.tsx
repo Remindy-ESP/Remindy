@@ -1,44 +1,24 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Localization from 'expo-localization';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
-LocaleConfig.locales['fr'] = {
-  monthNames: [
-    'Janvier',
-    'Février',
-    'Mars',
-    'Avril',
-    'Mai',
-    'Juin',
-    'Juillet',
-    'Août',
-    'Septembre',
-    'Octobre',
-    'Novembre',
-    'Décembre'
-  ],
-  monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
-  dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-  dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
-  today: "Aujourd'hui"
-};
-LocaleConfig.defaultLocale = 'fr';
+import CategoryDropdown from '@/components/CategoryDropdown';
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     selected,
     setSelected,
@@ -61,9 +41,7 @@ export default function DashboardScreen() {
     fetchDashboardData,
   } = useDashboard();
 
-  const { token } = useAuth();
   const [uploadingDocument, setUploadingDocument] = React.useState(false);
-  console.log("Current token : ", token);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -114,7 +92,7 @@ export default function DashboardScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#4f46e5" />
-        <Text style={{ color: '#fff', marginTop: 16 }}>Chargement de la page d'accueil...</Text>
+        <Text style={{ color: '#fff', marginTop: 16 }}>{t('dashboard.loading')}</Text>
       </View>
     );
   }
@@ -124,10 +102,10 @@ export default function DashboardScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
         <Text style={{ color: '#ff6b6b', fontSize: 16, textAlign: 'center' }}>
-          Error: {error}
+          {t('dashboard.errorPrefix', { message: String(error) })}
         </Text>
         <Text style={{ color: '#999', marginTop: 8, textAlign: 'center' }}>
-          Make sure the backend server is running and your network connection is stable
+          {t('dashboard.errorHint')}
         </Text>
       </View>
     );
@@ -191,9 +169,9 @@ export default function DashboardScreen() {
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (selectedFile.size && selectedFile.size > maxSize) {
         Alert.alert(
-          'Fichier trop volumineux',
-          'Le fichier ne peut pas dépasser 10 MB. Veuillez choisir un fichier plus petit.',
-          [{ text: 'OK' }]
+          t('dashboard.fileTooLargeTitle'),
+          t('dashboard.fileTooLargeMessage'),
+          [{ text: t('common.ok') }]
         );
         return;
       }
@@ -243,9 +221,9 @@ export default function DashboardScreen() {
 
       if (documentWithParsedData.ocr_status === 'failed') {
         Alert.alert(
-          'Analyse échouée',
-          'L\'analyse automatique du document a échoué. Vous pouvez saisir les informations manuellement.',
-          [{ text: 'OK' }]
+          t('dashboard.ocrFailedTitle'),
+          t('dashboard.ocrFailedMessage'),
+          [{ text: t('common.ok') }]
         );
       }
 
@@ -268,7 +246,7 @@ export default function DashboardScreen() {
     } catch (error: any) {
       console.error('Error uploading document:', error);
 
-      let errorMessage = 'Une erreur est survenue lors de l\'upload du document.';
+      let errorMessage = t('dashboard.uploadErrorFallback');
 
       if (error.message) {
         errorMessage = error.message;
@@ -277,9 +255,9 @@ export default function DashboardScreen() {
       }
 
       Alert.alert(
-        'Erreur',
+        t('common.error'),
         errorMessage,
-        [{ text: 'OK' }]
+        [{ text: t('common.ok') }]
       );
     } finally {
       setUploadingDocument(false);
@@ -293,46 +271,18 @@ export default function DashboardScreen() {
 
         <Button
           onPress={() => setCategoriesOpen(!categoriesOpen)}
-          label={selectedCategory || "Catégories"}
+          label={selectedCategory || t('dashboard.categoriesDropdown')}
           isOpen={categoriesOpen}
         />
 
         {categoriesOpen && (
-          <View style={styles.categoriesContainer}>
-            {categories.length === 0 ? (
-              <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
-                No categories available. Please add some categories first.
-              </Text>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.categoryItem}
-                  onPress={() => {
-                    setSelectedCategory(null);
-                    setCategoriesOpen(false);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.categoryText}>Toutes les catégories</Text>
-                </TouchableOpacity>
-                {categories.map((category: Category) => (
-                  <TouchableOpacity
-                    key={category.id}
-                    style={styles.categoryItem}
-                    onPress={() => {
-                      setSelectedCategory(category.name);
-                      setCategoriesOpen(false);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.categoryText}>
-                      {category.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-          </View>
+          <CategoryDropdown
+            categories={categories}
+            emptyLabel={t('dashboard.categoriesEmpty')}
+            allLabel={t('dashboard.allCategories')}
+            onSelectAll={() => { setSelectedCategory(null); setCategoriesOpen(false); }}
+            onSelect={(name) => { setSelectedCategory(name); setCategoriesOpen(false); }}
+          />
         )}
 
         <CoachMarkTarget targetKey={COACH_MARK_TARGETS.dashboardCalendar}>
@@ -375,7 +325,7 @@ export default function DashboardScreen() {
 
 
         <View style={styles.timePeriodSection}>
-          <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
+          <Text style={styles.timePeriodTitle}>{t('dashboard.expensesTitle')}</Text>
           <View style={styles.timePeriodMenu}>
             {timePeriods.map((period) => (
               <TouchableOpacity
@@ -408,7 +358,7 @@ export default function DashboardScreen() {
         <View style={styles.contentSection}>
           {getEventsForPeriod(activePeriod, selected, selectedCategory).length === 0 ? (
             <Text style={{ color: '#999', textAlign: 'center', marginVertical: 20 }}>
-              Aucune dépense pour cette période
+              {t('dashboard.noExpenses')}
             </Text>
           ) : (
             <ScrollView
@@ -425,7 +375,7 @@ export default function DashboardScreen() {
                         {event.subscription?.name || event.title}
                       </Text>
                       <Text style={styles.expenseCategory}>
-                        {event.subscription?.category?.name || 'Général'}
+                        {event.subscription?.category?.name || t('dashboard.generalCategory')}
                       </Text>
                     </View>
                   </View>
@@ -454,9 +404,9 @@ export default function DashboardScreen() {
         <View style={styles.uploadOverlay}>
           <View style={styles.uploadContainer}>
             <ActivityIndicator size="large" color="#4f46e5" />
-            <Text style={styles.uploadText}>Analyse en cours...</Text>
-            <Text style={styles.uploadSubtext}>Extraction des données par IA</Text>
-            <Text style={styles.uploadSubtext2}>Cela peut prendre jusqu'à 30 secondes</Text>
+            <Text style={styles.uploadText}>{t('dashboard.uploading')}</Text>
+            <Text style={styles.uploadSubtext}>{t('dashboard.uploadingHint')}</Text>
+            <Text style={styles.uploadSubtext2}>{t('dashboard.uploadingHint2')}</Text>
           </View>
         </View>
       )}
@@ -472,16 +422,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#11112A',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
   },
   calendarContainer: {
     margin: 16,
@@ -578,36 +518,6 @@ const styles = StyleSheet.create({
     color: '#6366f1',
     textAlign: 'center',
     marginVertical: 20,
-  },
-  categoriesContainer: {
-    position: 'absolute',
-    top: 64,
-    alignSelf: 'center',
-    minWidth: 146,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    overflow: 'hidden',
-    zIndex: 1000,
-  },
-  categoryItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F1F39',
-    textAlign: 'center',
   },
   expenseItem: {
     flexDirection: 'row',
