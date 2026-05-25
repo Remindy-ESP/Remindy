@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act, within } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import DashboardScreen from '../dashboard';
 
@@ -762,6 +762,69 @@ describe('DashboardScreen', () => {
       render(<DashboardScreen />);
       // useFocusEffect mock calls the callback immediately
       expect(fetchDashboardData).toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Subscription Detail Modal
+  // -------------------------------------------------------------------------
+  describe('subscription detail modal', () => {
+    it('does not render modal initially', () => {
+      const { queryByTestId } = renderDashboard();
+      expect(queryByTestId('expense-details-modal')).toBeNull();
+    });
+
+    it('opens modal with correct details when an expense is pressed', () => {
+      const events = [
+        {
+          id: 'e1',
+          title: 'Netflix',
+          dueDate: '2025-01-15',
+          totalAmount: 15.99,
+          subscription: { name: 'Netflix Premium', category: { name: 'Streaming' }, amount: 15.99, currency: '€', frequency: 'mensuel' },
+        },
+      ];
+      
+      const { getByTestId } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
+      
+      // Press the expense item
+      fireEvent.press(getByTestId('expense-item-e1'));
+      
+      // Modal should be visible
+      const modal = getByTestId('expense-details-modal');
+      expect(modal).toBeTruthy();
+      
+      // Modal content should be correct
+      const { getByText: getByTextInModal } = within(modal);
+      expect(getByTextInModal('Netflix Premium')).toBeTruthy();
+      expect(getByTextInModal(/15\.99/)).toBeTruthy();
+      expect(getByTextInModal('Streaming')).toBeTruthy();
+    });
+
+    it('closes modal when close button is pressed', async () => {
+      const events = [
+        {
+          id: 'e1',
+          title: 'Netflix',
+          dueDate: '2025-01-15',
+          totalAmount: 15.99,
+          subscription: { name: 'Netflix Premium', category: { name: 'Streaming' }, amount: 15.99, currency: '€', frequency: 'mensuel' },
+        },
+      ];
+      
+      const { getByTestId, queryByTestId } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
+      
+      // Press the expense item to open modal
+      fireEvent.press(getByTestId('expense-item-e1'));
+      expect(getByTestId('expense-details-modal')).toBeTruthy();
+      
+      // Press close button
+      fireEvent.press(getByTestId('expense-details-close'));
+      
+      // Wait for modal to be removed from the tree or hidden
+      await waitFor(() => {
+        expect(queryByTestId('expense-details-modal')).toBeNull();
+      });
     });
   });
 });
