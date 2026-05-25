@@ -58,8 +58,6 @@ import {
   ApiDocumentJobStatus,
 } from '../../../../swagger/decorators/api-document.decorator';
 
-type UserRole = 'freemium' | 'premium' | 'admin';
-
 @ApiTags('Documents')
 @ApiBearerAuth()
 @Controller('documents')
@@ -77,11 +75,6 @@ export class DocumentController {
     private readonly quotaService: QuotaService,
     private readonly queueService: InMemoryQueueService,
   ) {}
-
-  private normalizeRole(role?: string): UserRole {
-    if (role === 'premium' || role === 'admin') return role;
-    return 'freemium';
-  }
 
   @ApiDocumentUpload()
   @Post('upload')
@@ -129,16 +122,14 @@ export class DocumentController {
       folderId,
     };
 
-    const role = this.normalizeRole(userRole);
-
-    const document = await this.uploadDocumentUseCase.execute(appDto, role);
+    const document = await this.uploadDocumentUseCase.execute(appDto, userRole);
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
   @ApiDocumentGetQuota()
   @Get('quota')
   async getQuota(@CurrentUser('id') userId: string, @CurrentUser('role') role?: string) {
-    const usage = await this.quotaService.getUserQuotaUsage(userId, this.normalizeRole(role));
+    const usage = await this.quotaService.getUserQuotaUsage(userId, role ?? '');
 
     return {
       ...usage,

@@ -22,7 +22,7 @@ export class UploadDocumentUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(dto: UploadDocumentAppDto, userRole: UserRole = 'freemium'): Promise<Document> {
+  async execute(dto: UploadDocumentAppDto, userRole: UserRole = ''): Promise<Document> {
     try {
       this.logger.log(`Starting document upload for user ${dto.userId}`);
 
