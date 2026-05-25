@@ -4,11 +4,7 @@ import type { IEventRepository } from '../../../event/application/ports/event-re
 import { FindAllSubscriptionsUseCase } from '../../../subscription/application/use-cases/find-all-subscriptions.use-case';
 import { Event } from '../../../event/domain/event.entity';
 import { Subscription } from '../../../subscription/domain/subscription.entity';
-import {
-  ComparisonAppDto,
-  ComparisonPeriod,
-  ComparisonTrend,
-} from '../dto/comparison-app.dto';
+import { ComparisonAppDto, ComparisonPeriod, ComparisonTrend } from '../dto/comparison-app.dto';
 import { ComparisonQueryAppDto } from '../dto/comparison-query-app.dto';
 
 const TREND_THRESHOLD = 0.1;
@@ -62,10 +58,7 @@ export class GetComparisonUseCase {
   }
 }
 
-function filterSubscriptionIds(
-  subscriptions: Subscription[],
-  categoryId?: string,
-): Set<string> {
+function filterSubscriptionIds(subscriptions: Subscription[], categoryId?: string): Set<string> {
   const ids = new Set<string>();
   for (const sub of subscriptions) {
     if (!sub.id) continue;

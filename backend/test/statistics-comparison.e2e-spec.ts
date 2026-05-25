@@ -133,9 +133,7 @@ describe('Statistics Comparison (e2e)', () => {
         categoryId,
       })
       .expect(200);
-    expect(comparisonUseCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({ categoryId }),
-    );
+    expect(comparisonUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ categoryId }));
   });
 
   it('returns 400 when required dates are missing', async () => {

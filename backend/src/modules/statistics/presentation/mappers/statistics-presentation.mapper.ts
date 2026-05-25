@@ -1,10 +1,7 @@
 import type { ExpenseSummaryAppDto } from '../../application/dto/expense-summary-app.dto';
 import type { ComparisonAppDto } from '../../application/dto/comparison-app.dto';
 import { ExpenseSummaryResponseDto } from '../dto/expense-summary-response.dto';
-import {
-  ComparisonPeriodDto,
-  ComparisonResponseDto,
-} from '../dto/comparison-response.dto';
+import { ComparisonPeriodDto, ComparisonResponseDto } from '../dto/comparison-response.dto';
 
 export class StatisticsPresentationMapper {
   static toExpenseSummaryResponse(app: ExpenseSummaryAppDto): ExpenseSummaryResponseDto {

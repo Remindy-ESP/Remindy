@@ -44,9 +44,7 @@ class TestJwtAuthGuard implements CanActivate {
   }
 }
 
-function makeBudget(
-  overrides: Partial<ConstructorParameters<typeof Budget>[0]> = {},
-): Budget {
+function makeBudget(overrides: Partial<ConstructorParameters<typeof Budget>[0]> = {}): Budget {
   return new Budget({
     id: BUDGET_ID,
     userId: USER_ID,
@@ -320,9 +318,7 @@ describe('Budgets Module (e2e)', () => {
         .send({ ...validBody, categoryId })
         .expect(201);
 
-      expect(budgetService.create).toHaveBeenCalledWith(
-        expect.objectContaining({ categoryId }),
-      );
+      expect(budgetService.create).toHaveBeenCalledWith(expect.objectContaining({ categoryId }));
     });
   });
 

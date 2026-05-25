@@ -12,9 +12,9 @@ import { Event } from '../../../event/domain/event.entity';
 describe('BudgetService', () => {
   let service: BudgetService;
   let budgetRepository: jest.Mocked<IBudgetRepository>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   let eventRepository: jest.Mocked<IEventRepository>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   let findAllSubscriptionsUseCase: jest.Mocked<FindAllSubscriptionsUseCase>;
 
   const USER_ID = 'user-123';
@@ -97,26 +97,26 @@ describe('BudgetService', () => {
     });
 
     it('defaults isActive to true when omitted', async () => {
-      budgetRepository.create.mockImplementation(async b => b);
+      budgetRepository.create.mockImplementation(b => Promise.resolve(b));
       const result = await service.create(baseDto);
       expect(result.isActive).toBe(true);
     });
 
     it('respects explicit isActive=false', async () => {
-      budgetRepository.create.mockImplementation(async b => b);
+      budgetRepository.create.mockImplementation(b => Promise.resolve(b));
       const result = await service.create({ ...baseDto, isActive: false });
       expect(result.isActive).toBe(false);
     });
 
     it('preserves explicit endDate', async () => {
-      budgetRepository.create.mockImplementation(async b => b);
+      budgetRepository.create.mockImplementation(b => Promise.resolve(b));
       const end = new Date('2026-03-01T00:00:00Z');
       const result = await service.create({ ...baseDto, endDate: end });
       expect(result.endDate).toEqual(end);
     });
 
     it('scopes the persisted budget to the caller userId', async () => {
-      budgetRepository.create.mockImplementation(async b => b);
+      budgetRepository.create.mockImplementation(b => Promise.resolve(b));
       await service.create({ ...baseDto, userId: 'someone-else' });
       const passed = budgetRepository.create.mock.calls[0][0];
       expect(passed.userId).toBe('someone-else');
@@ -218,7 +218,7 @@ describe('BudgetService', () => {
     it('applies partial updates and persists the budget', async () => {
       const budget = makeBudget();
       budgetRepository.findById.mockResolvedValue(budget);
-      budgetRepository.update.mockImplementation(async (_id, b) => b);
+      budgetRepository.update.mockImplementation((_id, b) => Promise.resolve(b));
 
       const result = await service.update(
         'budget-1',
@@ -235,7 +235,7 @@ describe('BudgetService', () => {
     it('updates dates together when both provided', async () => {
       const budget = makeBudget();
       budgetRepository.findById.mockResolvedValue(budget);
-      budgetRepository.update.mockImplementation(async (_id, b) => b);
+      budgetRepository.update.mockImplementation((_id, b) => Promise.resolve(b));
 
       const newStart = new Date('2026-02-01T00:00:00Z');
       const newEnd = new Date('2026-03-15T00:00:00Z');
@@ -252,7 +252,7 @@ describe('BudgetService', () => {
     it('updates only endDate when startDate is unchanged', async () => {
       const budget = makeBudget();
       budgetRepository.findById.mockResolvedValue(budget);
-      budgetRepository.update.mockImplementation(async (_id, b) => b);
+      budgetRepository.update.mockImplementation((_id, b) => Promise.resolve(b));
 
       const newEnd = new Date('2026-04-15T00:00:00Z');
       const result = await service.update('budget-1', { endDate: newEnd }, USER_ID);
@@ -305,7 +305,11 @@ describe('BudgetService', () => {
       });
     }
 
-    function makeEvent(subscriptionId: string, amount: number, opts: { canceled?: boolean } = {}): Event {
+    function makeEvent(
+      subscriptionId: string,
+      amount: number,
+      opts: { canceled?: boolean } = {},
+    ): Event {
       return new Event({
         id: `event-${subscriptionId}-${amount}`,
         subscriptionId,
@@ -354,10 +358,7 @@ describe('BudgetService', () => {
         makeSubscription('sub-1', 'cat-1'),
         makeSubscription('sub-2', 'cat-other'),
       ]);
-      eventRepository.findAll.mockResolvedValue([
-        makeEvent('sub-1', 10),
-        makeEvent('sub-2', 100),
-      ]);
+      eventRepository.findAll.mockResolvedValue([makeEvent('sub-1', 10), makeEvent('sub-2', 100)]);
 
       const result = await service.calculateSpendingForBudget(budget);
 

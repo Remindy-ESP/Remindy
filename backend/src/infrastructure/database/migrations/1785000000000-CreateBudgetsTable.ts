@@ -52,7 +52,9 @@ export class CreateBudgetsTable1785000000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "budgets" DROP CONSTRAINT IF EXISTS "fk_budgets_category_id"`);
+    await queryRunner.query(
+      `ALTER TABLE "budgets" DROP CONSTRAINT IF EXISTS "fk_budgets_category_id"`,
+    );
     await queryRunner.query(`ALTER TABLE "budgets" DROP CONSTRAINT IF EXISTS "fk_budgets_user_id"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_budgets_active"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_budgets_category_id"`);

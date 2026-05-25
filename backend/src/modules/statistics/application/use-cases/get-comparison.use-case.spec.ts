@@ -132,9 +132,7 @@ describe('GetComparisonUseCase', () => {
 
   it('reports 100% up when previous is zero and current > 0', async () => {
     findAllSubsUseCase.execute.mockResolvedValue([makeSub('s1')]);
-    eventRepository.findAll
-      .mockResolvedValueOnce([makeEvent('s1', 12)])
-      .mockResolvedValueOnce([]);
+    eventRepository.findAll.mockResolvedValueOnce([makeEvent('s1', 12)]).mockResolvedValueOnce([]);
 
     const result = await useCase.execute(baseQuery());
 
@@ -167,10 +165,7 @@ describe('GetComparisonUseCase', () => {
   });
 
   it('filters by categoryId when provided', async () => {
-    findAllSubsUseCase.execute.mockResolvedValue([
-      makeSub('s1', 'cat-a'),
-      makeSub('s2', 'cat-b'),
-    ]);
+    findAllSubsUseCase.execute.mockResolvedValue([makeSub('s1', 'cat-a'), makeSub('s2', 'cat-b')]);
     eventRepository.findAll
       .mockResolvedValueOnce([makeEvent('s1', 10), makeEvent('s2', 99)])
       .mockResolvedValueOnce([makeEvent('s1', 5), makeEvent('s2', 99)]);
