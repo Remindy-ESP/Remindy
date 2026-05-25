@@ -8,7 +8,7 @@ import {
 } from '../types/budget.types';
 
 const BASE_PATH = '/budgets';
-const client = apiClient.getInstance();
+const client = apiClient;
 
 function buildParams(filters?: BudgetListFilters): Record<string, string> | undefined {
   if (!filters) return undefined;
