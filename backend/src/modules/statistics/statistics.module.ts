@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module';
 import { EventModule } from '../event/event.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { GetExpenseSummaryUseCase } from './application/use-cases/get-expense-summary.use-case';
+import { GetComparisonUseCase } from './application/use-cases/get-comparison.use-case';
 import { StatisticsController } from './presentation/controllers/statistics.controller';
 
 @Module({
@@ -12,6 +13,6 @@ import { StatisticsController } from './presentation/controllers/statistics.cont
     forwardRef(() => EventModule),
   ],
   controllers: [StatisticsController],
-  providers: [GetExpenseSummaryUseCase],
+  providers: [GetExpenseSummaryUseCase, GetComparisonUseCase],
 })
 export class StatisticsModule {}
