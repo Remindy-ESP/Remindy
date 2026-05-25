@@ -19,13 +19,24 @@ import { EUser } from '../../infrastructure/database/entities/user.entity';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    TypeOrmModule.forFeature([SubscriptionEntity, ReminderEntity, NotificationEntity, UserPreferenceEntity, EUser]),
+    TypeOrmModule.forFeature([
+      SubscriptionEntity,
+      ReminderEntity,
+      NotificationEntity,
+      UserPreferenceEntity,
+      EUser,
+    ]),
     SubscriptionModule,
     AuditModule,
     ReminderModule,
     NotificationModule,
     AuthModule,
   ],
-  providers: [RegenerateEventsTask, AuditPurgeTask, ProcessRenewalNotificationsTask, SendMonthlyReportTask],
+  providers: [
+    RegenerateEventsTask,
+    AuditPurgeTask,
+    ProcessRenewalNotificationsTask,
+    SendMonthlyReportTask,
+  ],
 })
 export class SchedulerModule {}

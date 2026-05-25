@@ -43,9 +43,7 @@ describe('Monthly Report (e2e)', () => {
   });
 
   const setupUsers = (users: any[]) => {
-    preferencesRepository.find.mockResolvedValue(
-      users.map(u => ({ userId: u.id })),
-    );
+    preferencesRepository.find.mockResolvedValue(users.map(u => ({ userId: u.id })));
     const mockQueryBuilder = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -177,9 +175,6 @@ describe('Monthly Report (e2e)', () => {
 
     it('excludes cancelled subscriptions from the report', async () => {
       setupUsers([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]);
-
-      const now = new Date();
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 15);
 
       subscriptionRepository.find.mockResolvedValue([
         {

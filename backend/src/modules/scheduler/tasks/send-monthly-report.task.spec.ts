@@ -106,10 +106,7 @@ describe('SendMonthlyReportTask', () => {
     });
 
     it('should count failed emails without stopping the batch', async () => {
-      preferencesRepository.find.mockResolvedValue([
-        { userId: 'user-1' },
-        { userId: 'user-2' },
-      ]);
+      preferencesRepository.find.mockResolvedValue([{ userId: 'user-1' }, { userId: 'user-2' }]);
 
       const mockUsers = [
         { id: 'user-1', email: 'a@example.com', firstName: 'A' },
@@ -141,9 +138,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'jane@example.com', firstName: '' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'jane@example.com', firstName: '' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       subscriptionRepository.find.mockResolvedValue([]);
@@ -163,9 +160,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
@@ -228,9 +225,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
@@ -267,9 +264,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
@@ -309,9 +306,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
@@ -342,9 +339,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
@@ -375,9 +372,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
@@ -408,9 +405,9 @@ describe('SendMonthlyReportTask', () => {
       const mockQueryBuilder = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([
-          { id: 'user-1', email: 'test@example.com', firstName: 'Test' },
-        ]),
+        getMany: jest
+          .fn()
+          .mockResolvedValue([{ id: 'user-1', email: 'test@example.com', firstName: 'Test' }]),
       };
       userRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 

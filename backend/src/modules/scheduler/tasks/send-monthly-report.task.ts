@@ -26,9 +26,7 @@ export class SendMonthlyReportTask {
     this.logger.log('Starting monthly report generation...');
     try {
       const result = await this.processMonthlyReports();
-      this.logger.log(
-        `Monthly reports completed. Sent: ${result.sent}, Failed: ${result.failed}`,
-      );
+      this.logger.log(`Monthly reports completed. Sent: ${result.sent}, Failed: ${result.failed}`);
     } catch (error) {
       this.logger.error(`Monthly report generation failed: ${error}`);
     }
@@ -93,7 +91,9 @@ export class SendMonthlyReportTask {
       relations: ['category'],
     });
 
-    const activeSubscriptions = subscriptions.filter(s => s.status === 'active' || s.status === 'trial');
+    const activeSubscriptions = subscriptions.filter(
+      s => s.status === 'active' || s.status === 'trial',
+    );
 
     const currentMonthSubs = this.getSubscriptionsActiveInPeriod(
       subscriptions,
@@ -111,9 +111,10 @@ export class SendMonthlyReportTask {
     const previousTotal = this.calculateMonthlyTotal(previousMonthSubs);
     const currentTotal = categorySummary.reduce((sum, c) => sum + c.total, 0);
 
-    const topCategory = categorySummary.length > 0
-      ? categorySummary.reduce((max, c) => (c.total > max.total ? c : max))
-      : null;
+    const topCategory =
+      categorySummary.length > 0
+        ? categorySummary.reduce((max, c) => (c.total > max.total ? c : max), categorySummary[0])
+        : null;
 
     const { percentageChange, trend } = this.computeChange(currentTotal, previousTotal);
 
@@ -145,7 +146,9 @@ export class SendMonthlyReportTask {
     });
   }
 
-  private buildCategorySummary(subscriptions: SubscriptionEntity[]): { name: string; total: number }[] {
+  private buildCategorySummary(
+    subscriptions: SubscriptionEntity[],
+  ): { name: string; total: number }[] {
     const map = new Map<string, number>();
 
     for (const sub of subscriptions) {
@@ -166,23 +169,32 @@ export class SendMonthlyReportTask {
   private toMonthlyAmount(sub: SubscriptionEntity): number {
     const amount = Number(sub.amount);
     switch (sub.frequency) {
-      case 'weekly': return amount * 4.33;
-      case 'monthly': return amount;
-      case 'quarterly': return amount / 3;
-      case 'yearly': return amount / 12;
-      default: return amount;
+      case 'weekly':
+        return amount * 4.33;
+      case 'monthly':
+        return amount;
+      case 'quarterly':
+        return amount / 3;
+      case 'yearly':
+        return amount / 12;
+      default:
+        return amount;
     }
   }
 
-  private computeChange(current: number, previous: number): { percentageChange: number; trend: 'up' | 'down' | 'stable' } {
+  private computeChange(
+    current: number,
+    previous: number,
+  ): { percentageChange: number; trend: 'up' | 'down' | 'stable' } {
     if (previous === 0) {
       if (current === 0) return { percentageChange: 0, trend: 'stable' };
       return { percentageChange: 100, trend: 'up' };
     }
     const raw = ((current - previous) / previous) * 100;
     const percentageChange = Math.round(raw * 10) / 10;
-    const trend: 'up' | 'down' | 'stable' =
-      percentageChange > 0.1 ? 'up' : percentageChange < -0.1 ? 'down' : 'stable';
+    let trend: 'up' | 'down' | 'stable' = 'stable';
+    if (percentageChange > 0.1) trend = 'up';
+    else if (percentageChange < -0.1) trend = 'down';
     return { percentageChange, trend };
   }
 
