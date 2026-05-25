@@ -5,6 +5,7 @@ import { IUserAuthRepository } from '../../domain/repositories/user-auth.reposit
 import { IPasswordService } from '../../domain/services/password.service';
 import { UserPreferencesRepository } from 'src/modules/user/infrastructure/repositories/user-preferences.repository';
 import { Role } from '../../domain/value-objects/role.enum';
+import { SendVerificationEmailUseCase } from './send-verification-email.use-case';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -13,6 +14,7 @@ export class RegisterUserUseCase {
     private readonly userRepo: IUserAuthRepository,
     private readonly passwordService: IPasswordService,
     private readonly preferencesRepo: UserPreferencesRepository,
+    private readonly sendVerificationEmailUseCase: SendVerificationEmailUseCase,
   ) {}
 
   async execute(dto: RegisterRequestDto) {
@@ -35,6 +37,8 @@ export class RegisterUserUseCase {
     const savedUser = await this.userRepo.save(user);
 
     await this.preferencesRepo.createDefaultPreferences(savedUser.getId());
+
+    await this.sendVerificationEmailUseCase.execute(savedUser.getId());
 
     return savedUser;
   }
