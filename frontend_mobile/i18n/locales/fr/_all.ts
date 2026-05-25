@@ -14,6 +14,7 @@ import errors from './errors.json';
 import coach from './coach.json';
 import category from './category.json';
 import support from './support.json';
+import budgets from './budgets.json';
 
 const fr = {
   common,
@@ -32,6 +33,7 @@ const fr = {
   coach,
   category,
   support,
+  budgets,
 };
 
 export default fr;
