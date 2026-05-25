@@ -372,6 +372,7 @@ export default function DashboardScreen() {
               {getEventsForPeriod(activePeriod, selected, selectedCategory).map((event) => (
                 <TouchableOpacity
                   key={event.id}
+                  testID={`expense-item-${event.id}`}
                   style={styles.expenseItem}
                   activeOpacity={0.6}
                   onPress={() => setSelectedExpense(event)}
@@ -431,9 +432,10 @@ export default function DashboardScreen() {
           activeOpacity={1}
           onPress={() => setSelectedExpense(null)}
         >
-          <TouchableOpacity activeOpacity={1} style={styles.modalContent}>
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent} testID="expense-details-modal">
             {/* Close button */}
             <TouchableOpacity
+              testID="expense-details-close"
               style={styles.modalCloseButton}
               onPress={() => setSelectedExpense(null)}
             >
