@@ -13,6 +13,7 @@ describe('DeleteFolderUseCase', () => {
     const mockRepository: Partial<jest.Mocked<IFolderRepository>> = {
       findById: jest.fn(),
       save: jest.fn(),
+      softDelete: jest.fn(),
       findSubfolders: jest.fn(),
       countDocumentsInFolder: jest.fn(),
       moveDocumentsToFolder: jest.fn(),
@@ -44,14 +45,14 @@ describe('DeleteFolderUseCase', () => {
     expect(repository.findById).toHaveBeenCalledWith('folder-123');
     expect(repository.findSubfolders).toHaveBeenCalledWith('folder-123');
     expect(repository.countDocumentsInFolder).toHaveBeenCalledWith('folder-123');
-    expect(repository.save).toHaveBeenCalled();
+    expect(repository.softDelete).toHaveBeenCalledWith('folder-123');
   });
 
   it('should throw NotFoundException if folder does not exist', async () => {
     repository.findById.mockResolvedValue(null);
 
     await expect(useCase.execute('nonexistent-id', 'user-123')).rejects.toThrow(NotFoundException);
-    expect(repository.save).not.toHaveBeenCalled();
+    expect(repository.softDelete).not.toHaveBeenCalled();
   });
 
   it('should throw ForbiddenException if user does not own folder', async () => {
@@ -65,7 +66,7 @@ describe('DeleteFolderUseCase', () => {
     repository.findById.mockResolvedValue(folder);
 
     await expect(useCase.execute('folder-123', 'user-123')).rejects.toThrow(ForbiddenException);
-    expect(repository.save).not.toHaveBeenCalled();
+    expect(repository.softDelete).not.toHaveBeenCalled();
   });
 
   it('should throw ForbiddenException if trying to delete default folder', async () => {
@@ -115,7 +116,8 @@ describe('DeleteFolderUseCase', () => {
     await useCase.execute('folder-123', 'user-123');
 
     expect(repository.findSubfolders).toHaveBeenCalledWith('folder-123');
-    expect(repository.save).toHaveBeenCalledTimes(3);
+    expect(repository.save).toHaveBeenCalledTimes(2);
+    expect(repository.softDelete).toHaveBeenCalledWith('folder-123');
   });
 
   it('should move documents to parent before deletion', async () => {
@@ -136,7 +138,7 @@ describe('DeleteFolderUseCase', () => {
     await useCase.execute('folder-123', 'user-123');
 
     expect(repository.moveDocumentsToFolder).toHaveBeenCalledWith('folder-123', 'parent-123');
-    expect(repository.save).toHaveBeenCalled();
+    expect(repository.softDelete).toHaveBeenCalledWith('folder-123');
   });
 
   it('should move documents to root if folder has no parent', async () => {
@@ -156,6 +158,6 @@ describe('DeleteFolderUseCase', () => {
     await useCase.execute('folder-123', 'user-123');
 
     expect(repository.moveDocumentsToFolder).toHaveBeenCalledWith('folder-123', null);
-    expect(repository.save).toHaveBeenCalled();
+    expect(repository.softDelete).toHaveBeenCalledWith('folder-123');
   });
 });
