@@ -21,7 +21,6 @@ describe('GmailEmailService', () => {
     jest.clearAllMocks();
     process.env = { ...envBackup };
   });
-
   it('sends the password reset email via Gmail SMTP', async () => {
     await service.sendPasswordResetEmail({
       to: 'user@example.com',
@@ -45,7 +44,7 @@ describe('GmailEmailService', () => {
     );
   });
 
-  it('logs the error and rethrows when sending fails', async () => {
+  it('logs the error and rethrows when sending password reset email fails', async () => {
     const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
     const error = new Error('SMTP connection refused');
     sendMailMock.mockRejectedValue(error);
@@ -59,6 +58,46 @@ describe('GmailEmailService', () => {
 
     expect(loggerSpy).toHaveBeenCalledWith(
       'Failed to send password reset email to user@example.com',
+      error,
+    );
+  });
+  it('sends the verification email via Gmail SMTP', async () => {
+    await service.sendVerificationEmail({
+      to: 'user@example.com',
+      verificationLink: 'http://localhost:3000/verify-email?token=xyz',
+    });
+
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'remindy@gmail.com', pass: 'test-app-password' },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Confirmez votre adresse email',
+        html: expect.stringContaining('http://localhost:3000/verify-email?token=xyz'),
+      }),
+    );
+  });
+
+  it('logs the error and rethrows when sending verification email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP connection refused');
+    sendMailMock.mockRejectedValue(error);
+
+    await expect(
+      service.sendVerificationEmail({
+        to: 'user@example.com',
+        verificationLink: 'http://localhost:3000/verify-email?token=xyz',
+      }),
+    ).rejects.toBe(error);
+
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send verification email to user@example.com',
       error,
     );
   });
