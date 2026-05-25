@@ -10,7 +10,15 @@ import {
   UseGuards,
   HttpCode,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiNoContentResponse,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard';
 import { CurrentUser } from '../../../auth/decorators/current-user.decorator';
@@ -29,6 +37,10 @@ export class BudgetController {
   constructor(private readonly budgetService: BudgetService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new budget for the authenticated user' })
+  @ApiResponse({ status: 201, description: 'Budget created', type: BudgetResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
   async create(
     @CurrentUser('id') userId: string,
     @Body() body: CreateBudgetDto,
@@ -39,6 +51,11 @@ export class BudgetController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List the budgets owned by the authenticated user' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiQuery({ name: 'categoryId', required: false, type: String })
+  @ApiResponse({ status: 200, type: [BudgetResponseDto] })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
   async findAll(
     @CurrentUser('id') userId: string,
     @Query('isActive') isActive?: string,
@@ -53,6 +70,14 @@ export class BudgetController {
   }
 
   @Get('with-spending')
+  @ApiOperation({
+    summary:
+      'List the budgets owned by the authenticated user with their current-period spending attached',
+  })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiQuery({ name: 'categoryId', required: false, type: String })
+  @ApiResponse({ status: 200, type: [BudgetWithSpendingDto] })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
   async findAllWithSpending(
     @CurrentUser('id') userId: string,
     @Query('isActive') isActive?: string,
@@ -69,6 +94,12 @@ export class BudgetController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a single budget owned by the authenticated user' })
+  @ApiParam({ name: 'id', description: 'Budget UUID' })
+  @ApiResponse({ status: 200, type: BudgetResponseDto })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiResponse({ status: 403, description: 'Budget does not belong to the caller' })
+  @ApiResponse({ status: 404, description: 'Budget not found' })
   async findOne(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
@@ -78,6 +109,12 @@ export class BudgetController {
   }
 
   @Get(':id/spending')
+  @ApiOperation({ summary: 'Get a budget with its current-period spending attached' })
+  @ApiParam({ name: 'id', description: 'Budget UUID' })
+  @ApiResponse({ status: 200, type: BudgetWithSpendingDto })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiResponse({ status: 403, description: 'Budget does not belong to the caller' })
+  @ApiResponse({ status: 404, description: 'Budget not found' })
   async findOneWithSpending(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
@@ -88,6 +125,13 @@ export class BudgetController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update an existing budget' })
+  @ApiParam({ name: 'id', description: 'Budget UUID' })
+  @ApiResponse({ status: 200, type: BudgetResponseDto })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiResponse({ status: 403, description: 'Budget does not belong to the caller' })
+  @ApiResponse({ status: 404, description: 'Budget not found' })
   async update(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
@@ -100,6 +144,12 @@ export class BudgetController {
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a budget' })
+  @ApiParam({ name: 'id', description: 'Budget UUID' })
+  @ApiNoContentResponse({ description: 'Budget deleted' })
+  @ApiResponse({ status: 401, description: 'Not authenticated' })
+  @ApiResponse({ status: 403, description: 'Budget does not belong to the caller' })
+  @ApiResponse({ status: 404, description: 'Budget not found' })
   async delete(@CurrentUser('id') userId: string, @Param('id') id: string): Promise<void> {
     await this.budgetService.remove(id, userId);
   }
