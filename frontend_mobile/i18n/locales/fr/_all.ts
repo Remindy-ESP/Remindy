@@ -16,6 +16,7 @@ import category from './category.json';
 import support from './support.json';
 import budgets from './budgets.json';
 import comparison from './comparison.json';
+import charts from './charts.json';
 
 const fr = {
   common,
@@ -36,6 +37,7 @@ const fr = {
   support,
   budgets,
   comparison,
+  charts,
 };
 
 export default fr;

@@ -16,6 +16,7 @@ import frCategory from './locales/fr/category.json';
 import frSupport from './locales/fr/support.json';
 import frBudgets from './locales/fr/budgets.json';
 import frComparison from './locales/fr/comparison.json';
+import frCharts from './locales/fr/charts.json';
 
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
@@ -35,6 +36,7 @@ import enCategory from './locales/en/category.json';
 import enSupport from './locales/en/support.json';
 import enBudgets from './locales/en/budgets.json';
 import enComparison from './locales/en/comparison.json';
+import enCharts from './locales/en/charts.json';
 
 export const resources = {
   fr: {
@@ -56,6 +58,7 @@ export const resources = {
     support: frSupport,
     budgets: frBudgets,
     comparison: frComparison,
+    charts: frCharts,
   },
   en: {
     common: enCommon,
@@ -76,6 +79,7 @@ export const resources = {
     support: enSupport,
     budgets: enBudgets,
     comparison: enComparison,
+    charts: enCharts,
   },
 } as const;
 
