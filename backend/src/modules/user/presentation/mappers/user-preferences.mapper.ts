@@ -12,7 +12,6 @@ export class UserPreferencesMapper {
       defaultReminderDelay: dto.defaultReminderDelay,
       currency: dto.currency,
       showOnlineStatus: dto.showOnlineStatus,
-      monthlyReportEnabled: dto.monthlyReportEnabled,
     };
   }
 }

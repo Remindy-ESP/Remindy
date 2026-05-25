@@ -35,7 +35,6 @@ export class UserPreferencesService {
       defaultReminderDelay: preferences.defaultReminderDelay,
       currency: preferences.currency,
       showOnlineStatus: preferences.showOnlineStatus,
-      monthlyReportEnabled: preferences.monthlyReportEnabled,
       createdAt: preferences.createdAt,
       updatedAt: preferences.updatedAt,
     };
@@ -80,7 +79,6 @@ export class UserPreferencesService {
       defaultReminderDelay: updateDto.defaultReminderDelay,
       currency: updateDto.currency?.toUpperCase(),
       showOnlineStatus: updateDto.showOnlineStatus,
-      monthlyReportEnabled: updateDto.monthlyReportEnabled,
     });
 
     if (!updatedPreferences) {
@@ -96,7 +94,6 @@ export class UserPreferencesService {
       defaultReminderDelay: updatedPreferences.defaultReminderDelay,
       currency: updatedPreferences.currency,
       showOnlineStatus: updatedPreferences.showOnlineStatus,
-      monthlyReportEnabled: updatedPreferences.monthlyReportEnabled,
       createdAt: updatedPreferences.createdAt,
       updatedAt: updatedPreferences.updatedAt,
     };

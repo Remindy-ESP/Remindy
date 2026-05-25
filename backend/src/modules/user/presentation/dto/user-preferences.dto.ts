@@ -27,9 +27,6 @@ export class UserPreferencesResponseDto {
   @ApiProperty({ description: 'Show online status' })
   showOnlineStatus: boolean;
 
-  @ApiProperty({ description: 'Monthly expense report enabled' })
-  monthlyReportEnabled: boolean;
-
   @ApiProperty({ description: 'Creation date' })
   createdAt: Date;
 
@@ -46,7 +43,6 @@ export class UserPreferencesResponseDto {
       defaultReminderDelay: entity.defaultReminderDelay,
       currency: entity.currency,
       showOnlineStatus: entity.showOnlineStatus,
-      monthlyReportEnabled: entity.monthlyReportEnabled,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
@@ -104,9 +100,4 @@ export class UpdateUserPreferencesDto {
   @IsOptional()
   @IsBoolean()
   showOnlineStatus?: boolean;
-
-  @ApiPropertyOptional({ description: 'Enable monthly expense report email', default: true })
-  @IsOptional()
-  @IsBoolean()
-  monthlyReportEnabled?: boolean;
 }

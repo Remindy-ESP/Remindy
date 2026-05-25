@@ -15,6 +15,4 @@ export class UpdateUserPreferencesRequest {
   currency?: string;
 
   showOnlineStatus?: boolean;
-
-  monthlyReportEnabled?: boolean;
 }

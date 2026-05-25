@@ -15,7 +15,6 @@ import { FindAllNotificationsUseCase } from '../src/modules/notification/applica
 import { SnoozeNotificationUseCase } from '../src/modules/notification/application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from '../src/modules/notification/application/use-cases/mark-notification-as-read.use-case';
 import { ExpoPushService } from '../src/modules/notification/application/services/expo-push.service';
-import { NOTIFICATION_REPOSITORY } from '../src/modules/notification/application/ports/notification-repository.interface';
 
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
@@ -75,16 +74,6 @@ describe('NotificationController (e2e)', () => {
   const snoozeNotificationUseCase = { execute: jest.fn() };
   const markNotificationAsReadUseCase = { execute: jest.fn() };
   const expoPushService = { registerToken: jest.fn(), unregisterToken: jest.fn() };
-  const notificationRepository = {
-    findById: jest.fn(),
-    findAll: jest.fn(),
-    save: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    deleteAll: jest.fn(),
-    markAllAsRead: jest.fn(),
-    findByUserAndMetadata: jest.fn(),
-  };
 
   const authHeader = (token: string) => ({
     Authorization: `Bearer ${token}`,
@@ -98,7 +87,6 @@ describe('NotificationController (e2e)', () => {
         { provide: SnoozeNotificationUseCase, useValue: snoozeNotificationUseCase },
         { provide: MarkNotificationAsReadUseCase, useValue: markNotificationAsReadUseCase },
         { provide: ExpoPushService, useValue: expoPushService },
-        { provide: NOTIFICATION_REPOSITORY, useValue: notificationRepository },
       ],
     })
       .overrideGuard(ThrottlerGuard)

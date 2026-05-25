@@ -27,7 +27,6 @@ export class UserPreferencesRepository {
       defaultReminderDelay: 3,
       currency: 'EUR',
       showOnlineStatus: true,
-      monthlyReportEnabled: true,
     });
     return this.preferencesRepository.save(preferences);
   }
@@ -46,7 +45,6 @@ export class UserPreferencesRepository {
       prefs.defaultReminderDelay = data.defaultReminderDelay;
     if (data.currency !== undefined) prefs.currency = data.currency;
     if (data.showOnlineStatus !== undefined) prefs.showOnlineStatus = data.showOnlineStatus;
-    if (data.monthlyReportEnabled !== undefined) prefs.monthlyReportEnabled = data.monthlyReportEnabled;
 
     const saved = await this.preferencesRepository.save(prefs);
     return saved;

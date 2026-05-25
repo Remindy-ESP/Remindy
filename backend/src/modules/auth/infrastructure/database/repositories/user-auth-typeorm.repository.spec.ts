@@ -350,19 +350,6 @@ describe('UserAuthTypeOrmRepository', () => {
       );
     });
   });
-
-  describe('markEmailAsVerified', () => {
-    it('sets emailVerified to true for the given user', async () => {
-      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
-
-      await repository.markEmailAsVerified('user-123');
-
-      expect(typeOrmRepository.update).toHaveBeenCalledWith(
-        { id: 'user-123' },
-        { emailVerified: true },
-      );
-    });
-  });
 });
 describe('UserAuthTypeOrmRepository constructor branch coverage', () => {
   it('should instantiate with null dependencies to cover constructor parameter branches', () => {

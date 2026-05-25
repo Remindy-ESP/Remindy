@@ -55,7 +55,4 @@ export class UserAuthTypeOrmRepository implements IUserAuthRepository {
   async updateLastLoginAt(userId: string, date: Date): Promise<void> {
     await this.repo.update({ id: userId }, { lastLoginAt: date });
   }
-  async markEmailAsVerified(userId: string): Promise<void> {
-    await this.repo.update({ id: userId }, { emailVerified: true });
-  }
 }
