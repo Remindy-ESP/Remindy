@@ -7,6 +7,7 @@ import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
 import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
 import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
 import { AnalyticsSection } from '@/features/statistics/components/AnalyticsSection';
+import { BudgetSummaryCard } from '@/features/budgets/components/BudgetSummaryCard';
 import { useTranslation } from '@/context/I18nContext';
 import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
@@ -119,6 +120,8 @@ export default function StatisticsScreen() {
       </View>
 
       <AnalyticsSection />
+
+      <BudgetSummaryCard />
 
       <ComparisonInfoModal
         visible={infoVisible}
