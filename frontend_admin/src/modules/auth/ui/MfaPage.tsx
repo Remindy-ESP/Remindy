@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { FormEvent } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -16,9 +16,11 @@ export function MfaPage() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const setupCalled = useRef(false);
 
   useEffect(() => {
-    if (needsMfaSetup) {
+    if (needsMfaSetup && !setupCalled.current) {
+      setupCalled.current = true;
       setupMfa()
         .then(data => setQrCode(data.qrCodeDataUrl))
         .catch(() => setError('Impossible de générer le QR code'));

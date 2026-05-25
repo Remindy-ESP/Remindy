@@ -65,7 +65,8 @@ apiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failQueue.push({
@@ -86,7 +87,7 @@ apiClient.interceptors.response.use(
         const { data } = await axios.post(
           `${API_BASE_URL}/auth/refresh-token`,
           { refreshToken },
-          { withCredentials: true, baseURL: API_BASE_URL }
+          { withCredentials: true }
         );
         setTokens(data.accessToken, data.refreshToken);
         processQueue(null, data.accessToken);
