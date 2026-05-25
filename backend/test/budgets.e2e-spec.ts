@@ -390,4 +390,176 @@ describe('Budgets Module (e2e)', () => {
       expect(budgetService.remove).toHaveBeenCalledWith(BUDGET_ID, OTHER_USER_ID);
     });
   });
+
+  describe('Error cases', () => {
+    it('POST /budgets returns 400 when amount is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({
+          name: 'Streaming',
+          currency: 'EUR',
+          period: 'monthly',
+          startDate: '2026-01-01T00:00:00.000Z',
+        })
+        .expect(400);
+      expect(budgetService.create).not.toHaveBeenCalled();
+    });
+
+    it('POST /budgets returns 400 when amount is zero or negative', async () => {
+      const base = {
+        name: 'Streaming',
+        currency: 'EUR',
+        period: 'monthly' as const,
+        startDate: '2026-01-01T00:00:00.000Z',
+      };
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({ ...base, amount: 0 })
+        .expect(400);
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({ ...base, amount: -5 })
+        .expect(400);
+    });
+
+    it('POST /budgets returns 400 when currency length is wrong', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({
+          name: 'Streaming',
+          amount: 10,
+          currency: 'EU',
+          period: 'monthly',
+          startDate: '2026-01-01T00:00:00.000Z',
+        })
+        .expect(400);
+    });
+
+    it('POST /budgets returns 400 when period is invalid', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({
+          name: 'Streaming',
+          amount: 10,
+          currency: 'EUR',
+          period: 'weekly',
+          startDate: '2026-01-01T00:00:00.000Z',
+        })
+        .expect(400);
+    });
+
+    it('POST /budgets returns 400 when startDate is not ISO 8601', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({
+          name: 'Streaming',
+          amount: 10,
+          currency: 'EUR',
+          period: 'monthly',
+          startDate: 'not-a-date',
+        })
+        .expect(400);
+    });
+
+    it('POST /budgets returns 400 when name exceeds 100 chars', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({
+          name: 'A'.repeat(101),
+          amount: 10,
+          currency: 'EUR',
+          period: 'monthly',
+          startDate: '2026-01-01T00:00:00.000Z',
+        })
+        .expect(400);
+    });
+
+    it('POST /budgets returns 400 when an unknown field is sent (whitelist)', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .set(authHeaderFor('user-token'))
+        .send({
+          name: 'Streaming',
+          amount: 10,
+          currency: 'EUR',
+          period: 'monthly',
+          startDate: '2026-01-01T00:00:00.000Z',
+          unexpected: 'x',
+        })
+        .expect(400);
+    });
+
+    it('POST /budgets returns 401 when not authenticated', async () => {
+      await request(app.getHttpServer())
+        .post('/budgets')
+        .send({
+          name: 'Streaming',
+          amount: 10,
+          currency: 'EUR',
+          period: 'monthly',
+          startDate: '2026-01-01T00:00:00.000Z',
+        })
+        .expect(401);
+    });
+
+    it('PATCH /budgets/:id returns 404 when not found', async () => {
+      budgetService.update.mockRejectedValueOnce(
+        new NotFoundException('Budget with ID missing not found'),
+      );
+      await request(app.getHttpServer())
+        .patch('/budgets/missing')
+        .set(authHeaderFor('user-token'))
+        .send({ name: 'New' })
+        .expect(404);
+    });
+
+    it('PATCH /budgets/:id returns 403 when budget belongs to another user', async () => {
+      budgetService.update.mockRejectedValueOnce(
+        new ForbiddenException('You can only modify your own budgets'),
+      );
+      await request(app.getHttpServer())
+        .patch(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('other-token'))
+        .send({ name: 'New' })
+        .expect(403);
+    });
+
+    it('DELETE /budgets/:id returns 404 when not found', async () => {
+      budgetService.remove.mockRejectedValueOnce(
+        new NotFoundException('Budget with ID missing not found'),
+      );
+      await request(app.getHttpServer())
+        .delete('/budgets/missing')
+        .set(authHeaderFor('user-token'))
+        .expect(404);
+    });
+
+    it('DELETE /budgets/:id returns 403 for non-owner', async () => {
+      budgetService.remove.mockRejectedValueOnce(
+        new ForbiddenException('You can only delete your own budgets'),
+      );
+      await request(app.getHttpServer())
+        .delete(`/budgets/${BUDGET_ID}`)
+        .set(authHeaderFor('other-token'))
+        .expect(403);
+    });
+
+    it('PATCH /budgets/:id returns 401 when not authenticated', async () => {
+      await request(app.getHttpServer())
+        .patch(`/budgets/${BUDGET_ID}`)
+        .send({ name: 'x' })
+        .expect(401);
+    });
+
+    it('DELETE /budgets/:id returns 401 when not authenticated', async () => {
+      await request(app.getHttpServer()).delete(`/budgets/${BUDGET_ID}`).expect(401);
+    });
+  });
 });
