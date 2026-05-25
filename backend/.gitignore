@@ -55,6 +55,7 @@ coverage.json
 .env.test.local
 .env.production.local
 .env.local
+.env.backup-*
 
 # temp directory
 .temp
