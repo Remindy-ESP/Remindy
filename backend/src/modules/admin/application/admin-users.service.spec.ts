@@ -42,8 +42,17 @@ const mockSessionsRepo = {
   delete: jest.fn(),
 };
 
+const mockForgotPasswordUseCase = {
+  execute: jest.fn(),
+};
+
 const makeService = () =>
-  new AdminUsersService(mockUsersRepo as any, mockSessionsRepo as any, mockEventEmitter as any);
+  new AdminUsersService(
+    mockUsersRepo as any,
+    mockSessionsRepo as any,
+    mockEventEmitter as any,
+    mockForgotPasswordUseCase as any,
+  );
 
 const superAdmin = { id: 'actor-1', role: Role.SUPER_ADMIN };
 const userAdmin = { id: 'actor-2', role: Role.USER_ADMIN };
@@ -391,24 +400,23 @@ describe('AdminUsersService.revokeSessions()', () => {
 });
 
 describe('AdminUsersService.resetPassword()', () => {
-  it('met à jour passwordChangedAt', async () => {
+  beforeEach(() => {
+    mockForgotPasswordUseCase.execute.mockResolvedValue(undefined);
+    mockSessionsRepo.delete.mockResolvedValue({});
+    mockEventEmitter.emit.mockClear();
+  });
+
+  it("envoie un email de réinitialisation et révoque les sessions de l'utilisateur", async () => {
     mockUsersRepo.findOne.mockResolvedValue(makeUser());
-    mockUsersRepo.update.mockResolvedValue({});
 
-    const before = new Date();
     const result = await makeService().resetPassword(superAdmin, 'user-1');
-    const after = new Date();
 
-    expect(mockUsersRepo.update).toHaveBeenCalledWith(
-      'user-1',
-      expect.objectContaining({
-        passwordChangedAt: expect.any(Date),
-      }),
+    expect(mockForgotPasswordUseCase.execute).toHaveBeenCalledWith('user@test.com');
+    expect(mockSessionsRepo.delete).toHaveBeenCalledWith({ user: { id: 'user-1' } });
+    expect(mockEventEmitter.emit).toHaveBeenCalledWith(
+      'security.admin.user.password-reset',
+      expect.objectContaining({ actorId: 'actor-1', targetUserId: 'user-1' }),
     );
-
-    const calledDate: Date = mockUsersRepo.update.mock.calls[0][1].passwordChangedAt;
-    expect(calledDate.getTime()).toBeGreaterThanOrEqual(before.getTime());
-    expect(calledDate.getTime()).toBeLessThanOrEqual(after.getTime());
     expect(result).toEqual({ ok: true });
   });
 
@@ -418,7 +426,7 @@ describe('AdminUsersService.resetPassword()', () => {
     await expect(makeService().resetPassword(userAdmin, 'user-1')).rejects.toThrow(
       ForbiddenException,
     );
-    expect(mockUsersRepo.update).not.toHaveBeenCalled();
+    expect(mockForgotPasswordUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('throws NotFoundException when user not found', async () => {

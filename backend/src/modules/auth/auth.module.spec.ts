@@ -124,6 +124,7 @@ describe('AuthModule', () => {
       IEmailService,
       UserMfaTypeOrmRepository,
       TotpService,
+      ForgotPasswordUseCase,
     ]);
   });
 

@@ -7,6 +7,7 @@ import { UserSessionEntity } from 'src/infrastructure/database/entities';
 import { AdminUsersQueryDto } from '../presentation/dto/admin-users-query.dto';
 import { assertCanActOnUser } from '../domain/policies/admin-user.policy';
 import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
+import { ForgotPasswordUseCase } from 'src/modules/auth/application/use-cases/forgot-password.use-case';
 
 @Injectable()
 export class AdminUsersService {
@@ -15,6 +16,7 @@ export class AdminUsersService {
     @InjectRepository(UserSessionEntity)
     private readonly sessionsRepo: Repository<UserSessionEntity>,
     private readonly eventEmitter: EventEmitter2,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
   ) {}
 
   async list(actor: { id: string; role: Role }, query: AdminUsersQueryDto) {
@@ -154,7 +156,15 @@ export class AdminUsersService {
       action: 'reset-password',
     });
 
-    await this.usersRepo.update(userId, { passwordChangedAt: new Date() });
+    await this.forgotPasswordUseCase.execute(user.email);
+
+    await this.sessionsRepo.delete({ user: { id: userId } as any });
+
+    this.eventEmitter.emit('security.admin.user.password-reset', {
+      actorId: actor.id,
+      targetUserId: userId,
+    });
+
     return { ok: true };
   }
 
@@ -179,7 +189,15 @@ export class AdminUsersService {
   private async mustGetUser(id: string) {
     const user = await this.usersRepo.findOne({
       where: { id },
-      select: ['id', 'role_key', 'status', 'emailVerified', 'mfaEnabled', 'passwordChangedAt'],
+      select: [
+        'id',
+        'email',
+        'role_key',
+        'status',
+        'emailVerified',
+        'mfaEnabled',
+        'passwordChangedAt',
+      ],
     });
     if (!user) throw new NotFoundException('User not found');
     return user;

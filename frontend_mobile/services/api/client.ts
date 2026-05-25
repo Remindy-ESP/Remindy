@@ -19,6 +19,11 @@ class ApiClient {
     resolve: (value?: unknown) => void;
     reject: (reason?: unknown) => void;
   }> = [];
+  private onAuthFailureCb?: () => void;
+
+  setOnAuthFailure(cb: () => void): void {
+    this.onAuthFailureCb = cb;
+  }
 
   constructor() {
     this.client = axios.create({
@@ -77,11 +82,10 @@ class ApiClient {
           try {
             const refreshToken = await this.getRefreshToken();
             if (!refreshToken) {
-              // No refresh token available - user needs to login again
               console.log('[Auth] No refresh token available, clearing auth state');
               await this.clearTokens();
               this.isRefreshing = false;
-              // Don't throw error, just reject with 401 so app can redirect to login
+              this.onAuthFailureCb?.();
               return Promise.reject(error);
             }
 
@@ -110,7 +114,6 @@ class ApiClient {
             // Retry original request
             return this.client(originalRequest);
           } catch (refreshError) {
-            // Refresh failed - clear tokens and reject all queued requests
             console.error('[Auth] Token refresh failed:', refreshError);
             this.failedQueue.forEach((promise) => {
               promise.reject(refreshError);
@@ -118,7 +121,8 @@ class ApiClient {
             this.failedQueue = [];
             await this.clearTokens();
             this.isRefreshing = false;
-            return Promise.reject(error); // Return original error, not refresh error
+            this.onAuthFailureCb?.();
+            return Promise.reject(error);
           } finally {
             this.isRefreshing = false;
           }
