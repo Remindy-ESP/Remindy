@@ -211,4 +211,109 @@ describe('BudgetService', () => {
       );
     });
   });
+
+  describe('update', () => {
+    it('applies partial updates and persists the budget', async () => {
+      const budget = makeBudget();
+      budgetRepository.findById.mockResolvedValue(budget);
+      budgetRepository.update.mockImplementation(async (_id, b) => b);
+
+      const result = await service.update(
+        'budget-1',
+        { name: 'New name', amount: 80, isActive: false },
+        USER_ID,
+      );
+
+      expect(result.name).toBe('New name');
+      expect(result.amount).toBe(80);
+      expect(result.isActive).toBe(false);
+      expect(budgetRepository.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('updates dates together when both provided', async () => {
+      const budget = makeBudget();
+      budgetRepository.findById.mockResolvedValue(budget);
+      budgetRepository.update.mockImplementation(async (_id, b) => b);
+
+      const newStart = new Date('2026-02-01T00:00:00Z');
+      const newEnd = new Date('2026-03-15T00:00:00Z');
+      const result = await service.update(
+        'budget-1',
+        { startDate: newStart, endDate: newEnd },
+        USER_ID,
+      );
+
+      expect(result.startDate).toEqual(newStart);
+      expect(result.endDate).toEqual(newEnd);
+    });
+
+    it('updates only endDate when startDate is unchanged', async () => {
+      const budget = makeBudget();
+      budgetRepository.findById.mockResolvedValue(budget);
+      budgetRepository.update.mockImplementation(async (_id, b) => b);
+
+      const newEnd = new Date('2026-04-15T00:00:00Z');
+      const result = await service.update('budget-1', { endDate: newEnd }, USER_ID);
+
+      expect(result.endDate).toEqual(newEnd);
+    });
+
+    it('throws NotFoundException when the budget does not exist', async () => {
+      budgetRepository.findById.mockResolvedValue(null);
+      await expect(service.update('missing', { name: 'x' }, USER_ID)).rejects.toThrow(
+        'Budget with ID missing not found',
+      );
+      expect(budgetRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws ForbiddenException when the budget belongs to another user', async () => {
+      const budget = makeBudget({ userId: 'other-user' });
+      budgetRepository.findById.mockResolvedValue(budget);
+
+      await expect(service.update('budget-1', { name: 'x' }, USER_ID)).rejects.toThrow(
+        'You can only modify your own budgets',
+      );
+      expect(budgetRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws when repository.update returns null', async () => {
+      const budget = makeBudget();
+      budgetRepository.findById.mockResolvedValue(budget);
+      budgetRepository.update.mockResolvedValue(null);
+
+      await expect(service.update('budget-1', { name: 'x' }, USER_ID)).rejects.toThrow(
+        'Budget with ID budget-1 not found',
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('deletes the budget when owned by the caller', async () => {
+      const budget = makeBudget();
+      budgetRepository.findById.mockResolvedValue(budget);
+      budgetRepository.delete.mockResolvedValue(true);
+
+      await service.remove('budget-1', USER_ID);
+
+      expect(budgetRepository.delete).toHaveBeenCalledWith('budget-1');
+    });
+
+    it('throws NotFoundException when budget missing', async () => {
+      budgetRepository.findById.mockResolvedValue(null);
+      await expect(service.remove('missing', USER_ID)).rejects.toThrow(
+        'Budget with ID missing not found',
+      );
+      expect(budgetRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws ForbiddenException when budget belongs to another user', async () => {
+      const budget = makeBudget({ userId: 'other-user' });
+      budgetRepository.findById.mockResolvedValue(budget);
+
+      await expect(service.remove('budget-1', USER_ID)).rejects.toThrow(
+        'You can only delete your own budgets',
+      );
+      expect(budgetRepository.delete).not.toHaveBeenCalled();
+    });
+  });
 });
