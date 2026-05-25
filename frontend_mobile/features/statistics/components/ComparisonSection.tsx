@@ -2,6 +2,7 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '@/context/I18nContext';
 import { useComparison } from '../hooks/useComparison';
+import { BarChart } from '@/components/charts/BarChart';
 import type { PeriodDateRange } from '@/components/PeriodFilter/usePeriodFilter';
 
 export interface ComparisonSectionProps {
@@ -93,6 +94,22 @@ export function ComparisonSection({
         <Text style={[styles.delta, { color: percentColor }]}>{deltaLabel}</Text>
         <Text style={[styles.percent, { color: percentColor }]}>{percentLabel}</Text>
       </View>
+
+      <BarChart
+        testID="comparison-bar-chart"
+        bars={[
+          {
+            label: t('charts.comparisonBars.previousLabel'),
+            value: data.previous.total,
+            color: '#9ca3af',
+          },
+          {
+            label: t('charts.comparisonBars.currentLabel'),
+            value: data.current.total,
+            color: '#6366f1',
+          },
+        ]}
+      />
 
       <Text style={styles.narrative}>{narrative}</Text>
     </View>
