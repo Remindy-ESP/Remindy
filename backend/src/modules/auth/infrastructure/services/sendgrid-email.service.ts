@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { IEmailService } from './email.service';
+import { IEmailService, MonthlyReportData } from './email.service';
 
 @Injectable()
 export class GmailEmailService implements IEmailService {
@@ -61,6 +61,52 @@ export class GmailEmailService implements IEmailService {
       });
     } catch (error: any) {
       this.logger.error(`Failed to send verification email to ${to}`, error);
+      throw error;
+    }
+  }
+
+  async sendMonthlyReport(params: { to: string; data: MonthlyReportData }): Promise<void> {
+    const { to, data } = params;
+
+    const trendIcon = data.trend === 'up' ? '↑' : data.trend === 'down' ? '↓' : '→';
+    const trendText =
+      data.trend === 'stable'
+        ? 'stable par rapport au mois précédent'
+        : `${Math.abs(data.percentageChange)}% ${data.trend === 'up' ? 'de plus' : 'de moins'} que le mois précédent`;
+
+    const categoryRows = data.categorySummary
+      .map(c => `<tr><td style="padding:4px 8px">${c.name}</td><td style="padding:4px 8px;text-align:right">${c.total.toFixed(2)} ${data.currency}</td></tr>`)
+      .join('');
+
+    const topCategoryHtml = data.topCategory
+      ? `<p><strong>Top catégorie :</strong> ${data.topCategory.name} — ${data.topCategory.total.toFixed(2)} ${data.currency}</p>`
+      : '';
+
+    const html = `
+      <h2>Récapitulatif mensuel — ${data.month}</h2>
+      <p>Bonjour ${data.userName},</p>
+      <p>Voici votre résumé de dépenses pour le mois de <strong>${data.month}</strong>.</p>
+      <h3>Total : ${data.totalExpenses.toFixed(2)} ${data.currency} ${trendIcon}</h3>
+      <p>${trendText}</p>
+      ${topCategoryHtml}
+      <h3>Détail par catégorie</h3>
+      <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
+        <tr><th style="padding:4px 8px">Catégorie</th><th style="padding:4px 8px">Montant</th></tr>
+        ${categoryRows || '<tr><td colspan="2" style="padding:4px 8px">Aucune dépense ce mois-ci</td></tr>'}
+      </table>
+      <p><strong>Abonnements actifs :</strong> ${data.activeSubscriptionsCount}</p>
+      <p style="color:#888;font-size:12px">Vous recevez cet email car le résumé mensuel est activé dans vos préférences Remindy.</p>
+    `;
+
+    try {
+      await this.createTransporter().sendMail({
+        from: `Remindy <${process.env.MAIL_USER}>`,
+        to,
+        subject: `Récapitulatif mensuel — ${data.month}`,
+        html,
+      });
+    } catch (error: any) {
+      this.logger.error(`Failed to send monthly report to ${to}`, error);
       throw error;
     }
   }

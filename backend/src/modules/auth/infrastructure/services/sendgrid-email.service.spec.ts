@@ -101,4 +101,63 @@ describe('GmailEmailService', () => {
       error,
     );
   });
+
+  it('sends the monthly report email via Gmail SMTP', async () => {
+    await service.sendMonthlyReport({
+      to: 'user@example.com',
+      data: {
+        userName: 'John',
+        month: 'avril 2026',
+        totalExpenses: 55.97,
+        previousTotalExpenses: 45.98,
+        percentageChange: 21.7,
+        trend: 'up',
+        categorySummary: [
+          { name: 'Streaming', total: 25.98 },
+          { name: 'Sport', total: 30 },
+        ],
+        topCategory: { name: 'Sport', total: 30 },
+        activeSubscriptionsCount: 3,
+        currency: 'EUR',
+      },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Récapitulatif mensuel — avril 2026',
+        html: expect.stringContaining('55.97'),
+      }),
+    );
+  });
+
+  it('logs the error and rethrows when sending monthly report fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP timeout');
+    sendMailMock.mockRejectedValue(error);
+
+    await expect(
+      service.sendMonthlyReport({
+        to: 'user@example.com',
+        data: {
+          userName: 'John',
+          month: 'avril 2026',
+          totalExpenses: 0,
+          previousTotalExpenses: 0,
+          percentageChange: 0,
+          trend: 'stable',
+          categorySummary: [],
+          topCategory: null,
+          activeSubscriptionsCount: 0,
+          currency: 'EUR',
+        },
+      }),
+    ).rejects.toBe(error);
+
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send monthly report to user@example.com',
+      error,
+    );
+  });
 });

@@ -121,6 +121,7 @@ describe('AuthModule', () => {
     expect(exportsMetadata).toEqual([
       JwtTokenService,
       ITokenService,
+      IEmailService,
       UserMfaTypeOrmRepository,
       TotpService,
     ]);
