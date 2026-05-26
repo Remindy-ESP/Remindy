@@ -139,7 +139,7 @@ describe('ProfilePrivacyScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Erreur',
-        "Impossible de demander l'export des donnees."
+        "Impossible de demander l'export des données."
       );
     });
   });

@@ -99,7 +99,7 @@ describe('ProfileHelpScreen', () => {
     fireEvent.press(getByTestId('reset-onboarding-guide-button'));
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
-        'Guide reinitialise',
+        'Guide réinitialisé',
         expect.any(String)
       );
     });

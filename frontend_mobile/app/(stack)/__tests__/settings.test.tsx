@@ -37,18 +37,18 @@ describe('SettingsScreen', () => {
 
   it('renders section cards and titles', () => {
     const { getByText, getAllByText } = render(<SettingsScreen />);
-    expect(getAllByText('Parametres').length).toBeGreaterThan(0);
+    expect(getAllByText('Réglages').length).toBeGreaterThan(0);
     expect(getByText('Support')).toBeTruthy();
   });
 
   it('renders all menu items with correct labels', () => {
     const { getByText } = render(<SettingsScreen />);
     expect(getByText('Notifications')).toBeTruthy();
-    expect(getByText('Preferences')).toBeTruthy();
-    expect(getByText('Securite')).toBeTruthy();
-    expect(getByText('Confidentialite')).toBeTruthy();
+    expect(getByText('Préférences')).toBeTruthy();
+    expect(getByText('Sécurité')).toBeTruthy();
+    expect(getByText('Confidentialité')).toBeTruthy();
     expect(getByText('Aide')).toBeTruthy();
-    expect(getByText('A propos')).toBeTruthy();
+    expect(getByText('À propos')).toBeTruthy();
   });
 
   it('navigates to notifications page when notifications item is pressed', () => {
@@ -107,8 +107,8 @@ describe('SettingsScreen', () => {
     fireEvent.press(getByTestId('settings-logout-button'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
-      'Deconnexion',
-      'Etes-vous sur de vouloir vous deconnecter ?',
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
       expect.any(Array),
     );
     expect(mockLogout).not.toHaveBeenCalled();
@@ -124,7 +124,7 @@ describe('SettingsScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Erreur',
-        'Echec de la deconnexion. Veuillez reessayer.',
+        'Échec de la déconnexion. Veuillez réessayer.',
       );
     });
   });

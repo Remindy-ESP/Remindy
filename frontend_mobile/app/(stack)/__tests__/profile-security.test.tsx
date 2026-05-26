@@ -41,7 +41,7 @@ describe('ProfileSecurityScreen', () => {
 
     await waitFor(() => {
       expect(mockChangePassword).toHaveBeenCalledWith('OldPassword123', 'NewPassword123');
-      expect(Alert.alert).toHaveBeenCalledWith('Succes', 'Votre mot de passe a ete modifie.');
+      expect(Alert.alert).toHaveBeenCalledWith('Succès', 'Votre mot de passe a été modifié.');
     });
   });
 
@@ -80,7 +80,7 @@ describe('ProfileSecurityScreen', () => {
     fireEvent.press(getByTestId('change-password-button'));
 
     expect(
-      await findByText('Le nouveau mot de passe doit contenir au moins 8 caracteres')
+      await findByText('Le nouveau mot de passe doit contenir au moins 8 caractères')
     ).toBeTruthy();
     expect(mockChangePassword).not.toHaveBeenCalled();
   });
@@ -93,7 +93,7 @@ describe('ProfileSecurityScreen', () => {
     fireEvent.press(getByTestId('change-password-button'));
 
     expect(
-      await findByText('Le nouveau mot de passe doit etre different de l ancien')
+      await findByText("Le nouveau mot de passe doit être différent de l'ancien")
     ).toBeTruthy();
     expect(mockChangePassword).not.toHaveBeenCalled();
   });
@@ -111,7 +111,7 @@ describe('ProfileSecurityScreen', () => {
   });
 
   it('shows error message and alert when API call fails (lines 75-77)', async () => {
-    mockChangePassword.mockRejectedValueOnce(new Error('Unauthorized'));
+    mockChangePassword.mockOnce ? mockChangePassword.mockRejectedValueOnce(new Error('Unauthorized')) : mockChangePassword.mockRejectedValue(new Error('Unauthorized'));
     const { getByTestId, findByText } = render(<ProfileSecurityScreen />);
 
     fireEvent.changeText(getByTestId('current-password-input'), 'OldPassword123');
@@ -128,7 +128,7 @@ describe('ProfileSecurityScreen', () => {
   });
 
   it('clears error/success messages when user edits an input field', async () => {
-    mockChangePassword.mockRejectedValueOnce(new Error('Bad request'));
+    mockChangePassword.mockOnce ? mockChangePassword.mockRejectedValueOnce(new Error('Bad request')) : mockChangePassword.mockRejectedValue(new Error('Bad request'));
     const { getByTestId, findByText, queryByText } = render(<ProfileSecurityScreen />);
 
     fireEvent.changeText(getByTestId('current-password-input'), 'OldPassword123');
@@ -170,7 +170,7 @@ describe('ProfileSecurityScreen', () => {
     fireEvent.changeText(getByTestId('new-password-input'), 'NewPassword12345');
     fireEvent.changeText(getByTestId('confirm-password-input'), 'NewPassword12345');
     fireEvent.press(getByTestId('change-password-button'));
-    expect(await findByText('Mot de passe modifie avec succes.')).toBeTruthy();
+    expect(await findByText('Mot de passe modifié avec succès.')).toBeTruthy();
   });
 
   it('resets input fields after successful password change', async () => {

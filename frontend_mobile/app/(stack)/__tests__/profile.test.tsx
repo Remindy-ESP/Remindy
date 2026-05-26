@@ -61,7 +61,7 @@ describe('ProfileScreen', () => {
 
   it('renders logout button', () => {
     const { getByText } = render(<ProfileScreen />);
-    expect(getByText('Deconnexion')).toBeTruthy();
+    expect(getByText('Déconnexion')).toBeTruthy();
   });
 
   it('calls logout handler when logout button is pressed', async () => {
@@ -143,7 +143,7 @@ describe('ProfileScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Erreur',
-        'Echec de la deconnexion. Veuillez reessayer.',
+        'Échec de la déconnexion. Veuillez réessayer.',
       );
     });
   });
@@ -171,8 +171,8 @@ describe('ProfileScreen', () => {
     fireEvent.press(getByTestId('logout-button'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
-      'Deconnexion',
-      'Etes-vous sur de vouloir vous deconnecter ?',
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
       expect.any(Array),
     );
     expect(mockLogout).not.toHaveBeenCalled();
