@@ -18,7 +18,7 @@ export interface DataTablePagination {
 }
 
 interface DataTablePageProps<T extends GridValidRowModel> {
-  title: string;
+  title?: string;
   filters?: ReactNode;
   columns: GridColDef<T>[];
   rows: T[];
@@ -67,9 +67,11 @@ export function DataTablePage<T extends GridValidRowModel>({
 
   return (
     <Box>
-      <Typography variant='h4' sx={{ mb: 3 }}>
-        {title}
-      </Typography>
+      {title && (
+        <Typography variant='h4' sx={{ mb: 3 }}>
+          {title}
+        </Typography>
+      )}
 
       {filters && (
         <Paper
@@ -112,7 +114,7 @@ export function DataTablePage<T extends GridValidRowModel>({
               ? { '& .MuiDataGrid-row:hover': { cursor: 'pointer' } }
               : undefined
           }
-          aria-label={ariaLabel ?? title}
+          aria-label={ariaLabel ?? title ?? 'Tableau'}
         />
       </Paper>
     </Box>
