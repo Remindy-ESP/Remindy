@@ -5,6 +5,7 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import { SecurityLogsTab } from './SecurityLogsTab';
 import { SuspiciousEventsTab } from './SuspiciousEventsTab';
+import { BlockedIpsTab } from './BlockedIpsTab';
 
 type SecurityTab = 'logs' | 'suspicious' | 'blocked-ips' | 'policy';
 
@@ -67,7 +68,7 @@ export function SecurityPage() {
 
       {activeTab === 'logs' && <SecurityLogsTab />}
       {activeTab === 'suspicious' && <SuspiciousEventsTab />}
-      {activeTab === 'blocked-ips' && <Placeholder label='IPs bloquées' />}
+      {activeTab === 'blocked-ips' && <BlockedIpsTab />}
       {activeTab === 'policy' && <Placeholder label='Politique' />}
     </Box>
   );
