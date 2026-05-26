@@ -18,46 +18,20 @@ import { DataGrid } from '@mui/x-data-grid';
 import { frFR } from '@mui/x-data-grid/locales';
 import { useAdminTickets } from '@/modules/support/application/useAdminTickets';
 import { ErrorState } from '@/shared/ui/NetworkStates';
+import {
+  TicketStatusBadge,
+  TICKET_STATUS_LABELS,
+} from './TicketStatusBadge';
+import {
+  TicketPriorityBadge,
+  TICKET_PRIORITY_LABELS,
+} from './TicketPriorityBadge';
 import type { AdminTicketsQuery, SupportTicket } from '@/shared/domain/types';
 import {
   SupportTicketStatus,
   SupportTicketPriority,
   SupportTicketCategory,
 } from '@/shared/domain/types';
-
-const STATUS_LABELS: Record<SupportTicketStatus, string> = {
-  [SupportTicketStatus.OPEN]: 'Ouvert',
-  [SupportTicketStatus.PENDING_USER]: 'En attente',
-  [SupportTicketStatus.RESOLVED]: 'Résolu',
-  [SupportTicketStatus.CLOSED]: 'Fermé',
-};
-
-const STATUS_COLORS: Record<
-  SupportTicketStatus,
-  'warning' | 'info' | 'success' | 'default'
-> = {
-  [SupportTicketStatus.OPEN]: 'warning',
-  [SupportTicketStatus.PENDING_USER]: 'info',
-  [SupportTicketStatus.RESOLVED]: 'success',
-  [SupportTicketStatus.CLOSED]: 'default',
-};
-
-const PRIORITY_LABELS: Record<SupportTicketPriority, string> = {
-  [SupportTicketPriority.LOW]: 'Faible',
-  [SupportTicketPriority.MEDIUM]: 'Moyen',
-  [SupportTicketPriority.HIGH]: 'Élevé',
-  [SupportTicketPriority.URGENT]: 'Urgent',
-};
-
-const PRIORITY_COLORS: Record<
-  SupportTicketPriority,
-  'default' | 'info' | 'warning' | 'error'
-> = {
-  [SupportTicketPriority.LOW]: 'default',
-  [SupportTicketPriority.MEDIUM]: 'info',
-  [SupportTicketPriority.HIGH]: 'warning',
-  [SupportTicketPriority.URGENT]: 'error',
-};
 
 const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
   [SupportTicketCategory.TECHNICAL]: 'Technique',
@@ -155,11 +129,7 @@ export function TicketListPage() {
       headerName: 'Statut',
       width: 130,
       renderCell: ({ value }) => (
-        <Chip
-          label={STATUS_LABELS[value as SupportTicketStatus]}
-          size='small'
-          color={STATUS_COLORS[value as SupportTicketStatus]}
-        />
+        <TicketStatusBadge status={value as SupportTicketStatus} />
       ),
     },
     {
@@ -167,12 +137,7 @@ export function TicketListPage() {
       headerName: 'Priorité',
       width: 110,
       renderCell: ({ value }) => (
-        <Chip
-          label={PRIORITY_LABELS[value as SupportTicketPriority]}
-          size='small'
-          color={PRIORITY_COLORS[value as SupportTicketPriority]}
-          variant='outlined'
-        />
+        <TicketPriorityBadge priority={value as SupportTicketPriority} />
       ),
     },
     {
@@ -277,7 +242,7 @@ export function TicketListPage() {
           <MenuItem value=''>Tous</MenuItem>
           {Object.values(SupportTicketStatus).map(s => (
             <MenuItem key={s} value={s}>
-              {STATUS_LABELS[s]}
+              {TICKET_STATUS_LABELS[s]}
             </MenuItem>
           ))}
         </TextField>
@@ -296,7 +261,7 @@ export function TicketListPage() {
           <MenuItem value=''>Toutes</MenuItem>
           {Object.values(SupportTicketPriority).map(p => (
             <MenuItem key={p} value={p}>
-              {PRIORITY_LABELS[p]}
+              {TICKET_PRIORITY_LABELS[p]}
             </MenuItem>
           ))}
         </TextField>

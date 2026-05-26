@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
-import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
@@ -15,29 +14,17 @@ import { useAdminTicket } from '@/modules/support/application/useAdminTickets';
 import { useTicketActions } from '@/modules/support/application/useTicketActions';
 import { FullPageLoader, ErrorState } from '@/shared/ui/NetworkStates';
 import { PermissionGate } from '@/shared/ui/PermissionGate';
+import {
+  TicketStatusBadge,
+  TICKET_STATUS_LABELS,
+} from './TicketStatusBadge';
+import { TicketPriorityBadge } from './TicketPriorityBadge';
 import type { SupportTicketMessage } from '@/shared/domain/types';
 import {
   AdminPermission,
   SupportTicketStatus,
   SupportTicketAuthorType,
 } from '@/shared/domain/types';
-
-const STATUS_LABELS: Record<SupportTicketStatus, string> = {
-  [SupportTicketStatus.OPEN]: 'Ouvert',
-  [SupportTicketStatus.PENDING_USER]: 'En attente',
-  [SupportTicketStatus.RESOLVED]: 'Résolu',
-  [SupportTicketStatus.CLOSED]: 'Fermé',
-};
-
-const STATUS_COLORS: Record<
-  SupportTicketStatus,
-  'warning' | 'info' | 'success' | 'default'
-> = {
-  [SupportTicketStatus.OPEN]: 'warning',
-  [SupportTicketStatus.PENDING_USER]: 'info',
-  [SupportTicketStatus.RESOLVED]: 'success',
-  [SupportTicketStatus.CLOSED]: 'default',
-};
 
 function MessageBubble({ message }: { message: SupportTicketMessage }) {
   const isAdmin = message.authorType === SupportTicketAuthorType.ADMIN;
@@ -142,11 +129,8 @@ export function TicketDetailPage() {
             {ticket.subject}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
-            <Chip
-              label={STATUS_LABELS[ticket.status]}
-              size='small'
-              color={STATUS_COLORS[ticket.status]}
-            />
+            <TicketStatusBadge status={ticket.status} />
+            <TicketPriorityBadge priority={ticket.priority} />
             {ticket.user && (
               <Typography
                 variant='caption'
@@ -229,7 +213,7 @@ export function TicketDetailPage() {
                   <MenuItem value=''>Inchangé</MenuItem>
                   {Object.values(SupportTicketStatus).map(s => (
                     <MenuItem key={s} value={s}>
-                      {STATUS_LABELS[s]}
+                      {TICKET_STATUS_LABELS[s]}
                     </MenuItem>
                   ))}
                 </TextField>
