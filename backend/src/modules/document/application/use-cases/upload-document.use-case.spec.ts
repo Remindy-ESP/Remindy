@@ -232,7 +232,7 @@ describe('UploadDocumentUseCase', () => {
     expect(repository.create).toHaveBeenCalled();
   });
 
-  it('should call checkUserQuota twice to prevent race conditions', async () => {
+  it('should call checkUserQuota once before upload', async () => {
     const fileBuffer = Buffer.from('test content');
     const dto: UploadDocumentAppDto = {
       userId: 'user-123',
@@ -257,7 +257,7 @@ describe('UploadDocumentUseCase', () => {
 
     await useCase.execute(dto);
 
-    expect(quotaService.checkUserQuota).toHaveBeenCalledTimes(2);
+    expect(quotaService.checkUserQuota).toHaveBeenCalledTimes(1);
   });
 
   it('should handle queue failure gracefully (mark doc as failed, not throw)', async () => {
