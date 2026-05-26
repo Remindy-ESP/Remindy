@@ -19,66 +19,8 @@ import {
   TICKET_STATUS_LABELS,
 } from './TicketStatusBadge';
 import { TicketPriorityBadge } from './TicketPriorityBadge';
-import type { SupportTicketMessage } from '@/shared/domain/types';
-import {
-  AdminPermission,
-  SupportTicketStatus,
-  SupportTicketAuthorType,
-} from '@/shared/domain/types';
-
-function MessageBubble({ message }: { message: SupportTicketMessage }) {
-  const isAdmin = message.authorType === SupportTicketAuthorType.ADMIN;
-  const isSystem = message.authorType === SupportTicketAuthorType.SYSTEM;
-
-  const authorLabel = isSystem
-    ? 'Système'
-    : message.author
-      ? [message.author.firstName, message.author.lastName]
-          .filter(Boolean)
-          .join(' ') || message.author.email
-      : isAdmin
-        ? 'Admin'
-        : 'Utilisateur';
-
-  return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: isAdmin || isSystem ? 'flex-end' : 'flex-start',
-        mb: 2,
-      }}
-    >
-      <Typography
-        variant='caption'
-        color='text.secondary'
-        sx={{ mb: 0.5, px: 0.5 }}
-      >
-        {authorLabel} · {new Date(message.createdAt).toLocaleString('fr-FR')}
-      </Typography>
-      <Box
-        sx={{
-          maxWidth: '75%',
-          bgcolor: isAdmin
-            ? 'primary.main'
-            : isSystem
-              ? 'action.selected'
-              : 'background.default',
-          color: isAdmin ? '#fff' : 'text.primary',
-          borderRadius: 2,
-          px: 2,
-          py: 1.5,
-          border: isSystem ? '1px dashed' : 'none',
-          borderColor: 'divider',
-        }}
-      >
-        <Typography variant='body2' sx={{ whiteSpace: 'pre-wrap' }}>
-          {message.body}
-        </Typography>
-      </Box>
-    </Box>
-  );
-}
+import { TicketTimeline } from './TicketTimeline';
+import { AdminPermission, SupportTicketStatus } from '@/shared/domain/types';
 
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -152,25 +94,7 @@ export function TicketDetailPage() {
       </Box>
 
       {/* Message thread */}
-      <Paper
-        sx={{
-          p: 2,
-          mb: 2,
-          maxHeight: 'calc(100vh - 420px)',
-          minHeight: 200,
-          overflowY: 'auto',
-        }}
-      >
-        {ticket.messages.length === 0 ? (
-          <Typography color='text.secondary' textAlign='center' py={4}>
-            Aucun message
-          </Typography>
-        ) : (
-          ticket.messages.map(msg => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))
-        )}
-      </Paper>
+      <TicketTimeline messages={ticket.messages} />
 
       {/* Reply form */}
       <PermissionGate permission={AdminPermission.SUPPORT_WRITE}>
