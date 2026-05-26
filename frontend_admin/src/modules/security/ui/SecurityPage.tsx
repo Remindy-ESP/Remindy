@@ -6,6 +6,7 @@ import Tab from '@mui/material/Tab';
 import { SecurityLogsTab } from './SecurityLogsTab';
 import { SuspiciousEventsTab } from './SuspiciousEventsTab';
 import { BlockedIpsTab } from './BlockedIpsTab';
+import { SecurityPolicyTab } from './SecurityPolicyTab';
 
 type SecurityTab = 'logs' | 'suspicious' | 'blocked-ips' | 'policy';
 
@@ -20,22 +21,6 @@ const DEFAULT_TAB: SecurityTab = 'logs';
 
 function isSecurityTab(value: string | null): value is SecurityTab {
   return TABS.some(t => t.value === value);
-}
-
-function Placeholder({ label }: { label: string }) {
-  return (
-    <Box
-      sx={{
-        p: 4,
-        border: '1px dashed',
-        borderColor: 'divider',
-        borderRadius: 2,
-        color: 'text.secondary',
-      }}
-    >
-      {label} — à implémenter
-    </Box>
-  );
 }
 
 export function SecurityPage() {
@@ -69,7 +54,7 @@ export function SecurityPage() {
       {activeTab === 'logs' && <SecurityLogsTab />}
       {activeTab === 'suspicious' && <SuspiciousEventsTab />}
       {activeTab === 'blocked-ips' && <BlockedIpsTab />}
-      {activeTab === 'policy' && <Placeholder label='Politique' />}
+      {activeTab === 'policy' && <SecurityPolicyTab />}
     </Box>
   );
 }
