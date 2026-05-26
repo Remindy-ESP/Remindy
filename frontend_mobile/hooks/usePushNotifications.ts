@@ -5,16 +5,21 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import notificationService from '../services/api/notification.service';
 
-// Configure how notifications are handled when the app is in the foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// expo-notifications remote push support was removed from Expo Go in SDK 53.
+// Skip all push setup when running inside Expo Go to avoid crashes.
+const IS_EXPO_GO = Constants.appOwnership === 'expo';
+
+if (!IS_EXPO_GO) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 /**
  * Hook to manage Expo push notifications
@@ -31,6 +36,8 @@ export function usePushNotifications() {
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
+    if (IS_EXPO_GO) return;
+
     // Register for push notifications
     registerForPushNotificationsAsync()
       .then(async (token) => {
