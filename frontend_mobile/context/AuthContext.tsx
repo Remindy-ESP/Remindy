@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { Alert, Platform } from 'react-native';
 import axios from 'axios';
+import Constants from 'expo-constants';
 import * as Google from 'expo-auth-session/providers/google';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
@@ -17,6 +18,14 @@ import i18n from '@/i18n';
 WebBrowser.maybeCompleteAuthSession();
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL;
+
+const IS_EXPO_GO = Constants.appOwnership === 'expo';
+
+// Expo Go doesn't support custom URI schemes — use the Expo auth proxy instead.
+// In a dev/prod build, expo-auth-session resolves the redirect URI natively.
+const GOOGLE_REDIRECT_URI = IS_EXPO_GO
+  ? 'https://auth.expo.io/@remindy/frontend_mobile'
+  : undefined;
 
 interface AuthContextType {
   user: User | null;
@@ -41,11 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Google OAuth hook — must be called at top level.
   // expo-auth-session v7 requires androidClientId to be a non-empty string on Android;
   // fall back to a placeholder so the hook never throws when env vars are absent.
+  // In Expo Go, force the Expo proxy URI — the local exp:// URI is rejected by Google.
   const [, , googlePromptAsync] = Google.useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || undefined,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || undefined,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || 'not_configured',
     scopes: ['profile', 'email'],
+    ...(GOOGLE_REDIRECT_URI ? { redirectUri: GOOGLE_REDIRECT_URI } : {}),
   });
 
   useEffect(() => {
