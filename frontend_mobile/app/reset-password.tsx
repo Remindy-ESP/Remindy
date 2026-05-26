@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
@@ -24,6 +25,8 @@ export default function ResetPasswordScreen() {
   const [token, setToken] = useState(queryToken ?? '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -83,19 +86,19 @@ export default function ResetPasswordScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={{ fontSize: 26, fontWeight: '700', color: '#333', marginBottom: 8, textAlign: 'center' }}>
+        <Text style={{ fontSize: 26, fontWeight: '700', color: '#f0f0f0', marginBottom: 8, textAlign: 'center' }}>
           {t('auth.reset.title')}
         </Text>
-        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20, lineHeight: 21 }}>
+        <Text style={{ fontSize: 14, color: '#9ca3af', textAlign: 'center', marginBottom: 20, lineHeight: 21 }}>
           {t('auth.reset.subtitle')}
         </Text>
 
-        <FormFeedback error={error} success={success} variant="light" />
+        <FormFeedback error={error} success={success} variant="dark" />
 
         <TextInput
           style={styles.input}
           placeholder={t('auth.reset.tokenPlaceholder')}
-          placeholderTextColor="#999"
+          placeholderTextColor="#6b7280"
           value={token}
           onChangeText={setToken}
           editable={!loading}
@@ -103,27 +106,37 @@ export default function ResetPasswordScreen() {
           testID="reset-token-input"
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.reset.newPasswordPlaceholder')}
-          placeholderTextColor="#999"
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-          editable={!loading}
-          testID="reset-password-input"
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder={t('auth.reset.newPasswordPlaceholder')}
+            placeholderTextColor="#6b7280"
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry={!showNewPassword}
+            editable={!loading}
+            testID="reset-password-input"
+          />
+          <TouchableOpacity style={styles.eyeButton} onPress={() => setShowNewPassword(v => !v)}>
+            <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder={t('auth.reset.confirmPlaceholder')}
-          placeholderTextColor="#999"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          editable={!loading}
-          testID="reset-confirm-password-input"
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder={t('auth.reset.confirmPlaceholder')}
+            placeholderTextColor="#6b7280"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+            editable={!loading}
+            testID="reset-confirm-password-input"
+          />
+          <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(v => !v)}>
+            <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}

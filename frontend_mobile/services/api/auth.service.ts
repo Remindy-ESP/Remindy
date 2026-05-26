@@ -116,6 +116,19 @@ class AuthService {
   /**
    * Clear all authentication data
    */
+  async oauthApple(data: {
+    identityToken: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  }): Promise<{ accessToken: string; refreshToken: string }> {
+    const response = await apiClient.post<{ accessToken: string; refreshToken: string }>(
+      `${this.BASE_PATH}/oauth/apple`,
+      data,
+    );
+    return response.data;
+  }
+
   async clearAuth(): Promise<void> {
     await client.clearTokens();
   }

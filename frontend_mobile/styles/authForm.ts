@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const authFormStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#06071D',
   },
   content: {
     flex: 1,
@@ -11,13 +11,33 @@ export const authFormStyles = StyleSheet.create({
     padding: 20,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1F2140',
     borderRadius: 12,
     padding: 16,
     marginBottom: 14,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#4E5498',
+    color: '#fff',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F2140',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4E5498',
+    marginBottom: 14,
+    paddingHorizontal: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#fff',
+  },
+  eyeButton: {
+    padding: 4,
   },
   button: {
     backgroundColor: '#6366f1',
@@ -40,21 +60,25 @@ export const authFormStyles = StyleSheet.create({
     fontWeight: '600',
   },
   errorBox: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#4B242C',
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#A6475A',
   },
   errorText: {
-    color: '#991b1b',
+    color: '#FFD7DE',
   },
   successBox: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: '#1E4732',
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#3C9B6A',
   },
   successText: {
-    color: '#166534',
+    color: '#D3FFEA',
   },
 });

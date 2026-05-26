@@ -89,6 +89,15 @@ export class EUser {
   @Column({ type: 'timestamptz', nullable: true })
   passwordChangedAt: Date;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  googleId: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  microsoftId: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  appleId: string | null;
+
   @CreateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   createdAt: Date;
 
