@@ -320,6 +320,35 @@ export interface SecurityLogQuery {
   limit?: number;
 }
 
+export interface BlockIpRequest {
+  ipAddress: string;
+  reason: BlockReason;
+  notes?: string;
+  durationMinutes?: number;
+}
+
+export interface UpdateSecurityPolicyRequest {
+  maxLoginAttempts?: number;
+  lockoutDurationMinutes?: number;
+  sessionTimeoutMinutes?: number;
+  requireMfaForAdmin?: boolean;
+  minPasswordLength?: number;
+  requireUppercase?: boolean;
+  requireNumbers?: boolean;
+  requireSpecialChars?: boolean;
+  passwordExpiryDays?: number;
+  rateLimitPerMinute?: number;
+  autoBlockAfterRequests?: number;
+  autoBlockDurationMinutes?: number;
+  allowedOrigins?: string[];
+}
+
+export interface IpActivity {
+  ipAddress: string;
+  isBlocked: boolean;
+  recentLogs: SecurityLog[];
+}
+
 // --- RBAC ---
 // `Role` enum (above) is the static role hierarchy used at the auth layer.
 // `RbacRole` is the dynamic, admin-managed RBAC entity exposed via /admin/roles.
