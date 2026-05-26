@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import { IEmailService, MonthlyReportData } from './email.service';
+import { IEmailService, MonthlyReportData, NotificationEmailData } from './email.service';
 
 @Injectable()
 export class GmailEmailService implements IEmailService {
@@ -114,6 +114,40 @@ export class GmailEmailService implements IEmailService {
       });
     } catch (error: any) {
       this.logger.error(`Failed to send monthly report to ${to}`, error);
+      throw error;
+    }
+  }
+
+  async sendNotificationEmail(params: { to: string; data: NotificationEmailData }): Promise<void> {
+    const { to, data } = params;
+
+    const isRenewal = data.type === 'subscription_renewal';
+    const accentColor = isRenewal ? '#22c55e' : '#f97316';
+    const emoji = isRenewal ? '🔄' : '⏳';
+    const subject = `${emoji} ${data.title}`;
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;">
+        <div style="background:${accentColor};color:#fff;padding:16px 20px;border-radius:10px 10px 0 0;">
+          <h2 style="margin:0;font-size:18px;">${emoji} ${data.title}</h2>
+        </div>
+        <div style="background:#f9fafb;padding:20px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 10px 10px;">
+          <p style="margin:0 0 12px;font-size:15px;color:#374151;">${data.body}</p>
+          <p style="margin:0;font-size:13px;color:#9ca3af;">— Remindy</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await this.createTransporter().sendMail({
+        from: `Remindy <${process.env.MAIL_USER}>`,
+        to,
+        subject,
+        html,
+      });
+      this.logger.log(`Notification email sent to ${to} (${data.type})`);
+    } catch (error: any) {
+      this.logger.error(`Failed to send notification email to ${to}: ${error.message}`);
       throw error;
     }
   }

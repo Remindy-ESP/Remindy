@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import type { INotificationRepository } from '../../notification/application/ports/notification-repository.interface';
 import { NOTIFICATION_REPOSITORY } from '../../notification/application/ports/notification-repository.interface';
 import { ExpoPushService } from '../../notification/application/services/expo-push.service';
+import { IEmailService } from '../../auth/infrastructure/services/email.service';
 import {
   Notification,
   NotificationType,
@@ -12,6 +13,8 @@ import {
 } from '../../notification/domain/notification.entity';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { ReminderEntity } from '../../reminder/infrastructure/persistence/reminder.entity';
+import { UserPreferenceEntity } from '../../../infrastructure/database/entities/user-preference.entity';
+import { EUser } from '../../../infrastructure/database/entities/user.entity';
 import type { PushNotificationPayload } from '../../notification/application/services/expo-push.service';
 
 interface BaseNotificationRow {
@@ -43,6 +46,11 @@ export class ProcessRenewalNotificationsTask {
     @Inject(NOTIFICATION_REPOSITORY)
     private readonly notificationRepository: INotificationRepository,
     private readonly expoPushService: ExpoPushService,
+    private readonly emailService: IEmailService,
+    @InjectRepository(UserPreferenceEntity)
+    private readonly preferencesRepository: Repository<UserPreferenceEntity>,
+    @InjectRepository(EUser)
+    private readonly userRepository: Repository<EUser>,
   ) {}
 
   /**
@@ -60,7 +68,7 @@ export class ProcessRenewalNotificationsTask {
     try {
       const result = await this.processNotifications();
       this.logger.log(
-        `Notifications process completed. Created: ${result.notificationsCreated}, Push sent: ${result.pushSent}`,
+        `Notifications process completed. Created: ${result.notificationsCreated}, Push sent: ${result.pushSent}, Emails sent: ${result.emailsSent}`,
       );
     } catch (error) {
       this.logger.error(`Notifications process failed: ${error}`);
@@ -74,6 +82,7 @@ export class ProcessRenewalNotificationsTask {
     subscriptionsProcessed: number;
     notificationsCreated: number;
     pushSent: number;
+    emailsSent: number;
   }> {
     this.logger.log('Manually triggering notifications process...');
     return this.processNotifications();
@@ -87,6 +96,7 @@ export class ProcessRenewalNotificationsTask {
     subscriptionsProcessed: number;
     notificationsCreated: number;
     pushSent: number;
+    emailsSent: number;
   }> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -98,7 +108,9 @@ export class ProcessRenewalNotificationsTask {
 
     let notificationsCreated = 0;
     let pushSent = 0;
+    let emailsSent = 0;
     const pushPayloads: PushNotificationPayload[] = [];
+    const emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[] = [];
     const uniqueSubscriptionIds = new Set<string>();
 
     // ─── 0. Transition expired trials to active ───────────────────────
@@ -111,6 +123,7 @@ export class ProcessRenewalNotificationsTask {
     const renewalResults = await this.processRenewalNotifications(
       todayStr,
       pushPayloads,
+      emailPayloads,
       uniqueSubscriptionIds,
     );
     notificationsCreated += renewalResults;
@@ -119,6 +132,7 @@ export class ProcessRenewalNotificationsTask {
     const trialResults = await this.processTrialEndingNotifications(
       todayStr,
       pushPayloads,
+      emailPayloads,
       uniqueSubscriptionIds,
     );
     notificationsCreated += trialResults;
@@ -134,10 +148,16 @@ export class ProcessRenewalNotificationsTask {
       }
     }
 
+    // ─── 4. Send all email notifications ────────────────────────────────
+    if (emailPayloads.length > 0) {
+      emailsSent = await this.sendEmailNotifications(emailPayloads);
+    }
+
     return {
       subscriptionsProcessed: uniqueSubscriptionIds.size,
       notificationsCreated,
       pushSent,
+      emailsSent,
     };
   }
 
@@ -158,7 +178,68 @@ export class ProcessRenewalNotificationsTask {
   }
 
   /**
-   * Persist a single notification entry and queue its push payload.
+   * Send email notifications for users who have notificationEmail enabled
+   */
+  private async sendEmailNotifications(
+    payloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
+  ): Promise<number> {
+    // Get unique user IDs
+    const userIds = [...new Set(payloads.map(p => p.userId))];
+
+    // Fetch preferences for all users in one query
+    const preferences = await this.preferencesRepository
+      .createQueryBuilder('p')
+      .where('p.userId IN (:...userIds)', { userIds })
+      .andWhere('p.notificationEmail = true')
+      .andWhere('p.deletedAt IS NULL')
+      .getMany();
+
+    const emailEnabledUserIds = new Set(preferences.map(p => p.userId));
+
+    if (emailEnabledUserIds.size === 0) {
+      this.logger.log('No users with email notifications enabled');
+      return 0;
+    }
+
+    // Fetch user emails in one query
+    const users = await this.userRepository
+      .createQueryBuilder('u')
+      .where('u.id IN (:...userIds)', { userIds: [...emailEnabledUserIds] })
+      .andWhere('u.deletedAt IS NULL')
+      .getMany();
+
+    const userEmailMap = new Map(users.map(u => [u.id, u.email]));
+
+    let sent = 0;
+
+    for (const payload of payloads) {
+      if (!emailEnabledUserIds.has(payload.userId)) continue;
+
+      const email = userEmailMap.get(payload.userId);
+      if (!email) continue;
+
+      try {
+        await this.emailService.sendNotificationEmail({
+          to: email,
+          data: {
+            title: payload.title,
+            body: payload.body,
+            subscriptionName: payload.subscriptionName,
+            type: payload.type,
+          },
+        });
+        sent++;
+      } catch (error) {
+        this.logger.error(`Failed to send notification email to ${email}: ${error}`);
+      }
+    }
+
+    this.logger.log(`Email notifications: ${sent}/${payloads.length} sent successfully`);
+    return sent;
+  }
+
+  /**
+   * Persist a single notification entry and queue its push/email payload.
    * Shared by both renewal and trial-ending loops to avoid duplication.
    */
   private async persistNotification(
@@ -170,6 +251,7 @@ export class ProcessRenewalNotificationsTask {
     dateKey: string,
     dateValue: string,
     pushPayloads: PushNotificationPayload[],
+    emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
   ): Promise<void> {
     const notification = new Notification({
       userId: row.userId,
@@ -187,11 +269,22 @@ export class ProcessRenewalNotificationsTask {
     });
     notification.markAsSent();
     await this.notificationRepository.save(notification);
+
+    // Queue push notification
     pushPayloads.push({
       userId: row.userId,
       title,
       body,
       data: { type: pushType, subscriptionId: row.subscriptionId, [dateKey]: dateValue },
+    });
+
+    // Queue email notification
+    emailPayloads.push({
+      userId: row.userId,
+      title,
+      body,
+      subscriptionName: row.subscriptionName,
+      type: pushType as 'subscription_renewal' | 'trial_ending',
     });
   }
 
@@ -202,6 +295,7 @@ export class ProcessRenewalNotificationsTask {
   private async processRenewalNotifications(
     todayStr: string,
     pushPayloads: PushNotificationPayload[],
+    emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
     uniqueSubscriptionIds: Set<string>,
   ): Promise<number> {
     const dueNotifications: DueNotificationRow[] = await this.subscriptionRepository
@@ -259,6 +353,7 @@ export class ProcessRenewalNotificationsTask {
           'nextDueDate',
           row.nextDueDate,
           pushPayloads,
+          emailPayloads,
         );
         created++;
         this.logger.log(
@@ -281,6 +376,7 @@ export class ProcessRenewalNotificationsTask {
   private async processTrialEndingNotifications(
     todayStr: string,
     pushPayloads: PushNotificationPayload[],
+    emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
     uniqueSubscriptionIds: Set<string>,
   ): Promise<number> {
     const trialNotifications: TrialEndingRow[] = await this.subscriptionRepository
@@ -338,6 +434,7 @@ export class ProcessRenewalNotificationsTask {
           'trialEndDate',
           row.trialEndDate,
           pushPayloads,
+          emailPayloads,
         );
         created++;
         this.logger.log(
