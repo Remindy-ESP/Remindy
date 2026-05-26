@@ -26,8 +26,6 @@ export default function AuthScreen() {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [onboardingCheckDone, setOnboardingCheckDone] = useState(false);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
   const router = useRouter();
   const {
@@ -42,40 +40,17 @@ export default function AuthScreen() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    let cancelled = false;
+    if (!isAuthenticated || authLoading) return;
 
-    const checkOnboarding = async () => {
-      try {
-        const seen = await onboardingService.hasSeenOnboarding();
-        if (!cancelled) {
-          setHasSeenOnboarding(seen);
-        }
-
-        if (!cancelled && !seen) {
-          router.replace('/onboarding' as any);
-          return;
-        }
-      } catch (err) {
-        console.error('Onboarding check failed:', err);
-      } finally {
-        if (!cancelled) {
-          setOnboardingCheckDone(true);
-        }
+    void (async () => {
+      const seen = await onboardingService.hasSeenOnboarding();
+      if (!seen) {
+        router.replace('/onboarding' as any);
+      } else {
+        router.replace('/(tabs)/dashboard');
       }
-    };
-
-    void checkOnboarding();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && !authLoading && onboardingCheckDone && hasSeenOnboarding !== false) {
-      router.replace('/(tabs)/dashboard');
-    }
-  }, [isAuthenticated, authLoading, onboardingCheckDone, hasSeenOnboarding]);
+    })();
+  }, [isAuthenticated, authLoading]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -190,7 +165,7 @@ export default function AuthScreen() {
     }
   };
 
-  if (authLoading || !onboardingCheckDone) {
+  if (authLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#6366f1" />

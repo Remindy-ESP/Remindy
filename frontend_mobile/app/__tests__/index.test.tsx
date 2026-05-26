@@ -172,16 +172,10 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByText('Chargement…')).toBeTruthy());
   });
 
-  it('shows loading spinner while onboarding check is pending', async () => {
-    // never resolves → onboardingCheckDone stays false
-    mockHasSeenOnboarding.mockReturnValue(new Promise(() => {}));
-    const { getByText } = render(<AuthScreen />);
-    await waitFor(() => expect(getByText('Chargement…')).toBeTruthy());
-  });
-
   // ── Onboarding redirect ─────────────────────────────────────────────────────
 
-  it('redirects to /onboarding when onboarding not seen', async () => {
+  it('redirects to /onboarding after login when onboarding not yet seen', async () => {
+    mockAuthState.isAuthenticated = true;
     mockHasSeenOnboarding.mockResolvedValue(false);
     render(<AuthScreen />);
     await waitFor(() => {
