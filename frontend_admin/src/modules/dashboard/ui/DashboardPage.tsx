@@ -1,14 +1,19 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Chip from '@mui/material/Chip';
 import Skeleton from '@mui/material/Skeleton';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
 import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import CloudIcon from '@mui/icons-material/Cloud';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import {
   Bar,
   BarChart,
@@ -18,11 +23,12 @@ import {
   Pie,
   PieChart,
   ResponsiveContainer,
-  Tooltip,
+  Tooltip as ChartTooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 import { useDashboard } from '@/modules/dashboard/application/useDashboard';
+import type { DashboardPeriod } from '@/modules/dashboard/infrastructure/dashboardApi';
 import { ErrorState } from '@/shared/ui/NetworkStates';
 import type { DashboardOverview } from '@/shared/domain/types';
 
@@ -189,6 +195,30 @@ const OCR_COLORS: Record<string, string> = {
   failed: '#ef4444',
 };
 
+const PERIOD_OPTIONS: { value: DashboardPeriod; label: string }[] = [
+  { value: '7d', label: '7j' },
+  { value: '30d', label: '30j' },
+  { value: '90d', label: '90j' },
+];
+
+function useElapsedSeconds(reference: number): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return Math.max(0, Math.floor((now - reference) / 1000));
+}
+
+function formatElapsed(seconds: number): string {
+  if (seconds < 5) return "à l'instant";
+  if (seconds < 60) return `il y a ${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return `il y a ${hours} h`;
+}
+
 interface ChartPanelProps {
   title: string;
   loading: boolean;
@@ -273,7 +303,11 @@ function buildCloudSubs(overview?: DashboardOverview): SubMetric[] {
 }
 
 export function DashboardPage() {
-  const { data, isLoading, isError, refetch } = useDashboard();
+  const [period, setPeriod] = useState<DashboardPeriod>('30d');
+  const { data, isLoading, isError, isFetching, refetch, dataUpdatedAt } =
+    useDashboard({ period });
+
+  const elapsed = useElapsedSeconds(dataUpdatedAt);
 
   if (isError) {
     return (
@@ -290,9 +324,73 @@ export function DashboardPage() {
 
   return (
     <Box>
-      <Typography variant='h4' sx={{ mb: 3 }}>
-        Dashboard
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Typography variant='h4' sx={{ mr: 'auto' }}>
+          Dashboard
+        </Typography>
+
+        <ToggleButtonGroup
+          size='small'
+          value={period}
+          exclusive
+          onChange={(_, next: DashboardPeriod | null) => {
+            if (next) setPeriod(next);
+          }}
+          aria-label='Période'
+        >
+          {PERIOD_OPTIONS.map(opt => (
+            <ToggleButton key={opt.value} value={opt.value}>
+              {opt.label}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+
+        <Typography
+          variant='caption'
+          color='text.secondary'
+          sx={{ minWidth: 130, textAlign: 'right' }}
+          aria-live='polite'
+        >
+          {dataUpdatedAt
+            ? `Dernière mise à jour ${formatElapsed(elapsed)}`
+            : 'Chargement…'}
+        </Typography>
+
+        <Tooltip title='Rafraîchir'>
+          <span>
+            <IconButton
+              size='small'
+              onClick={() => refetch()}
+              disabled={isFetching}
+              aria-label='Rafraîchir le dashboard'
+            >
+              <RefreshIcon
+                fontSize='small'
+                sx={
+                  isFetching
+                    ? {
+                        animation:
+                          'dashboard-spin 1s linear infinite',
+                        '@keyframes dashboard-spin': {
+                          from: { transform: 'rotate(0deg)' },
+                          to: { transform: 'rotate(360deg)' },
+                        },
+                      }
+                    : undefined
+                }
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Box>
 
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
@@ -366,7 +464,7 @@ export function DashboardPage() {
                     />
                   ))}
                 </Pie>
-                <Tooltip />
+                <ChartTooltip />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -385,7 +483,7 @@ export function DashboardPage() {
                 <CartesianGrid strokeDasharray='3 3' />
                 <XAxis dataKey='name' />
                 <YAxis allowDecimals={false} />
-                <Tooltip />
+                <ChartTooltip />
                 <Bar dataKey='value'>
                   {ocrData.map(entry => (
                     <Cell key={entry.key} fill={OCR_COLORS[entry.key]} />
