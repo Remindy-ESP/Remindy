@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   securityApi,
   type SuspiciousQuery,
@@ -9,5 +9,6 @@ export function useSuspiciousEvents(query: SuspiciousQuery) {
     queryKey: ['security', 'suspicious', query],
     queryFn: () => securityApi.listSuspicious(query),
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   });
 }
