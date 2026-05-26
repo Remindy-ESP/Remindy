@@ -4,10 +4,14 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 
 const TEST_TOKEN_MAP: Record<string, { id: string; userId: string; role: string }> = {
-  'user-token':       { id: '00000000-0000-0000-0000-000000000001', userId: '00000000-0000-0000-0000-000000000001', role: 'USER_PREMIUM' },
-  'other-user-token': { id: 'other-user-id',                        userId: 'other-user-id',                        role: 'USER_PREMIUM' },
-  'other-token':      { id: 'other-user-id',                        userId: 'other-user-id',                        role: 'USER_PREMIUM' },
-  'admin-token':      { id: 'admin-user-id',                        userId: 'admin-user-id',                        role: 'ADMIN' },
+  'user-token': {
+    id: '00000000-0000-0000-0000-000000000001',
+    userId: '00000000-0000-0000-0000-000000000001',
+    role: 'USER_PREMIUM',
+  },
+  'other-user-token': { id: 'other-user-id', userId: 'other-user-id', role: 'USER_PREMIUM' },
+  'other-token': { id: 'other-user-id', userId: 'other-user-id', role: 'USER_PREMIUM' },
+  'admin-token': { id: 'admin-user-id', userId: 'admin-user-id', role: 'ADMIN' },
 };
 
 @Injectable()

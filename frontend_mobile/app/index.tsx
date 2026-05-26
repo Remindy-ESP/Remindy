@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
+import { useTranslation } from '@/context/I18nContext';
 import { getErrorMessage } from '@/services/api';
 import onboardingService from '@/services/local/onboarding.service';
 
@@ -29,6 +30,7 @@ export default function AuthScreen() {
 
   const router = useRouter();
   const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     let cancelled = false;
@@ -73,36 +75,36 @@ export default function AuthScreen() {
 
   const validateForm = (): string | null => {
     if (!email.trim()) {
-      return 'Email is required';
+      return t('validation.emailRequired');
     }
 
     if (!validateEmail(email)) {
-      return 'Please enter a valid email address';
+      return t('validation.emailInvalid');
     }
 
     if (!password) {
-      return 'Password is required';
+      return t('validation.passwordRequired');
     }
 
     if (password.length < 6) {
-      return 'Password must be at least 6 characters';
+      return t('validation.passwordMinLength');
     }
 
     if (!isLogin) {
       if (!firstName.trim()) {
-        return 'First name is required';
+        return t('validation.firstNameRequired');
       }
 
       if (!lastName.trim()) {
-        return 'Last name is required';
+        return t('validation.lastNameRequired');
       }
 
       if (!confirmPassword) {
-        return 'Please confirm your password';
+        return t('validation.confirmPasswordRequired');
       }
 
       if (password !== confirmPassword) {
-        return 'Passwords do not match';
+        return t('validation.passwordsMismatch');
       }
     }
 
@@ -136,12 +138,12 @@ export default function AuthScreen() {
       console.error('Auth error:', err);
       const errorMessage = getErrorMessage(
         err,
-        `${isLogin ? 'Login' : 'Registration'} failed. Please try again.`
+        isLogin ? t('auth.loginRetry') : t('auth.registrationRetry')
       );
 
       setError(errorMessage);
       Alert.alert(
-        isLogin ? 'Login Failed' : 'Registration Failed',
+        isLogin ? t('auth.loginFailed') : t('auth.registrationFailed'),
         errorMessage
       );
     } finally {
@@ -153,7 +155,7 @@ export default function AuthScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={{ marginTop: 16, color: '#666' }}>Loading...</Text>
+        <Text style={{ marginTop: 16, color: '#666' }}>{t('auth.loading')}</Text>
       </View>
     );
   }
@@ -164,9 +166,9 @@ export default function AuthScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Remindy</Text>
+        <Text style={styles.title}>{t('common.appName')}</Text>
         <Text style={styles.subtitle}>
-          {isLogin ? 'Bienvenue' : 'Créer un compte'}
+          {isLogin ? t('auth.welcome') : t('auth.createAccount')}
         </Text>
 
         <View style={styles.form}>
@@ -180,7 +182,7 @@ export default function AuthScreen() {
             <>
               <TextInput
                 style={styles.input}
-                placeholder="Prénom"
+                placeholder={t('auth.firstName')}
                 placeholderTextColor="#999"
                 value={firstName}
                 onChangeText={setFirstName}
@@ -191,7 +193,7 @@ export default function AuthScreen() {
 
               <TextInput
                 style={styles.input}
-                placeholder="Nom"
+                placeholder={t('auth.lastName')}
                 placeholderTextColor="#999"
                 value={lastName}
                 onChangeText={setLastName}
@@ -204,7 +206,7 @@ export default function AuthScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Email"
+            placeholder={t('auth.email')}
             placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
@@ -216,7 +218,7 @@ export default function AuthScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Mot de passe"
+            placeholder={t('auth.password')}
             placeholderTextColor="#999"
             value={password}
             onChangeText={setPassword}
@@ -228,7 +230,7 @@ export default function AuthScreen() {
           {!isLogin && (
             <TextInput
               style={styles.input}
-              placeholder="Confirmer le mot de passe"
+              placeholder={t('auth.confirmPassword')}
               placeholderTextColor="#999"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -248,7 +250,7 @@ export default function AuthScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.buttonText}>
-                {isLogin ? 'Se connecter' : "S'inscrire"}
+                {isLogin ? t('auth.signIn') : t('auth.signUp')}
               </Text>
             )}
           </TouchableOpacity>
@@ -260,7 +262,7 @@ export default function AuthScreen() {
               disabled={loading}
             >
               <Text style={[styles.forgotText, loading && styles.toggleTextDisabled]}>
-                Mot de passe oublie ?
+                {t('auth.forgotPassword')}
               </Text>
             </TouchableOpacity>
           )}
@@ -274,9 +276,7 @@ export default function AuthScreen() {
             disabled={loading}
           >
             <Text style={[styles.toggleText, loading && styles.toggleTextDisabled]}>
-              {isLogin
-                ? "Pas de compte ? S'inscrire"
-                : 'Déjà un compte ? Se connecter'}
+              {isLogin ? t('auth.toggleToRegister') : t('auth.toggleToLogin')}
             </Text>
           </TouchableOpacity>
         </View>

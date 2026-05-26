@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import * as crypto from 'crypto';
 
 @Injectable()
 export class CryptoService {
   private readonly key: Buffer;
+  private readonly logger = new Logger(CryptoService.name);
 
   constructor() {
     const raw = process.env.MFA_SECRET_KEY;
@@ -21,7 +22,7 @@ export class CryptoService {
     return `${iv.toString('base64')}.${tag.toString('base64')}.${ciphertext.toString('base64')}`;
   }
 
-  decrypt(packed: string): string {
+  decrypt(packed: string): string | null {
     const parts = packed.split('.');
     if (parts.length !== 3) {
       return packed;
@@ -35,8 +36,17 @@ export class CryptoService {
     const decipher = crypto.createDecipheriv('aes-256-gcm', this.key, iv);
     decipher.setAuthTag(tag);
 
-    const plain = Buffer.concat([decipher.update(data), decipher.final()]);
-    return plain.toString('utf8');
+    try {
+      const plain = Buffer.concat([decipher.update(data), decipher.final()]);
+      return plain.toString('utf8');
+    } catch {
+      this.logger.error(
+        'MFA secret decryption failed — MFA_SECRET_KEY may have changed. Reset MFA for this user.',
+      );
+      throw new InternalServerErrorException(
+        'MFA secret decryption failed. Contact an administrator to reset your MFA.',
+      );
+    }
   }
 
   isEncrypted(value: string | null | undefined): boolean {

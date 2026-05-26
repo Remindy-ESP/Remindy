@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, userService, type User } from '@/services/api';
+import { Alert } from 'react-native';
+import { authService, userService, apiClient, type User } from '@/services/api';
+import i18n from '@/i18n';
 
 interface AuthContextType {
   user: User | null;
@@ -19,9 +21,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is already authenticated on mount
   useEffect(() => {
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    apiClient.setOnAuthFailure(() => {
+      setUser(null);
+      setToken(null);
+      Alert.alert(
+        i18n.t('auth.session.expiredTitle'),
+        i18n.t('auth.session.expiredMessage'),
+      );
+    });
   }, []);
 
   const checkAuth = async () => {

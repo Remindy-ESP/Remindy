@@ -87,7 +87,11 @@ describe('AdminCloudController', () => {
     it('forwards USER_ADMIN role', async () => {
       mockService.updateSharedSubscription.mockResolvedValue({});
 
-      await controller.updateSharedSubscription(makeReq(Role.USER_ADMIN) as any, 'sub-1', {} as any);
+      await controller.updateSharedSubscription(
+        makeReq(Role.USER_ADMIN) as any,
+        'sub-1',
+        {} as any,
+      );
 
       expect(mockService.updateSharedSubscription).toHaveBeenCalledWith(
         { role: Role.USER_ADMIN },
@@ -128,7 +132,11 @@ describe('AdminCloudController', () => {
       const body = { force: true } as any;
       const result = await controller.reprocessOcr(makeReq() as any, 'doc-1', body);
 
-      expect(mockService.reprocessOcr).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'doc-1', true);
+      expect(mockService.reprocessOcr).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'doc-1',
+        true,
+      );
       expect(result).toEqual({ ok: true });
     });
 
@@ -137,7 +145,11 @@ describe('AdminCloudController', () => {
 
       await controller.reprocessOcr(makeReq() as any, 'doc-1', {} as any);
 
-      expect(mockService.reprocessOcr).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'doc-1', false);
+      expect(mockService.reprocessOcr).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'doc-1',
+        false,
+      );
     });
 
     it('delegates with force=false when body.force is false', async () => {
@@ -145,15 +157,25 @@ describe('AdminCloudController', () => {
 
       await controller.reprocessOcr(makeReq() as any, 'doc-1', { force: false } as any);
 
-      expect(mockService.reprocessOcr).toHaveBeenCalledWith({ role: Role.SUPER_ADMIN }, 'doc-1', false);
+      expect(mockService.reprocessOcr).toHaveBeenCalledWith(
+        { role: Role.SUPER_ADMIN },
+        'doc-1',
+        false,
+      );
     });
 
     it('forwards USER_ADMIN role', async () => {
       mockService.reprocessOcr.mockResolvedValue({ ok: true });
 
-      await controller.reprocessOcr(makeReq(Role.USER_ADMIN) as any, 'doc-1', { force: true } as any);
+      await controller.reprocessOcr(makeReq(Role.USER_ADMIN) as any, 'doc-1', {
+        force: true,
+      } as any);
 
-      expect(mockService.reprocessOcr).toHaveBeenCalledWith({ role: Role.USER_ADMIN }, 'doc-1', true);
+      expect(mockService.reprocessOcr).toHaveBeenCalledWith(
+        { role: Role.USER_ADMIN },
+        'doc-1',
+        true,
+      );
     });
   });
 });

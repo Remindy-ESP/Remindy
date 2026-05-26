@@ -64,7 +64,7 @@ describe('AdminSecurityController', () => {
     it('coerces string page/limit to numbers', async () => {
       mockService.getSuspiciousEvents.mockResolvedValue({ items: [], total: 0 });
 
-      await controller.getSuspiciousEvents('2', '25');
+      await controller.getSuspiciousEvents('2' as unknown as number, '25' as unknown as number);
       expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(2, 25);
     });
 
@@ -78,7 +78,7 @@ describe('AdminSecurityController', () => {
     it('coerces string "1" correctly', async () => {
       mockService.getSuspiciousEvents.mockResolvedValue({});
 
-      await controller.getSuspiciousEvents('1', '100');
+      await controller.getSuspiciousEvents('1' as unknown as number, '100' as unknown as number);
       expect(mockService.getSuspiciousEvents).toHaveBeenCalledWith(1, 100);
     });
   });
@@ -121,7 +121,10 @@ describe('AdminSecurityController', () => {
       const dto = { ipAddress: '1.2.3.4', reason: BlockReason.MANUAL } as any;
       const result = await controller.blockIp(makeReq() as any, dto);
 
-      expect(mockService.blockIp).toHaveBeenCalledWith({ id: 'actor-1', role: Role.SUPER_ADMIN }, dto);
+      expect(mockService.blockIp).toHaveBeenCalledWith(
+        { id: 'actor-1', role: Role.SUPER_ADMIN },
+        dto,
+      );
       expect(result).toEqual(entry);
     });
 
@@ -142,7 +145,10 @@ describe('AdminSecurityController', () => {
 
       const result = await controller.unblockIp(makeReq() as any, 'ip-1');
 
-      expect(mockService.unblockIp).toHaveBeenCalledWith({ id: 'actor-1', role: Role.SUPER_ADMIN }, 'ip-1');
+      expect(mockService.unblockIp).toHaveBeenCalledWith(
+        { id: 'actor-1', role: Role.SUPER_ADMIN },
+        'ip-1',
+      );
       expect(result).toEqual({ ok: true });
     });
 
@@ -150,7 +156,10 @@ describe('AdminSecurityController', () => {
       mockService.unblockIp.mockResolvedValue({});
 
       await controller.unblockIp(makeReq(Role.USER_ADMIN) as any, 'ip-2');
-      expect(mockService.unblockIp).toHaveBeenCalledWith({ id: 'actor-1', role: Role.USER_ADMIN }, 'ip-2');
+      expect(mockService.unblockIp).toHaveBeenCalledWith(
+        { id: 'actor-1', role: Role.USER_ADMIN },
+        'ip-2',
+      );
     });
   });
 

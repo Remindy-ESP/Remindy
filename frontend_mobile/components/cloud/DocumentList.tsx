@@ -4,6 +4,7 @@ import type { Folder } from '@/services/api';
 import type { DocumentResponse } from '@/services/api/document.service';
 import FolderCard from './FolderCard';
 import DocumentCard from './DocumentCard';
+import { useTranslation } from '@/context/I18nContext';
 
 interface DocumentListProps {
   readonly folders: Folder[];
@@ -26,6 +27,7 @@ export default function DocumentList({
   refreshing = false,
   onRefresh,
 }: DocumentListProps) {
+  const { t } = useTranslation();
   const hasFolders = folders.length > 0;
   const hasDocuments = documents.length > 0;
   const isEmpty = !hasFolders && !hasDocuments;
@@ -37,8 +39,8 @@ export default function DocumentList({
         contentContainerStyle={styles.emptyContainer}
         refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" /> : undefined}
       >
-        <Text style={styles.emptyText}>Aucun document</Text>
-        <Text style={styles.emptySubtext}>Commencez par ajouter un document</Text>
+        <Text style={styles.emptyText}>{t('cloud.list.empty')}</Text>
+        <Text style={styles.emptySubtext}>{t('cloud.list.emptySubtext')}</Text>
       </ScrollView>
     );
   }
@@ -51,7 +53,7 @@ export default function DocumentList({
     >
       {hasFolders && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dossiers</Text>
+          <Text style={styles.sectionTitle}>{t('cloud.list.sectionFolders')}</Text>
           {folders.map((folder) => (
             <FolderCard
               key={folder.id}
@@ -64,7 +66,7 @@ export default function DocumentList({
       )}
       {hasDocuments && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents</Text>
+          <Text style={styles.sectionTitle}>{t('cloud.list.sectionDocuments')}</Text>
           {documents.map((document) => (
             <DocumentCard
               key={document.id}

@@ -70,15 +70,24 @@ const sampleDocument = {
 describe('DocumentController (e2e)', () => {
   let app: INestApplication;
 
-  const uploadDocumentUseCase   = { execute: jest.fn() };
+  const uploadDocumentUseCase = { execute: jest.fn() };
   const findAllDocumentsUseCase = { execute: jest.fn() };
-  const deleteDocumentUseCase   = { execute: jest.fn() };
-  const reprocessOcrUseCase     = { execute: jest.fn() };
-  const updateDocumentUseCase   = { execute: jest.fn() };
-  const r2Service               = { downloadFile: jest.fn(), uploadFile: jest.fn(), deleteFile: jest.fn() };
-  const documentRepository      = { findById: jest.fn(), findAll: jest.fn(), save: jest.fn(), delete: jest.fn() };
-  const quotaService            = { getUserQuotaUsage: jest.fn(), formatBytes: jest.fn(), checkUserQuota: jest.fn() };
-  const queueService            = { getQueueStats: jest.fn(), getJobStatus: jest.fn(), addJob: jest.fn() };
+  const deleteDocumentUseCase = { execute: jest.fn() };
+  const reprocessOcrUseCase = { execute: jest.fn() };
+  const updateDocumentUseCase = { execute: jest.fn() };
+  const r2Service = { downloadFile: jest.fn(), uploadFile: jest.fn(), deleteFile: jest.fn() };
+  const documentRepository = {
+    findById: jest.fn(),
+    findAll: jest.fn(),
+    save: jest.fn(),
+    delete: jest.fn(),
+  };
+  const quotaService = {
+    getUserQuotaUsage: jest.fn(),
+    formatBytes: jest.fn(),
+    checkUserQuota: jest.fn(),
+  };
+  const queueService = { getQueueStats: jest.fn(), getJobStatus: jest.fn(), addJob: jest.fn() };
 
   const authHeader = () => ({ Authorization: 'Bearer user-token' });
 
@@ -91,15 +100,15 @@ describe('DocumentController (e2e)', () => {
         // Provide JwtAuthGuard as our test double so NestJS DI resolves it
         // without trying to instantiate AuthGuard('jwt') / Passport
         { provide: JwtAuthGuard, useClass: TestJwtAuthGuard },
-        { provide: UploadDocumentUseCase,   useValue: uploadDocumentUseCase },
+        { provide: UploadDocumentUseCase, useValue: uploadDocumentUseCase },
         { provide: FindAllDocumentsUseCase, useValue: findAllDocumentsUseCase },
-        { provide: DeleteDocumentUseCase,   useValue: deleteDocumentUseCase },
-        { provide: ReprocessOcrUseCase,     useValue: reprocessOcrUseCase },
-        { provide: UpdateDocumentUseCase,   useValue: updateDocumentUseCase },
-        { provide: CloudflareR2Service,     useValue: r2Service },
-        { provide: DOCUMENT_REPOSITORY,     useValue: documentRepository },
-        { provide: QuotaService,            useValue: quotaService },
-        { provide: InMemoryQueueService,    useValue: queueService },
+        { provide: DeleteDocumentUseCase, useValue: deleteDocumentUseCase },
+        { provide: ReprocessOcrUseCase, useValue: reprocessOcrUseCase },
+        { provide: UpdateDocumentUseCase, useValue: updateDocumentUseCase },
+        { provide: CloudflareR2Service, useValue: r2Service },
+        { provide: DOCUMENT_REPOSITORY, useValue: documentRepository },
+        { provide: QuotaService, useValue: quotaService },
+        { provide: InMemoryQueueService, useValue: queueService },
       ],
     })
       .overrideGuard(ThrottlerGuard)
@@ -107,13 +116,18 @@ describe('DocumentController (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: false }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: false }),
+    );
     app.use('/documents/upload', multer({ limits: { fileSize: 10 * 1024 * 1024 } }).single('file'));
     await app.init();
     const server = (app as any).getHttpServer();
-const router = server._events?.request?._router;
-const routes = router?.stack?.filter((r: any) => r.route).map((r: any) => `${Object.keys(r.route.methods)[0].toUpperCase()} ${r.route.path}`) ?? [];
-console.log('ROUTES:', JSON.stringify(routes, null, 2));
+    const router = server._events?.request?._router;
+    const routes =
+      router?.stack
+        ?.filter((r: any) => r.route)
+        .map((r: any) => `${Object.keys(r.route.methods)[0].toUpperCase()} ${r.route.path}`) ?? [];
+    console.log('ROUTES:', JSON.stringify(routes, null, 2));
   });
 
   afterAll(async () => {
@@ -129,7 +143,12 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     updateDocumentUseCase.execute.mockResolvedValue({ ...sampleDocument, filename: 'renamed.pdf' });
     r2Service.downloadFile.mockResolvedValue(Buffer.from('fake-file-content'));
     documentRepository.findById.mockResolvedValue(sampleDocument);
-    quotaService.getUserQuotaUsage.mockResolvedValue({ storageUsed: 1024, maxStorage: 100 * 1024 * 1024, documentCount: 1, maxDocuments: 50 });
+    quotaService.getUserQuotaUsage.mockResolvedValue({
+      storageUsed: 1024,
+      maxStorage: 100 * 1024 * 1024,
+      documentCount: 1,
+      maxDocuments: 50,
+    });
     quotaService.formatBytes.mockImplementation((b: number) => `${b} B`);
     quotaService.checkUserQuota.mockResolvedValue(undefined);
     queueService.getQueueStats.mockResolvedValue({ pending: 0, processing: 0, completed: 5 });
@@ -143,11 +162,18 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
         .set(authHeader())
-        .attach('file', Buffer.from('%PDF-1.4 fake pdf'), { filename: 'test-document.pdf', contentType: 'application/pdf' })
+        .attach('file', Buffer.from('%PDF-1.4 fake pdf'), {
+          filename: 'test-document.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(201);
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: TEST_USER_ID, filename: 'test-document.pdf', mimeType: 'application/pdf' }),
+        expect.objectContaining({
+          userId: TEST_USER_ID,
+          filename: 'test-document.pdf',
+          mimeType: 'application/pdf',
+        }),
         expect.any(String),
       );
       expect(response.body).toHaveProperty('id');
@@ -157,7 +183,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
       const response = await request(app.getHttpServer())
         .post('/documents/upload')
         .set(authHeader())
-        .attach('file', Buffer.from('fake-jpeg-data'), { filename: 'invoice.jpg', contentType: 'image/jpeg' })
+        .attach('file', Buffer.from('fake-jpeg-data'), {
+          filename: 'invoice.jpg',
+          contentType: 'image/jpeg',
+        })
         .expect(201);
 
       expect(response.body).toHaveProperty('id');
@@ -168,7 +197,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
         .post('/documents/upload')
         .set(authHeader())
         .field('subscription_id', VALID_SUB_ID)
-        .attach('file', Buffer.from('%PDF-1.4 fake'), { filename: 'sub-doc.pdf', contentType: 'application/pdf' })
+        .attach('file', Buffer.from('%PDF-1.4 fake'), {
+          filename: 'sub-doc.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(201);
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
@@ -182,7 +214,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
         .post('/documents/upload')
         .set(authHeader())
         .field('contract_id', '42')
-        .attach('file', Buffer.from('%PDF-1.4 fake'), { filename: 'contract.pdf', contentType: 'application/pdf' })
+        .attach('file', Buffer.from('%PDF-1.4 fake'), {
+          filename: 'contract.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(201);
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
@@ -216,7 +251,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     it('should reject request without authentication with 401', async () => {
       await request(app.getHttpServer())
         .post('/documents/upload')
-        .attach('file', Buffer.from('%PDF-1.4'), { filename: 'test.pdf', contentType: 'application/pdf' })
+        .attach('file', Buffer.from('%PDF-1.4'), {
+          filename: 'test.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(401);
     });
 
@@ -224,7 +262,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
       await request(app.getHttpServer())
         .post('/documents/upload')
         .set('Authorization', 'Bearer bad-token')
-        .attach('file', Buffer.from('%PDF-1.4'), { filename: 'test.pdf', contentType: 'application/pdf' })
+        .attach('file', Buffer.from('%PDF-1.4'), {
+          filename: 'test.pdf',
+          contentType: 'application/pdf',
+        })
         .expect(401);
     });
   });
@@ -233,9 +274,14 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
   describe('GET /documents', () => {
     it('should return list of documents for authenticated user', async () => {
-      const response = await request(app.getHttpServer()).get('/documents').set(authHeader()).expect(200);
+      const response = await request(app.getHttpServer())
+        .get('/documents')
+        .set(authHeader())
+        .expect(200);
 
-      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ userId: TEST_USER_ID }));
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: TEST_USER_ID }),
+      );
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body[0]).toHaveProperty('id');
       expect(response.body[0]).toHaveProperty('filename');
@@ -245,23 +291,47 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     });
 
     it('should filter documents by subscription_id', async () => {
-      await request(app.getHttpServer()).get('/documents').query({ subscription_id: VALID_SUB_ID }).set(authHeader()).expect(200);
-      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ subscriptionId: VALID_SUB_ID }));
+      await request(app.getHttpServer())
+        .get('/documents')
+        .query({ subscription_id: VALID_SUB_ID })
+        .set(authHeader())
+        .expect(200);
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ subscriptionId: VALID_SUB_ID }),
+      );
     });
 
     it('should filter documents by ocr_status', async () => {
-      await request(app.getHttpServer()).get('/documents').query({ ocr_status: 'completed' }).set(authHeader()).expect(200);
-      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ ocrStatus: 'completed' }));
+      await request(app.getHttpServer())
+        .get('/documents')
+        .query({ ocr_status: 'completed' })
+        .set(authHeader())
+        .expect(200);
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ ocrStatus: 'completed' }),
+      );
     });
 
     it('should limit number of results', async () => {
-      await request(app.getHttpServer()).get('/documents').query({ limit: 5 }).set(authHeader()).expect(200);
-      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ limit: 5 }));
+      await request(app.getHttpServer())
+        .get('/documents')
+        .query({ limit: 5 })
+        .set(authHeader())
+        .expect(200);
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ limit: 5 }),
+      );
     });
 
     it('should sort documents by uploaded_at desc', async () => {
-      await request(app.getHttpServer()).get('/documents').query({ sort: 'uploaded_at:desc' }).set(authHeader()).expect(200);
-      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(expect.objectContaining({ sort: 'uploaded_at:desc' }));
+      await request(app.getHttpServer())
+        .get('/documents')
+        .query({ sort: 'uploaded_at:desc' })
+        .set(authHeader())
+        .expect(200);
+      expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ sort: 'uploaded_at:desc' }),
+      );
     });
 
     it('should require authentication', async () => {
@@ -269,7 +339,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     });
 
     it('should reject invalid token', async () => {
-      await request(app.getHttpServer()).get('/documents').set('Authorization', 'Bearer bad-token').expect(401);
+      await request(app.getHttpServer())
+        .get('/documents')
+        .set('Authorization', 'Bearer bad-token')
+        .expect(401);
     });
   });
 
@@ -277,7 +350,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
   describe('GET /documents/:id', () => {
     it('should return document details for owner', async () => {
-      const response = await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}`).set(authHeader()).expect(200);
+      const response = await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .expect(200);
 
       expect(documentRepository.findById).toHaveBeenCalledWith(VALID_DOC_ID);
       expect(response.body.id).toBe(VALID_DOC_ID);
@@ -285,12 +361,21 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
     it('should return 404 for non-existent document', async () => {
       documentRepository.findById.mockResolvedValueOnce(null);
-      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}`).set(authHeader()).expect(404);
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .expect(404);
     });
 
     it('should return 404 when accessing another user document', async () => {
-      documentRepository.findById.mockResolvedValueOnce({ ...sampleDocument, userId: 'other-user-id' });
-      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}`).set(authHeader()).expect(404);
+      documentRepository.findById.mockResolvedValueOnce({
+        ...sampleDocument,
+        userId: 'other-user-id',
+      });
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .expect(404);
     });
 
     it('should require authentication', async () => {
@@ -298,7 +383,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     });
 
     it('should reject invalid token', async () => {
-      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}`).set('Authorization', 'Bearer bogus-token').expect(401);
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}`)
+        .set('Authorization', 'Bearer bogus-token')
+        .expect(401);
     });
   });
 
@@ -307,27 +395,51 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
   describe('PUT /documents/:id', () => {
     it('should update document filename', async () => {
       const response = await request(app.getHttpServer())
-        .put(`/documents/${VALID_DOC_ID}`).set(authHeader()).send({ filename: 'renamed.pdf' }).expect(200);
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .send({ filename: 'renamed.pdf' })
+        .expect(200);
 
-      expect(updateDocumentUseCase.execute).toHaveBeenCalledWith(VALID_DOC_ID, TEST_USER_ID, expect.objectContaining({ filename: 'renamed.pdf' }));
+      expect(updateDocumentUseCase.execute).toHaveBeenCalledWith(
+        VALID_DOC_ID,
+        TEST_USER_ID,
+        expect.objectContaining({ filename: 'renamed.pdf' }),
+      );
       expect(response.body).toHaveProperty('id');
     });
 
     it('should return 400 for empty filename', async () => {
-      await request(app.getHttpServer()).put(`/documents/${VALID_DOC_ID}`).set(authHeader()).send({ filename: '' }).expect(400);
+      await request(app.getHttpServer())
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .send({ filename: '' })
+        .expect(400);
     });
 
     it('should return 400 for filename exceeding 255 chars', async () => {
-      await request(app.getHttpServer()).put(`/documents/${VALID_DOC_ID}`).set(authHeader()).send({ filename: 'a'.repeat(256) + '.pdf' }).expect(400);
+      await request(app.getHttpServer())
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .send({ filename: 'a'.repeat(256) + '.pdf' })
+        .expect(400);
     });
 
     it('should return 404 when use case throws NotFoundException', async () => {
-      updateDocumentUseCase.execute.mockRejectedValueOnce(new NotFoundException('Document not found'));
-      await request(app.getHttpServer()).put(`/documents/${VALID_DOC_ID}`).set(authHeader()).send({ filename: 'renamed.pdf' }).expect(404);
+      updateDocumentUseCase.execute.mockRejectedValueOnce(
+        new NotFoundException('Document not found'),
+      );
+      await request(app.getHttpServer())
+        .put(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .send({ filename: 'renamed.pdf' })
+        .expect(404);
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).put(`/documents/${VALID_DOC_ID}`).send({ filename: 'renamed.pdf' }).expect(401);
+      await request(app.getHttpServer())
+        .put(`/documents/${VALID_DOC_ID}`)
+        .send({ filename: 'renamed.pdf' })
+        .expect(401);
     });
   });
 
@@ -336,19 +448,35 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
   describe('POST /documents/:id/reprocess-ocr', () => {
     it('should trigger OCR reprocessing', async () => {
       const response = await request(app.getHttpServer())
-        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`).set(authHeader()).send({ force: true }).expect(200);
+        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`)
+        .set(authHeader())
+        .send({ force: true })
+        .expect(200);
 
-      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith(VALID_DOC_ID, TEST_USER_ID, expect.objectContaining({ force: true }));
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith(
+        VALID_DOC_ID,
+        TEST_USER_ID,
+        expect.objectContaining({ force: true }),
+      );
       expect(response.body.ocr_status).toBe('processing');
     });
 
     it('should return 404 when document not found', async () => {
-      reprocessOcrUseCase.execute.mockRejectedValueOnce(new NotFoundException('Document not found'));
-      await request(app.getHttpServer()).post(`/documents/${VALID_DOC_ID}/reprocess-ocr`).set(authHeader()).send({}).expect(404);
+      reprocessOcrUseCase.execute.mockRejectedValueOnce(
+        new NotFoundException('Document not found'),
+      );
+      await request(app.getHttpServer())
+        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`)
+        .set(authHeader())
+        .send({})
+        .expect(404);
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).post(`/documents/${VALID_DOC_ID}/reprocess-ocr`).send({}).expect(401);
+      await request(app.getHttpServer())
+        .post(`/documents/${VALID_DOC_ID}/reprocess-ocr`)
+        .send({})
+        .expect(401);
     });
   });
 
@@ -356,7 +484,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
   describe('GET /documents/:id/download', () => {
     it('should stream file for document owner', async () => {
-      const response = await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}/download`).set(authHeader()).expect(200);
+      const response = await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}/download`)
+        .set(authHeader())
+        .expect(200);
 
       expect(documentRepository.findById).toHaveBeenCalledWith(VALID_DOC_ID);
       expect(r2Service.downloadFile).toHaveBeenCalledWith(sampleDocument.r2Key);
@@ -365,12 +496,21 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
     it('should return 404 for non-existent document', async () => {
       documentRepository.findById.mockResolvedValueOnce(null);
-      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}/download`).set(authHeader()).expect(404);
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}/download`)
+        .set(authHeader())
+        .expect(404);
     });
 
     it('should return 404 when accessing another user document', async () => {
-      documentRepository.findById.mockResolvedValueOnce({ ...sampleDocument, userId: 'other-user-id' });
-      await request(app.getHttpServer()).get(`/documents/${VALID_DOC_ID}/download`).set(authHeader()).expect(404);
+      documentRepository.findById.mockResolvedValueOnce({
+        ...sampleDocument,
+        userId: 'other-user-id',
+      });
+      await request(app.getHttpServer())
+        .get(`/documents/${VALID_DOC_ID}/download`)
+        .set(authHeader())
+        .expect(404);
     });
 
     it('should require authentication', async () => {
@@ -382,13 +522,21 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
   describe('DELETE /documents/:id', () => {
     it('should delete document and return 204', async () => {
-      await request(app.getHttpServer()).delete(`/documents/${VALID_DOC_ID}`).set(authHeader()).expect(204);
+      await request(app.getHttpServer())
+        .delete(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .expect(204);
       expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith(VALID_DOC_ID, TEST_USER_ID);
     });
 
     it('should return 404 when document not found', async () => {
-      deleteDocumentUseCase.execute.mockRejectedValueOnce(new NotFoundException('Document not found'));
-      await request(app.getHttpServer()).delete(`/documents/${VALID_DOC_ID}`).set(authHeader()).expect(404);
+      deleteDocumentUseCase.execute.mockRejectedValueOnce(
+        new NotFoundException('Document not found'),
+      );
+      await request(app.getHttpServer())
+        .delete(`/documents/${VALID_DOC_ID}`)
+        .set(authHeader())
+        .expect(404);
     });
 
     it('should require authentication', async () => {
@@ -396,7 +544,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     });
 
     it('should reject invalid token', async () => {
-      await request(app.getHttpServer()).delete(`/documents/${VALID_DOC_ID}`).set('Authorization', 'Bearer bad-token').expect(401);
+      await request(app.getHttpServer())
+        .delete(`/documents/${VALID_DOC_ID}`)
+        .set('Authorization', 'Bearer bad-token')
+        .expect(401);
     });
   });
 
@@ -408,7 +559,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
     });
 
     it('should reject invalid token', async () => {
-      await request(app.getHttpServer()).get('/documents/quota').set('Authorization', 'Bearer bad-token').expect(401);
+      await request(app.getHttpServer())
+        .get('/documents/quota')
+        .set('Authorization', 'Bearer bad-token')
+        .expect(401);
     });
   });
 
@@ -416,7 +570,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
   describe('GET /documents/queue/stats', () => {
     it('should return queue statistics', async () => {
-      const response = await request(app.getHttpServer()).get('/documents/queue/stats').set(authHeader()).expect(200);
+      const response = await request(app.getHttpServer())
+        .get('/documents/queue/stats')
+        .set(authHeader())
+        .expect(200);
 
       expect(queueService.getQueueStats).toHaveBeenCalled();
       expect(response.body).toHaveProperty('pending');
@@ -432,7 +589,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
   describe('GET /documents/job/:jobId/status', () => {
     it('should return job status for valid jobId', async () => {
-      const response = await request(app.getHttpServer()).get(`/documents/job/${VALID_JOB_ID}/status`).set(authHeader()).expect(200);
+      const response = await request(app.getHttpServer())
+        .get(`/documents/job/${VALID_JOB_ID}/status`)
+        .set(authHeader())
+        .expect(200);
 
       expect(queueService.getJobStatus).toHaveBeenCalledWith(VALID_JOB_ID);
       expect(response.body).toHaveProperty('status');
@@ -440,7 +600,10 @@ console.log('ROUTES:', JSON.stringify(routes, null, 2));
 
     it('should return 404 for non-existent job', async () => {
       queueService.getJobStatus.mockRejectedValueOnce(new Error('Job not found'));
-      await request(app.getHttpServer()).get('/documents/job/non-existent-job/status').set(authHeader()).expect(404);
+      await request(app.getHttpServer())
+        .get('/documents/job/non-existent-job/status')
+        .set(authHeader())
+        .expect(404);
     });
 
     it('should require authentication', async () => {

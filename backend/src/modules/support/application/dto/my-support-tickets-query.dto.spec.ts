@@ -7,7 +7,7 @@ import { SupportTicketCategory } from '../../domain/enums/support-ticket-categor
 async function validateDto(plain: object): Promise<string[]> {
   const instance = plainToInstance(MySupportTicketsQueryDto, plain);
   const errors = await validate(instance);
-  return errors.flatMap((e) => Object.values(e.constraints ?? {}));
+  return errors.flatMap(e => Object.values(e.constraints ?? {}));
 }
 
 describe('MySupportTicketsQueryDto', () => {
@@ -36,13 +36,13 @@ describe('MySupportTicketsQueryDto', () => {
   it('rejects page less than 1', async () => {
     const errors = await validateDto({ page: '0' });
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors.some((e) => e.toLowerCase().includes('page'))).toBe(true);
+    expect(errors.some(e => e.toLowerCase().includes('page'))).toBe(true);
   });
 
   it('rejects limit greater than 100', async () => {
     const errors = await validateDto({ limit: '101' });
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors.some((e) => e.toLowerCase().includes('limit'))).toBe(true);
+    expect(errors.some(e => e.toLowerCase().includes('limit'))).toBe(true);
   });
 
   it('rejects an invalid status value', async () => {

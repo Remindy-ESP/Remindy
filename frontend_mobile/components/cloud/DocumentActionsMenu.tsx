@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '@/context/I18nContext';
 
 interface DocumentActionsMenuProps {
   readonly visible: boolean;
@@ -25,14 +26,16 @@ export default function DocumentActionsMenu({
   onLink,
   onDelete,
 }: DocumentActionsMenuProps) {
+  const { t } = useTranslation();
+
   const actions = [
-    { icon: 'eye-outline', label: 'Visualiser', onPress: onView, color: '#6366f1' },
-    { icon: 'download-outline', label: 'Télécharger', onPress: onDownload, color: '#10B981' },
-    { icon: 'information-circle-outline', label: 'Informations', onPress: onInfo, color: '#6366f1' },
-    { icon: 'create-outline', label: 'Renommer', onPress: onRename, color: '#6366f1' },
-    { icon: 'folder-open-outline', label: 'Déplacer', onPress: onMove, color: '#6366f1' },
-    { icon: 'link-outline', label: 'Lier à une transaction', onPress: onLink, color: '#6366f1' },
-    { icon: 'trash-outline', label: 'Supprimer', onPress: onDelete, color: '#E74C3C' },
+    { icon: 'eye-outline', label: t('cloud.documentActions.view'), onPress: onView, color: '#6366f1' },
+    { icon: 'download-outline', label: t('cloud.documentActions.download'), onPress: onDownload, color: '#10B981' },
+    { icon: 'information-circle-outline', label: t('cloud.documentActions.info'), onPress: onInfo, color: '#6366f1' },
+    { icon: 'create-outline', label: t('cloud.documentActions.rename'), onPress: onRename, color: '#6366f1' },
+    { icon: 'folder-open-outline', label: t('cloud.documentActions.move'), onPress: onMove, color: '#6366f1' },
+    { icon: 'link-outline', label: t('cloud.documentActions.link'), onPress: onLink, color: '#6366f1' },
+    { icon: 'trash-outline', label: t('cloud.documentActions.delete'), onPress: onDelete, color: '#E74C3C' },
   ];
 
   return (

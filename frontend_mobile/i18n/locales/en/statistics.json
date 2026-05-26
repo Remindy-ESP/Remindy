@@ -1,0 +1,37 @@
+{
+  "loading": "Loading statistics...",
+  "errorPrefix": "Error: {{message}}",
+  "errorHint": "Make sure the server is running and your network connection is stable",
+  "headerTitle": "Statistics",
+  "headerSubtitle": "View your statistics",
+  "summaryTitle": "Expense summary",
+  "summaryUnavailable": "Summary unavailable: {{message}}",
+  "breakdownTitle": "Breakdown by category",
+  "noExpenses": "No expenses for this period",
+  "transaction": {
+    "one": "{{count}} transaction",
+    "other": "{{count}} transactions"
+  },
+  "periods": {
+    "day": "Today",
+    "week": "Week",
+    "month": "Monthly",
+    "year": "Year"
+  },
+  "comparisonLabels": {
+    "day": "vs M-1",
+    "week": "vs W-1",
+    "month": "vs M-1",
+    "year": "vs Y-1"
+  },
+  "comparison": {
+    "infoAccessibility": "More info about the comparison",
+    "closeAccessibility": "Close",
+    "info": {
+      "day": "Comparison of cumulative expenses from the start of the month to today against the same period of the previous month.\nExample: October 1 to 5 vs September 1 to 5.",
+      "week": "Comparison of cumulative expenses for the past week against the previous week.\nExample: week of October 6 vs week of October 13.",
+      "month": "Comparison of total spending since the start of the month against the previous month. Note: results may be inaccurate early in the month.\nExample: October vs September.",
+      "year": "Comparison of this year's expenses against last year's.\nExample: 2025 vs 2024."
+    }
+  }
+}

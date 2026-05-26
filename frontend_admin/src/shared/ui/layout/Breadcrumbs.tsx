@@ -9,6 +9,11 @@ const LABELS: Record<string, string> = {
   users: 'Utilisateurs',
   audit: 'Audit',
   security: 'Sécurité',
+  support: 'Support',
+  rbac: 'RBAC',
+  subscriptions: 'Abonnements',
+  cloud: 'Cloud',
+  rgpd: 'RGPD',
 };
 
 interface Props {

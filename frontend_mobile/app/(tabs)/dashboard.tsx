@@ -1,44 +1,26 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert, Modal } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Localization from 'expo-localization';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useAuth } from '@/context/AuthContext';
+import type { AggregatedEvent } from '@/hooks/useDashboard';
+import { useTranslation } from '@/context/I18nContext';
 import Button from '@/components/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import type { Category } from '@/services/api';
 import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
-LocaleConfig.locales['fr'] = {
-  monthNames: [
-    'Janvier',
-    'Février',
-    'Mars',
-    'Avril',
-    'Mai',
-    'Juin',
-    'Juillet',
-    'Août',
-    'Septembre',
-    'Octobre',
-    'Novembre',
-    'Décembre'
-  ],
-  monthNamesShort: ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'],
-  dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
-  dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
-  today: "Aujourd'hui"
-};
-LocaleConfig.defaultLocale = 'fr';
+import CategoryDropdown from '@/components/CategoryDropdown';
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const {
     selected,
     setSelected,
@@ -61,9 +43,8 @@ export default function DashboardScreen() {
     fetchDashboardData,
   } = useDashboard();
 
-  const { token } = useAuth();
   const [uploadingDocument, setUploadingDocument] = React.useState(false);
-  console.log("Current token : ", token);
+  const [selectedExpense, setSelectedExpense] = React.useState<AggregatedEvent | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -114,7 +95,7 @@ export default function DashboardScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#4f46e5" />
-        <Text style={{ color: '#fff', marginTop: 16 }}>Chargement de la page d'accueil...</Text>
+        <Text style={{ color: '#fff', marginTop: 16 }}>{t('dashboard.loading')}</Text>
       </View>
     );
   }
@@ -124,10 +105,10 @@ export default function DashboardScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
         <Text style={{ color: '#ff6b6b', fontSize: 16, textAlign: 'center' }}>
-          Error: {error}
+          {t('dashboard.errorPrefix', { message: String(error) })}
         </Text>
         <Text style={{ color: '#999', marginTop: 8, textAlign: 'center' }}>
-          Make sure the backend server is running and your network connection is stable
+          {t('dashboard.errorHint')}
         </Text>
       </View>
     );
@@ -191,9 +172,9 @@ export default function DashboardScreen() {
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (selectedFile.size && selectedFile.size > maxSize) {
         Alert.alert(
-          'Fichier trop volumineux',
-          'Le fichier ne peut pas dépasser 10 MB. Veuillez choisir un fichier plus petit.',
-          [{ text: 'OK' }]
+          t('dashboard.fileTooLargeTitle'),
+          t('dashboard.fileTooLargeMessage'),
+          [{ text: t('common.ok') }]
         );
         return;
       }
@@ -243,9 +224,9 @@ export default function DashboardScreen() {
 
       if (documentWithParsedData.ocr_status === 'failed') {
         Alert.alert(
-          'Analyse échouée',
-          'L\'analyse automatique du document a échoué. Vous pouvez saisir les informations manuellement.',
-          [{ text: 'OK' }]
+          t('dashboard.ocrFailedTitle'),
+          t('dashboard.ocrFailedMessage'),
+          [{ text: t('common.ok') }]
         );
       }
 
@@ -268,7 +249,7 @@ export default function DashboardScreen() {
     } catch (error: any) {
       console.error('Error uploading document:', error);
 
-      let errorMessage = 'Une erreur est survenue lors de l\'upload du document.';
+      let errorMessage = t('dashboard.uploadErrorFallback');
 
       if (error.message) {
         errorMessage = error.message;
@@ -277,9 +258,9 @@ export default function DashboardScreen() {
       }
 
       Alert.alert(
-        'Erreur',
+        t('common.error'),
         errorMessage,
-        [{ text: 'OK' }]
+        [{ text: t('common.ok') }]
       );
     } finally {
       setUploadingDocument(false);
@@ -293,46 +274,18 @@ export default function DashboardScreen() {
 
         <Button
           onPress={() => setCategoriesOpen(!categoriesOpen)}
-          label={selectedCategory || "Catégories"}
+          label={selectedCategory || t('dashboard.categoriesDropdown')}
           isOpen={categoriesOpen}
         />
 
         {categoriesOpen && (
-          <View style={styles.categoriesContainer}>
-            {categories.length === 0 ? (
-              <Text style={{ color: '#999', padding: 16, textAlign: 'center' }}>
-                No categories available. Please add some categories first.
-              </Text>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.categoryItem}
-                  onPress={() => {
-                    setSelectedCategory(null);
-                    setCategoriesOpen(false);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.categoryText}>Toutes les catégories</Text>
-                </TouchableOpacity>
-                {categories.map((category: Category) => (
-                  <TouchableOpacity
-                    key={category.id}
-                    style={styles.categoryItem}
-                    onPress={() => {
-                      setSelectedCategory(category.name);
-                      setCategoriesOpen(false);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.categoryText}>
-                      {category.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </>
-            )}
-          </View>
+          <CategoryDropdown
+            categories={categories}
+            emptyLabel={t('dashboard.categoriesEmpty')}
+            allLabel={t('dashboard.allCategories')}
+            onSelectAll={() => { setSelectedCategory(null); setCategoriesOpen(false); }}
+            onSelect={(name) => { setSelectedCategory(name); setCategoriesOpen(false); }}
+          />
         )}
 
         <CoachMarkTarget targetKey={COACH_MARK_TARGETS.dashboardCalendar}>
@@ -375,7 +328,7 @@ export default function DashboardScreen() {
 
 
         <View style={styles.timePeriodSection}>
-          <Text style={styles.timePeriodTitle}>Détails de vos dépenses</Text>
+          <Text style={styles.timePeriodTitle}>{t('dashboard.expensesTitle')}</Text>
           <View style={styles.timePeriodMenu}>
             {timePeriods.map((period) => (
               <TouchableOpacity
@@ -408,7 +361,7 @@ export default function DashboardScreen() {
         <View style={styles.contentSection}>
           {getEventsForPeriod(activePeriod, selected, selectedCategory).length === 0 ? (
             <Text style={{ color: '#999', textAlign: 'center', marginVertical: 20 }}>
-              Aucune dépense pour cette période
+              {t('dashboard.noExpenses')}
             </Text>
           ) : (
             <ScrollView
@@ -417,7 +370,13 @@ export default function DashboardScreen() {
               showsVerticalScrollIndicator={true}
             >
               {getEventsForPeriod(activePeriod, selected, selectedCategory).map((event) => (
-                <View key={event.id} style={styles.expenseItem}>
+                <TouchableOpacity
+                  key={event.id}
+                  testID={`expense-item-${event.id}`}
+                  style={styles.expenseItem}
+                  activeOpacity={0.6}
+                  onPress={() => setSelectedExpense(event)}
+                >
                   <View style={styles.expenseLeft}>
                     <View style={styles.expenseIconPlaceholder} />
                     <View>
@@ -425,14 +384,14 @@ export default function DashboardScreen() {
                         {event.subscription?.name || event.title}
                       </Text>
                       <Text style={styles.expenseCategory}>
-                        {event.subscription?.category?.name || 'Général'}
+                        {event.subscription?.category?.name || t('dashboard.generalCategory')}
                       </Text>
                     </View>
                   </View>
                   <Text style={styles.expenseAmount}>
                     {parseFloat(event.totalAmount.toFixed(2))}€
                   </Text>
-                </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           )}
@@ -454,12 +413,149 @@ export default function DashboardScreen() {
         <View style={styles.uploadOverlay}>
           <View style={styles.uploadContainer}>
             <ActivityIndicator size="large" color="#4f46e5" />
-            <Text style={styles.uploadText}>Analyse en cours...</Text>
-            <Text style={styles.uploadSubtext}>Extraction des données par IA</Text>
-            <Text style={styles.uploadSubtext2}>Cela peut prendre jusqu'à 30 secondes</Text>
+            <Text style={styles.uploadText}>{t('dashboard.uploading')}</Text>
+            <Text style={styles.uploadSubtext}>{t('dashboard.uploadingHint')}</Text>
+            <Text style={styles.uploadSubtext2}>{t('dashboard.uploadingHint2')}</Text>
           </View>
         </View>
       )}
+
+      {/* Subscription Detail Modal */}
+      <Modal
+        visible={selectedExpense !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedExpense(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setSelectedExpense(null)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalContent} testID="expense-details-modal">
+            {/* Close button */}
+            <TouchableOpacity
+              testID="expense-details-close"
+              style={styles.modalCloseButton}
+              onPress={() => setSelectedExpense(null)}
+            >
+              <Ionicons name="close" size={24} color="#999" />
+            </TouchableOpacity>
+
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalIconCircle}>
+                <Ionicons name="card-outline" size={28} color="#6366f1" />
+              </View>
+              <Text style={styles.modalTitle}>
+                {selectedExpense?.subscription?.name || selectedExpense?.title || ''}
+              </Text>
+              <Text style={styles.modalPrice}>
+                {selectedExpense?.subscription?.amount?.toFixed(2) ?? selectedExpense?.totalAmount?.toFixed(2) ?? '0.00'}
+                {' '}
+                {selectedExpense?.subscription?.currency || '€'}
+              </Text>
+            </View>
+
+            {/* Separator */}
+            <View style={styles.modalSeparator} />
+
+            {/* Details */}
+            <View style={styles.modalDetails}>
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="pricetag-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Catégorie</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {selectedExpense?.subscription?.category?.name || 'Général'}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="repeat-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Type de paiement</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {(() => {
+                    const freq = selectedExpense?.subscription?.frequency;
+                    switch (freq) {
+                      case 'one-time': return 'Achat unique';
+                      case 'weekly': return 'Hebdomadaire';
+                      case 'monthly': return 'Mensuel';
+                      case 'quarterly': return 'Trimestriel';
+                      case 'yearly': return 'Annuel';
+                      default: return freq || '—';
+                    }
+                  })()}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="calendar-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Date de début</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {selectedExpense?.subscription?.startDate
+                    ? new Date(selectedExpense.subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : '—'}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="calendar-clear-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Date de fin</Text>
+                </View>
+                <Text style={styles.modalValue}>
+                  {selectedExpense?.subscription?.endDate
+                    ? new Date(selectedExpense.subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : 'Aucune'}
+                </Text>
+              </View>
+
+              <View style={styles.modalRow}>
+                <View style={styles.modalRowLeft}>
+                  <Ionicons name="pulse-outline" size={18} color="#6366f1" />
+                  <Text style={styles.modalLabel}>Statut</Text>
+                </View>
+                <View style={[
+                  styles.modalStatusBadge,
+                  { backgroundColor:
+                    selectedExpense?.subscription?.status === 'active' ? 'rgba(76, 175, 80, 0.15)' :
+                    selectedExpense?.subscription?.status === 'trial' ? 'rgba(255, 193, 7, 0.15)' :
+                    selectedExpense?.subscription?.status === 'paused' ? 'rgba(255, 152, 0, 0.15)' :
+                    'rgba(244, 67, 54, 0.15)'
+                  },
+                ]}>
+                  <Text style={[
+                    styles.modalStatusText,
+                    { color:
+                      selectedExpense?.subscription?.status === 'active' ? '#4CAF50' :
+                      selectedExpense?.subscription?.status === 'trial' ? '#FFC107' :
+                      selectedExpense?.subscription?.status === 'paused' ? '#FF9800' :
+                      '#F44336'
+                    },
+                  ]}>
+                    {(() => {
+                      const status = selectedExpense?.subscription?.status;
+                      switch (status) {
+                        case 'active': return 'Actif';
+                        case 'trial': return 'Essai';
+                        case 'paused': return 'En pause';
+                        case 'cancelled': return 'Annulé';
+                        default: return status || '—';
+                      }
+                    })()}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -472,16 +568,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#11112A',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
   },
   calendarContainer: {
     margin: 16,
@@ -579,36 +665,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 20,
   },
-  categoriesContainer: {
-    position: 'absolute',
-    top: 64,
-    alignSelf: 'center',
-    minWidth: 146,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    overflow: 'hidden',
-    zIndex: 1000,
-  },
-  categoryItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F1F39',
-    textAlign: 'center',
-  },
   expenseItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -677,5 +733,93 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     fontStyle: 'italic',
+  },
+  // ─── Subscription Detail Modal ─────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalContent: {
+    backgroundColor: '#1e1e42',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    position: 'relative',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 1,
+    padding: 4,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingTop: 8,
+  },
+  modalIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  modalPrice: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#6366f1',
+    marginTop: 4,
+  },
+  modalSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    marginVertical: 16,
+  },
+  modalDetails: {
+    gap: 14,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalLabel: {
+    color: '#aaa',
+    fontSize: 14,
+  },
+  modalValue: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    maxWidth: '50%',
+    textAlign: 'right',
+  },
+  modalStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  modalStatusText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

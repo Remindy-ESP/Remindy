@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import BaseInputModal from './BaseInputModal';
+import { useTranslation } from '@/context/I18nContext';
 
 interface CreateFolderModalProps {
   readonly visible: boolean;
@@ -9,6 +10,7 @@ interface CreateFolderModalProps {
 }
 
 export default function CreateFolderModal({ visible, onClose, onSubmit }: CreateFolderModalProps) {
+  const { t } = useTranslation();
   const [selectedColor, setSelectedColor] = useState('#6366f1');
 
   const colors = ['#6366f1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -26,14 +28,14 @@ export default function CreateFolderModal({ visible, onClose, onSubmit }: Create
   return (
     <BaseInputModal
       visible={visible}
-      title="Nouveau dossier"
-      placeholder="Nom du dossier"
-      submitText="Créer"
+      title={t('cloud.modals.createFolder.title')}
+      placeholder={t('cloud.modals.createFolder.placeholder')}
+      submitText={t('cloud.modals.createFolder.submit')}
       onClose={handleClose}
       onSubmit={handleSubmit}
     >
       <View>
-        <Text style={styles.label}>Couleur</Text>
+        <Text style={styles.label}>{t('cloud.modals.createFolder.colorLabel')}</Text>
         <View style={styles.colorsContainer}>
           {colors.map((color) => (
             <TouchableOpacity

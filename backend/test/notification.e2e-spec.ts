@@ -15,6 +15,7 @@ import { FindAllNotificationsUseCase } from '../src/modules/notification/applica
 import { SnoozeNotificationUseCase } from '../src/modules/notification/application/use-cases/snooze-notification.use-case';
 import { MarkNotificationAsReadUseCase } from '../src/modules/notification/application/use-cases/mark-notification-as-read.use-case';
 import { ExpoPushService } from '../src/modules/notification/application/services/expo-push.service';
+import { NOTIFICATION_REPOSITORY } from '../src/modules/notification/application/ports/notification-repository.interface';
 
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
@@ -74,6 +75,16 @@ describe('NotificationController (e2e)', () => {
   const snoozeNotificationUseCase = { execute: jest.fn() };
   const markNotificationAsReadUseCase = { execute: jest.fn() };
   const expoPushService = { registerToken: jest.fn(), unregisterToken: jest.fn() };
+  const notificationRepository = {
+    findById: jest.fn(),
+    findAll: jest.fn(),
+    save: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteAll: jest.fn(),
+    markAllAsRead: jest.fn(),
+    findByUserAndMetadata: jest.fn(),
+  };
 
   const authHeader = (token: string) => ({
     Authorization: `Bearer ${token}`,
@@ -87,6 +98,7 @@ describe('NotificationController (e2e)', () => {
         { provide: SnoozeNotificationUseCase, useValue: snoozeNotificationUseCase },
         { provide: MarkNotificationAsReadUseCase, useValue: markNotificationAsReadUseCase },
         { provide: ExpoPushService, useValue: expoPushService },
+        { provide: NOTIFICATION_REPOSITORY, useValue: notificationRepository },
       ],
     })
       .overrideGuard(ThrottlerGuard)
@@ -128,7 +140,6 @@ describe('NotificationController (e2e)', () => {
       readAt: new Date('2025-11-06T16:00:00Z'),
     });
   });
-
 
   it('GET /notifications — 401 sans token', async () => {
     await request(app.getHttpServer()).get('/notifications').expect(401);
@@ -193,7 +204,6 @@ describe('NotificationController (e2e)', () => {
     );
   });
 
-
   it('PUT /notifications/:id/snooze — OK', async () => {
     const payload = { snoozed_until: '2025-11-10T10:00:00Z' };
 
@@ -228,7 +238,6 @@ describe('NotificationController (e2e)', () => {
       .send({ snoozed_until: '2025-11-10T10:00:00Z' })
       .expect(401);
   });
-
 
   it('PUT /notifications/:id/mark-read — OK', async () => {
     const res = await request(app.getHttpServer())

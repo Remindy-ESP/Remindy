@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { eventService, categoryService, type Event, type Category } from '@/services/api';
 import { PERIOD_LABELS, type Period } from '@/types/statistics';
+import i18n from '@/i18n';
 
 export type TimePeriod = Period;
 
@@ -42,7 +43,7 @@ export function useStatistics() {
       setCategories(categoriesData);
     } catch (err) {
       console.error('Error fetching statistics data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load statistics');
+      setError(err instanceof Error ? err.message : i18n.t('errors.statisticsLoadFailed'));
     } finally {
       setLoading(false);
     }

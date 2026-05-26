@@ -4,6 +4,7 @@ import {
   type ExpenseSummaryResponse,
 } from '@/services/api/statistics.service';
 import type { Period } from '@/types/statistics';
+import i18n from '@/i18n';
 
 interface UseExpenseSummaryResult {
   data: ExpenseSummaryResponse | null;
@@ -24,7 +25,7 @@ export function useExpenseSummary(period: Period): UseExpenseSummaryResult {
       const result = await statisticsService.getExpenseSummary(period);
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load expense summary');
+      setError(err instanceof Error ? err.message : i18n.t('errors.expenseSummaryLoadFailed'));
       setData(null);
     } finally {
       setLoading(false);

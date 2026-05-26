@@ -12,6 +12,11 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
+import CloudIcon from '@mui/icons-material/Cloud';
+import GavelIcon from '@mui/icons-material/Gavel';
 import { useAuth } from '@/modules/auth/application/AuthContext';
 import { AdminPermission } from '@/shared/domain/types';
 
@@ -38,16 +43,46 @@ const NAV_ITEMS: NavItem[] = [
     permission: AdminPermission.USERS_READ,
   },
   {
-    label: 'Audit',
-    path: '/audit',
-    icon: <ReceiptLongIcon />,
-    permission: AdminPermission.AUDIT_READ,
-  },
-  {
     label: 'Sécurité',
     path: '/security',
     icon: <SecurityIcon />,
     permission: AdminPermission.SECURITY_READ,
+  },
+  {
+    label: 'RBAC',
+    path: '/rbac',
+    icon: <VpnKeyIcon />,
+    permission: AdminPermission.RBAC_READ,
+  },
+  {
+    label: 'Support',
+    path: '/support',
+    icon: <SupportAgentIcon />,
+    permission: AdminPermission.SUPPORT_READ,
+  },
+  {
+    label: 'Abonnements',
+    path: '/subscriptions',
+    icon: <SubscriptionsIcon />,
+    permission: AdminPermission.SUBSCRIPTIONS_READ,
+  },
+  {
+    label: 'Cloud',
+    path: '/cloud',
+    icon: <CloudIcon />,
+    permission: AdminPermission.CLOUD_READ,
+  },
+  {
+    label: 'RGPD',
+    path: '/rgpd',
+    icon: <GavelIcon />,
+    permission: AdminPermission.RGPD_EXPORT,
+  },
+  {
+    label: 'Audit',
+    path: '/audit',
+    icon: <ReceiptLongIcon />,
+    permission: AdminPermission.AUDIT_READ,
   },
 ];
 

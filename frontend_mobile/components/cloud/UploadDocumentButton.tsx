@@ -1,16 +1,18 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '@/context/I18nContext';
 
 interface UploadDocumentButtonProps {
   readonly onPress: () => void;
 }
 
 export default function UploadDocumentButton({ onPress }: UploadDocumentButtonProps) {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.8}>
       <Ionicons name="add-circle" size={20} color="#fff" />
-      <Text style={styles.text}>Ajouter un document</Text>
+      <Text style={styles.text}>{t('cloud.actions.addDocument')}</Text>
     </TouchableOpacity>
   );
 }

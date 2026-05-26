@@ -1,6 +1,6 @@
 export interface AppRoute {
     key: string;
-    label: string;
+    labelKey: string;
     route: string;
     showInBurger: boolean;
     showInFooter: boolean;
@@ -11,7 +11,7 @@ export interface AppRoute {
 export const APP_ROUTES: AppRoute[] = [
     {
         key: 'dashboard',
-        label: 'Accueil',
+        labelKey: 'nav.dashboard',
         route: '/(tabs)/dashboard',
         showInBurger: true,
         showInFooter: true,
@@ -19,7 +19,7 @@ export const APP_ROUTES: AppRoute[] = [
     },
     {
         key: 'statistics',
-        label: 'Statistiques',
+        labelKey: 'nav.statistics',
         route: '/(tabs)/statistics',
         showInBurger: true,
         showInFooter: true,
@@ -27,7 +27,7 @@ export const APP_ROUTES: AppRoute[] = [
     },
     {
         key: 'subscription',
-        label: 'Opérations',
+        labelKey: 'nav.subscription',
         route: '/(tabs)/subscription',
         showInBurger: true,
         showInFooter: true,
@@ -35,7 +35,7 @@ export const APP_ROUTES: AppRoute[] = [
     },
     {
         key: 'notifications',
-        label: 'Notifications',
+        labelKey: 'nav.notifications',
         route: '/(tabs)/notifications',
         showInBurger: true,
         showInFooter: true,
@@ -43,21 +43,21 @@ export const APP_ROUTES: AppRoute[] = [
     },
     {
         key: 'cloud',
-        label: 'Cloud',
+        labelKey: 'nav.cloud',
         route: '/(tabs)/cloud',
         showInBurger: true,
         showInFooter: false,
     },
     {
         key: 'promotion',
-        label: 'Promos',
+        labelKey: 'nav.promotion',
         route: '/(tabs)/promotion',
         showInBurger: true,
         showInFooter: false,
     },
     {
         key: 'legal',
-        label: 'Légal',
+        labelKey: 'nav.legal',
         route: '/(tabs)/legal',
         showInBurger: true,
         showInFooter: false,

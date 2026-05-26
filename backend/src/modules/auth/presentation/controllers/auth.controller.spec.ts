@@ -7,12 +7,13 @@ import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.u
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-password.use-case';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
+import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import type { Request, Response } from 'express';
-const TEST_IP = 'test-ip-address' 
-const TEST_IP_2 = 'another-test-ip'
+const TEST_IP = 'test-ip-address';
+const TEST_IP_2 = 'another-test-ip';
 describe('AuthController', () => {
   let controller: AuthController;
   let registerUserUseCase: jest.Mocked<RegisterUserUseCase>;
@@ -21,6 +22,7 @@ describe('AuthController', () => {
   let logoutUseCase: jest.Mocked<LogoutUseCase>;
   let forgotPasswordUseCase: jest.Mocked<ForgotPasswordUseCase>;
   let resetPasswordUseCase: jest.Mocked<ResetPasswordUseCase>;
+  let verifyEmailUseCase: jest.Mocked<VerifyEmailUseCase>;
 
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -47,6 +49,10 @@ describe('AuthController', () => {
     };
 
     const mockResetPasswordUseCase = {
+      execute: jest.fn(),
+    };
+
+    const mockVerifyEmailUseCase = {
       execute: jest.fn(),
     };
 
@@ -77,6 +83,10 @@ describe('AuthController', () => {
           provide: ResetPasswordUseCase,
           useValue: mockResetPasswordUseCase,
         },
+        {
+          provide: VerifyEmailUseCase,
+          useValue: mockVerifyEmailUseCase,
+        },
       ],
     }).compile();
 
@@ -87,6 +97,7 @@ describe('AuthController', () => {
     logoutUseCase = module.get(LogoutUseCase);
     forgotPasswordUseCase = module.get(ForgotPasswordUseCase);
     resetPasswordUseCase = module.get(ResetPasswordUseCase);
+    verifyEmailUseCase = module.get(VerifyEmailUseCase);
 
     mockRequest = {
       ip: TEST_IP,
@@ -135,10 +146,11 @@ describe('AuthController', () => {
       const tokens = {
         accessToken: 'access_token_value',
         refreshToken: 'refresh_token_value',
+        userId: 'user-123',
       };
 
       registerUserUseCase.execute.mockResolvedValue(mockUser);
-      loginUseCase.execute.mockResolvedValue(tokens);
+      loginUseCase.execute.mockResolvedValue(tokens as any);
 
       const result = await controller.register(
         mockRequest as Request,
@@ -192,7 +204,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-456',
+      } as any);
 
       const reqWithoutIp = { ...mockRequest, ip: undefined };
 
@@ -230,7 +243,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-789',
+      } as any);
 
       const reqWithoutUserAgent = {
         ...mockRequest,
@@ -261,9 +275,10 @@ describe('AuthController', () => {
       const tokens = {
         accessToken: 'access_token_value',
         refreshToken: 'refresh_token_value',
+        userId: 'user-123',
       };
 
-      loginUseCase.execute.mockResolvedValue(tokens);
+      loginUseCase.execute.mockResolvedValue(tokens as any);
 
       const result = await controller.login(
         mockRequest as Request,
@@ -299,7 +314,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-123',
+      } as any);
 
       const reqWithoutIp = { ...mockRequest, ip: undefined };
 
@@ -321,7 +337,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-123',
+      } as any);
 
       const reqWithoutUserAgent = {
         ...mockRequest,
@@ -455,8 +472,8 @@ describe('AuthController', () => {
 
       await controller.refreshToken(
         reqWithInvalidCookie as Request,
-        mockResponse,
-        { refreshToken: 'body_token' }
+        mockResponse as unknown as Response,
+        { refreshToken: 'body_token' },
       );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
@@ -479,9 +496,9 @@ describe('AuthController', () => {
       });
 
       await controller.refreshToken(
-  reqWithoutUserAgent as Request,
-  mockResponse
-);
+        reqWithoutUserAgent as Request,
+        mockResponse as unknown as Response,
+      );
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'cookie_token',
@@ -734,11 +751,41 @@ describe('AuthController', () => {
       });
     });
   });
+
+  describe('verifyEmail', () => {
+    it('should return success when token is valid', async () => {
+      verifyEmailUseCase.execute.mockResolvedValue(undefined);
+
+      const result = await controller.verifyEmail('valid-token-123');
+
+      expect(verifyEmailUseCase.execute).toHaveBeenCalledWith('valid-token-123');
+      expect(result).toEqual({ success: true, message: 'Email successfully verified' });
+    });
+
+    it('should propagate UnauthorizedException for invalid token', async () => {
+      verifyEmailUseCase.execute.mockRejectedValue(
+        new UnauthorizedException('Invalid or expired token'),
+      );
+
+      await expect(controller.verifyEmail('bad-token')).rejects.toThrow(UnauthorizedException);
+      expect(verifyEmailUseCase.execute).toHaveBeenCalledWith('bad-token');
+    });
+
+    it('should call execute with the exact token received', async () => {
+      const token = 'eyJhbGciOiJIUzI1NiJ9.test.signature';
+      verifyEmailUseCase.execute.mockResolvedValue(undefined);
+
+      await controller.verifyEmail(token);
+
+      expect(verifyEmailUseCase.execute).toHaveBeenCalledWith(token);
+    });
+  });
 });
 
 describe('AuthController constructor branch coverage', () => {
   it('should instantiate with null dependencies to cover constructor parameter branches', () => {
     const instance = new AuthController(
+      null as any,
       null as any,
       null as any,
       null as any,

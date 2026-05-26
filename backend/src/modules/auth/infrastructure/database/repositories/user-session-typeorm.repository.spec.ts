@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserSessionTypeOrmRepository } from './user-session-typeorm.repository';
 import { UserSessionEntity } from '../../../../../infrastructure/database/entities/user-session.entity';
-const TEST_IP = 'another-test-ip'; 
+const TEST_IP = 'another-test-ip';
 
 describe('UserSessionTypeOrmRepository', () => {
   let repository: UserSessionTypeOrmRepository;
@@ -54,8 +54,8 @@ describe('UserSessionTypeOrmRepository', () => {
       };
 
       const savedSession = {
-        id: 'session-123',
         ...createdSession,
+        id: 'session-123',
       };
 
       typeOrmRepository.create.mockReturnValue(createdSession as any);
@@ -98,8 +98,8 @@ describe('UserSessionTypeOrmRepository', () => {
       };
 
       const savedSession = {
-        id: 'session-456',
         ...createdSession,
+        id: 'session-456',
       };
 
       typeOrmRepository.create.mockReturnValue(createdSession as any);

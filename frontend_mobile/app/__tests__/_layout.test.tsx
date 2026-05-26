@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import RootLayout, { ErrorBoundary } from '../_layout';
+import { AppStatusScreenMock } from './testUtils';
 
 jest.mock('expo-router', () => ({
   Stack: Object.assign(
@@ -44,20 +45,8 @@ jest.mock('@/features/coach-marks/CoachMarksContext', () => ({
 }));
 
 jest.mock('@/components/system/AppStatusScreen', () => {
-  const React = require('react');
-  const { View, Text, TouchableOpacity } = require('react-native');
-  return ({ code, title, message, actions }: any) => (
-    <View>
-      <Text>{code}</Text>
-      <Text>{title}</Text>
-      <Text>{message}</Text>
-      {actions.map((action: any) => (
-        <TouchableOpacity key={action.label} testID={action.testID} onPress={action.onPress}>
-          <Text>{action.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+  const { AppStatusScreenMock } = require('./testUtils');
+  return AppStatusScreenMock;
 });
 
 jest.mock('@/components/system/CoachMarksOverlay', () => () => null);

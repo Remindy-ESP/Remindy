@@ -116,7 +116,7 @@ describe('useStorageQuota', () => {
         await result.current.fetchQuota();
       });
 
-      expect(result.current.error).toBe('Failed to load storage quota');
+      expect(result.current.error).toBe('Echec du chargement du quota de stockage');
     });
 
     it('clears previous error before re-fetching', async () => {

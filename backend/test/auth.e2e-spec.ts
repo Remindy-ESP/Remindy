@@ -1,4 +1,9 @@
-import { INestApplication, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  INestApplication,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AuthController } from '../src/modules/auth/presentation/controllers/auth.controller';
@@ -8,6 +13,7 @@ import { RefreshTokenUseCase } from '../src/modules/auth/application/use-cases/r
 import { LogoutUseCase } from '../src/modules/auth/application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from '../src/modules/auth/application/use-cases/forgot-password.use-case';
 import { ResetPasswordUseCase } from '../src/modules/auth/application/use-cases/reset-password.use-case';
+import { VerifyEmailUseCase } from '../src/modules/auth/application/use-cases/verify-email.use-case';
 import { JwtRefreshGuard } from '../src/modules/auth/presentation/guards/jwt-refresh.guard';
 
 const TEST_USER_CREDENTIAL = 'fake-password-for-tests';
@@ -15,10 +21,8 @@ const TEST_USER_CREDENTIAL = 'fake-password-for-tests';
 class TestJwtRefreshGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
-
     req.cookies ??= {};
-    req.cookies.refreshToken =
-      req.cookies.refreshToken ?? 'refresh-token-123';
+    req.cookies.refreshToken = req.cookies.refreshToken ?? 'refresh-token-123';
     return true;
   }
 }
@@ -26,58 +30,25 @@ class TestJwtRefreshGuard implements CanActivate {
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
 
-  const registerUserUseCase = {
-    execute: jest.fn(),
-  };
-
-  const loginUseCase = {
-    execute: jest.fn(),
-  };
-
-  const refreshTokenUseCase = {
-    execute: jest.fn(),
-  };
-
-  const logoutUseCase = {
-    execute: jest.fn(),
-  };
-
-  const forgotPasswordUseCase = {
-    execute: jest.fn(),
-  };
-
-  const resetPasswordUseCase = {
-    execute: jest.fn(),
-  };
+  const registerUserUseCase = { execute: jest.fn() };
+  const loginUseCase = { execute: jest.fn() };
+  const refreshTokenUseCase = { execute: jest.fn() };
+  const logoutUseCase = { execute: jest.fn() };
+  const forgotPasswordUseCase = { execute: jest.fn() };
+  const resetPasswordUseCase = { execute: jest.fn() };
+  const verifyEmailUseCase = { execute: jest.fn() };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        {
-          provide: RegisterUserUseCase,
-          useValue: registerUserUseCase,
-        },
-        {
-          provide: LoginUseCase,
-          useValue: loginUseCase,
-        },
-        {
-          provide: RefreshTokenUseCase,
-          useValue: refreshTokenUseCase,
-        },
-        {
-          provide: LogoutUseCase,
-          useValue: logoutUseCase,
-        },
-        {
-          provide: ForgotPasswordUseCase,
-          useValue: forgotPasswordUseCase,
-        },
-        {
-          provide: ResetPasswordUseCase,
-          useValue: resetPasswordUseCase,
-        },
+        { provide: RegisterUserUseCase, useValue: registerUserUseCase },
+        { provide: LoginUseCase, useValue: loginUseCase },
+        { provide: RefreshTokenUseCase, useValue: refreshTokenUseCase },
+        { provide: LogoutUseCase, useValue: logoutUseCase },
+        { provide: ForgotPasswordUseCase, useValue: forgotPasswordUseCase },
+        { provide: ResetPasswordUseCase, useValue: resetPasswordUseCase },
+        { provide: VerifyEmailUseCase, useValue: verifyEmailUseCase },
       ],
     })
       .overrideGuard(JwtRefreshGuard)
@@ -88,18 +59,15 @@ describe('AuthController (e2e)', () => {
 
     app.use((req, _res, next) => {
       const cookieHeader = req.headers.cookie;
-
       if (!cookieHeader) {
         req.cookies = {};
         return next();
       }
-
-      req.cookies = cookieHeader.split(';').reduce<Record<string, string>>((acc, part) => {
+      req.cookies = cookieHeader.split(';').reduce((acc: Record<string, string>, part: string) => {
         const [key, ...valueParts] = part.trim().split('=');
         acc[key] = valueParts.join('=');
         return acc;
-      }, {});
-
+      }, {}) as Record<string, string>;
       next();
     });
 
@@ -122,10 +90,7 @@ describe('AuthController (e2e)', () => {
       lastName: 'Doe',
     };
 
-    registerUserUseCase.execute.mockResolvedValue({
-      getId: () => 'user-1',
-    });
-
+    registerUserUseCase.execute.mockResolvedValue({ getId: () => 'user-1' });
     loginUseCase.execute.mockResolvedValue({
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
@@ -134,7 +99,6 @@ describe('AuthController (e2e)', () => {
     const res = await request(app.getHttpServer()).post('/auth/register').send(payload).expect(201);
 
     expect(registerUserUseCase.execute).toHaveBeenCalledWith(payload);
-
     expect(loginUseCase.execute).toHaveBeenCalledWith({
       email: payload.email,
       password: payload.password,
@@ -142,22 +106,17 @@ describe('AuthController (e2e)', () => {
       userAgent: expect.any(String),
       deviceName: 'web',
     });
-
     expect(res.body).toEqual({
       success: true,
       userId: 'user-1',
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
     });
-
     expect(res.headers['set-cookie']).toBeDefined();
   });
 
   it('POST /auth/login', async () => {
-    const payload = {
-      email: 'user@example.com',
-      password: TEST_USER_CREDENTIAL ,
-    };
+    const payload = { email: 'user@example.com', password: TEST_USER_CREDENTIAL };
 
     loginUseCase.execute.mockResolvedValue({
       accessToken: 'access-token-123',
@@ -173,12 +132,10 @@ describe('AuthController (e2e)', () => {
       userAgent: expect.any(String),
       deviceName: 'web',
     });
-
     expect(res.body).toEqual({
       accessToken: 'access-token-123',
       refreshToken: 'refresh-token-123',
     });
-
     expect(res.headers['set-cookie']).toBeDefined();
   });
 
@@ -198,12 +155,10 @@ describe('AuthController (e2e)', () => {
       ipAddress: expect.any(String),
       userAgent: undefined,
     });
-
     expect(res.body).toEqual({
       accessToken: 'new-access-token-123',
       refreshToken: 'new-refresh-token-123',
     });
-
     expect(res.headers['set-cookie']).toBeDefined();
   });
 
@@ -221,10 +176,7 @@ describe('AuthController (e2e)', () => {
   });
 
   it('POST /auth/forgot-password', async () => {
-    const payload = {
-      email: 'user@example.com',
-    };
-
+    const payload = { email: 'user@example.com' };
     forgotPasswordUseCase.execute.mockResolvedValue(undefined);
 
     const res = await request(app.getHttpServer())
@@ -233,7 +185,6 @@ describe('AuthController (e2e)', () => {
       .expect(201);
 
     expect(forgotPasswordUseCase.execute).toHaveBeenCalledWith(payload.email);
-
     expect(res.body).toEqual({
       success: true,
       message: 'If the email exists, a reset link has been sent',
@@ -241,11 +192,7 @@ describe('AuthController (e2e)', () => {
   });
 
   it('POST /auth/reset-password', async () => {
-    const payload = {
-      token: 'reset-token-123',
-      newPassword: TEST_USER_CREDENTIAL,
-    };
-
+    const payload = { token: 'reset-token-123', newPassword: TEST_USER_CREDENTIAL };
     resetPasswordUseCase.execute.mockResolvedValue(undefined);
 
     const res = await request(app.getHttpServer())
@@ -257,10 +204,37 @@ describe('AuthController (e2e)', () => {
       token: payload.token,
       newPassword: payload.newPassword,
     });
-
     expect(res.body).toEqual({
       success: true,
       message: 'Password successfully reset',
     });
+  });
+
+  it('GET /auth/verify-email - success', async () => {
+    verifyEmailUseCase.execute.mockResolvedValue(undefined);
+
+    const res = await request(app.getHttpServer())
+      .get('/auth/verify-email')
+      .query({ token: 'valid-token-123' })
+      .expect(200);
+
+    expect(verifyEmailUseCase.execute).toHaveBeenCalledWith('valid-token-123');
+    expect(res.body).toEqual({
+      success: true,
+      message: 'Email successfully verified',
+    });
+  });
+
+  it('GET /auth/verify-email - invalid token returns 401', async () => {
+    verifyEmailUseCase.execute.mockRejectedValue(
+      new UnauthorizedException('Invalid or expired token'),
+    );
+
+    await request(app.getHttpServer())
+      .get('/auth/verify-email')
+      .query({ token: 'bad-token' })
+      .expect(401);
+
+    expect(verifyEmailUseCase.execute).toHaveBeenCalledWith('bad-token');
   });
 });

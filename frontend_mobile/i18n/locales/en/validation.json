@@ -1,0 +1,10 @@
+{
+  "emailRequired": "Email is required",
+  "emailInvalid": "Please enter a valid email address",
+  "passwordRequired": "Password is required",
+  "passwordMinLength": "Password must be at least 6 characters",
+  "firstNameRequired": "First name is required",
+  "lastNameRequired": "Last name is required",
+  "confirmPasswordRequired": "Please confirm your password",
+  "passwordsMismatch": "Passwords do not match"
+}

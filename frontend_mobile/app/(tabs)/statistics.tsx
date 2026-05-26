@@ -6,8 +6,11 @@ import { useExpenseSummary } from '@/hooks/useExpenseSummary';
 import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
 import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
 import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
+import { useTranslation } from '@/context/I18nContext';
+import { screenHeaderStyles as shared } from '@/styles/screenHeader';
 
 export default function StatisticsScreen() {
+  const { t } = useTranslation();
   const {
     activePeriod,
     setActivePeriod,
@@ -39,7 +42,7 @@ export default function StatisticsScreen() {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color="#4f46e5" />
-        <Text style={styles.loadingText}>Chargement des statistiques...</Text>
+        <Text style={styles.loadingText}>{t('statistics.loading')}</Text>
       </View>
     );
   }
@@ -47,9 +50,9 @@ export default function StatisticsScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.errorText}>Erreur : {error}</Text>
+        <Text style={styles.errorText}>{t('statistics.errorPrefix', { message: error })}</Text>
         <Text style={styles.errorSubtext}>
-          Vérifiez que le serveur est lancé et votre connexion réseau
+          {t('statistics.errorHint')}
         </Text>
       </View>
     );
@@ -58,9 +61,9 @@ export default function StatisticsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Statistiques</Text>
-        <Text style={styles.headerSubtitle}>
-          Consultez vos statistiques
+        <Text style={shared.headerTitle}>{t('statistics.headerTitle')}</Text>
+        <Text style={shared.headerSubtitle}>
+          {t('statistics.headerSubtitle')}
         </Text>
       </View>
 
@@ -69,7 +72,7 @@ export default function StatisticsScreen() {
       {summaryError ? (
         <View style={styles.summaryErrorCard}>
           <Text style={styles.summaryErrorText}>
-            Bilan indisponible : {summaryError}
+            {t('statistics.summaryUnavailable', { message: summaryError })}
           </Text>
         </View>
       ) : summaryLoading || !summary ? (
@@ -89,11 +92,11 @@ export default function StatisticsScreen() {
 
       {/* Category Breakdown */}
       <View style={styles.breakdownSection}>
-        <Text style={styles.breakdownTitle}>Répartition par catégorie</Text>
+        <Text style={styles.breakdownTitle}>{t('statistics.breakdownTitle')}</Text>
         {stats.categoryBreakdown.length === 0 ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyText}>
-              Aucune dépense pour cette période
+              {t('statistics.noExpenses')}
             </Text>
           </View>
         ) : (
@@ -104,7 +107,7 @@ export default function StatisticsScreen() {
                 <View>
                   <Text style={styles.categoryName}>{cat.name}</Text>
                   <Text style={styles.categoryCount}>
-                    {cat.count} transaction{cat.count > 1 ? 's' : ''}
+                    {t('statistics.transaction', { count: cat.count })}
                   </Text>
                 </View>
               </View>
@@ -150,16 +153,6 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#11112A',
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
   },
   summaryLoadingCard: {
     backgroundColor: '#1a1a3e',

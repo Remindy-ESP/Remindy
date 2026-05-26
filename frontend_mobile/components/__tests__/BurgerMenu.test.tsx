@@ -26,7 +26,7 @@ jest.mock('react-native-safe-area-context', () => ({
 const mockItems: AppRoute[] = [
   {
     key: 'dashboard',
-    label: 'Dashboard',
+    labelKey: 'nav.dashboard',
     route: '/(tabs)/dashboard',
     showInBurger: true,
     showInFooter: false,
@@ -46,21 +46,21 @@ describe('BurgerMenu', () => {
     const { getByText } = render(
       <BurgerMenu isVisible={true} onClose={mockOnClose} items={mockItems} />
     );
-    expect(getByText('Dashboard')).toBeTruthy();
+    expect(getByText('Accueil')).toBeTruthy();
   });
 
   it('does not render when not visible', () => {
     const { queryByText } = render(
       <BurgerMenu isVisible={false} onClose={mockOnClose} items={mockItems} />
     );
-    expect(queryByText('Dashboard')).toBeNull();
+    expect(queryByText('Accueil')).toBeNull();
   });
 
   it('navigates when item pressed', () => {
     const { getByText } = render(
       <BurgerMenu isVisible={true} onClose={mockOnClose} items={mockItems} />
     );
-    fireEvent.press(getByText('Dashboard'));
+    fireEvent.press(getByText('Accueil'));
     expect(mockPush).toHaveBeenCalledWith('/(tabs)/dashboard');
   });
 

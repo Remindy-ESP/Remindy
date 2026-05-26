@@ -24,7 +24,6 @@ import { FindAllSubscriptionsUseCase } from '../src/modules/subscription/applica
 import { JwtAuthGuard } from '../src/modules/auth/presentation/guards/jwt-auth.guard';
 import { Role } from '../src/modules/auth/domain/value-objects/role.enum';
 
-
 const EVENT_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const SUB_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const USER_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -35,11 +34,10 @@ const TOKENS = {
   other: { userId: OTHER_USER_ID, role: Role.USER_PREMIUM },
 } as const;
 
-const TOKEN_MAP: Record<string, typeof TOKENS.user> = {
+const TOKEN_MAP: Record<string, { userId: string; role: Role }> = {
   'user-token': TOKENS.user,
   'other-user-token': TOKENS.other,
 };
-
 
 class TestJwtAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
@@ -157,18 +155,13 @@ describe('EventController (e2e)', () => {
     findAllSubscriptions.execute.mockResolvedValue([sampleSubscription]);
   });
 
-
   it('GET /calendar/events — 401 without token', async () => {
     await request(app.getHttpServer()).get('/calendar/events').expect(401);
   });
 
   it('GET /calendar/events — 401 invalid token', async () => {
-    await request(app.getHttpServer())
-      .get('/calendar/events')
-      .set(auth('bad-token'))
-      .expect(401);
+    await request(app.getHttpServer()).get('/calendar/events').set(auth('bad-token')).expect(401);
   });
-
 
   it('GET /calendar/events — returns events', async () => {
     const res = await request(app.getHttpServer())
@@ -192,7 +185,6 @@ describe('EventController (e2e)', () => {
     expect(res.body).toEqual([]);
   });
 
-
   it('GET /event/:id owner', async () => {
     await request(app.getHttpServer())
       .get(`/calendar/event/${EVENT_ID}`)
@@ -214,7 +206,6 @@ describe('EventController (e2e)', () => {
       .expect(404);
   });
 
-
   it('PUT reschedule', async () => {
     await request(app.getHttpServer())
       .put(`/calendar/event/${EVENT_ID}/reschedule`)
@@ -228,7 +219,6 @@ describe('EventController (e2e)', () => {
     expect(rescheduleEvent.execute).toHaveBeenCalled();
   });
 
-
   it('PATCH status', async () => {
     await request(app.getHttpServer())
       .patch(`/calendar/event/${EVENT_ID}/status`)
@@ -239,7 +229,6 @@ describe('EventController (e2e)', () => {
     expect(updateStatus.execute).toHaveBeenCalledWith(EVENT_ID, 'completed');
   });
 
-
   it('PATCH payment status', async () => {
     await request(app.getHttpServer())
       .patch(`/calendar/event/${EVENT_ID}/payment-status`)
@@ -249,7 +238,6 @@ describe('EventController (e2e)', () => {
 
     expect(updatePayment.execute).toHaveBeenCalledWith(EVENT_ID, 'paid');
   });
-
 
   it('DELETE event', async () => {
     await request(app.getHttpServer())

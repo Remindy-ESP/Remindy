@@ -1,7 +1,7 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { UserController } from './user.controller';
-const TEST_IP = 'test-ip-address' 
+const TEST_IP = 'test-ip-address';
 
 describe('UserController', () => {
   let controller: UserController;

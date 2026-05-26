@@ -15,6 +15,20 @@ export { default as userService } from './user.service';
 export { default as eventService } from './event.service';
 export { default as documentService } from './document.service';
 export { default as statisticsService } from './statistics.service';
+export { default as folderService } from './folder.service';
+export { default as storageService } from './storage.service';
+export { default as supportService } from './support.service';
+export type {
+  SupportTicketSummary,
+  SupportTicketDetail,
+  SupportTicketMessage,
+  SupportTicketsPage,
+  SupportTicketStatus,
+  SupportTicketCategory,
+  CreateTicketRequest,
+} from './support.service';
+export { default as notificationService } from './notification.service';
+export { default as reminderService } from './reminder.service';
 
 // Export types
 export * from './types';

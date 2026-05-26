@@ -23,11 +23,11 @@ function makeAxiosLike(options: {
 
 describe('getErrorMessage', () => {
   it('returns default message when error is null', () => {
-    expect(getErrorMessage(null)).toBe('An error occurred');
+    expect(getErrorMessage(null)).toBe('Une erreur est survenue');
   });
 
   it('returns default message when error is undefined', () => {
-    expect(getErrorMessage(undefined)).toBe('An error occurred');
+    expect(getErrorMessage(undefined)).toBe('Une erreur est survenue');
   });
 
   it('returns custom default message when provided', () => {

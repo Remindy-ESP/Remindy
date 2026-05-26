@@ -13,6 +13,7 @@ import { CreateAuditLogRequestDto } from '../dto/create-audit-log.request.dto';
 import { AuditLogFilterRequestDto } from '../dto/audit-log-filter.request.dto';
 import { createMockAuditLogResponse } from '../../test/audit-log.factory';
 import type { Response } from 'express';
+import { AuditLogResponseDto, PaginatedAuditLogsResponseDto } from '../dto/audit-log.response.dto';
 
 describe('AuditController', () => {
   let controller: AuditController;
@@ -42,7 +43,7 @@ describe('AuditController', () => {
   const mockAuditLogResponse = createMockAuditLogResponse({
     actorUserId: 'admin-123',
     userAgent: 'Mozilla/5.0 Test',
-  });
+  }) as unknown as AuditLogResponseDto;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -150,7 +151,7 @@ describe('AuditController', () => {
         page: 1,
         limit: 20,
         totalPages: 1,
-      };
+      } as unknown as PaginatedAuditLogsResponseDto;
 
       findAllAuditLogsUseCase.execute.mockResolvedValue(paginatedResponse);
 

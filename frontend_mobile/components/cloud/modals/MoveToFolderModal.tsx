@@ -3,6 +3,7 @@ import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BaseSelectionModal from './BaseSelectionModal';
 import type { Folder } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
 
 interface MoveToFolderModalProps {
   readonly visible: boolean;
@@ -13,6 +14,7 @@ interface MoveToFolderModalProps {
 }
 
 export default function MoveToFolderModal({ visible, folders, currentFolderId, onClose, onSubmit }: MoveToFolderModalProps) {
+  const { t } = useTranslation();
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -30,8 +32,8 @@ export default function MoveToFolderModal({ visible, folders, currentFolderId, o
   return (
     <BaseSelectionModal
       visible={visible}
-      title="Déplacer vers"
-      submitText="Déplacer"
+      title={t('cloud.modals.moveToFolder.title')}
+      submitText={t('cloud.modals.moveToFolder.submit')}
       onClose={handleClose}
       onSubmit={handleSubmit}
     >
@@ -41,7 +43,7 @@ export default function MoveToFolderModal({ visible, folders, currentFolderId, o
         activeOpacity={0.7}
       >
         <Ionicons name="home" size={20} color="#6366f1" />
-        <Text style={styles.folderName}>Racine</Text>
+        <Text style={styles.folderName}>{t('cloud.modals.moveToFolder.root')}</Text>
         {selectedFolderId === null && <Ionicons name="checkmark" size={20} color="#6366f1" />}
       </TouchableOpacity>
       {availableFolders.map((folder) => (

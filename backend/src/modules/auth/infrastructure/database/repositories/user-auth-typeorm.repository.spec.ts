@@ -140,7 +140,7 @@ describe('UserAuthTypeOrmRepository', () => {
         id: 'user-new-123',
         ...ormEntity,
         createdAt: savedEntity.createdAt,
-      });
+      } as any);
 
       mapper.toOrm.mockReturnValue(ormEntity);
       typeOrmRepository.save.mockResolvedValue(savedEntity);
@@ -347,6 +347,19 @@ describe('UserAuthTypeOrmRepository', () => {
       expect(typeOrmRepository.update).toHaveBeenCalledWith(
         { id: 'user-123' },
         { lastLoginAt: date },
+      );
+    });
+  });
+
+  describe('markEmailAsVerified', () => {
+    it('sets emailVerified to true for the given user', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.markEmailAsVerified('user-123');
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        { emailVerified: true },
       );
     });
   });

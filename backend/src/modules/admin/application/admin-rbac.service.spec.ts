@@ -73,7 +73,9 @@ describe('AdminRbacService.listRoles()', () => {
   });
 
   it("lève ForbiddenException si le rôle n'a pas RBAC_READ", async () => {
-    await expect(makeService().listRoles({ role: Role.USER })).rejects.toThrow(ForbiddenException);
+    await expect(makeService().listRoles({ role: Role.USER_FREEMIUM })).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(mockRolesRepo.find).not.toHaveBeenCalled();
   });
 

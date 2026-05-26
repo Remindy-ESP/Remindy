@@ -81,6 +81,7 @@ describe('ForgotPasswordUseCase', () => {
     beforeEach(() => {
       process.env.FRONTEND_URL = 'http://localhost:3000';
       delete process.env.FRONTEND_PASSWORD_RESET_URL;
+      jest.clearAllMocks();
     });
 
     it('should send password reset email when user exists', async () => {
@@ -262,6 +263,24 @@ describe('ForgotPasswordUseCase', () => {
       emailService.sendPasswordResetEmail.mockResolvedValue(undefined);
 
       await expect(useCase.execute(email)).resolves.not.toThrow();
+    });
+
+    it('should not throw when email service fails', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('token');
+      emailService.sendPasswordResetEmail.mockRejectedValue(new Error('Brevo API error'));
+
+      await expect(useCase.execute(email)).resolves.not.toThrow();
+    });
+
+    it('should not emit reset event when email service fails', async () => {
+      userRepo.findByEmail.mockResolvedValue(mockUser);
+      tokenService.generatePasswordResetToken.mockReturnValue('token');
+      emailService.sendPasswordResetEmail.mockRejectedValue(new Error('Brevo API error'));
+
+      await useCase.execute(email);
+
+      expect(mockEventEmitter.emit).not.toHaveBeenCalled();
     });
 
     it('should use explicit FRONTEND_PASSWORD_RESET_URL when configured', async () => {

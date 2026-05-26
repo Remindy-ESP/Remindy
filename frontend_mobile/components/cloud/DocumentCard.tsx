@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { DocumentResponse } from '@/services/api/document.service';
+import { useTranslation } from '@/context/I18nContext';
+import { formatShortDate } from '@/utils/format';
 
 interface DocumentCardProps {
   readonly document: DocumentResponse;
@@ -10,21 +12,14 @@ interface DocumentCardProps {
 }
 
 export default function DocumentCard({ document, onPress, onMenuPress }: DocumentCardProps) {
+  const { language } = useTranslation();
+
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-  };
-
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
   };
 
   const getStatusColor = () => {
@@ -58,7 +53,7 @@ export default function DocumentCard({ document, onPress, onMenuPress }: Documen
         <View style={styles.metadata}>
           <Text style={styles.metadataText}>{formatFileSize(document.file_size)}</Text>
           <Text style={styles.separator}>•</Text>
-          <Text style={styles.metadataText}>{formatDate(document.uploaded_at)}</Text>
+          <Text style={styles.metadataText}>{formatShortDate(document.uploaded_at, language)}</Text>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
         </View>
       </View>

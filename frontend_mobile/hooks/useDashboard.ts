@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { categoryService, eventService, type Category, type Event } from '@/services/api';
+import { useTranslation } from '@/context/I18nContext';
+import i18n from '@/i18n';
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';
 
@@ -9,6 +11,7 @@ export interface AggregatedEvent extends Event {
 }
 
 export function useDashboard() {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState('');
   const [activePeriod, setActivePeriod] = useState<TimePeriod>('day');
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -22,10 +25,10 @@ export function useDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const timePeriods: { key: TimePeriod; label: string; value: string }[] = [
-    { key: 'day', label: 'Ce jour', value: '1' },
-    { key: 'week', label: 'Semaine', value: '2' },
-    { key: 'month', label: 'Mensuel', value: '3' },
-    { key: 'year', label: 'Année', value: '4' },
+    { key: 'day', label: t('dashboard.periods.day'), value: '1' },
+    { key: 'week', label: t('dashboard.periods.week'), value: '2' },
+    { key: 'month', label: t('dashboard.periods.month'), value: '3' },
+    { key: 'year', label: t('dashboard.periods.year'), value: '4' },
   ];
 
   // Fetch categories and events from API
@@ -50,7 +53,7 @@ export function useDashboard() {
       console.log("eventsData", JSON.stringify(eventsData));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      setError(err instanceof Error ? err.message : i18n.t('errors.dashboardLoadFailed'));
     } finally {
       setLoading(false);
     }
