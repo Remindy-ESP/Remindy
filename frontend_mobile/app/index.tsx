@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { getErrorMessage } from '@/services/api';
@@ -29,7 +30,15 @@ export default function AuthScreen() {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
   const router = useRouter();
-  const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
+  const {
+    login,
+    register,
+    isAuthenticated,
+    isLoading: authLoading,
+    loginWithGoogle,
+    loginWithMicrosoft,
+    loginWithApple,
+  } = useAuth();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -126,28 +135,58 @@ export default function AuthScreen() {
       if (isLogin) {
         await login(email.trim(), password);
       } else {
-        await register(
-          email.trim(),
-          password,
-          firstName.trim(),
-          lastName.trim()
-        );
+        await register(email.trim(), password, firstName.trim(), lastName.trim());
       }
-
     } catch (err: any) {
       console.error('Auth error:', err);
       const errorMessage = getErrorMessage(
         err,
-        isLogin ? t('auth.loginRetry') : t('auth.registrationRetry')
+        isLogin ? t('auth.loginRetry') : t('auth.registrationRetry'),
       );
 
       setError(errorMessage);
       Alert.alert(
         isLogin ? t('auth.loginFailed') : t('auth.registrationFailed'),
-        errorMessage
+        errorMessage,
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
+      setError(errorMessage);
+      Alert.alert(t('auth.loginFailed'), errorMessage);
+    }
+  };
+
+  const handleMicrosoftLogin = async () => {
+    setError('');
+    try {
+      await loginWithMicrosoft();
+    } catch (err: any) {
+      console.error('Microsoft login error:', err);
+      const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
+      setError(errorMessage);
+      Alert.alert(t('auth.loginFailed'), errorMessage);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setError('');
+    try {
+      await loginWithApple();
+    } catch (err: any) {
+      console.error('Apple login error:', err);
+      const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
+      setError(errorMessage);
+      Alert.alert(t('auth.loginFailed'), errorMessage);
     }
   };
 
@@ -279,6 +318,31 @@ export default function AuthScreen() {
               {isLogin ? t('auth.toggleToRegister') : t('auth.toggleToLogin')}
             </Text>
           </TouchableOpacity>
+
+          {/* OAuth section */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>ou continuer avec</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <TouchableOpacity style={styles.oauthButton} onPress={handleGoogleLogin} testID="google-login-button">
+            <Text style={styles.oauthButtonText}>Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.oauthButton} onPress={handleMicrosoftLogin} testID="microsoft-login-button">
+            <Text style={styles.oauthButtonText}>Microsoft</Text>
+          </TouchableOpacity>
+
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={8}
+              style={styles.appleButton}
+              onPress={handleAppleLogin}
+            />
+          )}
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -362,5 +426,38 @@ const styles = StyleSheet.create({
   },
   toggleTextDisabled: {
     color: '#9ca3af',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 13,
+    color: '#9ca3af',
+  },
+  oauthButton: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  oauthButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  appleButton: {
+    height: 50,
+    marginBottom: 12,
   },
 });
