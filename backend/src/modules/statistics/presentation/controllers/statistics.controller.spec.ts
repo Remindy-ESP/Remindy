@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { StatisticsController } from './statistics.controller';
 import { GetExpenseSummaryUseCase } from '../../application/use-cases/get-expense-summary.use-case';
+import { GetComparisonUseCase } from '../../application/use-cases/get-comparison.use-case';
 import type { ExpenseSummaryAppDto } from '../../application/dto/expense-summary-app.dto';
 import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard';
 
@@ -13,10 +14,16 @@ describe('StatisticsController', () => {
     const mockUseCase: Partial<jest.Mocked<GetExpenseSummaryUseCase>> = {
       execute: jest.fn(),
     };
+    const mockComparisonUseCase: Partial<jest.Mocked<GetComparisonUseCase>> = {
+      execute: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StatisticsController],
-      providers: [{ provide: GetExpenseSummaryUseCase, useValue: mockUseCase }],
+      providers: [
+        { provide: GetExpenseSummaryUseCase, useValue: mockUseCase },
+        { provide: GetComparisonUseCase, useValue: mockComparisonUseCase },
+      ],
     })
       .overrideGuard(ThrottlerGuard)
       .useValue({ canActivate: () => true })

@@ -1,0 +1,52 @@
+{
+  "title": "Budgets",
+  "subtitle": "Manage your monthly and yearly envelopes",
+  "emptyTitle": "No budgets yet",
+  "emptySubtitle": "Create your first budget to track recurring spend",
+  "emptyCta": "Create a budget",
+  "loading": "Loading budgets...",
+  "errorPrefix": "Error: {{message}}",
+  "addBudget": "New budget",
+  "editBudget": "Edit budget",
+  "deleteBudget": "Delete budget",
+  "deleteConfirmTitle": "Delete this budget?",
+  "deleteConfirmMessage": "This action cannot be undone.",
+  "deleteConfirmYes": "Delete",
+  "deleteConfirmCancel": "Cancel",
+  "form": {
+    "nameLabel": "Budget name",
+    "namePlaceholder": "e.g. Streaming, Restaurants...",
+    "amountLabel": "Amount",
+    "amountPlaceholder": "0.00",
+    "currencyLabel": "Currency",
+    "periodLabel": "Period",
+    "periodMonthly": "Monthly",
+    "periodYearly": "Yearly",
+    "categoryLabel": "Category (optional)",
+    "noCategory": "All categories",
+    "startDateLabel": "Start date",
+    "endDateLabel": "End date (optional)",
+    "isActiveLabel": "Active",
+    "notesLabel": "Notes (optional)",
+    "submitCreate": "Create budget",
+    "submitUpdate": "Save",
+    "cancel": "Cancel"
+  },
+  "card": {
+    "spent": "Spent",
+    "remaining": "Remaining",
+    "overBudget": "Over by {{amount}}",
+    "progressLabel": "{{percent}}% used",
+    "monthly": "Monthly",
+    "yearly": "Yearly"
+  },
+  "summary": {
+    "title": "My budgets",
+    "totalBudgeted": "Total budgeted",
+    "totalSpent": "Total spent",
+    "budgetsCount": "{{count}} budget",
+    "budgetsCount_plural": "{{count}} budgets",
+    "viewAll": "View all budgets",
+    "createFirst": "Create my first budget"
+  }
+}
