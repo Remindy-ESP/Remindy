@@ -97,6 +97,13 @@ import { AppleOAuthService } from './infrastructure/services/apple-oauth.service
       useClass: GmailEmailService,
     },
   ],
-  exports: [JwtTokenService, ITokenService, IEmailService, UserMfaTypeOrmRepository, TotpService, ForgotPasswordUseCase],
+  exports: [
+    JwtTokenService,
+    ITokenService,
+    IEmailService,
+    UserMfaTypeOrmRepository,
+    TotpService,
+    ForgotPasswordUseCase,
+  ],
 })
 export class AuthModule {}
