@@ -34,7 +34,6 @@ export default function AuthScreen() {
     isAuthenticated,
     isLoading: authLoading,
     loginWithGoogle,
-    loginWithMicrosoft,
     loginWithApple,
   } = useAuth();
   const { t } = useTranslation();
@@ -135,18 +134,6 @@ export default function AuthScreen() {
       await loginWithGoogle();
     } catch (err: any) {
       console.error('Google login error:', err);
-      const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
-      setError(errorMessage);
-      Alert.alert(t('auth.loginFailed'), errorMessage);
-    }
-  };
-
-  const handleMicrosoftLogin = async () => {
-    setError('');
-    try {
-      await loginWithMicrosoft();
-    } catch (err: any) {
-      console.error('Microsoft login error:', err);
       const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
       setError(errorMessage);
       Alert.alert(t('auth.loginFailed'), errorMessage);
@@ -303,10 +290,6 @@ export default function AuthScreen() {
 
           <TouchableOpacity style={styles.oauthButton} onPress={handleGoogleLogin} testID="google-login-button">
             <Text style={styles.oauthButtonText}>Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.oauthButton} onPress={handleMicrosoftLogin} testID="microsoft-login-button">
-            <Text style={styles.oauthButtonText}>Microsoft</Text>
           </TouchableOpacity>
 
           {Platform.OS === 'ios' && (

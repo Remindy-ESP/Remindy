@@ -9,7 +9,6 @@ import React, {
 import { Alert, Platform } from 'react-native';
 import axios from 'axios';
 import * as Google from 'expo-auth-session/providers/google';
-import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import { authService, userService, apiClient, type User } from '@/services/api';
@@ -18,11 +17,6 @@ import i18n from '@/i18n';
 WebBrowser.maybeCompleteAuthSession();
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL;
-
-const MICROSOFT_DISCOVERY = {
-  authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-  tokenEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-};
 
 interface AuthContextType {
   user: User | null;
@@ -34,7 +28,6 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  loginWithMicrosoft: () => Promise<void>;
   loginWithApple: () => Promise<void>;
 }
 
@@ -54,16 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || 'not_configured',
     scopes: ['profile', 'email'],
   });
-
-  // Microsoft OAuth hook — must be called at top level
-  const [, , msPromptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: process.env.EXPO_PUBLIC_MICROSOFT_CLIENT_ID ?? '',
-      scopes: ['openid', 'profile', 'email', 'User.Read'],
-      redirectUri: AuthSession.makeRedirectUri({ scheme: 'remindy' }),
-    },
-    MICROSOFT_DISCOVERY,
-  );
 
   useEffect(() => {
     checkAuth();
@@ -163,20 +146,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(data.accessToken);
   }, [googlePromptAsync]);
 
-  const loginWithMicrosoft = useCallback(async () => {
-    const result = await msPromptAsync();
-    if (result.type !== 'success') throw new Error('Microsoft login cancelled');
-    const accessToken =
-      (result.params as any)?.access_token ?? (result.authentication as any)?.accessToken;
-    if (!accessToken) throw new Error('No Microsoft access token');
-    const { data } = await axios.post(`${API_URL}/auth/oauth/microsoft`, { accessToken });
-    await apiClient.setAccessToken(data.accessToken);
-    if (data.refreshToken) await apiClient.setRefreshToken(data.refreshToken);
-    const userData = await userService.getMe();
-    setUser(userData);
-    setToken(data.accessToken);
-  }, [msPromptAsync]);
-
   const loginWithApple = useCallback(async () => {
     if (Platform.OS !== 'ios') throw new Error('Apple Sign In is only available on iOS');
     const credential = await AppleAuthentication.signInAsync({
@@ -209,7 +178,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshUser,
     loginWithGoogle,
-    loginWithMicrosoft,
     loginWithApple,
   };
 
