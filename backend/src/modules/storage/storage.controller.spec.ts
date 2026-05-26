@@ -14,9 +14,12 @@ describe('StorageController', () => {
     availableBytes: 80 * 1024 * 1024,
     usagePercentage: 20,
     documentCount: 5,
+    maxDocuments: 50,
+    maxFileSize: 10 * 1024 * 1024,
     totalFormatted: '100 MB',
     usedFormatted: '20 MB',
     availableFormatted: '80 MB',
+    maxFileSizeFormatted: '10 MB',
   };
 
   beforeEach(async () => {

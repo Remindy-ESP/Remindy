@@ -51,19 +51,19 @@ export default function ForgotPasswordScreen() {
       style={styles.container}
     >
       <View style={styles.content}>
-        <Text style={{ fontSize: 28, fontWeight: '700', color: '#333', marginBottom: 8, textAlign: 'center' }}>
+        <Text style={{ fontSize: 28, fontWeight: '700', color: '#f0f0f0', marginBottom: 8, textAlign: 'center' }}>
           {t('auth.forgot.title')}
         </Text>
-        <Text style={{ fontSize: 15, color: '#666', textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
+        <Text style={{ fontSize: 15, color: '#9ca3af', textAlign: 'center', marginBottom: 24, lineHeight: 22 }}>
           {t('auth.forgot.subtitle')}
         </Text>
 
-        <FormFeedback error={error} success={success} variant="light" />
+        <FormFeedback error={error} success={success} variant="dark" />
 
         <TextInput
           style={styles.input}
           placeholder={t('auth.email')}
-          placeholderTextColor="#999"
+          placeholderTextColor="#6b7280"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"

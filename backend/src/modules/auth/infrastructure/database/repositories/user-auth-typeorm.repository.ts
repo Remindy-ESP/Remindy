@@ -58,4 +58,26 @@ export class UserAuthTypeOrmRepository implements IUserAuthRepository {
   async markEmailAsVerified(userId: string): Promise<void> {
     await this.repo.update({ id: userId }, { emailVerified: true });
   }
+
+  async findByOAuthId(
+    provider: 'google' | 'microsoft' | 'apple',
+    providerId: string,
+  ): Promise<AuthUser | null> {
+    const col = ({ google: 'googleId', microsoft: 'microsoftId', apple: 'appleId' } as const)[
+      provider
+    ];
+    const entity = await this.repo.findOne({ where: { [col]: providerId } });
+    return entity ? this.mapper.toDomain(entity) : null;
+  }
+
+  async linkOAuthId(
+    userId: string,
+    provider: 'google' | 'microsoft' | 'apple',
+    providerId: string,
+  ): Promise<void> {
+    const col = ({ google: 'googleId', microsoft: 'microsoftId', apple: 'appleId' } as const)[
+      provider
+    ];
+    await this.repo.update({ id: userId }, { [col]: providerId });
+  }
 }

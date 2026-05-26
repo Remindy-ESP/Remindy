@@ -22,23 +22,16 @@ export class UploadDocumentUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(dto: UploadDocumentAppDto, userRole: UserRole = 'freemium'): Promise<Document> {
+  async execute(dto: UploadDocumentAppDto, userRole: UserRole = ''): Promise<Document> {
     try {
       this.logger.log(`Starting document upload for user ${dto.userId}`);
 
-      // Vérifier les quotas utilisateur AVANT l'upload
       await this.quotaService.checkUserQuota(dto.userId, userRole, dto.fileSize);
       this.logger.log(`Quota check passed for user ${dto.userId}`);
 
-      // Generate file hash
       const fileHash = createHash('sha256').update(dto.fileBuffer).digest('hex');
-
-      // Generate R2 key (path in bucket)
       const timestamp = Date.now();
       const r2Key = `users/${dto.userId}/documents/${timestamp}-${dto.filename}`;
-
-      // Re-check quota just before upload to prevent race conditions
-      await this.quotaService.checkUserQuota(dto.userId, userRole, dto.fileSize);
 
       // ÉTAPE 1 : Upload vers Cloudflare R2
       this.logger.log(`Uploading file to R2: ${r2Key}`);

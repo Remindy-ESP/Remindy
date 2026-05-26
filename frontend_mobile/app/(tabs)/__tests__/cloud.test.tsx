@@ -959,6 +959,45 @@ describe('CloudScreen', () => {
     expect(mockDeleteDocument).toHaveBeenCalledWith('doc-1');
   });
 
+  it('refreshes quota and lists in finally after successful delete', async () => {
+    hookState.documents = [makeDoc()];
+    const { getByTestId } = render(<CloudScreen />);
+    await waitFor(() => getByTestId('doc-press-doc-1'));
+
+    mockFetchQuota.mockClear();
+    mockFetchDocuments.mockClear();
+    mockFetchFolders.mockClear();
+
+    fireEvent.press(getByTestId('doc-press-doc-1'));
+    fireEvent.press(getByTestId('action-delete'));
+    await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
+
+    expect(mockFetchQuota).toHaveBeenCalled();
+    expect(mockFetchDocuments).toHaveBeenCalled();
+    expect(mockFetchFolders).toHaveBeenCalled();
+  });
+
+  it('shows an alert and still refreshes when delete fails', async () => {
+    hookState.documents = [makeDoc()];
+    mockDeleteDocument.mockRejectedValueOnce(new Error('Boom'));
+    (Alert.alert as jest.Mock).mockClear();
+
+    const { getByTestId } = render(<CloudScreen />);
+    await waitFor(() => getByTestId('doc-press-doc-1'));
+
+    mockFetchQuota.mockClear();
+
+    fireEvent.press(getByTestId('doc-press-doc-1'));
+    fireEvent.press(getByTestId('action-delete'));
+    await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
+
+    expect(Alert.alert).toHaveBeenCalled();
+    const calls = (Alert.alert as jest.Mock).mock.calls;
+    const lastAlertMessage = String(calls[calls.length - 1][1]);
+    expect(lastAlertMessage).toContain('Boom');
+    expect(mockFetchQuota).toHaveBeenCalled();
+  });
+
   it('shows subscription-linked message in delete modal when doc has subscription_id', async () => {
     mockGetAll.mockResolvedValue([{ id: 'sub-1', name: 'Netflix' }] as any);
     hookState.documents = [makeDoc({ subscription_id: 'sub-1' })];
