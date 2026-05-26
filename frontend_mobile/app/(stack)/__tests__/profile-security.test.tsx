@@ -111,7 +111,7 @@ describe('ProfileSecurityScreen', () => {
   });
 
   it('shows error message and alert when API call fails (lines 75-77)', async () => {
-    mockChangePassword.mockOnce ? mockChangePassword.mockRejectedValueOnce(new Error('Unauthorized')) : mockChangePassword.mockRejectedValue(new Error('Unauthorized'));
+    mockChangePassword.mockRejectedValueOnce(new Error('Unauthorized'));
     const { getByTestId, findByText } = render(<ProfileSecurityScreen />);
 
     fireEvent.changeText(getByTestId('current-password-input'), 'OldPassword123');
@@ -128,7 +128,7 @@ describe('ProfileSecurityScreen', () => {
   });
 
   it('clears error/success messages when user edits an input field', async () => {
-    mockChangePassword.mockOnce ? mockChangePassword.mockRejectedValueOnce(new Error('Bad request')) : mockChangePassword.mockRejectedValue(new Error('Bad request'));
+    mockChangePassword.mockRejectedValueOnce(new Error('Bad request'));
     const { getByTestId, findByText, queryByText } = render(<ProfileSecurityScreen />);
 
     fireEvent.changeText(getByTestId('current-password-input'), 'OldPassword123');
