@@ -15,31 +15,6 @@ import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from '@/components/profile/UserAvatar';
 import ScreenHeader from '@/components/ScreenHeader';
 
-type MenuItemProps = {
-  testID: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-};
-
-function MenuItem({ testID, icon, label, onPress }: MenuItemProps) {
-  return (
-    <TouchableOpacity
-      style={styles.menuItem}
-      testID={testID}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <View style={styles.menuItemLeft}>
-        <View style={styles.menuIconWrap}>
-          <Ionicons name={icon} size={18} color="#C9CCF4" />
-        </View>
-        <Text style={styles.menuItemText}>{label}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color="#8E93B7" />
-    </TouchableOpacity>
-  );
-}
 
 type InfoRowProps = {
   label: string;
