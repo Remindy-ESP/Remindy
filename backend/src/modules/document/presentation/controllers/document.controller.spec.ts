@@ -236,10 +236,13 @@ describe('DocumentController', () => {
       );
     });
 
-    it('should throw BadRequestException when file exceeds 10MB', async () => {
-      const largeFile = { ...mockFile, size: 11 * 1024 * 1024 };
+    it('should delegate per-role file size enforcement to the use-case', async () => {
+      const largeFile = { ...mockFile, size: 60 * 1024 * 1024 };
+      uploadDocumentUseCase.execute.mockRejectedValue(
+        new Error('File size (60MB) exceeds your plan limit (50MB).'),
+      );
       await expect(controller.upload(mockRequest, largeFile, 'user-123')).rejects.toThrow(
-        'File size exceeds 10MB limit',
+        /exceeds your plan limit/,
       );
     });
 

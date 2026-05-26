@@ -4,6 +4,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   StreamableFile,
   Header,
   NotFoundException,
@@ -18,6 +19,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -79,6 +81,7 @@ export class DocumentController {
   @ApiDocumentUpload()
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
   async upload(
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
@@ -105,10 +108,6 @@ export class DocumentController {
 
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new BadRequestException(`Invalid file type: ${file.mimetype}`);
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      throw new BadRequestException('File size exceeds 10MB limit');
     }
 
     const appDto: UploadDocumentAppDto = {
