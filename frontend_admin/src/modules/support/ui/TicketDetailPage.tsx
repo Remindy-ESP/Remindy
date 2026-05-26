@@ -1,7 +1,8 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAdminTicket } from '@/modules/support/application/useAdminTickets';
 import { FullPageLoader, ErrorState } from '@/shared/ui/NetworkStates';
@@ -40,13 +41,15 @@ export function TicketDetailPage() {
             <TicketStatusBadge status={ticket.status} />
             <TicketPriorityBadge priority={ticket.priority} />
             {ticket.user && (
-              <Typography
+              <Link
+                component={RouterLink}
+                to={`/users/${ticket.user.id}`}
                 variant='caption'
-                color='text.secondary'
-                sx={{ alignSelf: 'center' }}
+                color='primary'
+                sx={{ alignSelf: 'center', fontWeight: 500 }}
               >
                 {ticket.user.email}
-              </Typography>
+              </Link>
             )}
             <Typography
               variant='caption'
