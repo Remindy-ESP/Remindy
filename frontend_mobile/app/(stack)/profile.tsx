@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from '@/components/profile/UserAvatar';
+import { formatRoleLabel } from '@/utils/role';
 
 type MenuItemProps = {
   testID: string;
@@ -120,7 +121,9 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{user?.email || t('profile.fallbackEmail')}</Text>
 
         <View style={styles.rolePill}>
-          <Text style={styles.rolePillText}>{user?.role || t('profile.fallbackRole')}</Text>
+          <Text style={styles.rolePillText}>
+            {formatRoleLabel(user?.role) || t('profile.fallbackRole')}
+          </Text>
         </View>
       </View>
 

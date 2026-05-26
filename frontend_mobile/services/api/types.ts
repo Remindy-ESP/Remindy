@@ -221,9 +221,12 @@ export interface StorageQuota {
   availableBytes: number;
   usagePercentage: number;
   documentCount: number;
+  maxDocuments: number;
+  maxFileSize: number;
   totalFormatted: string;
   usedFormatted: string;
   availableFormatted: string;
+  maxFileSizeFormatted: string;
 }
 
 export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewed' | 'trial_ending' | 'document_processed' | 'subscription_renewal' | 'document_expiry' | 'system';

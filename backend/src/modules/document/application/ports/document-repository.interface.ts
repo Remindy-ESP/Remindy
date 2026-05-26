@@ -11,6 +11,8 @@ export interface IDocumentRepository {
   delete(id: string): Promise<boolean>;
   softDelete(id: string): Promise<boolean>;
   save(document: Document): Promise<Document>;
+  sumFileSizeByUserId(userId: string): Promise<number>;
+  countByUserId(userId: string): Promise<number>;
   updateOcrStatus(
     id: string,
     status: 'pending' | 'processing' | 'completed' | 'failed',
