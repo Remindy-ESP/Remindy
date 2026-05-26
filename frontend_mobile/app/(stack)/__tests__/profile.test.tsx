@@ -89,10 +89,10 @@ describe('ProfileScreen', () => {
     expect(getByTestId('edit-profile-item')).toBeTruthy();
   });
 
-  it('navigates to notifications page when notifications item is pressed', () => {
+  it('navigates to notifications settings page when notifications item is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('notifications-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/notifications');
+    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-notifications');
   });
 
   it('navigates to profile edit page when edit button is pressed', () => {

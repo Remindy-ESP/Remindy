@@ -89,6 +89,13 @@ import { AdminModule } from '../admin/admin.module';
       useClass: GmailEmailService,
     },
   ],
-  exports: [JwtTokenService, ITokenService, IEmailService, UserMfaTypeOrmRepository, TotpService, ForgotPasswordUseCase],
+  exports: [
+    JwtTokenService,
+    ITokenService,
+    IEmailService,
+    UserMfaTypeOrmRepository,
+    TotpService,
+    ForgotPasswordUseCase,
+  ],
 })
 export class AuthModule {}

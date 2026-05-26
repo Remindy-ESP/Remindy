@@ -110,7 +110,13 @@ export class ProcessRenewalNotificationsTask {
     let pushSent = 0;
     let emailsSent = 0;
     const pushPayloads: PushNotificationPayload[] = [];
-    const emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[] = [];
+    const emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[] = [];
     const uniqueSubscriptionIds = new Set<string>();
 
     // ─── 0. Transition expired trials to active ───────────────────────
@@ -181,7 +187,13 @@ export class ProcessRenewalNotificationsTask {
    * Send email notifications for users who have notificationEmail enabled
    */
   private async sendEmailNotifications(
-    payloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
+    payloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
   ): Promise<number> {
     // Get unique user IDs
     const userIds = [...new Set(payloads.map(p => p.userId))];
@@ -251,7 +263,13 @@ export class ProcessRenewalNotificationsTask {
     dateKey: string,
     dateValue: string,
     pushPayloads: PushNotificationPayload[],
-    emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
+    emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
   ): Promise<void> {
     const notification = new Notification({
       userId: row.userId,
@@ -295,7 +313,13 @@ export class ProcessRenewalNotificationsTask {
   private async processRenewalNotifications(
     todayStr: string,
     pushPayloads: PushNotificationPayload[],
-    emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
+    emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
     uniqueSubscriptionIds: Set<string>,
   ): Promise<number> {
     const dueNotifications: DueNotificationRow[] = await this.subscriptionRepository
@@ -376,7 +400,13 @@ export class ProcessRenewalNotificationsTask {
   private async processTrialEndingNotifications(
     todayStr: string,
     pushPayloads: PushNotificationPayload[],
-    emailPayloads: { userId: string; title: string; body: string; subscriptionName: string; type: 'subscription_renewal' | 'trial_ending' }[],
+    emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
     uniqueSubscriptionIds: Set<string>,
   ): Promise<number> {
     const trialNotifications: TrialEndingRow[] = await this.subscriptionRepository

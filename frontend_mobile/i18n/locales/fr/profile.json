@@ -83,6 +83,23 @@
       "en": "English"
     }
   },
+  "notificationSettings": {
+    "title": "Notifications",
+    "subtitle": "Gérez vos canaux de notification",
+    "loading": "Chargement des préférences...",
+    "loadError": "Impossible de charger les préférences de notification.",
+    "channelsTitle": "Canaux de notification",
+    "channelsDescription": "Choisissez comment vous souhaitez recevoir vos alertes d'abonnement et rappels.",
+    "push": {
+      "label": "Notifications push",
+      "description": "Alertes directement sur votre téléphone"
+    },
+    "email": {
+      "label": "Notifications par email",
+      "description": "Recevez un email pour chaque rappel"
+    },
+    "infoNote": "Les notifications de renouvellement et de fin de période d'essai seront envoyées via les canaux activés ci-dessus."
+  },
   "security": {
     "title": "Securite",
     "subtitle": "Modifier votre mot de passe",

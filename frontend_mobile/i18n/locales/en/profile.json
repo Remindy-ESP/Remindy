@@ -83,6 +83,23 @@
       "en": "English"
     }
   },
+  "notificationSettings": {
+    "title": "Notifications",
+    "subtitle": "Manage your notification channels",
+    "loading": "Loading preferences...",
+    "loadError": "Unable to load notification preferences.",
+    "channelsTitle": "Notification channels",
+    "channelsDescription": "Choose how you want to receive your subscription alerts and reminders.",
+    "push": {
+      "label": "Push notifications",
+      "description": "Alerts directly on your phone"
+    },
+    "email": {
+      "label": "Email notifications",
+      "description": "Receive an email for each reminder"
+    },
+    "infoNote": "Renewal and trial ending notifications will be sent through the channels enabled above."
+  },
   "security": {
     "title": "Security",
     "subtitle": "Change your password",

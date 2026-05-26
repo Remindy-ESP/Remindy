@@ -153,7 +153,7 @@ export default function ProfileScreen() {
           testID="notifications-item"
           icon="notifications-outline"
           label={t('profile.menu.notifications')}
-          onPress={() => router.push('/(tabs)/notifications' as any)}
+          onPress={() => router.push('/(stack)/profile-notifications' as any)}
         />
         <MenuItem
           testID="preferences-item"
