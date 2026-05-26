@@ -6,6 +6,7 @@ import Paper from '@mui/material/Paper';
 import { useRoles } from '@/modules/rbac/application/useRoles';
 import { ErrorState, InlineLoader } from '@/shared/ui/NetworkStates';
 import { RoleList } from './RoleList';
+import { RolePermissionsPanel } from './RolePermissionsPanel';
 
 export function RbacPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,22 +49,29 @@ export function RbacPage() {
           )}
         </Grid>
         <Grid size={{ xs: 12, md: 8 }}>
-          <Paper
-            sx={{
-              height: '100%',
-              p: 3,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'text.secondary',
-            }}
-          >
-            <Typography variant='body2'>
-              {selectedKey
-                ? 'Panneau de permissions — à implémenter'
-                : 'Sélectionnez un rôle dans la liste pour voir ses permissions.'}
-            </Typography>
-          </Paper>
+          {(() => {
+            const selectedRole = roles?.find(r => r.key === selectedKey);
+            if (!selectedRole) {
+              return (
+                <Paper
+                  sx={{
+                    height: '100%',
+                    p: 3,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'text.secondary',
+                  }}
+                >
+                  <Typography variant='body2'>
+                    Sélectionnez un rôle dans la liste pour voir ses
+                    permissions.
+                  </Typography>
+                </Paper>
+              );
+            }
+            return <RolePermissionsPanel role={selectedRole} />;
+          })()}
         </Grid>
       </Grid>
     </Box>
