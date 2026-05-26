@@ -7,25 +7,15 @@ import React, {
   ReactNode,
 } from 'react';
 import { Alert, Platform } from 'react-native';
-import axios from 'axios';
-import Constants from 'expo-constants';
-import * as Google from 'expo-auth-session/providers/google';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { authService, userService, apiClient, type User } from '@/services/api';
 import i18n from '@/i18n';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL;
-
-const IS_EXPO_GO = Constants.appOwnership === 'expo';
-
-// Expo Go doesn't support custom URI schemes — use the Expo auth proxy instead.
-// In a dev/prod build, expo-auth-session resolves the redirect URI natively.
-const GOOGLE_REDIRECT_URI = IS_EXPO_GO
-  ? 'https://auth.expo.io/@remindy/frontend_mobile'
-  : undefined;
 
 interface AuthContextType {
   user: User | null;
@@ -46,18 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Google OAuth hook — must be called at top level.
-  // expo-auth-session v7 requires androidClientId to be a non-empty string on Android;
-  // fall back to a placeholder so the hook never throws when env vars are absent.
-  // In Expo Go, force the Expo proxy URI — the local exp:// URI is rejected by Google.
-  const [, , googlePromptAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || undefined,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || undefined,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || 'not_configured',
-    scopes: ['profile', 'email'],
-    ...(GOOGLE_REDIRECT_URI ? { redirectUri: GOOGLE_REDIRECT_URI } : {}),
-  });
 
   useEffect(() => {
     checkAuth();
@@ -144,18 +122,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGoogle = useCallback(async () => {
-    const result = await googlePromptAsync();
+    const returnUrl = Linking.createURL('oauth');
+    const initUrl = `${API_URL}/auth/oauth/google/mobile?returnUrl=${encodeURIComponent(returnUrl)}`;
+    const result = await WebBrowser.openAuthSessionAsync(initUrl, returnUrl);
     if (result.type !== 'success') throw new Error('Google login cancelled');
-    const idToken =
-      (result.params as any)?.id_token ?? (result.authentication as any)?.idToken;
-    if (!idToken) throw new Error('No Google ID token');
-    const { data } = await axios.post(`${API_URL}/auth/oauth/google`, { idToken });
-    await apiClient.setAccessToken(data.accessToken);
-    if (data.refreshToken) await apiClient.setRefreshToken(data.refreshToken);
+    const parsed = Linking.parse(result.url);
+    const accessToken = parsed.queryParams?.accessToken as string | undefined;
+    const refreshToken = parsed.queryParams?.refreshToken as string | undefined;
+    const error = parsed.queryParams?.error as string | undefined;
+    if (error) throw new Error(`Google login failed: ${error}`);
+    if (!accessToken) throw new Error('No access token received');
+    await apiClient.setAccessToken(accessToken);
+    if (refreshToken) await apiClient.setRefreshToken(refreshToken);
     const userData = await userService.getMe();
     setUser(userData);
-    setToken(data.accessToken);
-  }, [googlePromptAsync]);
+    setToken(accessToken);
+  }, []);
 
   const loginWithApple = useCallback(async () => {
     if (Platform.OS !== 'ios') throw new Error('Apple Sign In is only available on iOS');

@@ -24,6 +24,7 @@ import { ResetPasswordUseCase } from '../../application/use-cases/reset-password
 import { ResetPasswordRequestDto } from '../../application/dto/reset-password-request.dto';
 import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import { OAuthLoginUseCase } from '../../application/use-cases/oauth-login.use-case';
+import { GoogleOAuthService } from '../../infrastructure/services/google-oauth.service';
 import {
   ApiAuthLogout,
   ApiAuthResetPassword,
@@ -45,7 +46,65 @@ export class AuthController {
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
     private readonly verifyEmailUseCase: VerifyEmailUseCase,
     private readonly oauthLoginUseCase: OAuthLoginUseCase,
+    private readonly googleOAuthService: GoogleOAuthService,
   ) {}
+
+  @Public()
+  @Get('password-reset-redirect')
+  passwordResetRedirect(@Query('token') token: string, @Res() res: Response) {
+    const deepLink = `remindy://reset-password?token=${encodeURIComponent(token ?? '')}`;
+    return res.send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${deepLink}"></head><body><script>window.location.href="${deepLink}";</script><p><a href="${deepLink}">Réinitialiser mon mot de passe</a></p></body></html>`);
+  }
+
+  @Public()
+  @Get('oauth/google/mobile')
+  async googleMobileInit(@Query('returnUrl') returnUrl: string, @Res() res: Response) {
+    const callbackUrl = process.env.GOOGLE_MOBILE_CALLBACK_URL ?? '';
+    const state = Buffer.from(returnUrl || 'remindy://oauth').toString('base64url');
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID ?? '');
+    authUrl.searchParams.set('redirect_uri', callbackUrl);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'openid email profile');
+    authUrl.searchParams.set('state', state);
+    authUrl.searchParams.set('access_type', 'online');
+    res.redirect(authUrl.toString());
+  }
+
+  @Public()
+  @Get('oauth/google/mobile/callback')
+  async googleMobileCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Query('error') error: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const returnUrl = state
+      ? Buffer.from(state, 'base64url').toString('utf-8')
+      : 'remindy://oauth';
+
+    if (error || !code) {
+      return res.redirect(`${returnUrl}?error=${encodeURIComponent(error ?? 'cancelled')}`);
+    }
+
+    try {
+      const callbackUrl = process.env.GOOGLE_MOBILE_CALLBACK_URL ?? '';
+      const idToken = await this.googleOAuthService.exchangeCodeForIdToken(code, callbackUrl);
+      const result = await this.oauthLoginUseCase.execute({
+        provider: 'google',
+        token: idToken,
+        ipAddress: req.ip || 'unknown',
+        userAgent: req.headers['user-agent'] ?? 'unknown',
+      });
+      return res.redirect(
+        `${returnUrl}?accessToken=${result.accessToken}&refreshToken=${result.refreshToken}`,
+      );
+    } catch (err) {
+      console.error('[OAuth Google callback error]', err);
+      return res.redirect(`${returnUrl}?error=auth_failed`);
+    }
+  }
 
   @Public()
   @Post('oauth/google')

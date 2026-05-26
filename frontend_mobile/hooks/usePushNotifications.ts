@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import notificationService from '../services/api/notification.service';
 
 // expo-notifications remote push support was removed from Expo Go in SDK 53.
 // Skip all push setup when running inside Expo Go to avoid crashes.
-const IS_EXPO_GO = Constants.appOwnership === 'expo';
+const IS_EXPO_GO = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 if (!IS_EXPO_GO) {
   Notifications.setNotificationHandler({
@@ -38,23 +38,20 @@ export function usePushNotifications() {
   useEffect(() => {
     if (IS_EXPO_GO) return;
 
-    // Register for push notifications
+    // Register for push notifications — silently skip if Firebase is not configured
     registerForPushNotificationsAsync()
       .then(async (token) => {
         if (token) {
           setExpoPushToken(token);
-          // Register token with our backend
           try {
             await notificationService.registerPushToken(token);
-            console.log('[Push] Token registered with backend:', token);
-          } catch (err) {
-            console.error('[Push] Failed to register token with backend:', err);
+          } catch {
+            // backend registration failure is non-critical
           }
         }
       })
-      .catch((err) => {
-        setError(err.message);
-        console.error('[Push] Registration error:', err);
+      .catch(() => {
+        // Firebase not configured (missing google-services.json) — skip silently
       });
 
     // Listen for notifications received while app is in foreground
@@ -124,8 +121,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
       projectId,
     });
     return tokenData.data;
-  } catch (error) {
-    console.error('[Push] Failed to get push token:', error);
+  } catch {
     return null;
   }
 }
