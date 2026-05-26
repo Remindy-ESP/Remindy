@@ -17,6 +17,7 @@ import { AuditLogsPage } from '@/modules/audit/ui/AuditLogsPage';
 import { TicketListPage } from '@/modules/support/ui/TicketListPage';
 import { TicketDetailPage } from '@/modules/support/ui/TicketDetailPage';
 import { SecurityPage } from '@/modules/security/ui/SecurityPage';
+import { RbacPage } from '@/modules/rbac/ui/RbacPage';
 import { AdminPermission } from '@/shared/domain/types';
 
 function ComingSoon({ title }: { title: string }) {
@@ -111,10 +112,14 @@ function AppRoutes() {
         <Route
           path='/rbac'
           element={
-            <GatedPlaceholder
-              title='RBAC'
+            <PermissionGate
               permission={AdminPermission.RBAC_READ}
-            />
+              fallback={
+                <ComingSoon title='RBAC — accès refusé (permission manquante)' />
+              }
+            >
+              <RbacPage />
+            </PermissionGate>
           }
         />
         <Route path='/support' element={<TicketListPage />} />
