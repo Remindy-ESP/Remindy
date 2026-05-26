@@ -25,6 +25,7 @@ import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import { useTranslation } from '@/context/I18nContext';
 import { formatShortDate } from '@/utils/format';
+import BrandLogo from '@/components/BrandLogo';
 
 interface SubscriptionFormData {
   name: string;
@@ -557,6 +558,12 @@ export default function SubscriptionScreen() {
     <View style={styles.subscriptionCard}>
       <View style={styles.cardHeader}>
         <View style={styles.cardTitleContainer}>
+          <BrandLogo
+            name={item.name}
+            categoryIcon={item.category?.icon}
+            categoryColor={item.category?.color}
+            size={32}
+          />
           <Text style={styles.cardTitle}>
             {item.name.length > 30 ? `${item.name.substring(0, 30)}...` : item.name}
           </Text>
