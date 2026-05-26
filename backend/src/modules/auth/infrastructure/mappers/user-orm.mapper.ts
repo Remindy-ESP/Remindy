@@ -8,7 +8,7 @@ export class UserOrmMapper {
     return new AuthUser({
       id: entity.id,
       email: entity.email,
-      passwordHash: entity.passwordHash,
+      passwordHash: entity.passwordHash ?? null,
       role_key: entity.role_key,
       firstName: entity.firstName,
       lastName: entity.lastName,
@@ -19,13 +19,16 @@ export class UserOrmMapper {
       mfaEnabled: entity.mfaEnabled,
       mfaSecret: entity.mfaSecret,
       createdAt: entity.createdAt,
+      googleId: entity.googleId ?? null,
+      microsoftId: entity.microsoftId ?? null,
+      appleId: entity.appleId ?? null,
     });
   }
 
   toOrm(user: AuthUser): Partial<EUser> {
     return {
       email: user.getEmail(),
-      passwordHash: user.getPasswordHash(),
+      passwordHash: user.getPasswordHash() ?? undefined,
       firstName: user.getFirstName(),
       lastName: user.getLastName(),
       phone: user.getPhone(),
@@ -35,6 +38,9 @@ export class UserOrmMapper {
       emailVerified: user.isEmailVerified(),
       mfaEnabled: user.isMfaEnabled(),
       mfaSecret: user.getMfaSecret(),
+      googleId: user.getGoogleId(),
+      microsoftId: user.getMicrosoftId(),
+      appleId: user.getAppleId(),
     };
   }
 }

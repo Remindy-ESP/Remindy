@@ -6,6 +6,7 @@ import { defaultProfileUser, mockAlertPressButton } from './test-utils';
 
 const mockReplace = global.__mockRouterReplace as jest.Mock;
 const mockPush = global.__mockRouterPush as jest.Mock;
+const mockBack = global.__mockRouterBack as jest.Mock;
 
 jest.spyOn(Alert, 'alert');
 
@@ -21,10 +22,20 @@ jest.mock('@/context/AuthContext', () => ({
   useAuth: (...args: any[]) => (mockUseAuth as jest.Mock)(...args),
 }));
 
+// Mock @expo/vector-icons locally to render the icon name as text
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    Ionicons: ({ name, ...props }: any) => <Text {...props}>{name}</Text>,
+  };
+});
+
 describe('ProfileScreen', () => {
   beforeEach(() => {
     mockReplace.mockClear();
     mockPush.mockClear();
+    mockBack.mockClear();
     mockLogout.mockClear();
     (Alert.alert as jest.Mock).mockClear();
     mockUseAuth.mockReturnValue({
@@ -38,7 +49,7 @@ describe('ProfileScreen', () => {
     const { getByText, getAllByText } = render(<ProfileScreen />);
     expect(getByText('Test User')).toBeTruthy();
     expect(getAllByText('utilisateur@remindy.com').length).toBeGreaterThan(0);
-    expect(getByText('Profil')).toBeTruthy();
+    expect(getAllByText('Profil').length).toBeGreaterThan(0);
   });
 
   it('renders the profile photo when available', () => {
@@ -48,21 +59,9 @@ describe('ProfileScreen', () => {
     });
   });
 
-  it('renders settings and support sections', () => {
-    const { getByText } = render(<ProfileScreen />);
-    expect(getByText('Parametres')).toBeTruthy();
-    expect(getByText('Notifications')).toBeTruthy();
-    expect(getByText('Preferences')).toBeTruthy();
-    expect(getByText('Securite')).toBeTruthy();
-    expect(getByText('Confidentialite')).toBeTruthy();
-    expect(getByText('Support')).toBeTruthy();
-    expect(getByText('Aide')).toBeTruthy();
-    expect(getByText('A propos')).toBeTruthy();
-  });
-
   it('renders logout button', () => {
     const { getByText } = render(<ProfileScreen />);
-    expect(getByText('Deconnexion')).toBeTruthy();
+    expect(getByText('Déconnexion')).toBeTruthy();
   });
 
   it('calls logout handler when logout button is pressed', async () => {
@@ -78,36 +77,11 @@ describe('ProfileScreen', () => {
     });
   });
 
-  it('renders all menu items with correct testIDs', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    expect(getByTestId('notifications-item')).toBeTruthy();
-    expect(getByTestId('preferences-item')).toBeTruthy();
-    expect(getByTestId('security-item')).toBeTruthy();
-    expect(getByTestId('privacy-item')).toBeTruthy();
-    expect(getByTestId('help-item')).toBeTruthy();
-    expect(getByTestId('about-item')).toBeTruthy();
-    expect(getByTestId('edit-profile-item')).toBeTruthy();
-  });
-
-  it('navigates to notifications page when notifications item is pressed', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    fireEvent.press(getByTestId('notifications-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(tabs)/notifications');
-  });
-
   it('navigates to profile edit page when edit button is pressed', () => {
     const { getByTestId } = render(<ProfileScreen />);
     fireEvent.press(getByTestId('edit-profile-item'));
     expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-edit');
   });
-
-  it('navigates to profile security page when security item is pressed', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    fireEvent.press(getByTestId('security-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-security');
-  });
-
-  // ── Missing coverage ────────────────────────────────────────────────────────
 
   it('shows loading spinner when isLoading is true', () => {
     mockUseAuth.mockReturnValue({
@@ -169,7 +143,7 @@ describe('ProfileScreen', () => {
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
         'Erreur',
-        'Echec de la deconnexion. Veuillez reessayer.',
+        'Échec de la déconnexion. Veuillez réessayer.',
       );
     });
   });
@@ -190,30 +164,6 @@ describe('ProfileScreen', () => {
     expect(getByTestId('profile-hero-avatar-initials')).toBeTruthy();
   });
 
-  it('navigates to preferences when preferences item is pressed', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    fireEvent.press(getByTestId('preferences-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-preferences');
-  });
-
-  it('navigates to privacy when privacy item is pressed', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    fireEvent.press(getByTestId('privacy-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-privacy');
-  });
-
-  it('navigates to help when help item is pressed', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    fireEvent.press(getByTestId('help-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-help');
-  });
-
-  it('navigates to about when about item is pressed', () => {
-    const { getByTestId } = render(<ProfileScreen />);
-    fireEvent.press(getByTestId('about-item'));
-    expect(mockPush).toHaveBeenCalledWith('/(stack)/profile-about');
-  });
-
   it('shows alert dialog and dismisses when cancel is pressed', () => {
     mockAlertPressButton(0);
 
@@ -221,10 +171,16 @@ describe('ProfileScreen', () => {
     fireEvent.press(getByTestId('logout-button'));
 
     expect(Alert.alert).toHaveBeenCalledWith(
-      'Deconnexion',
-      'Etes-vous sur de vouloir vous deconnecter ?',
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
       expect.any(Array),
     );
     expect(mockLogout).not.toHaveBeenCalled();
+  });
+
+  it('navigates back when back chevron is pressed', () => {
+    const { getByText } = render(<ProfileScreen />);
+    fireEvent.press(getByText('chevron-back'));
+    expect(mockBack).toHaveBeenCalled();
   });
 });

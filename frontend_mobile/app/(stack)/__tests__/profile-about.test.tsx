@@ -21,12 +21,12 @@ describe('ProfileAboutScreen', () => {
 
   it('displays the header title', () => {
     const { getByText } = render(<ProfileAboutScreen />);
-    expect(getByText('A propos')).toBeTruthy();
+    expect(getByText('À propos')).toBeTruthy();
   });
 
   it('displays the header subtitle', () => {
     const { getByText } = render(<ProfileAboutScreen />);
-    expect(getByText('Informations sur l application')).toBeTruthy();
+    expect(getByText("Informations sur l'application")).toBeTruthy();
   });
 
   it('displays the app name', () => {

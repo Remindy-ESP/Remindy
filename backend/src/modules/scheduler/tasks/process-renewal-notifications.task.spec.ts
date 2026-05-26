@@ -5,12 +5,18 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { NOTIFICATION_REPOSITORY } from '../../notification/application/ports/notification-repository.interface';
 import { ExpoPushService } from '../../notification/application/services/expo-push.service';
+import { IEmailService } from '../../auth/infrastructure/services/email.service';
+import { UserPreferenceEntity } from '../../../infrastructure/database/entities/user-preference.entity';
+import { EUser } from '../../../infrastructure/database/entities/user.entity';
 
 describe('ProcessRenewalNotificationsTask', () => {
   let task: ProcessRenewalNotificationsTask;
   let subscriptionRepository: any;
   let notificationRepository: any;
   let expoPushService: any;
+  let emailService: any;
+  let preferencesRepository: any;
+  let userRepository: any;
   let loggerSpy: jest.SpyInstance;
 
   beforeEach(async () => {
@@ -36,6 +42,26 @@ describe('ProcessRenewalNotificationsTask', () => {
       sendToUsers: jest.fn().mockResolvedValue(new Map()),
     };
 
+    emailService = {
+      sendNotificationEmail: jest.fn().mockResolvedValue(undefined),
+    };
+
+    preferencesRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
+    userRepository = {
+      createQueryBuilder: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProcessRenewalNotificationsTask,
@@ -50,6 +76,18 @@ describe('ProcessRenewalNotificationsTask', () => {
         {
           provide: ExpoPushService,
           useValue: expoPushService,
+        },
+        {
+          provide: IEmailService,
+          useValue: emailService,
+        },
+        {
+          provide: getRepositoryToken(UserPreferenceEntity),
+          useValue: preferencesRepository,
+        },
+        {
+          provide: getRepositoryToken(EUser),
+          useValue: userRepository,
         },
       ],
     }).compile();
@@ -89,7 +127,6 @@ describe('ProcessRenewalNotificationsTask', () => {
         daysBefore: 3,
       };
 
-      // First call returns renewal rows, second call returns empty (no trial endings)
       const qbMock = {
         select: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
@@ -131,7 +168,6 @@ describe('ProcessRenewalNotificationsTask', () => {
         daysBefore: 3,
       };
 
-      // First call returns empty (no renewals), second call returns trial rows
       const qbMock = {
         select: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
@@ -219,6 +255,59 @@ describe('ProcessRenewalNotificationsTask', () => {
         ]),
       );
     });
+
+    it('should send email notifications when user has notificationEmail enabled', async () => {
+      const mockRenewalRow = {
+        subscriptionId: 'sub-123',
+        subscriptionName: 'Netflix',
+        subscriptionAmount: 15.99,
+        subscriptionCurrency: 'EUR',
+        nextDueDate: '2025-05-15',
+        userId: 'user-123',
+        reminderId: 'rem-123',
+        reminderChannel: 'push',
+        daysBefore: 3,
+      };
+
+      const subQbMock = {
+        select: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValue({ affected: 0 }),
+        getRawMany: jest.fn().mockResolvedValueOnce([mockRenewalRow]).mockResolvedValueOnce([]),
+      };
+      subscriptionRepository.createQueryBuilder.mockReturnValue(subQbMock);
+      expoPushService.sendToUsers.mockResolvedValue(new Map([['user-123', true]]));
+
+      // Mock preferences: user has email enabled
+      preferencesRepository.createQueryBuilder.mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([{ userId: 'user-123', notificationEmail: true }]),
+      });
+
+      // Mock user email
+      userRepository.createQueryBuilder.mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([{ id: 'user-123', email: 'test@example.com' }]),
+      });
+
+      await task.handleCron();
+
+      expect(emailService.sendNotificationEmail).toHaveBeenCalledTimes(1);
+      expect(emailService.sendNotificationEmail).toHaveBeenCalledWith({
+        to: 'test@example.com',
+        data: expect.objectContaining({
+          type: 'subscription_renewal',
+          subscriptionName: 'Netflix',
+        }),
+      });
+    });
   });
 
   describe('triggerManually', () => {
@@ -229,6 +318,7 @@ describe('ProcessRenewalNotificationsTask', () => {
         subscriptionsProcessed: 0,
         notificationsCreated: 0,
         pushSent: 0,
+        emailsSent: 0,
       });
     });
   });

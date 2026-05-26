@@ -34,6 +34,10 @@ import { UserMfaTypeOrmRepository } from '../admin/infrastructure/database/repos
 import { TotpService } from '../admin/infrastructure/services/totp.service';
 import { CryptoService } from '../admin/infrastructure/services/crypto.service';
 import { AdminModule } from '../admin/admin.module';
+import { OAuthLoginUseCase } from './application/use-cases/oauth-login.use-case';
+import { GoogleOAuthService } from './infrastructure/services/google-oauth.service';
+import { MicrosoftOAuthService } from './infrastructure/services/microsoft-oauth.service';
+import { AppleOAuthService } from './infrastructure/services/apple-oauth.service';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
@@ -45,6 +49,10 @@ import { AdminModule } from '../admin/admin.module';
   providers: [
     RegisterUserUseCase,
     LoginUseCase,
+    OAuthLoginUseCase,
+    GoogleOAuthService,
+    MicrosoftOAuthService,
+    AppleOAuthService,
     RefreshTokenUseCase,
     LogoutUseCase,
     ForgotPasswordUseCase,

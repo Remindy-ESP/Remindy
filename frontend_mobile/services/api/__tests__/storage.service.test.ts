@@ -18,9 +18,12 @@ describe('StorageService', () => {
     availableBytes: 89128960,
     usagePercentage: 15,
     documentCount: 12,
+    maxDocuments: 50,
+    maxFileSize: 10485760,
     totalFormatted: '100 MB',
     usedFormatted: '15 MB',
     availableFormatted: '85 MB',
+    maxFileSizeFormatted: '10 MB',
   };
 
   describe('getQuota', () => {
@@ -76,9 +79,12 @@ describe('StorageService', () => {
         availableBytes: 104857600,
         usagePercentage: 0,
         documentCount: 0,
+        maxDocuments: 50,
+        maxFileSize: 10485760,
         totalFormatted: '100 MB',
         usedFormatted: '0 B',
         availableFormatted: '100 MB',
+        maxFileSizeFormatted: '10 MB',
       };
 
       mockApiClient.get.mockResolvedValue({ data: emptyQuota });
@@ -97,9 +103,12 @@ describe('StorageService', () => {
         availableBytes: 5242880,
         usagePercentage: 95,
         documentCount: 48,
+        maxDocuments: 50,
+        maxFileSize: 10485760,
         totalFormatted: '100 MB',
         usedFormatted: '95 MB',
         availableFormatted: '5 MB',
+        maxFileSizeFormatted: '10 MB',
       };
 
       mockApiClient.get.mockResolvedValue({ data: nearlyFullQuota });
@@ -117,9 +126,12 @@ describe('StorageService', () => {
         availableBytes: 0,
         usagePercentage: 100,
         documentCount: 50,
+        maxDocuments: 50,
+        maxFileSize: 10485760,
         totalFormatted: '100 MB',
         usedFormatted: '100 MB',
         availableFormatted: '0 B',
+        maxFileSizeFormatted: '10 MB',
       };
 
       mockApiClient.get.mockResolvedValue({ data: fullQuota });
@@ -208,9 +220,12 @@ describe('StorageService', () => {
         availableBytes: 0,
         usagePercentage: 100,
         documentCount: 25,
+        maxDocuments: 50,
+        maxFileSize: 10485760,
         totalFormatted: '50 MB',
         usedFormatted: '50 MB',
         availableFormatted: '0 B',
+        maxFileSizeFormatted: '10 MB',
       };
 
       mockApiClient.get.mockResolvedValue({ data: fullStorageQuota });

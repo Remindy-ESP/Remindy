@@ -17,9 +17,12 @@ const mockQuota: StorageQuota = {
   availableBytes: 805306368, // 768 MB
   usagePercentage: 25,
   documentCount: 42,
+  maxDocuments: 1000,
+  maxFileSize: 50 * 1024 * 1024,
   totalFormatted: '1 GB',
   usedFormatted: '256 MB',
   availableFormatted: '768 MB',
+  maxFileSizeFormatted: '50 MB',
 };
 
 describe('useStorageQuota', () => {
