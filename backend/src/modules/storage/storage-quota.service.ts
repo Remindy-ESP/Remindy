@@ -10,9 +10,12 @@ export interface StorageQuota {
   availableBytes: number;
   usagePercentage: number;
   documentCount: number;
+  maxDocuments: number;
+  maxFileSize: number;
   totalFormatted: string;
   usedFormatted: string;
   availableFormatted: string;
+  maxFileSizeFormatted: string;
 }
 
 @Injectable()
@@ -33,6 +36,7 @@ export class StorageQuotaService {
         this.documentRepository.countByUserId(userId),
       ]);
 
+      const limits = QUOTA_LIMITS[resolveRole(userRole)];
       const totalBytes = this.getTotalQuotaByRole(userRole);
       const availableBytes = Math.max(0, totalBytes - usedBytes);
       const usagePercentage = totalBytes > 0 ? (usedBytes / totalBytes) * 100 : 0;
@@ -43,9 +47,12 @@ export class StorageQuotaService {
         availableBytes,
         usagePercentage: parseFloat(usagePercentage.toFixed(2)),
         documentCount,
+        maxDocuments: limits.maxDocumentsCount,
+        maxFileSize: limits.maxFileSize,
         totalFormatted: this.formatBytes(totalBytes),
         usedFormatted: this.formatBytes(usedBytes),
         availableFormatted: this.formatBytes(availableBytes),
+        maxFileSizeFormatted: this.formatBytes(limits.maxFileSize),
       };
     });
   }
