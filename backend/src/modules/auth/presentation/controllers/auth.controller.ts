@@ -53,12 +53,14 @@ export class AuthController {
   @Get('password-reset-redirect')
   passwordResetRedirect(@Query('token') token: string, @Res() res: Response) {
     const deepLink = `remindy://reset-password?token=${encodeURIComponent(token ?? '')}`;
-    return res.send(`<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${deepLink}"></head><body><script>window.location.href="${deepLink}";</script><p><a href="${deepLink}">Réinitialiser mon mot de passe</a></p></body></html>`);
+    return res.send(
+      `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${deepLink}"></head><body><script>window.location.href="${deepLink}";</script><p><a href="${deepLink}">Réinitialiser mon mot de passe</a></p></body></html>`,
+    );
   }
 
   @Public()
   @Get('oauth/google/mobile')
-  async googleMobileInit(@Query('returnUrl') returnUrl: string, @Res() res: Response) {
+  googleMobileInit(@Query('returnUrl') returnUrl: string, @Res() res: Response) {
     const callbackUrl = process.env.GOOGLE_MOBILE_CALLBACK_URL ?? '';
     const state = Buffer.from(returnUrl || 'remindy://oauth').toString('base64url');
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -80,9 +82,7 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const returnUrl = state
-      ? Buffer.from(state, 'base64url').toString('utf-8')
-      : 'remindy://oauth';
+    const returnUrl = state ? Buffer.from(state, 'base64url').toString('utf-8') : 'remindy://oauth';
 
     if (error || !code) {
       return res.redirect(`${returnUrl}?error=${encodeURIComponent(error ?? 'cancelled')}`);
@@ -108,7 +108,11 @@ export class AuthController {
 
   @Public()
   @Post('oauth/google')
-  @ApiResponse({ status: HttpStatus.OK, description: 'Google OAuth login successful', type: LoginResponseDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Google OAuth login successful',
+    type: LoginResponseDto,
+  })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Invalid Google token' })
   async oauthGoogle(
     @Req() req: Request,
@@ -132,7 +136,11 @@ export class AuthController {
 
   @Public()
   @Post('oauth/microsoft')
-  @ApiResponse({ status: HttpStatus.OK, description: 'Microsoft OAuth login successful', type: LoginResponseDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Microsoft OAuth login successful',
+    type: LoginResponseDto,
+  })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Invalid Microsoft token' })
   async oauthMicrosoft(
     @Req() req: Request,
@@ -156,7 +164,11 @@ export class AuthController {
 
   @Public()
   @Post('oauth/apple')
-  @ApiResponse({ status: HttpStatus.OK, description: 'Apple OAuth login successful', type: LoginResponseDto })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Apple OAuth login successful',
+    type: LoginResponseDto,
+  })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Invalid Apple identity token' })
   async oauthApple(
     @Req() req: Request,

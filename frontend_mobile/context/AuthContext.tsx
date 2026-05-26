@@ -148,17 +148,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ],
     });
     if (!credential.identityToken) throw new Error('No Apple identity token');
-    const { data } = await axios.post(`${API_URL}/auth/oauth/apple`, {
+    const result = await authService.oauthApple({
       identityToken: credential.identityToken,
       email: credential.email ?? undefined,
       firstName: credential.fullName?.givenName ?? undefined,
       lastName: credential.fullName?.familyName ?? undefined,
     });
-    await apiClient.setAccessToken(data.accessToken);
-    if (data.refreshToken) await apiClient.setRefreshToken(data.refreshToken);
+    await apiClient.setAccessToken(result.accessToken);
+    if (result.refreshToken) await apiClient.setRefreshToken(result.refreshToken);
     const userData = await userService.getMe();
     setUser(userData);
-    setToken(data.accessToken);
+    setToken(result.accessToken);
   }, []);
 
   const value: AuthContextType = {

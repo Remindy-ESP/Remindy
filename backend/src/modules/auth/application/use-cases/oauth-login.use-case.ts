@@ -53,12 +53,18 @@ export class OAuthLoginUseCase {
     if (!user) {
       // 3. Create new OAuth user
       if (!email) throw new UnauthorizedException('Email required for account creation');
-      const newUser = AuthUser.createFromOAuth({
-        email,
-        firstName,
-        lastName,
-        [`${params.provider}Id`]: providerId,
-      } as any);
+      const oauthData: {
+        email: string;
+        firstName: string;
+        lastName: string;
+        googleId?: string;
+        microsoftId?: string;
+        appleId?: string;
+      } = { email, firstName, lastName };
+      if (params.provider === 'google') oauthData.googleId = providerId;
+      else if (params.provider === 'microsoft') oauthData.microsoftId = providerId;
+      else oauthData.appleId = providerId;
+      const newUser = AuthUser.createFromOAuth(oauthData);
       user = await this.userRepo.save(newUser);
       this.eventEmitter.emit('auth.oauth.user.created', {
         userId: user.getId(),
