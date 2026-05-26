@@ -22,6 +22,7 @@ import { ErrorState, InlineLoader, EmptyState } from '@/shared/ui/NetworkStates'
 import { PermissionGate } from '@/shared/ui/PermissionGate';
 import { AdminPermission, type BlockedIp } from '@/shared/domain/types';
 import { BlockIpDialog } from './BlockIpDialog';
+import { IpActivityDrawer } from './IpActivityDrawer';
 
 function formatDate(value: string | null): string {
   if (!value) return '—';
@@ -37,6 +38,7 @@ function isExpired(ip: BlockedIp, now: Date): boolean {
 export function BlockedIpsTab() {
   const [includeExpired, setIncludeExpired] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedIp, setSelectedIp] = useState<string | null>(null);
   const { data, isLoading, isError, refetch } = useBlockedIps(includeExpired);
   const { unblockIp } = useSecurityActions();
   const now = new Date();
@@ -122,7 +124,12 @@ export function BlockedIpsTab() {
                 {data.map(ip => {
                   const expired = isExpired(ip, now);
                   return (
-                    <TableRow key={ip.id} hover>
+                    <TableRow
+                      key={ip.id}
+                      hover
+                      onClick={() => setSelectedIp(ip.ipAddress)}
+                      sx={{ cursor: 'pointer' }}
+                    >
                       <TableCell>
                         <Typography
                           variant='body2'
@@ -184,7 +191,10 @@ export function BlockedIpsTab() {
                           color={expired ? 'default' : 'error'}
                         />
                       </TableCell>
-                      <TableCell align='right'>
+                      <TableCell
+                        align='right'
+                        onClick={e => e.stopPropagation()}
+                      >
                         <PermissionGate
                           permission={AdminPermission.SECURITY_WRITE}
                         >
@@ -214,6 +224,12 @@ export function BlockedIpsTab() {
       <BlockIpDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
+      />
+
+      <IpActivityDrawer
+        ip={selectedIp}
+        open={!!selectedIp}
+        onClose={() => setSelectedIp(null)}
       />
     </Box>
   );
