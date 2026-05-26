@@ -16,6 +16,7 @@ import { UserDetailPage } from '@/modules/users/ui/UserDetailPage';
 import { AuditLogsPage } from '@/modules/audit/ui/AuditLogsPage';
 import { TicketListPage } from '@/modules/support/ui/TicketListPage';
 import { TicketDetailPage } from '@/modules/support/ui/TicketDetailPage';
+import { SecurityPage } from '@/modules/security/ui/SecurityPage';
 import { AdminPermission } from '@/shared/domain/types';
 
 function ComingSoon({ title }: { title: string }) {
@@ -97,10 +98,14 @@ function AppRoutes() {
         <Route
           path='/security'
           element={
-            <GatedPlaceholder
-              title='Sécurité'
+            <PermissionGate
               permission={AdminPermission.SECURITY_READ}
-            />
+              fallback={
+                <ComingSoon title='Sécurité — accès refusé (permission manquante)' />
+              }
+            >
+              <SecurityPage />
+            </PermissionGate>
           }
         />
         <Route
