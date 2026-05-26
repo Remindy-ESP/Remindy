@@ -1,0 +1,52 @@
+{
+  "title": "Budgets",
+  "subtitle": "Gérez vos enveloppes mensuelles et annuelles",
+  "emptyTitle": "Aucun budget pour l'instant",
+  "emptySubtitle": "Créez votre premier budget pour suivre vos dépenses récurrentes",
+  "emptyCta": "Créer un budget",
+  "loading": "Chargement des budgets...",
+  "errorPrefix": "Erreur : {{message}}",
+  "addBudget": "Nouveau budget",
+  "editBudget": "Modifier le budget",
+  "deleteBudget": "Supprimer le budget",
+  "deleteConfirmTitle": "Supprimer ce budget ?",
+  "deleteConfirmMessage": "Cette action est définitive et ne peut pas être annulée.",
+  "deleteConfirmYes": "Supprimer",
+  "deleteConfirmCancel": "Annuler",
+  "form": {
+    "nameLabel": "Nom du budget",
+    "namePlaceholder": "Ex. Streaming, Restaurants...",
+    "amountLabel": "Montant",
+    "amountPlaceholder": "0,00",
+    "currencyLabel": "Devise",
+    "periodLabel": "Période",
+    "periodMonthly": "Mensuel",
+    "periodYearly": "Annuel",
+    "categoryLabel": "Catégorie (facultatif)",
+    "noCategory": "Toutes catégories",
+    "startDateLabel": "Date de début",
+    "endDateLabel": "Date de fin (facultatif)",
+    "isActiveLabel": "Actif",
+    "notesLabel": "Notes (facultatif)",
+    "submitCreate": "Créer le budget",
+    "submitUpdate": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "card": {
+    "spent": "Dépensé",
+    "remaining": "Restant",
+    "overBudget": "Dépassé de {{amount}}",
+    "progressLabel": "{{percent}}% utilisé",
+    "monthly": "Mensuel",
+    "yearly": "Annuel"
+  },
+  "summary": {
+    "title": "Mes budgets",
+    "totalBudgeted": "Total budgété",
+    "totalSpent": "Total dépensé",
+    "budgetsCount": "{{count}} budget",
+    "budgetsCount_plural": "{{count}} budgets",
+    "viewAll": "Voir tous les budgets",
+    "createFirst": "Créer mon premier budget"
+  }
+}

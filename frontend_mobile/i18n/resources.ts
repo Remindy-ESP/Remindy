@@ -14,6 +14,9 @@ import frErrors from './locales/fr/errors.json';
 import frCoach from './locales/fr/coach.json';
 import frCategory from './locales/fr/category.json';
 import frSupport from './locales/fr/support.json';
+import frBudgets from './locales/fr/budgets.json';
+import frComparison from './locales/fr/comparison.json';
+import frCharts from './locales/fr/charts.json';
 
 import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
@@ -31,6 +34,9 @@ import enErrors from './locales/en/errors.json';
 import enCoach from './locales/en/coach.json';
 import enCategory from './locales/en/category.json';
 import enSupport from './locales/en/support.json';
+import enBudgets from './locales/en/budgets.json';
+import enComparison from './locales/en/comparison.json';
+import enCharts from './locales/en/charts.json';
 
 export const resources = {
   fr: {
@@ -50,6 +56,9 @@ export const resources = {
     coach: frCoach,
     category: frCategory,
     support: frSupport,
+    budgets: frBudgets,
+    comparison: frComparison,
+    charts: frCharts,
   },
   en: {
     common: enCommon,
@@ -68,6 +77,9 @@ export const resources = {
     coach: enCoach,
     category: enCategory,
     support: enSupport,
+    budgets: enBudgets,
+    comparison: enComparison,
+    charts: enCharts,
   },
 } as const;
 

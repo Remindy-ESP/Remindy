@@ -67,11 +67,13 @@ describe('StatisticsScreen', () => {
   });
 
   it('renders all four period filter tabs', () => {
-    const { getByText, getByTestId } = render(<StatisticsScreen />);
-    expect(getByText('Ce jour')).toBeTruthy();
-    expect(getByText('Semaine')).toBeTruthy();
-    expect(getByText('Mensuel')).toBeTruthy();
-    expect(getByText('Année')).toBeTruthy();
+    const { getAllByText, getByTestId } = render(<StatisticsScreen />);
+    // Statistics screen now renders the legacy PeriodFilterTabs and the new
+    // AnalyticsSection's PeriodFilter; both use the same translated labels.
+    expect(getAllByText('Ce jour').length).toBeGreaterThan(0);
+    expect(getAllByText('Semaine').length).toBeGreaterThan(0);
+    expect(getAllByText('Mensuel').length).toBeGreaterThan(0);
+    expect(getAllByText('Année').length).toBeGreaterThan(0);
     expect(getByTestId('period-day')).toBeTruthy();
     expect(getByTestId('period-year')).toBeTruthy();
   });

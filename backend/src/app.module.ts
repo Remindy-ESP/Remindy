@@ -24,6 +24,7 @@ import { SeedModule } from './modules/seed/seed.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SupportModule } from './modules/support/support.module';
+import { BudgetsModule } from './modules/budgets/budgets.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -68,6 +69,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     SeedModule,
     StatisticsModule,
     SupportModule,
+    BudgetsModule,
   ],
   controllers: [AppController],
   providers: [
