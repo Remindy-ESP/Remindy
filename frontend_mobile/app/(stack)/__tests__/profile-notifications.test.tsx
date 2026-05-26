@@ -14,6 +14,15 @@ jest.mock('@/services/api', () => ({
   },
 }));
 
+// Mock @expo/vector-icons locally to render the icon name as text
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    Ionicons: ({ name, ...props }: any) => <Text {...props}>{name}</Text>,
+  };
+});
+
 // Mock useFocusEffect from @react-navigation/native to run the effect instantly in tests
 jest.mock('@react-navigation/native', () => ({
   useFocusEffect: jest.fn((callback: () => void) => {
@@ -46,17 +55,17 @@ describe('ProfileNotificationsScreen', () => {
   it('renders loading state initially', () => {
     mockGetPreferences.mockReturnValue(new Promise(() => {}));
     const { getByText } = render(<ProfileNotificationsScreen />);
-    expect(getByText('profile.notificationSettings.loading')).toBeTruthy();
+    expect(getByText('Chargement des préférences...')).toBeTruthy();
   });
 
   it('renders notification channels after loading preferences', async () => {
     const { getByText } = render(<ProfileNotificationsScreen />);
 
     await waitFor(() => {
-      expect(getByText('profile.notificationSettings.title')).toBeTruthy();
-      expect(getByText('profile.notificationSettings.subtitle')).toBeTruthy();
-      expect(getByText('profile.notificationSettings.push.label')).toBeTruthy();
-      expect(getByText('profile.notificationSettings.email.label')).toBeTruthy();
+      expect(getByText('Notifications')).toBeTruthy();
+      expect(getByText('Gérez vos canaux de notification')).toBeTruthy();
+      expect(getByText('Notifications push')).toBeTruthy();
+      expect(getByText('Notifications par email')).toBeTruthy();
     });
   });
 
@@ -65,7 +74,7 @@ describe('ProfileNotificationsScreen', () => {
     const { getByText } = render(<ProfileNotificationsScreen />);
 
     await waitFor(() => {
-      expect(getByText('profile.notificationSettings.loadError')).toBeTruthy();
+      expect(getByText('Impossible de charger les préférences de notification.')).toBeTruthy();
     });
   });
 

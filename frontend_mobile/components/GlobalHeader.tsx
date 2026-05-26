@@ -123,7 +123,13 @@ export default function GlobalHeader() {
 
                             <View style={styles.separator} />
 
-                            <TouchableOpacity style={styles.menuItem}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => {
+                                    closeProfileMenu();
+                                    router.push('/(stack)/settings' as any);
+                                }}
+                            >
                                 <Text style={styles.menuItemText}>{t('common.headerMenu.settings')}</Text>
                             </TouchableOpacity>
                         </View>

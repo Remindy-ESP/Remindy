@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from '@/components/profile/UserAvatar';
+import ScreenHeader from '@/components/ScreenHeader';
 
 type MenuItemProps = {
   testID: string;
@@ -107,6 +108,11 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScreenHeader
+        title={t('profile.sections.profile')}
+        testID="profile-back-button"
+      />
+
       <View style={styles.heroCard}>
         <UserAvatar
           testID="profile-hero-avatar"
@@ -144,52 +150,6 @@ export default function ProfileScreen() {
         <InfoRow label={t('profile.infoLabels.phone')} value={user?.phone} />
         <InfoRow label={t('profile.infoLabels.language')} value={user?.language} />
         <InfoRow label={t('profile.infoLabels.timezone')} value={user?.timezone} />
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>{t('profile.sections.settings')}</Text>
-
-        <MenuItem
-          testID="notifications-item"
-          icon="notifications-outline"
-          label={t('profile.menu.notifications')}
-          onPress={() => router.push('/(stack)/profile-notifications' as any)}
-        />
-        <MenuItem
-          testID="preferences-item"
-          icon="settings-outline"
-          label={t('profile.menu.preferences')}
-          onPress={() => router.push('/(stack)/profile-preferences' as any)}
-        />
-        <MenuItem
-          testID="security-item"
-          icon="shield-checkmark-outline"
-          label={t('profile.menu.security')}
-          onPress={() => router.push('/(stack)/profile-security' as any)}
-        />
-        <MenuItem
-          testID="privacy-item"
-          icon="lock-closed-outline"
-          label={t('profile.menu.privacy')}
-          onPress={() => router.push('/(stack)/profile-privacy' as any)}
-        />
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>{t('profile.sections.support')}</Text>
-
-        <MenuItem
-          testID="help-item"
-          icon="help-circle-outline"
-          label={t('profile.menu.help')}
-          onPress={() => router.push('/(stack)/profile-help' as any)}
-        />
-        <MenuItem
-          testID="about-item"
-          icon="information-circle-outline"
-          label={t('profile.menu.about')}
-          onPress={() => router.push('/(stack)/profile-about' as any)}
-        />
       </View>
 
       <TouchableOpacity
