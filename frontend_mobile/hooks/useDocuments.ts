@@ -76,9 +76,9 @@ export function useDocuments() {
   };
 
   const deleteDocument = async (id: string) => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
       await documentService.deleteDocument(id);
       setDocuments((prev) => prev.filter((doc) => doc.id !== id));
     } catch (err) {

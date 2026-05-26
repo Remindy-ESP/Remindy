@@ -22,7 +22,7 @@ export class DocumentRepository implements IDocumentRepository {
 
   async findById(id: string): Promise<Document | null> {
     const entity = await this.repository.findOne({
-      where: { id },
+      where: { id, deletedAt: null as any },
     });
 
     if (!entity) {
@@ -69,8 +69,8 @@ export class DocumentRepository implements IDocumentRepository {
   async findAll(filters: DocumentFilterAppDto): Promise<Document[]> {
     const queryBuilder = this.repository.createQueryBuilder('document');
 
-    // Filter by userId (required)
     queryBuilder.andWhere('document.userId = :userId', { userId: filters.userId });
+    queryBuilder.andWhere('document.deletedAt IS NULL');
 
     if (filters.subscriptionId) {
       queryBuilder.andWhere('document.subscriptionId = :subscriptionId', {
@@ -134,6 +134,23 @@ export class DocumentRepository implements IDocumentRepository {
   async softDelete(id: string): Promise<boolean> {
     const result = await this.repository.softDelete(id);
     return (result.affected ?? 0) > 0;
+  }
+
+  async sumFileSizeByUserId(userId: string): Promise<number> {
+    const result = await this.repository
+      .createQueryBuilder('document')
+      .select('COALESCE(SUM(document.fileSize), 0)', 'total')
+      .where('document.userId = :userId', { userId })
+      .andWhere('document.deletedAt IS NULL')
+      .getRawOne<{ total: string | number }>();
+
+    return Number(result?.total ?? 0);
+  }
+
+  async countByUserId(userId: string): Promise<number> {
+    return this.repository.count({
+      where: { userId, deletedAt: null as any },
+    });
   }
 
   async updateOcrStatus(

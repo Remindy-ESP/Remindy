@@ -1,4 +1,4 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,6 +13,7 @@ import { ApiStorageGetQuota } from '../../swagger/decorators/api-storage.decorat
 export class StorageController {
   constructor(private readonly storageQuotaService: StorageQuotaService) {}
 
+  @Get('quota')
   @ApiStorageGetQuota()
   async getQuota(
     @CurrentUser('id') userId: string,

@@ -33,7 +33,7 @@ export class FolderRepository implements IFolderRepository {
   async findById(id: string): Promise<Folder | null> {
     try {
       const folderEntity = await this.folderEntityRepository.findOne({
-        where: { id },
+        where: { id, deletedAt: IsNull() },
       });
 
       if (!folderEntity) {
