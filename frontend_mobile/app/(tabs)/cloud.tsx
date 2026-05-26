@@ -120,8 +120,13 @@ export default function CloudScreen() {
         return;
       }
 
+      if (quota && quota.maxDocuments !== -1 && quota.documentCount >= quota.maxDocuments) {
+        Alert.alert(t('cloud.alerts.quotaExceededTitle'), t('cloud.alerts.quotaExceededMessage'));
+        return;
+      }
+
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
+        type: ['application/pdf', 'image/*'],
         copyToCacheDirectory: true,
         multiple: false,
       });
@@ -129,7 +134,7 @@ export default function CloudScreen() {
       if (result.canceled) return;
 
       const file = result.assets[0];
-      const maxSize = 10 * 1024 * 1024;
+      const maxSize = quota?.maxFileSize ?? 10 * 1024 * 1024;
 
       if (file.size && file.size > maxSize) {
         Alert.alert(t('cloud.alerts.fileTooLargeTitle'), t('cloud.alerts.fileTooLargeMessage'));
