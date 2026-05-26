@@ -365,6 +365,25 @@ export interface Permission {
 }
 
 export interface RoleWithPermissions extends RbacRole {
+  isSystem: boolean;
+  permissions: string[];
+  /** Optional — backend doesn't expose it yet. */
+  userCount?: number;
+}
+
+export interface CreateRoleRequest {
+  key: string;
+  label: string;
+  description?: string;
+}
+
+export interface UpdateRoleRequest {
+  label?: string;
+  description?: string;
+}
+
+export interface RolePermissionResponse {
+  key: string;
   permissions: string[];
 }
 
