@@ -9,6 +9,19 @@ import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
 import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import CloudIcon from '@mui/icons-material/Cloud';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useDashboard } from '@/modules/dashboard/application/useDashboard';
 import { ErrorState } from '@/shared/ui/NetworkStates';
 import type { DashboardOverview } from '@/shared/domain/types';
@@ -153,6 +166,97 @@ function buildSubscriptionSubs(overview?: DashboardOverview): SubMetric[] {
   ];
 }
 
+const FREQUENCY_LABELS: Record<string, string> = {
+  'one-time': 'Ponctuel',
+  weekly: 'Hebdo',
+  monthly: 'Mensuel',
+  quarterly: 'Trimestriel',
+  yearly: 'Annuel',
+};
+
+const FREQUENCY_COLORS = [
+  '#6366f1',
+  '#10b981',
+  '#f59e0b',
+  '#3b82f6',
+  '#ec4899',
+];
+
+const OCR_COLORS: Record<string, string> = {
+  pending: '#f59e0b',
+  processing: '#3b82f6',
+  completed: '#10b981',
+  failed: '#ef4444',
+};
+
+interface ChartPanelProps {
+  title: string;
+  loading: boolean;
+  empty: boolean;
+  emptyMessage: string;
+  children: ReactNode;
+}
+
+function ChartPanel({
+  title,
+  loading,
+  empty,
+  emptyMessage,
+  children,
+}: ChartPanelProps) {
+  return (
+    <Paper sx={{ p: 3, height: 340, display: 'flex', flexDirection: 'column' }}>
+      <Typography variant='subtitle1' fontWeight={600} sx={{ mb: 2 }}>
+        {title}
+      </Typography>
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        {loading ? (
+          <Skeleton variant='rectangular' height='100%' />
+        ) : empty ? (
+          <Box
+            sx={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'text.secondary',
+            }}
+          >
+            <Typography variant='body2'>{emptyMessage}</Typography>
+          </Box>
+        ) : (
+          children
+        )}
+      </Box>
+    </Paper>
+  );
+}
+
+function buildFrequencyData(overview?: DashboardOverview) {
+  if (!overview) return [];
+  return Object.entries(overview.subscriptions.byFrequency)
+    .filter(([, count]) => count > 0)
+    .map(([key, count]) => ({
+      name: FREQUENCY_LABELS[key] ?? key,
+      value: count,
+      key,
+    }));
+}
+
+function buildOcrData(overview?: DashboardOverview) {
+  if (!overview) return [];
+  return [
+    { name: 'En attente', key: 'pending', value: overview.cloud.ocrPending },
+    {
+      name: 'En cours',
+      key: 'processing',
+      value: overview.cloud.ocrProcessing,
+    },
+    { name: 'Terminés', key: 'completed', value: overview.cloud.ocrCompleted },
+    { name: 'Échoués', key: 'failed', value: overview.cloud.ocrFailed },
+  ];
+}
+
 function buildCloudSubs(overview?: DashboardOverview): SubMetric[] {
   if (!overview) return [];
   return [
@@ -179,6 +283,10 @@ export function DashboardPage() {
       />
     );
   }
+
+  const frequencyData = buildFrequencyData(data);
+  const ocrData = buildOcrData(data);
+  const ocrHasValues = ocrData.some(d => d.value > 0);
 
   return (
     <Box>
@@ -230,6 +338,62 @@ export function DashboardPage() {
             subs={buildCloudSubs(data)}
             loading={isLoading}
           />
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <ChartPanel
+            title='Abonnements par fréquence'
+            loading={isLoading}
+            empty={frequencyData.length === 0}
+            emptyMessage='Aucun abonnement actif.'
+          >
+            <ResponsiveContainer width='100%' height='100%'>
+              <PieChart>
+                <Pie
+                  data={frequencyData}
+                  dataKey='value'
+                  nameKey='name'
+                  innerRadius={50}
+                  outerRadius={90}
+                  paddingAngle={2}
+                >
+                  {frequencyData.map((entry, index) => (
+                    <Cell
+                      key={entry.key}
+                      fill={
+                        FREQUENCY_COLORS[index % FREQUENCY_COLORS.length]
+                      }
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartPanel>
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <ChartPanel
+            title='OCR — répartition des statuts'
+            loading={isLoading}
+            empty={!ocrHasValues}
+            emptyMessage='Aucun document indexé.'
+          >
+            <ResponsiveContainer width='100%' height='100%'>
+              <BarChart data={ocrData}>
+                <CartesianGrid strokeDasharray='3 3' />
+                <XAxis dataKey='name' />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey='value'>
+                  {ocrData.map(entry => (
+                    <Cell key={entry.key} fill={OCR_COLORS[entry.key]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartPanel>
         </Grid>
       </Grid>
     </Box>
