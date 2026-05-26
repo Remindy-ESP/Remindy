@@ -113,7 +113,7 @@ describe('ProfileEditScreen', () => {
   it('renders the screen header', () => {
     const { getByText } = renderScreen();
     expect(getByText('Modifier le profil')).toBeTruthy();
-    expect(getByText('Edition des informations du profil')).toBeTruthy();
+    expect(getByText('Édition des informations du profil')).toBeTruthy();
   });
 
   it('renders all form fields with current user data', () => {
@@ -303,7 +303,7 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('save-profile-button'));
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Succes', expect.any(String));
+    expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
   });
 
   it('calls router.back() after successful save', async () => {
@@ -440,7 +440,7 @@ describe('ProfileEditScreen', () => {
       expect.objectContaining({ uri: 'file://photo.jpg', type: 'image/jpeg' })
     );
     expect(mockRefreshUser).toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith('Succes', expect.any(String));
+    expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
   });
 
   it('shows error alert when photo upload fails', async () => {
@@ -583,7 +583,7 @@ describe('ProfileEditScreen', () => {
 
     expect(mockDeleteMyPhoto).toHaveBeenCalled();
     expect(mockRefreshUser).toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith('Succes', expect.any(String));
+    expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
   });
 
   it('does not call deleteMyPhoto when removal is cancelled', async () => {

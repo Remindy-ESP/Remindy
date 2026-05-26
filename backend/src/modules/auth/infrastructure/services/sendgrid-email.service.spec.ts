@@ -185,4 +185,67 @@ describe('GmailEmailService', () => {
       error,
     );
   });
+
+  it('sends a renewal notification email', async () => {
+    await service.sendNotificationEmail({
+      to: 'user@example.com',
+      data: {
+        title: 'Renouvellement',
+        body: 'Netflix — renouvellement dans 3 jour(s)',
+        subscriptionName: 'Netflix',
+        type: 'subscription_renewal',
+      },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: expect.stringContaining('Renouvellement'),
+        html: expect.stringContaining('Netflix'),
+      }),
+    );
+  });
+
+  it('sends a trial ending notification email', async () => {
+    await service.sendNotificationEmail({
+      to: 'user@example.com',
+      data: {
+        title: "Période d'essai",
+        body: 'Spotify — essai gratuit se termine dans 3 jour(s)',
+        subscriptionName: 'Spotify',
+        type: 'trial_ending',
+      },
+    });
+
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'user@example.com',
+        subject: expect.stringContaining("Période d'essai"),
+        html: expect.stringContaining('Spotify'),
+      }),
+    );
+  });
+
+  it('logs the error and rethrows when sending notification email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP timeout');
+    sendMailMock.mockRejectedValue(error);
+
+    await expect(
+      service.sendNotificationEmail({
+        to: 'user@example.com',
+        data: {
+          title: 'Renouvellement',
+          body: 'Netflix — renouvellement dans 3 jour(s)',
+          subscriptionName: 'Netflix',
+          type: 'subscription_renewal',
+        },
+      }),
+    ).rejects.toBe(error);
+
+    expect(loggerSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to send notification email to user@example.com'),
+    );
+  });
 });

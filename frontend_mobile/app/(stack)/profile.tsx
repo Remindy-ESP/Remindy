@@ -13,33 +13,9 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from '@/components/profile/UserAvatar';
+import ScreenHeader from '@/components/ScreenHeader';
 import { formatRoleLabel } from '@/utils/role';
 
-type MenuItemProps = {
-  testID: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-};
-
-function MenuItem({ testID, icon, label, onPress }: MenuItemProps) {
-  return (
-    <TouchableOpacity
-      style={styles.menuItem}
-      testID={testID}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <View style={styles.menuItemLeft}>
-        <View style={styles.menuIconWrap}>
-          <Ionicons name={icon} size={18} color="#C9CCF4" />
-        </View>
-        <Text style={styles.menuItemText}>{label}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={18} color="#8E93B7" />
-    </TouchableOpacity>
-  );
-}
 
 type InfoRowProps = {
   label: string;
@@ -108,6 +84,11 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScreenHeader
+        title={t('profile.sections.profile')}
+        testID="profile-back-button"
+      />
+
       <View style={styles.heroCard}>
         <UserAvatar
           testID="profile-hero-avatar"
@@ -147,52 +128,6 @@ export default function ProfileScreen() {
         <InfoRow label={t('profile.infoLabels.phone')} value={user?.phone} />
         <InfoRow label={t('profile.infoLabels.language')} value={user?.language} />
         <InfoRow label={t('profile.infoLabels.timezone')} value={user?.timezone} />
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>{t('profile.sections.settings')}</Text>
-
-        <MenuItem
-          testID="notifications-item"
-          icon="notifications-outline"
-          label={t('profile.menu.notifications')}
-          onPress={() => router.push('/(tabs)/notifications' as any)}
-        />
-        <MenuItem
-          testID="preferences-item"
-          icon="settings-outline"
-          label={t('profile.menu.preferences')}
-          onPress={() => router.push('/(stack)/profile-preferences' as any)}
-        />
-        <MenuItem
-          testID="security-item"
-          icon="shield-checkmark-outline"
-          label={t('profile.menu.security')}
-          onPress={() => router.push('/(stack)/profile-security' as any)}
-        />
-        <MenuItem
-          testID="privacy-item"
-          icon="lock-closed-outline"
-          label={t('profile.menu.privacy')}
-          onPress={() => router.push('/(stack)/profile-privacy' as any)}
-        />
-      </View>
-
-      <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>{t('profile.sections.support')}</Text>
-
-        <MenuItem
-          testID="help-item"
-          icon="help-circle-outline"
-          label={t('profile.menu.help')}
-          onPress={() => router.push('/(stack)/profile-help' as any)}
-        />
-        <MenuItem
-          testID="about-item"
-          icon="information-circle-outline"
-          label={t('profile.menu.about')}
-          onPress={() => router.push('/(stack)/profile-about' as any)}
-        />
       </View>
 
       <TouchableOpacity
