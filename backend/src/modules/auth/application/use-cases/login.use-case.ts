@@ -64,9 +64,15 @@ export class LoginUseCase {
       throw new UnauthorizedException('Account is inactive');
     }
 
+    if (!user.getPasswordHash()) {
+      throw new UnauthorizedException(
+        'This account uses social login. Please sign in with Google, Microsoft, or Apple.',
+      );
+    }
+
     const isPasswordValid = await this.passwordService.compare(
       params.password,
-      user.getPasswordHash(),
+      user.getPasswordHash()!,
     );
 
     if (!isPasswordValid) {

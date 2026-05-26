@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { getErrorMessage } from '@/services/api';
@@ -25,48 +27,32 @@ export default function AuthScreen() {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [onboardingCheckDone, setOnboardingCheckDone] = useState(false);
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const router = useRouter();
-  const { login, register, isAuthenticated, isLoading: authLoading } = useAuth();
+  const {
+    login,
+    register,
+    isAuthenticated,
+    isLoading: authLoading,
+    loginWithGoogle,
+    loginWithApple,
+  } = useAuth();
   const { t } = useTranslation();
 
   useEffect(() => {
-    let cancelled = false;
+    if (!isAuthenticated || authLoading) return;
 
-    const checkOnboarding = async () => {
-      try {
-        const seen = await onboardingService.hasSeenOnboarding();
-        if (!cancelled) {
-          setHasSeenOnboarding(seen);
-        }
-
-        if (!cancelled && !seen) {
-          router.replace('/onboarding' as any);
-          return;
-        }
-      } catch (err) {
-        console.error('Onboarding check failed:', err);
-      } finally {
-        if (!cancelled) {
-          setOnboardingCheckDone(true);
-        }
+    void (async () => {
+      const seen = await onboardingService.hasSeenOnboarding();
+      if (!seen) {
+        router.replace('/onboarding' as any);
+      } else {
+        router.replace('/(tabs)/dashboard');
       }
-    };
-
-    void checkOnboarding();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated && !authLoading && onboardingCheckDone && hasSeenOnboarding !== false) {
-      router.replace('/(tabs)/dashboard');
-    }
-  }, [isAuthenticated, authLoading, onboardingCheckDone, hasSeenOnboarding]);
+    })();
+  }, [isAuthenticated, authLoading]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,38 +60,16 @@ export default function AuthScreen() {
   };
 
   const validateForm = (): string | null => {
-    if (!email.trim()) {
-      return t('validation.emailRequired');
-    }
-
-    if (!validateEmail(email)) {
-      return t('validation.emailInvalid');
-    }
-
-    if (!password) {
-      return t('validation.passwordRequired');
-    }
-
-    if (password.length < 6) {
-      return t('validation.passwordMinLength');
-    }
+    if (!email.trim()) return t('validation.emailRequired');
+    if (!validateEmail(email)) return t('validation.emailInvalid');
+    if (!password) return t('validation.passwordRequired');
+    if (password.length < 6) return t('validation.passwordMinLength');
 
     if (!isLogin) {
-      if (!firstName.trim()) {
-        return t('validation.firstNameRequired');
-      }
-
-      if (!lastName.trim()) {
-        return t('validation.lastNameRequired');
-      }
-
-      if (!confirmPassword) {
-        return t('validation.confirmPasswordRequired');
-      }
-
-      if (password !== confirmPassword) {
-        return t('validation.passwordsMismatch');
-      }
+      if (!firstName.trim()) return t('validation.firstNameRequired');
+      if (!lastName.trim()) return t('validation.lastNameRequired');
+      if (!confirmPassword) return t('validation.confirmPasswordRequired');
+      if (password !== confirmPassword) return t('validation.passwordsMismatch');
     }
 
     return null;
@@ -113,49 +77,63 @@ export default function AuthScreen() {
 
   const handleAuth = async () => {
     setError('');
-
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
       return;
     }
-
     setLoading(true);
-
     try {
       if (isLogin) {
         await login(email.trim(), password);
       } else {
-        await register(
-          email.trim(),
-          password,
-          firstName.trim(),
-          lastName.trim()
-        );
+        await register(email.trim(), password, firstName.trim(), lastName.trim());
       }
-
     } catch (err: any) {
       console.error('Auth error:', err);
       const errorMessage = getErrorMessage(
         err,
-        isLogin ? t('auth.loginRetry') : t('auth.registrationRetry')
+        isLogin ? t('auth.loginRetry') : t('auth.registrationRetry'),
       );
-
       setError(errorMessage);
       Alert.alert(
         isLogin ? t('auth.loginFailed') : t('auth.registrationFailed'),
-        errorMessage
+        errorMessage,
       );
     } finally {
       setLoading(false);
     }
   };
 
-  if (authLoading || !onboardingCheckDone) {
+  const handleGoogleLogin = async () => {
+    setError('');
+    try {
+      await loginWithGoogle();
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
+      setError(errorMessage);
+      Alert.alert(t('auth.loginFailed'), errorMessage);
+    }
+  };
+
+  const handleAppleLogin = async () => {
+    setError('');
+    try {
+      await loginWithApple();
+    } catch (err: any) {
+      console.error('Apple login error:', err);
+      const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
+      setError(errorMessage);
+      Alert.alert(t('auth.loginFailed'), errorMessage);
+    }
+  };
+
+  if (authLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#6366f1" />
-        <Text style={{ marginTop: 16, color: '#666' }}>{t('auth.loading')}</Text>
+        <Text style={{ marginTop: 16, color: '#9ca3af' }}>{t('auth.loading')}</Text>
       </View>
     );
   }
@@ -183,18 +161,17 @@ export default function AuthScreen() {
               <TextInput
                 style={styles.input}
                 placeholder={t('auth.firstName')}
-                placeholderTextColor="#999"
+                placeholderTextColor="#6b7280"
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
                 testID="firstName-input"
                 editable={!loading}
               />
-
               <TextInput
                 style={styles.input}
                 placeholder={t('auth.lastName')}
-                placeholderTextColor="#999"
+                placeholderTextColor="#6b7280"
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
@@ -207,7 +184,7 @@ export default function AuthScreen() {
           <TextInput
             style={styles.input}
             placeholder={t('auth.email')}
-            placeholderTextColor="#999"
+            placeholderTextColor="#6b7280"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -216,28 +193,38 @@ export default function AuthScreen() {
             editable={!loading}
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder={t('auth.password')}
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            testID="password-input"
-            editable={!loading}
-          />
-
-          {!isLogin && (
+          <View style={styles.passwordContainer}>
             <TextInput
-              style={styles.input}
-              placeholder={t('auth.confirmPassword')}
-              placeholderTextColor="#999"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              testID="confirm-password-input"
+              style={styles.passwordInput}
+              placeholder={t('auth.password')}
+              placeholderTextColor="#6b7280"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              testID="password-input"
               editable={!loading}
             />
+            <TouchableOpacity style={styles.eyeButton} onPress={() => setShowPassword(v => !v)}>
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+
+          {!isLogin && (
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder={t('auth.confirmPassword')}
+                placeholderTextColor="#6b7280"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                testID="confirm-password-input"
+                editable={!loading}
+              />
+              <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(v => !v)}>
+                <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
           )}
 
           <TouchableOpacity
@@ -279,6 +266,27 @@ export default function AuthScreen() {
               {isLogin ? t('auth.toggleToRegister') : t('auth.toggleToLogin')}
             </Text>
           </TouchableOpacity>
+
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>ou continuer avec</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <TouchableOpacity style={styles.oauthButton} onPress={handleGoogleLogin} testID="google-login-button">
+            <MaterialCommunityIcons name="google" size={20} color="#e5e7eb" style={{ marginRight: 10 }} />
+            <Text style={styles.oauthButtonText}>Continuer avec Google</Text>
+          </TouchableOpacity>
+
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={8}
+              style={styles.appleButton}
+              onPress={handleAppleLogin}
+            />
+          )}
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -288,7 +296,7 @@ export default function AuthScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#06071D',
   },
   content: {
     flex: 1,
@@ -304,7 +312,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 24,
-    color: '#333',
+    color: '#9ca3af',
     textAlign: 'center',
     marginBottom: 40,
   },
@@ -312,25 +320,45 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   errorContainer: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#4B242C',
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#ef4444',
+    borderLeftColor: '#A6475A',
   },
   errorText: {
-    color: '#991b1b',
+    color: '#FFD7DE',
     fontSize: 14,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1F2140',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#4E5498',
+    color: '#fff',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F2140',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4E5498',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#fff',
+  },
+  eyeButton: {
+    padding: 4,
   },
   button: {
     backgroundColor: '#6366f1',
@@ -354,7 +382,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   forgotText: {
-    color: '#4f46e5',
+    color: '#818cf8',
     textAlign: 'center',
     marginTop: 14,
     fontSize: 14,
@@ -362,5 +390,40 @@ const styles = StyleSheet.create({
   },
   toggleTextDisabled: {
     color: '#9ca3af',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#2d2d5e',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  oauthButton: {
+    backgroundColor: '#1F2140',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#4E5498',
+  },
+  oauthButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#e5e7eb',
+  },
+  appleButton: {
+    height: 50,
+    marginBottom: 12,
   },
 });

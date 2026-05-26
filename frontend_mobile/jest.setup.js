@@ -131,6 +131,50 @@ jest.mock('@/services/local/onboarding.service', () => ({
   },
 }));
 
+// Mock expo-web-browser (used by OAuth flows)
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  openAuthSessionAsync: jest.fn(() => Promise.resolve({ type: 'cancel' })),
+  dismissAuthSession: jest.fn(),
+}));
+
+// Mock expo-auth-session (used by Google and Microsoft OAuth)
+jest.mock('expo-auth-session', () => ({
+  useAuthRequest: jest.fn(() => [null, null, jest.fn(() => Promise.resolve({ type: 'cancel' }))]),
+  makeRedirectUri: jest.fn(() => 'remindy://redirect'),
+  AuthRequest: jest.fn(),
+  ResponseType: { Token: 'token', Code: 'code' },
+}));
+
+jest.mock('expo-auth-session/providers/google', () => ({
+  useAuthRequest: jest.fn(() => [null, null, jest.fn(() => Promise.resolve({ type: 'cancel' }))]),
+}));
+
+// Mock expo-apple-authentication (iOS-only)
+jest.mock('expo-apple-authentication', () => ({
+  signInAsync: jest.fn(),
+  AppleAuthenticationScope: {
+    FULL_NAME: 'full_name',
+    EMAIL: 'email',
+  },
+  AppleAuthenticationButtonType: {
+    SIGN_IN: 'SIGN_IN',
+  },
+  AppleAuthenticationButtonStyle: {
+    BLACK: 'BLACK',
+    WHITE: 'WHITE',
+    WHITE_OUTLINE: 'WHITE_OUTLINE',
+  },
+  AppleAuthenticationButton: 'AppleAuthenticationButton',
+}));
+
+// Mock expo-crypto (peer dep of expo-auth-session)
+jest.mock('expo-crypto', () => ({
+  digestStringAsync: jest.fn(),
+  CryptoDigestAlgorithm: { SHA256: 'SHA256' },
+  randomUUID: jest.fn(() => 'test-uuid'),
+}));
+
 // Mock expo-localization (used by I18nProvider for device detection)
 jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'fr', regionCode: 'FR' }],

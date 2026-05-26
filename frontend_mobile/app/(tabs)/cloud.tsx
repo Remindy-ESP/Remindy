@@ -120,8 +120,13 @@ export default function CloudScreen() {
         return;
       }
 
+      if (quota && quota.maxDocuments !== -1 && quota.documentCount >= quota.maxDocuments) {
+        Alert.alert(t('cloud.alerts.quotaExceededTitle'), t('cloud.alerts.quotaExceededMessage'));
+        return;
+      }
+
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/pdf',
+        type: ['application/pdf', 'image/*'],
         copyToCacheDirectory: true,
         multiple: false,
       });
@@ -129,7 +134,7 @@ export default function CloudScreen() {
       if (result.canceled) return;
 
       const file = result.assets[0];
-      const maxSize = 10 * 1024 * 1024;
+      const maxSize = quota?.maxFileSize ?? 10 * 1024 * 1024;
 
       if (file.size && file.size > maxSize) {
         Alert.alert(t('cloud.alerts.fileTooLargeTitle'), t('cloud.alerts.fileTooLargeMessage'));
@@ -385,38 +390,51 @@ export default function CloudScreen() {
     }
   };
 
+  const navigateOutOfDeletedFolder = (folderId: string) => {
+    if (currentFolderId !== folderId) return;
+    const deletedFolder = folders.find(f => f.id === folderId);
+    const parentId = deletedFolder?.parentId || null;
+    setCurrentFolderId(parentId);
+
+    if (!parentId) {
+      setFolderPath([]);
+      return;
+    }
+    const parentIndex = folderPath.findIndex(f => f.id === parentId);
+    setFolderPath(parentIndex >= 0 ? folderPath.slice(0, parentIndex + 1) : []);
+  };
+
+  const refreshAfterDelete = async () => {
+    try {
+      await Promise.all([fetchQuota(), fetchDocuments(), fetchFolders()]);
+    } catch (refreshError) {
+      console.error('Refresh after delete failed:', refreshError);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    if (deleteTarget.type === 'document') {
-      await deleteDocument(deleteTarget.item.id);
-      await fetchQuota();
-    } else {
-      const folderId = deleteTarget.item.id;
-
-      // If we're currently inside the folder being deleted, navigate to its parent
-      if (currentFolderId === folderId) {
-        const deletedFolder = folders.find(f => f.id === folderId);
-        setCurrentFolderId(deletedFolder?.parentId || null);
-
-        // Update folder path
-        if (deletedFolder?.parentId) {
-          const parentIndex = folderPath.findIndex(f => f.id === deletedFolder.parentId);
-          if (parentIndex >= 0) {
-            setFolderPath(folderPath.slice(0, parentIndex + 1));
-          } else {
-            setFolderPath([]);
-          }
-        } else {
-          setFolderPath([]);
-        }
+    const isDocument = deleteTarget.type === 'document';
+    try {
+      if (isDocument) {
+        await deleteDocument(deleteTarget.item.id);
+      } else {
+        navigateOutOfDeletedFolder(deleteTarget.item.id);
+        await deleteFolder(deleteTarget.item.id);
       }
-
-      await deleteFolder(folderId);
+      setDeleteTarget(null);
+      setShowDeleteConfirm(false);
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      const fallback = isDocument
+        ? t('errors.documentDeleteFailed')
+        : t('errors.folderDeleteFailed');
+      const errorMessage = error?.response?.data?.message || error?.message || fallback;
+      Alert.alert(t('common.error'), errorMessage);
+    } finally {
+      await refreshAfterDelete();
     }
-
-    setDeleteTarget(null);
-    setShowDeleteConfirm(false);
   };
 
   const getDeleteMessage = (): string => {

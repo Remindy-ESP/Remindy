@@ -130,7 +130,7 @@ describe('DocumentController', () => {
         'sub-123',
         '1',
         undefined,
-        'freemium',
+        'user_freemium',
       );
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
@@ -144,7 +144,7 @@ describe('DocumentController', () => {
           contractId: 1,
           folderId: undefined,
         },
-        'freemium',
+        'user_freemium',
       );
 
       expect(result).toEqual(
@@ -181,7 +181,7 @@ describe('DocumentController', () => {
           contractId: undefined,
           folderId: undefined,
         }),
-        'freemium',
+        undefined,
       );
       expect(result.subscription_id).toBeUndefined();
       expect(result.contract_id).toBeUndefined();
@@ -200,7 +200,7 @@ describe('DocumentController', () => {
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ contractId: 42 }),
-        'freemium',
+        undefined,
       );
     });
 
@@ -211,7 +211,7 @@ describe('DocumentController', () => {
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({ contractId: undefined }),
-        'freemium',
+        undefined,
       );
     });
 
@@ -236,10 +236,13 @@ describe('DocumentController', () => {
       );
     });
 
-    it('should throw BadRequestException when file exceeds 10MB', async () => {
-      const largeFile = { ...mockFile, size: 11 * 1024 * 1024 };
+    it('should delegate per-role file size enforcement to the use-case', async () => {
+      const largeFile = { ...mockFile, size: 60 * 1024 * 1024 };
+      uploadDocumentUseCase.execute.mockRejectedValue(
+        new Error('File size (60MB) exceeds your plan limit (50MB).'),
+      );
       await expect(controller.upload(mockRequest, largeFile, 'user-123')).rejects.toThrow(
-        'File size exceeds 10MB limit',
+        /exceeds your plan limit/,
       );
     });
 
@@ -546,7 +549,7 @@ describe('DocumentController', () => {
 
       await controller.getQuota('user-123', undefined);
 
-      expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', 'freemium');
+      expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', '');
     });
   });
 

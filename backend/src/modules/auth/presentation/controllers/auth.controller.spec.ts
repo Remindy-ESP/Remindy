@@ -8,6 +8,7 @@ import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-password.use-case';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
 import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
+import { OAuthLoginUseCase } from '../../application/use-cases/oauth-login.use-case';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
@@ -56,6 +57,10 @@ describe('AuthController', () => {
       execute: jest.fn(),
     };
 
+    const mockOAuthLoginUseCase = {
+      execute: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -86,6 +91,10 @@ describe('AuthController', () => {
         {
           provide: VerifyEmailUseCase,
           useValue: mockVerifyEmailUseCase,
+        },
+        {
+          provide: OAuthLoginUseCase,
+          useValue: mockOAuthLoginUseCase,
         },
       ],
     }).compile();
@@ -785,6 +794,7 @@ describe('AuthController', () => {
 describe('AuthController constructor branch coverage', () => {
   it('should instantiate with null dependencies to cover constructor parameter branches', () => {
     const instance = new AuthController(
+      null as any,
       null as any,
       null as any,
       null as any,

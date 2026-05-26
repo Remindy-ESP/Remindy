@@ -28,12 +28,18 @@ export class GmailEmailService implements IEmailService {
         to,
         subject: 'Réinitialisation de votre mot de passe',
         html: `
-          <p>Bonjour,</p>
-          <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-          <p>
-            <a href="${resetLink}">Réinitialiser mon mot de passe</a>
-          </p>
-          <p>Ce lien expire dans 15 minutes.</p>
+          <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px">
+            <p>Bonjour,</p>
+            <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
+            <p style="margin:24px 0">
+              <a href="${resetLink}" style="background-color:#6366f1;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:bold;font-size:16px">
+                Réinitialiser mon mot de passe
+              </a>
+            </p>
+            <p style="color:#888;font-size:13px">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
+            <p style="word-break:break-all;font-size:12px;color:#6366f1">${resetLink}</p>
+            <p style="color:#888;font-size:13px">Ce lien expire dans 15 minutes.</p>
+          </div>
         `,
       });
     } catch (error: any) {

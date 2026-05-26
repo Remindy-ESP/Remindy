@@ -4,6 +4,7 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
   StreamableFile,
   Header,
   NotFoundException,
@@ -18,6 +19,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -58,8 +60,6 @@ import {
   ApiDocumentJobStatus,
 } from '../../../../swagger/decorators/api-document.decorator';
 
-type UserRole = 'freemium' | 'premium' | 'admin';
-
 @ApiTags('Documents')
 @ApiBearerAuth()
 @Controller('documents')
@@ -78,14 +78,10 @@ export class DocumentController {
     private readonly queueService: InMemoryQueueService,
   ) {}
 
-  private normalizeRole(role?: string): UserRole {
-    if (role === 'premium' || role === 'admin') return role;
-    return 'freemium';
-  }
-
   @ApiDocumentUpload()
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FileInterceptor('file'))
   async upload(
     @Req() req: Request,
     @UploadedFile() file: Express.Multer.File,
@@ -114,10 +110,6 @@ export class DocumentController {
       throw new BadRequestException(`Invalid file type: ${file.mimetype}`);
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      throw new BadRequestException('File size exceeds 10MB limit');
-    }
-
     const appDto: UploadDocumentAppDto = {
       userId,
       filename: file.originalname,
@@ -129,16 +121,14 @@ export class DocumentController {
       folderId,
     };
 
-    const role = this.normalizeRole(userRole);
-
-    const document = await this.uploadDocumentUseCase.execute(appDto, role);
+    const document = await this.uploadDocumentUseCase.execute(appDto, userRole);
     return DocumentPresentationMapper.toResponseDto(document);
   }
 
   @ApiDocumentGetQuota()
   @Get('quota')
   async getQuota(@CurrentUser('id') userId: string, @CurrentUser('role') role?: string) {
-    const usage = await this.quotaService.getUserQuotaUsage(userId, this.normalizeRole(role));
+    const usage = await this.quotaService.getUserQuotaUsage(userId, role ?? '');
 
     return {
       ...usage,
