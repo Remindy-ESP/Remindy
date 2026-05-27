@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Modal,
 } from 'react-native';
@@ -15,6 +14,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { categoryService } from '@/services/api/category.service';
 import type { Category } from '@/services/api';
 import { useTranslation } from '@/shared/application/I18nContext';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 
 export default function CategoriesScreen() {
   const { t } = useTranslation();
@@ -69,17 +70,17 @@ export default function CategoriesScreen() {
 
   const handleCreate = async () => {
     if (!newName.trim()) {
-      Alert.alert(t('category.errorTitle'), t('category.nameRequired'));
+      toast.error(t('category.nameRequired'));
       return;
     }
     try {
       setCreating(true);
-      await categoryService.create({ name: newName.trim(), icon: 'folder', color: newColor });
+      await categoryService.create({ name: newName.trim(), icon: '📁', color: newColor });
       setCreateModalVisible(false);
       await fetchCategories();
     } catch (err) {
       console.error('Error creating category:', err);
-      Alert.alert(t('category.errorTitle'), t('category.errorCreate'));
+      toast.error(t('category.errorCreate'));
     } finally {
       setCreating(false);
     }
@@ -96,37 +97,30 @@ export default function CategoriesScreen() {
     if (!renameValue.trim() || !renamingCategory) return;
     try {
       setRenaming(true);
-      await categoryService.update(renamingCategory.id, { name: renameValue.trim(), color: renameColor });
+      await categoryService.update(renamingCategory.id, { name: renameValue.trim(), color: renameColor, icon: renamingCategory.icon || '📁' });
       setRenameModalVisible(false);
       await fetchCategories();
     } catch (err) {
       console.error('Error renaming category:', err);
-      Alert.alert(t('category.errorTitle'), t('category.errorRename'));
+      toast.error(t('category.errorRename'));
     } finally {
       setRenaming(false);
     }
   };
 
-  const handleDelete = (cat: Category) => {
-    Alert.alert(
-      t('category.deleteModal.title'),
-      t('category.deleteModal.message', { name: cat.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await categoryService.delete(cat.id);
-              await fetchCategories();
-            } catch {
-              Alert.alert(t('category.errorTitle'), t('category.errorDelete'));
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async (cat: Category) => {
+    const confirmed = await showConfirm({
+      title: t('category.deleteModal.title'),
+      message: t('category.deleteModal.message', { name: cat.name }),
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      await categoryService.delete(cat.id);
+      await fetchCategories();
+    } catch {
+      toast.error(t('category.errorDelete'));
+    }
   };
 
   const systemCategories = categories.filter((c) => c.isSystem);
@@ -198,7 +192,7 @@ export default function CategoriesScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.deleteBtn]}
-                  onPress={() => handleDelete(cat)}
+                  onPress={() => { void handleDelete(cat); }}
                   testID={`delete-category-${cat.id}`}
                 >
                   <Ionicons name="trash-outline" size={16} color="#ef4444" />

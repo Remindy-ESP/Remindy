@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,7 @@ import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
 import { useTranslation } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { profileCardStyles as shared } from '@/shared/styles/profileCard';
+import { toast } from '@/context/ToastContext';
 
 export default function ProfileHelpScreen() {
   const router = useRouter();
@@ -32,9 +32,9 @@ export default function ProfileHelpScreen() {
     try {
       setResettingGuide(true);
       await onboardingService.resetOnboarding();
-      Alert.alert(t('profile.help.guide.resetSuccessTitle'), t('profile.help.guide.resetSuccessMessage'));
+      toast.success(t('profile.help.guide.resetSuccessMessage'));
     } catch {
-      Alert.alert(t('profile.help.guide.resetErrorTitle'), t('profile.help.guide.resetErrorMessage'));
+      toast.error(t('profile.help.guide.resetErrorMessage'));
     } finally {
       setResettingGuide(false);
     }

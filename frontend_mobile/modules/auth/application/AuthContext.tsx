@@ -7,7 +7,8 @@ import React, {
   useMemo,
   ReactNode,
 } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { toast } from '@/context/ToastContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     apiClient.setOnAuthFailure(() => {
       setUser(null);
       setToken(null);
-      Alert.alert(i18n.t('auth.session.expiredTitle'), i18n.t('auth.session.expiredMessage'));
+      toast.error(i18n.t('auth.session.expiredMessage'));
     });
   }, []);
 

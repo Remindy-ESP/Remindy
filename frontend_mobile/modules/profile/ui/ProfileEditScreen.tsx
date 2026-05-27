@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -18,6 +17,8 @@ import { userService } from '@/services/api';
 import type { UpdateUserRequest } from '@/services/api';
 import UserAvatar from '@/modules/profile/ui/UserAvatar';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 
 type FieldKey = 'firstName' | 'lastName' | 'phone' | 'language' | 'timezone';
 
@@ -108,7 +109,7 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!user) {
-      Alert.alert(t('profile.edit.errorTitle'), t('profile.edit.userNotFound'));
+      toast.error(t('profile.edit.userNotFound'));
       return;
     }
 
@@ -124,7 +125,7 @@ export default function ProfileEditScreen() {
       setIsSaving(true);
       await userService.updateMe(payload);
       await refreshUser();
-      Alert.alert(t('profile.edit.successTitle'), t('profile.edit.successMessage'));
+      toast.success(t('profile.edit.successMessage'));
       router.back();
     } catch (error: any) {
       console.error('Profile update failed:', error);
@@ -132,7 +133,7 @@ export default function ProfileEditScreen() {
         error?.response?.data?.message ||
         error?.message ||
         t('profile.edit.updateFailed');
-      Alert.alert(t('profile.edit.errorTitle'), String(message));
+      toast.error(String(message));
     } finally {
       setIsSaving(false);
     }
@@ -185,7 +186,7 @@ export default function ProfileEditScreen() {
 
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert(t('profile.edit.photo.permissionTitle'), t('profile.edit.photo.permissionMessage'));
+        toast.error(t('profile.edit.photo.permissionMessage'));
         return;
       }
 
@@ -203,20 +204,20 @@ export default function ProfileEditScreen() {
       const asset = result.assets[0];
 
       if (typeof asset.fileSize === 'number' && asset.fileSize <= 0) {
-        Alert.alert(t('profile.edit.errorTitle'), t('profile.edit.photo.emptyFile'));
+        toast.error(t('profile.edit.photo.emptyFile'));
         return;
       }
 
       await userService.uploadMyPhoto(buildPhotoFilePayload(asset));
       await refreshUser();
-      Alert.alert(t('profile.edit.successTitle'), t('profile.edit.photo.uploadSuccess'));
+      toast.success(t('profile.edit.photo.uploadSuccess'));
     } catch (error: any) {
       console.error('Profile photo upload failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
         t('profile.edit.photo.uploadFailed');
-      Alert.alert(t('profile.edit.errorTitle'), String(message));
+      toast.error(String(message));
     } finally {
       setIsPhotoUploading(false);
     }
@@ -227,30 +228,28 @@ export default function ProfileEditScreen() {
       return;
     }
 
-    Alert.alert(t('profile.edit.photo.deleteConfirmTitle'), t('profile.edit.photo.deleteConfirmMessage'), [
-      { text: t('profile.logout.cancel'), style: 'cancel' },
-      {
-        text: t('profile.privacy.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsPhotoDeleting(true);
-            await userService.deleteMyPhoto();
-            await refreshUser();
-            Alert.alert(t('profile.edit.successTitle'), t('profile.edit.photo.deleteSuccess'));
-          } catch (error: any) {
-            console.error('Profile photo delete failed:', error);
-            const message =
-              error?.response?.data?.message ||
-              error?.message ||
-              t('profile.edit.photo.deleteFailed');
-            Alert.alert(t('profile.edit.errorTitle'), String(message));
-          } finally {
-            setIsPhotoDeleting(false);
-          }
-        },
-      },
-    ]);
+    const confirmed = await showConfirm({
+      title: t('profile.edit.photo.deleteConfirmTitle'),
+      message: t('profile.edit.photo.deleteConfirmMessage'),
+      destructive: true,
+    });
+    if (!confirmed) return;
+
+    try {
+      setIsPhotoDeleting(true);
+      await userService.deleteMyPhoto();
+      await refreshUser();
+      toast.success(t('profile.edit.photo.deleteSuccess'));
+    } catch (error: any) {
+      console.error('Profile photo delete failed:', error);
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        t('profile.edit.photo.deleteFailed');
+      toast.error(String(message));
+    } finally {
+      setIsPhotoDeleting(false);
+    }
   };
 
   return (

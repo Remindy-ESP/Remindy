@@ -6,13 +6,14 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/modules/auth/application/AuthContext';
 import { useTranslation } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 
 type MenuItemProps = Readonly<{
   testID: string;
@@ -47,28 +48,22 @@ export default function SettingsScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
-    Alert.alert(t('profile.logout.confirmTitle'), t('profile.logout.confirmMessage'), [
-      {
-        text: t('profile.logout.cancel'),
-        style: 'cancel',
-      },
-      {
-        text: t('profile.logout.button'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setLoggingOut(true);
-            await logout();
-            router.replace('/');
-          } catch (error) {
-            console.error('Logout error:', error);
-            Alert.alert(t('profile.logout.errorTitle'), t('profile.logout.errorMessage'));
-          } finally {
-            setLoggingOut(false);
-          }
-        },
-      },
-    ]);
+    const confirmed = await showConfirm({
+      title: t('profile.logout.confirmTitle'),
+      message: t('profile.logout.confirmMessage'),
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      setLoggingOut(true);
+      await logout();
+      router.replace('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error(t('profile.logout.errorMessage'));
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   return (

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { toast } from '@/context/ToastContext';
 
 const APP_VERSION = '1.0.0';
 const SUPPORT_EMAIL = 'support@remindy.com';
@@ -14,18 +15,12 @@ export default function ProfileAboutScreen() {
     try {
       const canOpen = await Linking.canOpenURL(emailUrl);
       if (!canOpen) {
-        Alert.alert(
-          t('profile.about.emailUnavailableTitle'),
-          t('profile.about.emailUnavailableMessage', { email: SUPPORT_EMAIL }),
-        );
+        toast.info(t('profile.about.emailUnavailableMessage', { email: SUPPORT_EMAIL }));
         return;
       }
       await Linking.openURL(emailUrl);
     } catch {
-      Alert.alert(
-        t('profile.about.emailErrorTitle'),
-        t('profile.about.emailErrorMessage', { email: SUPPORT_EMAIL }),
-      );
+      toast.error(t('profile.about.emailErrorMessage', { email: SUPPORT_EMAIL }));
     }
   };
 

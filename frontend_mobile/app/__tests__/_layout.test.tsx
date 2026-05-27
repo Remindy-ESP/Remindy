@@ -76,7 +76,7 @@ jest.mock('@/context/ActionSheetContext', () => ({
   showActionSheet: jest.fn(),
 }));
 
-jest.mock('@/context/I18nContext', () => ({
+jest.mock('@/shared/application/I18nContext', () => ({
   I18nProvider: ({ children }: any) => {
     const { View } = require('react-native');
     return <View>{children}</View>;
