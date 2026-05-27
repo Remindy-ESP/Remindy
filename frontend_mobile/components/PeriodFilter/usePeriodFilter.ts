@@ -1,5 +1,14 @@
 import { useCallback, useMemo, useState } from 'react';
 import { PeriodOption } from './PeriodFilter';
+import {
+  endOfDay,
+  endOfMonth,
+  endOfYear,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+} from '@/utils/dateBoundaries';
 
 export interface PeriodDateRange {
   start: Date;
@@ -17,43 +26,6 @@ export interface UsePeriodFilterResult {
   period: PeriodOption;
   setPeriod: (next: PeriodOption) => void;
   range: PeriodDateRange;
-}
-
-function startOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
-function endOfDay(date: Date): Date {
-  const d = new Date(date);
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
-
-function startOfMonth(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
-}
-
-function endOfMonth(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-}
-
-function startOfYear(date: Date): Date {
-  return new Date(date.getFullYear(), 0, 1, 0, 0, 0, 0);
-}
-
-function endOfYear(date: Date): Date {
-  return new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999);
-}
-
-// Monday-first week (FR convention)
-function startOfWeek(date: Date): Date {
-  const d = startOfDay(date);
-  const day = d.getDay();
-  const diffToMonday = (day + 6) % 7;
-  d.setDate(d.getDate() - diffToMonday);
-  return d;
 }
 
 export function rangeForPeriod(period: PeriodOption, reference: Date): PeriodDateRange {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import ScreenHeader from '@/components/ScreenHeader';
+import { useLogout } from '@/hooks/useLogout';
+import { logoutButtonStyles } from '@/components/logoutButtonStyles';
 
 type MenuItemProps = {
   testID: string;
@@ -43,33 +43,7 @@ function MenuItem({ testID, icon, label, onPress }: MenuItemProps) {
 export default function SettingsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { logout } = useAuth();
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    Alert.alert(t('profile.logout.confirmTitle'), t('profile.logout.confirmMessage'), [
-      {
-        text: t('profile.logout.cancel'),
-        style: 'cancel',
-      },
-      {
-        text: t('profile.logout.button'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setLoggingOut(true);
-            await logout();
-            router.replace('/');
-          } catch (error) {
-            console.error('Logout error:', error);
-            Alert.alert(t('profile.logout.errorTitle'), t('profile.logout.errorMessage'));
-          } finally {
-            setLoggingOut(false);
-          }
-        },
-      },
-    ]);
-  };
+  const { loggingOut, handleLogout } = useLogout();
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
@@ -198,22 +172,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 12,
   },
-  logoutButton: {
-    marginTop: 6,
-    backgroundColor: '#D94A58',
-    borderRadius: 14,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  logoutButtonDisabled: {
-    backgroundColor: '#777B99',
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  ...logoutButtonStyles,
 });
