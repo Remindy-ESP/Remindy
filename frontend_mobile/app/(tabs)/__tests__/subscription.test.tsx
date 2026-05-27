@@ -2,14 +2,14 @@ import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import SubscriptionScreen from '../subscription';
-import { subscriptionService } from '../../../services/api/subscription.service';
-import { categoryService } from '../../../services/api/category.service';
+import { subscriptionService } from '@/modules/subscriptions/infrastructure/subscriptionApi';
+import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
 
 // ---------------------------------------------------------------------------
 // Service mocks
 // ---------------------------------------------------------------------------
-jest.mock('../../../services/api/subscription.service');
-jest.mock('../../../services/api/category.service');
+jest.mock('@/modules/subscriptions/infrastructure/subscriptionApi');
+jest.mock('@/modules/categories/infrastructure/categoryApi');
 
 const mockedSubscriptionService = subscriptionService as jest.Mocked<typeof subscriptionService>;
 const mockedCategoryService = categoryService as jest.Mocked<typeof categoryService>;
@@ -84,7 +84,7 @@ jest.mock('@react-native-community/datetimepicker', () => {
 // ---------------------------------------------------------------------------
 // CoachMarkTarget & config
 // ---------------------------------------------------------------------------
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const React = require('react');
   return ({ children }: any) => <React.Fragment>{children}</React.Fragment>;
 });

@@ -4,10 +4,10 @@ import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import GlobalHeader from '@/components/GlobalHeader';
-import { useAuth } from '@/context/AuthContext';
+import GlobalHeader from '@/shared/ui/GlobalHeader';
+import { useAuth } from '@/modules/auth/application/AuthContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { usePushNotifications } from '@/modules/notifications/application/usePushNotifications';
 
 export default function TabLayout() {
     const router = useRouter();

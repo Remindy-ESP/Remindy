@@ -1,9 +1,9 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { useComparison } from '../hooks/useComparison';
-import { BarChart } from '@/components/charts/BarChart';
-import type { PeriodDateRange } from '@/components/PeriodFilter/usePeriodFilter';
+import { BarChart } from '@/shared/ui/charts/BarChart';
+import type { PeriodDateRange } from '@/shared/ui/PeriodFilter/usePeriodFilter';
 
 export interface ComparisonSectionProps {
   range: PeriodDateRange;

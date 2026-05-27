@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { categoryService } from '@/services/api/category.service';
 import type { Category } from '@/services/api/types';
 import {

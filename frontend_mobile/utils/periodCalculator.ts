@@ -1,12 +1,4 @@
 import type { DateRange, Period } from '@/types/statistics';
-import {
-  endOfDay,
-  endOfMonth,
-  endOfYear,
-  startOfMonth,
-  startOfWeek,
-  startOfYear,
-} from '@/utils/dateBoundaries';
 
 const MONTH_NAMES_FR = [
   'janvier',
@@ -22,6 +14,42 @@ const MONTH_NAMES_FR = [
   'novembre',
   'décembre',
 ];
+
+export function startOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+export function endOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+export function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+}
+
+export function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+
+export function startOfYear(date: Date): Date {
+  return new Date(date.getFullYear(), 0, 1, 0, 0, 0, 0);
+}
+
+export function endOfYear(date: Date): Date {
+  return new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999);
+}
+
+export function startOfWeek(date: Date): Date {
+  const d = startOfDay(date);
+  const day = d.getDay();
+  const diffToMonday = (day + 6) % 7;
+  d.setDate(d.getDate() - diffToMonday);
+  return d;
+}
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);

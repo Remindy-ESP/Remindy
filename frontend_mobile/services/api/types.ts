@@ -1,6 +1,14 @@
-/**
- * API Types and Interfaces
- */
+export {
+  User,
+  UpdateUserRequest,
+  UploadUserPhotoFile,
+  ApiResponse,
+  PaginatedResponse,
+  ThemePreference,
+  UserPreferences,
+  UpdateUserPreferencesRequest,
+} from '@/shared/domain/types';
+export type { User as UserType } from '@/shared/domain/types';
 
 export interface LoginRequest {
   email: string;
@@ -17,42 +25,11 @@ export interface RegisterRequest {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
+  user: import('@/shared/domain/types').User;
 }
 
 export interface RefreshTokenRequest {
   refreshToken: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  photoR2Key?: string;
-  photoUrl?: string;
-  role: string;
-  status: string;
-  timezone: string;
-  language: string;
-  emailVerified: boolean;
-  createdAt: string;
-}
-
-export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  language?: string;
-  timezone?: string;
-  photoR2Key?: string;
-}
-
-export interface UploadUserPhotoFile {
-  uri: string;
-  name: string;
-  type: string;
 }
 
 export interface RequestRgpdExport {
@@ -154,7 +131,6 @@ export interface UpdateSubscriptionRequest {
   categoryId?: string;
 }
 
-// Event Types
 export interface Event {
   id: string;
   title: string;
@@ -166,19 +142,6 @@ export interface Event {
   userId: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  statusCode?: number;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
 }
 
 export interface Folder {
@@ -268,30 +231,4 @@ export interface NotificationResponse {
     page: number;
     limit: number;
   };
-}
-
-// User Preferences
-export type ThemePreference = 'light' | 'dark' | 'auto';
-
-export interface UserPreferences {
-  userId: string;
-  theme: ThemePreference;
-  notificationEmail: boolean;
-  notificationPush: boolean;
-  notificationSms: boolean;
-  defaultReminderDelay: number;
-  currency: string;
-  showOnlineStatus: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UpdateUserPreferencesRequest {
-  theme?: ThemePreference;
-  notificationEmail?: boolean;
-  notificationPush?: boolean;
-  notificationSms?: boolean;
-  defaultReminderDelay?: number;
-  currency?: string;
-  showOnlineStatus?: boolean;
 }

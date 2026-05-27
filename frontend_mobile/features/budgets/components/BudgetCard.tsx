@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { BudgetWithSpending } from '../types/budget.types';
 import { BudgetProgressBar } from './BudgetProgressBar';
 

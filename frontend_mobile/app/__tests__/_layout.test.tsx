@@ -30,7 +30,7 @@ jest.mock('expo-navigation-bar', () => ({
   setButtonStyleAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   AuthProvider: ({ children }: any) => {
     const { View } = require('react-native');
     return <View>{children}</View>;
@@ -44,12 +44,12 @@ jest.mock('@/features/coach-marks/CoachMarksContext', () => ({
   },
 }));
 
-jest.mock('@/components/system/AppStatusScreen', () => {
+jest.mock('@/shared/ui/system/AppStatusScreen', () => {
   const { AppStatusScreenMock } = require('./testUtils');
   return AppStatusScreenMock;
 });
 
-jest.mock('@/components/system/CoachMarksOverlay', () => () => null);
+jest.mock('@/shared/ui/system/CoachMarksOverlay', () => () => null);
 
 describe('RootLayout', () => {
   it('renders without crashing', () => {

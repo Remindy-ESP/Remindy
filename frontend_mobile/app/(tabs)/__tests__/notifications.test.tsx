@@ -2,7 +2,7 @@ import React from 'react';
 import { render, waitFor } from '@testing-library/react-native';
 import NotificationsScreen from '../notifications';
 
-jest.mock('../../../context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({
     user: { id: 'user-1', email: 'test@test.com' },
     token: 'token',
@@ -22,7 +22,7 @@ jest.mock('expo-router', () => {
   };
 });
 
-jest.mock('../../../services/api', () => ({
+jest.mock('@/services/api', () => ({
   notificationService: {
     getNotifications: jest.fn(() => Promise.resolve([])),
     markAsRead: jest.fn(() => Promise.resolve({})),
@@ -34,11 +34,11 @@ jest.mock('../../../services/api', () => ({
   NotificationType: {},
 }));
 
-jest.mock('../../../services/api/category.service', () => ({
+jest.mock('@/modules/categories/infrastructure/categoryApi', () => ({
   categoryService: { getAll: jest.fn(() => Promise.resolve([])) },
 }));
 
-jest.mock('../../../services/api/subscription.service', () => ({
+jest.mock('@/modules/subscriptions/infrastructure/subscriptionApi', () => ({
   subscriptionService: { getAll: jest.fn(() => Promise.resolve([])) },
 }));
 
