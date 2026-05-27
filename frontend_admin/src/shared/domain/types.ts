@@ -443,6 +443,15 @@ export interface SubscriptionQuery {
   limit?: number;
 }
 
+export type AdminSubscriptionsQuery = SubscriptionQuery;
+
+export interface UpdateSharedSubscriptionRequest {
+  name?: string;
+  amount?: number;
+  status?: SubscriptionStatus;
+  notes?: string;
+}
+
 // --- Cloud / Documents ---
 
 export enum OcrStatus {
