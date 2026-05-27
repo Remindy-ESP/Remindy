@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { subscriptionService } from '@/modules/subscriptions/infrastructure/subscriptionApi';
 import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
@@ -219,9 +220,11 @@ export function useSubscriptionScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchData().catch(console.error);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData().catch(console.error);
+    }, [filterFrequency, filterCategoryId])
+  );
 
   useEffect(() => {
     if (!openAdd) return;
@@ -250,10 +253,6 @@ export function useSubscriptionScreen() {
       parsedFrequency: undefined, parsedCategory: undefined,
     });
   }, [openAdd, categories]);
-
-  useEffect(() => {
-    if (!loading) fetchData().catch(console.error);
-  }, [filterFrequency, filterCategoryId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
