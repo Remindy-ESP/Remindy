@@ -8,6 +8,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import Badge from '@mui/material/Badge';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import SecurityIcon from '@mui/icons-material/Security';
@@ -18,6 +19,7 @@ import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import CloudIcon from '@mui/icons-material/Cloud';
 import GavelIcon from '@mui/icons-material/Gavel';
 import { useAuth } from '@/modules/auth/application/AuthContext';
+import { useDashboard } from '@/modules/dashboard/application/useDashboard';
 import { AdminPermission } from '@/shared/domain/types';
 
 export const DRAWER_WIDTH = 260;
@@ -95,10 +97,33 @@ export function Sidebar({ mobileOpen, onClose }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
+  const canSeeDashboard = hasPermission(AdminPermission.DASHBOARD_READ);
+  const canSeeSupport = hasPermission(AdminPermission.SUPPORT_READ);
+  const { data: dashboard } = useDashboard(
+    {},
+    { enabled: canSeeDashboard && canSeeSupport }
+  );
+  const openTicketsCount = dashboard?.support.open ?? 0;
 
   const filteredItems = NAV_ITEMS.filter(
     item => !item.permission || hasPermission(item.permission)
   );
+
+  const renderIcon = (item: NavItem) => {
+    if (item.path === '/support' && openTicketsCount > 0) {
+      return (
+        <Badge
+          badgeContent={openTicketsCount}
+          color='error'
+          max={99}
+          overlap='circular'
+        >
+          {item.icon}
+        </Badge>
+      );
+    }
+    return item.icon;
+  };
 
   const drawer = (
     <Box
@@ -158,7 +183,9 @@ export function Sidebar({ mobileOpen, onClose }: Props) {
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+              <ListItemIcon sx={{ minWidth: 40 }}>
+                {renderIcon(item)}
+              </ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItemButton>
           );
