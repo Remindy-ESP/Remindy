@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act, within } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import DashboardScreen from '../dashboard';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +46,39 @@ jest.mock('../../../context/AuthContext', () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// Toast / Confirm / ActionSheet context mocks
+// ---------------------------------------------------------------------------
+jest.mock('@/context/ToastContext', () => {
+  const toastError = jest.fn();
+  const toastSuccess = jest.fn();
+  const toastInfo = jest.fn();
+  const toastFn: any = jest.fn();
+  toastFn.error = toastError;
+  toastFn.success = toastSuccess;
+  toastFn.info = toastInfo;
+  return {
+    toast: toastFn,
+    ToastProvider: ({ children }: any) => children,
+  };
+});
+
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: jest.fn().mockResolvedValue(true),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  showActionSheet: jest.fn(),
+  ActionSheetProvider: ({ children }: any) => children,
+}));
+
+// Get references to mock functions from the mocked modules
+const { toast: _mockedToast } = jest.requireMock('@/context/ToastContext');
+const mockToast = { error: _mockedToast.error as jest.Mock, success: _mockedToast.success as jest.Mock, info: _mockedToast.info as jest.Mock };
+const mockShowConfirm: jest.Mock = jest.requireMock('@/context/ConfirmContext').showConfirm;
+const mockShowActionSheet: jest.Mock = jest.requireMock('@/context/ActionSheetContext').showActionSheet;
+
+// ---------------------------------------------------------------------------
 // useDashboard — baseline factory (overridden per test where needed)
 // ---------------------------------------------------------------------------
 const baseUseDashboard = {
@@ -70,6 +102,7 @@ const baseUseDashboard = {
   categories: [],
   events: [],
   loading: false,
+  initialLoad: false,
   error: null,
   getEventsForDate: jest.fn(() => []),
   getEventsByCategory: jest.fn(() => []),
@@ -209,11 +242,6 @@ jest.mock('@/services/api', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Alert spy
-// ---------------------------------------------------------------------------
-const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 function renderDashboard(overrides: Partial<typeof baseUseDashboard> = {}) {
@@ -225,7 +253,9 @@ function renderDashboard(overrides: Partial<typeof baseUseDashboard> = {}) {
 describe('DashboardScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    alertSpy.mockClear();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     mockUseDashboard.mockReturnValue({ ...baseUseDashboard });
     mockGetAllFolders.mockResolvedValue([]);
   });
@@ -235,12 +265,12 @@ describe('DashboardScreen', () => {
   // -------------------------------------------------------------------------
   describe('loading state', () => {
     it('shows ActivityIndicator and loading text when loading=true', () => {
-      const { getByText } = renderDashboard({ loading: true });
+      const { getByText } = renderDashboard({ loading: true, initialLoad: true });
       expect(getByText('Chargement de la page d\'accueil...')).toBeTruthy();
     });
 
     it('does not render calendar when loading', () => {
-      const { queryByTestId } = renderDashboard({ loading: true });
+      const { queryByTestId } = renderDashboard({ loading: true, initialLoad: true });
       expect(queryByTestId('calendar')).toBeNull();
     });
   });
@@ -574,7 +604,7 @@ describe('DashboardScreen', () => {
   // PDF insert — file too large
   // -------------------------------------------------------------------------
   describe('handlePdfInsert — file too large', () => {
-    it('shows alert when file exceeds 10MB', async () => {
+    it('shows toast when file exceeds 10MB', async () => {
       const bigFile = {
         canceled: false,
         assets: [{ name: 'big.pdf', size: 11 * 1024 * 1024, mimeType: 'application/pdf', uri: 'file://big.pdf' }],
@@ -584,11 +614,7 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Fichier trop volumineux',
-          expect.any(String),
-          expect.any(Array)
-        );
+        expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
       });
     });
   });
@@ -630,7 +656,7 @@ describe('DashboardScreen', () => {
   // PDF insert — ocr failed
   // -------------------------------------------------------------------------
   describe('handlePdfInsert — ocr failed', () => {
-    it('shows alert when OCR analysis fails', async () => {
+    it('shows toast when OCR analysis fails', async () => {
       const file = {
         canceled: false,
         assets: [{ name: 'bad.pdf', size: 100 * 1024, mimeType: 'application/pdf', uri: 'file://bad.pdf' }],
@@ -651,11 +677,7 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Analyse échouée',
-          expect.any(String),
-          expect.any(Array)
-        );
+        expect(mockToast.info).toHaveBeenCalledWith(expect.any(String));
       });
     });
   });
@@ -664,7 +686,7 @@ describe('DashboardScreen', () => {
   // PDF insert — upload throws error
   // -------------------------------------------------------------------------
   describe('handlePdfInsert — upload error', () => {
-    it('shows error alert when upload throws', async () => {
+    it('shows error toast when upload throws', async () => {
       const file = {
         canceled: false,
         assets: [{ name: 'err.pdf', size: 100 * 1024, mimeType: 'application/pdf', uri: 'file://err.pdf' }],
@@ -676,15 +698,11 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Erreur',
-          'Upload failed',
-          expect.any(Array)
-        );
+        expect(mockToast.error).toHaveBeenCalledWith('Upload failed');
       });
     });
 
-    it('shows generic error message when error has no .message', async () => {
+    it('shows server error message from response when upload fails', async () => {
       const file = {
         canceled: false,
         assets: [{ name: 'err2.pdf', size: 100 * 1024, mimeType: 'application/pdf', uri: 'file://err2.pdf' }],
@@ -696,11 +714,7 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Erreur',
-          'Server error',
-          expect.any(Array)
-        );
+        expect(mockToast.error).toHaveBeenCalledWith('Server error');
       });
     });
   });

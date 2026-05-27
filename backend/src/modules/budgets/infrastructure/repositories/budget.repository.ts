@@ -7,6 +7,8 @@ import { BudgetEntity } from '../persistence/budget.entity';
 import { BudgetMapper } from '../mappers/budget.mapper';
 import { BudgetFilterAppDto } from '../../application/dto/budget-filter-app.dto';
 
+const RELATIONS = ['subscriptions'];
+
 @Injectable()
 export class BudgetRepository implements IBudgetRepository {
   constructor(
@@ -17,20 +19,25 @@ export class BudgetRepository implements IBudgetRepository {
   async create(budget: Budget): Promise<Budget> {
     const entity = BudgetMapper.toPersistence(budget);
     const saved = await this.repository.save(entity);
-    return BudgetMapper.toDomain(saved);
+    await this.syncSubscriptions(saved.id, budget.subscriptionIds);
+    const withRelations = await this.repository.findOne({
+      where: { id: saved.id },
+      relations: RELATIONS,
+    });
+    return BudgetMapper.toDomain(withRelations!);
   }
 
   async findById(id: string): Promise<Budget | null> {
-    const entity = await this.repository.findOne({ where: { id } });
-    if (!entity) {
-      return null;
-    }
+    const entity = await this.repository.findOne({ where: { id }, relations: RELATIONS });
+    if (!entity) return null;
     return BudgetMapper.toDomain(entity);
   }
 
   async findAll(filters: BudgetFilterAppDto): Promise<Budget[]> {
-    const qb = this.repository.createQueryBuilder('budget');
-    qb.where('budget.userId = :userId', { userId: filters.userId });
+    const qb = this.repository
+      .createQueryBuilder('budget')
+      .leftJoinAndSelect('budget.subscriptions', 'subscription')
+      .where('budget.userId = :userId', { userId: filters.userId });
 
     if (filters.isActive !== undefined) {
       qb.andWhere('budget.isActive = :isActive', { isActive: filters.isActive });
@@ -45,14 +52,16 @@ export class BudgetRepository implements IBudgetRepository {
   }
 
   async update(id: string, budget: Budget): Promise<Budget | null> {
-    const existing = await this.repository.findOne({ where: { id } });
-    if (!existing) {
-      return null;
-    }
+    const existing = await this.repository.findOne({ where: { id }, relations: RELATIONS });
+    if (!existing) return null;
+
     const entity = BudgetMapper.toPersistence(budget);
     entity.id = id;
-    const updated = await this.repository.save(entity);
-    return BudgetMapper.toDomain(updated);
+    await this.repository.save(entity);
+    await this.syncSubscriptions(id, budget.subscriptionIds);
+
+    const withRelations = await this.repository.findOne({ where: { id }, relations: RELATIONS });
+    return BudgetMapper.toDomain(withRelations!);
   }
 
   async delete(id: string): Promise<boolean> {
@@ -63,5 +72,18 @@ export class BudgetRepository implements IBudgetRepository {
   async softDelete(id: string): Promise<boolean> {
     const result = await this.repository.softDelete(id);
     return (result.affected ?? 0) > 0;
+  }
+
+  private async syncSubscriptions(budgetId: string, newIds: string[]): Promise<void> {
+    const existing = await this.repository.findOne({
+      where: { id: budgetId },
+      relations: RELATIONS,
+    });
+    const existingIds = existing?.subscriptions?.map(s => s.id) ?? [];
+    await this.repository
+      .createQueryBuilder()
+      .relation(BudgetEntity, 'subscriptions')
+      .of(budgetId)
+      .addAndRemove(newIds, existingIds);
   }
 }

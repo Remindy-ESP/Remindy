@@ -11,7 +11,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useAuth } from '@/modules/auth/application/AuthContext';
 
 export function MfaPage() {
-  const { needsMfaSetup, setupMfa, enableMfa, verifyMfa } = useAuth();
+  const { needsMfaSetup, setupMfa, enableMfa, verifyMfa, logout } = useAuth();
   const [qrCode, setQrCode] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -120,6 +120,15 @@ export function MfaPage() {
               {loading ? <CircularProgress size={24} /> : 'Vérifier'}
             </Button>
           </Box>
+          <Button
+            variant='text'
+            fullWidth
+            size='small'
+            onClick={logout}
+            sx={{ mt: 2, color: 'text.secondary' }}
+          >
+            Retour à la connexion
+          </Button>
         </CardContent>
       </Card>
     </Box>

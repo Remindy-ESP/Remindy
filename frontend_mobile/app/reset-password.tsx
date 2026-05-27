@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 import { authFormStyles as styles } from '@/styles/authForm';
 import FormFeedback from '@/components/FormFeedback';
 
@@ -65,16 +65,12 @@ export default function ResetPasswordScreen() {
       setLoading(true);
       await authService.resetPassword(token.trim(), newPassword);
       setSuccess(t('auth.reset.success'));
-      Alert.alert(t('auth.reset.successAlertTitle'), t('auth.reset.successAlertMessage'), [
-        {
-          text: t('common.ok'),
-          onPress: () => router.replace('/'),
-        },
-      ]);
+      toast.success(t('auth.reset.successAlertMessage'));
+      router.replace('/');
     } catch (err) {
       const message = getErrorMessage(err, t('auth.reset.errorFallback'));
       setError(message);
-      Alert.alert(t('common.error'), message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

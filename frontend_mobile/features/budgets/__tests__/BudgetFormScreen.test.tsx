@@ -10,6 +10,12 @@ jest.mock('@/services/api/category.service', () => ({
   },
 }));
 
+jest.mock('@/services/api', () => ({
+  subscriptionService: {
+    getAll: jest.fn().mockResolvedValue([]),
+  },
+}));
+
 jest.mock('../hooks/useBudget', () => ({
   useBudget: jest.fn(),
 }));
@@ -58,6 +64,7 @@ describe('BudgetFormScreen', () => {
         startDate: '2026-01-01T00:00:00.000Z',
         endDate: null,
         categoryId: null,
+        subscriptionIds: [],
         isActive: true,
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
@@ -94,6 +101,7 @@ describe('BudgetFormScreen', () => {
       startDate: new Date().toISOString(),
       endDate: null,
       categoryId: null,
+      subscriptionIds: [],
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -121,6 +129,7 @@ describe('BudgetFormScreen', () => {
         startDate: '2026-01-01T00:00:00.000Z',
         endDate: null,
         categoryId: null,
+        subscriptionIds: [],
         isActive: true,
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',

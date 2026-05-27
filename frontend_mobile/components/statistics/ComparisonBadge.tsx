@@ -17,8 +17,9 @@ const TREND_COLORS: Record<ExpenseTrend, string> = {
 };
 
 function formatPercentage(value: number): string {
-  const sign = value > 0 ? '+' : '';
-  return `${sign}${value.toFixed(1)}%`;
+  const safe = value ?? 0;
+  const sign = safe > 0 ? '+' : '';
+  return `${sign}${safe.toFixed(1)}%`;
 }
 
 export function ComparisonBadge({

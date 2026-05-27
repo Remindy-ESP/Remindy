@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { toast } from '@/context/ToastContext';
+import { showActionSheet } from '@/context/ActionSheetContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
@@ -56,6 +58,7 @@ export default function CloudScreen() {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [pdfViewerUri, setPdfViewerUri] = useState<string>('');
   const [pdfViewerToken, setPdfViewerToken] = useState<string>('');
+  const [pdfViewerMimeType, setPdfViewerMimeType] = useState<string>('');
 
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'document' | 'folder'; item: any } | null>(null);
 
@@ -78,7 +81,7 @@ export default function CloudScreen() {
   const fetchSubscriptions = async () => {
     try {
       const data = await subscriptionService.getAll();
-      setSubscriptions(data);
+      setSubscriptions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
     }
@@ -96,10 +99,18 @@ export default function CloudScreen() {
           : 'Subscriptions';
         const subFolderName = t('cloud.defaultFolders.documentsSub');
 
-        const rootFolder = await createFolder({ name: rootFolderName, color: '#6366f1' });
-        if (rootFolder) {
-          await createFolder({ name: subFolderName, color: '#F39C12', parentId: rootFolder.id });
+        try {
+          const rootFolder = await createFolder({ name: rootFolderName, color: '#6366f1' });
+          if (rootFolder) {
+            await createFolder({ name: subFolderName, color: '#F39C12', parentId: rootFolder.id });
+          }
+        } catch (innerError: any) {
+          // 409 means folders already exist — that's fine
+          if (innerError?.response?.status !== 409) {
+            console.error('Error creating default folders:', innerError);
+          }
         }
+        // Always mark as initialized so we don't retry on every focus
         await AsyncStorage.setItem('folders_initialized', 'true');
       }
     } catch (error) {
@@ -116,12 +127,12 @@ export default function CloudScreen() {
   const handleUpload = async () => {
     try {
       if (quota && quota.availableBytes <= 0) {
-        Alert.alert(t('cloud.alerts.quotaExceededTitle'), t('cloud.alerts.quotaExceededMessage'));
+        toast.error(t('cloud.alerts.quotaExceededMessage'));
         return;
       }
 
       if (quota && quota.maxDocuments !== -1 && quota.documentCount >= quota.maxDocuments) {
-        Alert.alert(t('cloud.alerts.quotaExceededTitle'), t('cloud.alerts.quotaExceededMessage'));
+        toast.error(t('cloud.alerts.quotaExceededMessage'));
         return;
       }
 
@@ -137,12 +148,12 @@ export default function CloudScreen() {
       const maxSize = quota?.maxFileSize ?? 10 * 1024 * 1024;
 
       if (file.size && file.size > maxSize) {
-        Alert.alert(t('cloud.alerts.fileTooLargeTitle'), t('cloud.alerts.fileTooLargeMessage'));
+        toast.error(t('cloud.alerts.fileTooLargeMessage'));
         return;
       }
 
       if (quota && file.size && file.size > quota.availableBytes) {
-        Alert.alert(t('cloud.alerts.insufficientSpaceTitle'), t('cloud.alerts.insufficientSpaceMessage'));
+        toast.error(t('cloud.alerts.insufficientSpaceMessage'));
         return;
       }
 
@@ -157,11 +168,11 @@ export default function CloudScreen() {
         folderId: currentFolderId || undefined,
       });
       await Promise.all([fetchDocuments(), fetchQuota()]);
-      Alert.alert(t('common.success'), t('cloud.alerts.uploadSuccessMessage'));
+      toast.success(t('cloud.alerts.uploadSuccessMessage'));
     } catch (error: any) {
       console.error('Upload error:', error);
       const errorMessage = error?.response?.data?.message || error?.message || t('cloud.alerts.uploadErrorMessage');
-      Alert.alert(t('common.error'), errorMessage);
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -172,14 +183,9 @@ export default function CloudScreen() {
     if (folderId) {
       const folderExists = folders.find((f) => f.id === folderId);
       if (!folderExists) {
-        Alert.alert(
-          t('cloud.alerts.folderNotFoundTitle'),
-          t('cloud.alerts.folderNotFoundMessage'),
-          [{ text: t('common.ok'), onPress: () => {
-            setCurrentFolderId(null);
-            setFolderPath([]);
-          }}]
-        );
+        toast.error(t('cloud.alerts.folderNotFoundMessage'));
+        setCurrentFolderId(null);
+        setFolderPath([]);
         return;
       }
     }
@@ -217,18 +223,17 @@ export default function CloudScreen() {
 
   const handleFolderMenuPress = (folder: Folder) => {
     setSelectedFolder(folder);
-    Alert.alert(
-      folder.name,
-      t('cloud.folderMenu.message'),
-      [
-        { text: t('cloud.folderMenu.rename'), onPress: () => setShowRenameFolder(true) },
-        { text: t('cloud.folderMenu.delete'), onPress: () => {
+    showActionSheet({
+      title: folder.name,
+      actions: [
+        { label: t('cloud.folderMenu.rename'), onPress: () => setShowRenameFolder(true) },
+        { label: t('cloud.folderMenu.delete'), destructive: true, onPress: () => {
           setDeleteTarget({ type: 'folder', item: folder });
           setShowDeleteConfirm(true);
-        }, style: 'destructive' },
-        { text: t('cloud.folderMenu.cancel'), style: 'cancel' },
-      ]
-    );
+        }},
+        { label: t('cloud.folderMenu.cancel'), cancel: true, onPress: () => {} },
+      ],
+    });
   };
 
   const handleDocumentPress = (document: DocumentResponse) => {
@@ -242,7 +247,17 @@ export default function CloudScreen() {
   };
 
   const handleCreateFolder = async (name: string, color?: string) => {
-    await createFolder({ name, color, parentId: currentFolderId || undefined });
+    try {
+      await createFolder({ name, color, parentId: currentFolderId || undefined });
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 409) {
+        toast.error(t('cloud.alerts.folderAlreadyExists'));
+      } else {
+        toast.error(t('cloud.alerts.folderCreateError'));
+      }
+      throw err;
+    }
   };
 
   const handleRenameFolder = async (name: string) => {
@@ -272,7 +287,7 @@ export default function CloudScreen() {
       if (subscriptionId) {
         const linkedDocs = documents.filter((d) => d.subscription_id === subscriptionId);
         if (linkedDocs.length >= 5) {
-          Alert.alert(t('cloud.alerts.limitReachedTitle'), t('cloud.alerts.limitReachedMessage'));
+          toast.error(t('cloud.alerts.limitReachedMessage'));
           return;
         }
       }
@@ -285,7 +300,7 @@ export default function CloudScreen() {
     try {
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert(t('common.error'), t('cloud.alerts.notAuthenticated'));
+        toast.error(t('cloud.alerts.notAuthenticated'));
         return;
       }
 
@@ -296,12 +311,12 @@ export default function CloudScreen() {
       // Pass the authenticated download URL and token to the PDF viewer
       setPdfViewerUri(downloadUrl);
       setPdfViewerToken(token);
+      setPdfViewerMimeType(selectedDocument?.mime_type ?? 'application/pdf');
       setShowPdfViewer(true);
       setShowDocActions(false);
     } catch (error: any) {
       console.error('View document error:', error);
-      const errorMessage = error?.message || t('cloud.alerts.viewError');
-      Alert.alert(t('common.error'), errorMessage);
+      toast.error(error?.message || t('cloud.alerts.viewError'));
     }
   };
 
@@ -311,7 +326,7 @@ export default function CloudScreen() {
       setDownloading(true);
       const token = await apiClient.getAccessToken();
       if (!token) {
-        Alert.alert(t('common.error'), t('cloud.alerts.notAuthenticated'));
+        toast.error(t('cloud.alerts.notAuthenticated'));
         setDownloading(false);
         return;
       }
@@ -363,29 +378,22 @@ export default function CloudScreen() {
               console.log('[CloudScreen] Share result:', JSON.stringify(result));
 
               // Show success message after sharing
-              Alert.alert(
-                t('cloud.alerts.downloadSuccessTitle'),
-                t('cloud.alerts.downloadSuccessMessage', { filename: document.filename })
-              );
+              toast.success(t('cloud.alerts.downloadSuccessMessage', { filename: document.filename }));
             } catch (shareError: any) {
               console.error('[CloudScreen] Share error:', shareError);
-              Alert.alert(
-                t('cloud.alerts.downloadFallbackTitle'),
-                t('cloud.alerts.downloadFallbackMessage', { filename: document.filename })
-              );
+              toast.info(t('cloud.alerts.downloadFallbackMessage', { filename: document.filename }));
             }
           }, 100);
         } else {
-          Alert.alert(t('common.error'), t('cloud.alerts.sharingUnavailable'));
+          toast.error(t('cloud.alerts.sharingUnavailable'));
         }
       } else {
         console.error('[CloudScreen] Download failed with status:', downloadResult.status);
-        Alert.alert(t('common.error'), t('cloud.alerts.downloadError'));
+        toast.error(t('cloud.alerts.downloadError'));
       }
     } catch (error: any) {
       console.error('[CloudScreen] Download document error:', error);
-      const errorMessage = error?.message || t('cloud.alerts.downloadError');
-      Alert.alert(t('common.error'), errorMessage);
+      toast.error(error?.message || t('cloud.alerts.downloadError'));
       setDownloading(false);
     }
   };
@@ -404,14 +412,6 @@ export default function CloudScreen() {
     setFolderPath(parentIndex >= 0 ? folderPath.slice(0, parentIndex + 1) : []);
   };
 
-  const refreshAfterDelete = async () => {
-    try {
-      await Promise.all([fetchQuota(), fetchDocuments(), fetchFolders()]);
-    } catch (refreshError) {
-      console.error('Refresh after delete failed:', refreshError);
-    }
-  };
-
   const handleDelete = async () => {
     if (!deleteTarget) return;
 
@@ -419,21 +419,27 @@ export default function CloudScreen() {
     try {
       if (isDocument) {
         await deleteDocument(deleteTarget.item.id);
+        toast.success(t('cloud.alerts.documentDeletedSuccess'));
+        setDeleteTarget(null);
+        setShowDeleteConfirm(false);
+        // Optimistic update already removed the doc from state — only refresh quota
+        fetchQuota();
       } else {
         navigateOutOfDeletedFolder(deleteTarget.item.id);
         await deleteFolder(deleteTarget.item.id);
+        toast.success(t('cloud.alerts.folderDeletedSuccess'));
+        setDeleteTarget(null);
+        setShowDeleteConfirm(false);
+        await Promise.all([fetchQuota(), fetchDocuments(), fetchFolders()]);
       }
-      setDeleteTarget(null);
-      setShowDeleteConfirm(false);
     } catch (error: any) {
       console.error('Delete error:', error);
       const fallback = isDocument
         ? t('errors.documentDeleteFailed')
         : t('errors.folderDeleteFailed');
-      const errorMessage = error?.response?.data?.message || error?.message || fallback;
-      Alert.alert(t('common.error'), errorMessage);
-    } finally {
-      await refreshAfterDelete();
+      toast.error(error?.response?.data?.message || error?.message || fallback);
+      setDeleteTarget(null);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -478,7 +484,7 @@ export default function CloudScreen() {
         folderPath={folderPath}
         onNavigate={handleNavigateToFolder}
       />
-      {loading && !refreshing ? (
+      {loading && !refreshing && documents.length === 0 && folders.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#6366f1" />
         </View>
@@ -589,11 +595,13 @@ export default function CloudScreen() {
         visible={showPdfViewer}
         pdfUri={pdfViewerUri}
         fileName={selectedDocument?.filename || 'Document'}
+        mimeType={pdfViewerMimeType}
         authToken={pdfViewerToken}
         onClose={() => {
           setShowPdfViewer(false);
           setPdfViewerUri('');
           setPdfViewerToken('');
+          setPdfViewerMimeType('');
         }}
       />
 

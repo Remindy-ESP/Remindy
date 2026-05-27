@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import ProfileHelpScreen from '../profile-help';
 
 const mockBack = global.__mockRouterBack as jest.Mock;
@@ -26,11 +25,28 @@ jest.mock('@/features/coach-marks/CoachMarksContext', () => ({
 
 const mockResetOnboarding = global.__mockOnboardingReset as jest.Mock;
 
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 describe('ProfileHelpScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     mockResetOnboarding.mockResolvedValue(undefined);
   });
 
@@ -98,10 +114,7 @@ describe('ProfileHelpScreen', () => {
     const { getByTestId } = render(<ProfileHelpScreen />);
     fireEvent.press(getByTestId('reset-onboarding-guide-button'));
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Guide réinitialisé',
-        expect.any(String)
-      );
+      expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -110,7 +123,7 @@ describe('ProfileHelpScreen', () => {
     const { getByTestId } = render(<ProfileHelpScreen />);
     fireEvent.press(getByTestId('reset-onboarding-guide-button'));
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 

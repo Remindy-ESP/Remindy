@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
@@ -28,21 +29,18 @@ export default function ProfilePrivacyScreen() {
       setIsExporting(true);
       const result = await userService.exportData({ format: 'json' });
 
-      Alert.alert(
-        t('profile.privacy.data.exportTitle'),
-        t('profile.privacy.data.exportStatus', {
-          status: result.status,
-          format: result.format,
-          id: result.id,
-        })
-      );
+      toast.success(t('profile.privacy.data.exportStatus', {
+        status: result.status,
+        format: result.format,
+        id: result.id,
+      }));
     } catch (error: any) {
       console.error('RGPD export request failed:', error);
       const message =
         error?.response?.data?.message ||
         error?.message ||
         t('profile.privacy.data.exportFailed');
-      Alert.alert(t('profile.privacy.errorTitle'), String(message));
+      toast.error(String(message));
     } finally {
       setIsExporting(false);
     }
@@ -53,7 +51,7 @@ export default function ProfilePrivacyScreen() {
       setIsDeleting(true);
       await userService.deleteMe();
       await logout();
-      Alert.alert(t('profile.privacy.danger.deletedTitle'), t('profile.privacy.danger.deletedMessage'));
+      toast.info(t('profile.privacy.danger.deletedMessage'));
       router.replace('/');
     } catch (error: any) {
       console.error('Delete account failed:', error);
@@ -61,27 +59,23 @@ export default function ProfilePrivacyScreen() {
         error?.response?.data?.message ||
         error?.message ||
         t('profile.privacy.danger.deleteFailed');
-      Alert.alert(t('profile.privacy.errorTitle'), String(message));
+      toast.error(String(message));
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      t('profile.privacy.danger.confirmTitle'),
-      t('profile.privacy.danger.confirmMessage'),
-      [
-        { text: t('profile.privacy.cancel'), style: 'cancel' },
-        {
-          text: t('profile.privacy.delete'),
-          style: 'destructive',
-          onPress: () => {
-            void performDeleteAccount();
-          },
-        },
-      ]
-    );
+  const handleDeleteAccount = async () => {
+    const confirmed = await showConfirm({
+      title: t('profile.privacy.danger.confirmTitle'),
+      message: t('profile.privacy.danger.confirmMessage'),
+      confirmText: t('profile.privacy.delete'),
+      cancelText: t('profile.privacy.cancel'),
+      destructive: true,
+    });
+    if (confirmed) {
+      void performDeleteAccount();
+    }
   };
 
   return (

@@ -31,6 +31,7 @@ class ApiClient {
       timeout: API_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
       },
     });
 
@@ -114,7 +115,7 @@ class ApiClient {
             // Retry original request
             return this.client(originalRequest);
           } catch (refreshError) {
-            console.error('[Auth] Token refresh failed:', refreshError);
+            console.warn('[Auth] Token refresh failed — session expired');
             this.failedQueue.forEach((promise) => {
               promise.reject(refreshError);
             });

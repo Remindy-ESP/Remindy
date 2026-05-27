@@ -7,9 +7,9 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { toast } from '@/context/ToastContext';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
@@ -96,10 +96,7 @@ export default function AuthScreen() {
         isLogin ? t('auth.loginRetry') : t('auth.registrationRetry'),
       );
       setError(errorMessage);
-      Alert.alert(
-        isLogin ? t('auth.loginFailed') : t('auth.registrationFailed'),
-        errorMessage,
-      );
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -113,7 +110,7 @@ export default function AuthScreen() {
       console.error('Google login error:', err);
       const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
       setError(errorMessage);
-      Alert.alert(t('auth.loginFailed'), errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -125,11 +122,11 @@ export default function AuthScreen() {
       console.error('Apple login error:', err);
       const errorMessage = getErrorMessage(err, t('auth.loginRetry'));
       setError(errorMessage);
-      Alert.alert(t('auth.loginFailed'), errorMessage);
+      toast.error(errorMessage);
     }
   };
 
-  if (authLoading) {
+  if (authLoading || isAuthenticated) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#6366f1" />

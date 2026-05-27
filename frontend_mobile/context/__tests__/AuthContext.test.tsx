@@ -17,6 +17,20 @@ jest.mock('../../services/api', () => ({
   userService: {
     getMe: jest.fn(),
   },
+  apiClient: {
+    setOnAuthFailure: jest.fn(),
+    setAccessToken: jest.fn(),
+    setRefreshToken: jest.fn(),
+  },
+}));
+
+jest.mock('../../context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
 }));
 
 const mockAuthService = authService as jest.Mocked<typeof authService>;

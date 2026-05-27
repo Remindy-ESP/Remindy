@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Alert,
   Clipboard,
   Image,
   Linking,
@@ -15,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 
 type PromoItem = {
   id: string;
@@ -70,26 +70,20 @@ export default function PromotionScreen() {
 
   const handleCopyPromoCode = (promo: PromoItem) => {
     Clipboard.setString(promo.promoCode);
-    Alert.alert(
-      t('promotion.copiedTitle'),
-      t('promotion.copiedMessage', { brand: promo.brand, code: promo.promoCode }),
-    );
+    toast.success(t('promotion.copiedMessage', { brand: promo.brand, code: promo.promoCode }));
   };
 
   const handleOpenPartnerWebsite = async (promo: PromoItem) => {
     try {
       const supported = await Linking.canOpenURL(promo.partnerUrl);
       if (!supported) {
-        Alert.alert(
-          t('promotion.linkUnavailableTitle'),
-          t('promotion.linkUnavailableMessage', { url: promo.partnerUrl }),
-        );
+        toast.error(t('promotion.linkUnavailableMessage', { url: promo.partnerUrl }));
         return;
       }
 
       await Linking.openURL(promo.partnerUrl);
     } catch {
-      Alert.alert(t('common.error'), t('promotion.openErrorMessage'));
+      toast.error(t('promotion.openErrorMessage'));
     }
   };
 

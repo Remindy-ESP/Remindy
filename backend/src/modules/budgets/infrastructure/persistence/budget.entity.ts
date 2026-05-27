@@ -6,11 +6,14 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  ManyToMany,
   JoinColumn,
+  JoinTable,
   Index,
 } from 'typeorm';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 import { CategoryEntity } from '../../../category/infrastructure/persistence/category.entity';
+import { SubscriptionEntity } from '../../../subscription/infrastructure/persistence/subscription.entity';
 
 export type BudgetPeriodColumn = 'monthly' | 'yearly';
 
@@ -68,4 +71,12 @@ export class BudgetEntity {
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
+
+  @ManyToMany(() => SubscriptionEntity, { eager: false })
+  @JoinTable({
+    name: 'budget_subscriptions',
+    joinColumn: { name: 'budget_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'subscription_id', referencedColumnName: 'id' },
+  })
+  subscriptions?: SubscriptionEntity[];
 }

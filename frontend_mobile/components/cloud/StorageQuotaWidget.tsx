@@ -10,11 +10,13 @@ interface StorageQuotaWidgetProps {
 export default function StorageQuotaWidget({ quota }: StorageQuotaWidgetProps) {
   const { t } = useTranslation();
 
-  if (!quota) return null;
+  if (!quota || typeof quota !== 'object') return null;
+
+  const pct = quota.usagePercentage ?? 0;
 
   const getBarColor = () => {
-    if (quota.usagePercentage >= 90) return '#E74C3C';
-    if (quota.usagePercentage >= 70) return '#F39C12';
+    if (pct >= 90) return '#E74C3C';
+    if (pct >= 70) return '#F39C12';
     return '#6366f1';
   };
 
@@ -23,13 +25,13 @@ export default function StorageQuotaWidget({ quota }: StorageQuotaWidgetProps) {
       <View style={styles.header}>
         <Text style={styles.title}>{t('cloud.quota.title')}</Text>
         <Text style={styles.usage}>
-          {quota.usedFormatted} / {quota.totalFormatted}
+          {quota.usedFormatted ?? '—'} / {quota.totalFormatted ?? '—'}
         </Text>
       </View>
       <View style={styles.barContainer}>
-        <View style={[styles.barFill, { width: `${Math.min(quota.usagePercentage, 100)}%`, backgroundColor: getBarColor() }]} />
+        <View style={[styles.barFill, { width: `${Math.min(pct, 100)}%`, backgroundColor: getBarColor() }]} />
       </View>
-      <Text style={styles.percentage}>{quota.usagePercentage.toFixed(1)}{t('cloud.quota.usedSuffix')}</Text>
+      <Text style={styles.percentage}>{pct.toFixed(1)}{t('cloud.quota.usedSuffix')}</Text>
     </View>
   );
 }

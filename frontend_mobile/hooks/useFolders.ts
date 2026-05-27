@@ -13,7 +13,7 @@ export function useFolders() {
       setLoading(true);
       setError(null);
       const data = await folderService.getAllFolders(filters);
-      setFolders(data);
+      setFolders(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching folders:', err);
       setError(err instanceof Error ? err.message : i18n.t('errors.foldersLoadFailed'));
@@ -29,9 +29,11 @@ export function useFolders() {
       const folder = await folderService.createFolder(params);
       setFolders((prev) => [...prev, folder]);
       return folder;
-    } catch (err) {
-      console.error('Error creating folder:', err);
-      setError(err instanceof Error ? err.message : i18n.t('errors.folderCreateFailed'));
+    } catch (err: any) {
+      if (err?.response?.status !== 409) {
+        console.error('Error creating folder:', err);
+        setError(err instanceof Error ? err.message : i18n.t('errors.folderCreateFailed'));
+      }
       throw err;
     } finally {
       setLoading(false);

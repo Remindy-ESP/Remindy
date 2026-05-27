@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketCategory } from '@/services/api/support.service';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 import ScreenHeader from '@/components/ScreenHeader';
 
 const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
@@ -43,10 +43,7 @@ export default function SupportNewScreen() {
 
   const handleSubmit = async () => {
     if (!subject.trim() || !message.trim()) {
-      Alert.alert(
-        t('support.new.validationTitle'),
-        t('support.new.validationMessage')
-      );
+      toast.error(t('support.new.validationMessage'));
       return;
     }
     try {
@@ -59,11 +56,10 @@ export default function SupportNewScreen() {
       setSubject('');
       setMessage('');
       setCategory('');
-      Alert.alert(t('support.new.successTitle'), t('support.new.successMessage'), [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      toast.success(t('support.new.successMessage'));
+      router.back();
     } catch {
-      Alert.alert(t('support.new.errorTitle'), t('support.new.errorMessage'));
+      toast.error(t('support.new.errorMessage'));
     } finally {
       setSubmitting(false);
     }

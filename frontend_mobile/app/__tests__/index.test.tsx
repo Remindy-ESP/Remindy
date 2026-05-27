@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import AuthScreen from '../index';
 
 const mockReplace = global.__mockRouterReplace as jest.Mock;
@@ -31,6 +30,17 @@ jest.mock('@/services/api', () => ({
   getErrorMessage: (error: any, fallback: string) => error?.message || fallback,
 }));
 
+const mockToastError = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastInfo = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(
+    jest.fn(),
+    { error: (...args: any[]) => mockToastError(...args), success: (...args: any[]) => mockToastSuccess(...args), info: (...args: any[]) => mockToastInfo(...args) }
+  ),
+  ToastProvider: ({ children }: any) => children,
+}));
+
 // Mock fetch
 global.fetch = jest.fn(() =>
   Promise.resolve({
@@ -38,8 +48,6 @@ global.fetch = jest.fn(() =>
     json: () => Promise.resolve({}),
   })
 ) as jest.Mock;
-
-jest.spyOn(Alert, 'alert');
 
 // Helper to fill the register form (used by many tests)
 const fillRegisterForm = (
@@ -62,7 +70,9 @@ describe('AuthScreen', () => {
     mockPush.mockClear();
     mockLogin.mockClear();
     mockRegister.mockClear();
-    (Alert.alert as jest.Mock).mockClear();
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastInfo.mockClear();
     mockAuthState.isAuthenticated = false;
     mockAuthState.isLoading = false;
     mockHasSeenOnboarding.mockResolvedValue(true);
@@ -279,7 +289,7 @@ describe('AuthScreen', () => {
 
   // ── Login error ─────────────────────────────────────────────────────────────
 
-  it('shows alert and error message when login fails', async () => {
+  it('shows toast error and error message when login fails', async () => {
     mockLogin.mockRejectedValue({ message: 'Invalid credentials' });
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
@@ -288,13 +298,13 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Invalid credentials')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Connexion echouee', 'Invalid credentials');
+      expect(mockToastError).toHaveBeenCalledWith('Invalid credentials');
     });
   });
 
   // ── Register error ──────────────────────────────────────────────────────────
 
-  it('shows alert and error message when registration fails', async () => {
+  it('shows toast error and error message when registration fails', async () => {
     mockRegister.mockRejectedValue({ message: 'Email already taken' });
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
@@ -302,7 +312,7 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Email already taken')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Inscription echouee', 'Email already taken');
+      expect(mockToastError).toHaveBeenCalledWith('Email already taken');
     });
   });
 

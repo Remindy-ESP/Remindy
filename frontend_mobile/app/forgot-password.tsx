@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -12,6 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 import { authFormStyles as styles } from '@/styles/authForm';
 import FormFeedback from '@/components/FormFeedback';
 
@@ -39,7 +39,7 @@ export default function ForgotPasswordScreen() {
     } catch (err) {
       const message = getErrorMessage(err, t('auth.forgot.errorSend'));
       setError(message);
-      Alert.alert(t('common.error'), message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

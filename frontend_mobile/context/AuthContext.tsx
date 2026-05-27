@@ -6,7 +6,8 @@ import React, {
   useCallback,
   ReactNode,
 } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { toast } from '@/context/ToastContext';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -45,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     apiClient.setOnAuthFailure(() => {
       setUser(null);
       setToken(null);
-      Alert.alert(i18n.t('auth.session.expiredTitle'), i18n.t('auth.session.expiredMessage'));
+      toast.error(i18n.t('auth.session.expiredMessage'));
     });
   }, []);
 
@@ -63,8 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setToken(null);
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
+    } catch (error: any) {
+      // 401 is already handled by the axios interceptor (token refresh / onAuthFailure callback)
+      // Only log truly unexpected errors to avoid red noise during normal session expiry
+      if (error?.response?.status !== 401) {
+        console.error('Auth check failed:', error);
+      }
       setUser(null);
       setToken(null);
       await authService.clearAuth();

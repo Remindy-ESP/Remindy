@@ -7,7 +7,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   Modal,
   TextInput,
   ScrollView,
@@ -15,7 +14,9 @@ import {
   Platform,
   Switch,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import AppPicker, { PickerItem } from '@/components/AppPicker';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { subscriptionService } from '../../services/api/subscription.service';
 import { categoryService } from '../../services/api/category.service';
@@ -151,8 +152,8 @@ export default function SubscriptionScreen() {
         subscriptionService.getAll(Object.keys(filters).length > 0 ? filters : undefined),
         categoryService.getAll(),
       ]);
-      setSubscriptions(subscriptionsData);
-      setCategories(categoriesData);
+      setSubscriptions(Array.isArray(subscriptionsData) ? subscriptionsData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (err: any) {
       console.error('Error fetching data:', err);
       setError(getErrorMessage(err, t('subscription.errors.loadFailed')));
@@ -354,7 +355,7 @@ export default function SubscriptionScreen() {
     // Parse price safely (handles both comma and dot)
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
-      Alert.alert(t('common.error'), t('subscription.alerts.invalidPriceFormat'));
+      toast.error(t('subscription.alerts.invalidPriceFormat'));
       return;
     }
 
@@ -414,6 +415,8 @@ export default function SubscriptionScreen() {
         }
 
         showSuccess(t('subscription.success.updated'));
+        setModalVisible(false);
+        await fetchData();
       } else {
         const created = await subscriptionService.create(requestData);
 
@@ -453,32 +456,26 @@ export default function SubscriptionScreen() {
       setModalVisible(false);
       await fetchData();
     } catch (err: any) {
-      const errorMessage = getErrorMessage(err, t('subscription.errors.saveFailed'));
-      Alert.alert(t('common.error'), errorMessage);
+      toast.error(getErrorMessage(err, t('subscription.errors.saveFailed')));
     }
   };
 
-  const handleDelete = (subscription: Subscription) => {
-    Alert.alert(
-      t('subscription.alerts.deleteTitle'),
-      t('subscription.alerts.deleteMessage', { name: subscription.name }),
-      [
-        { text: t('subscription.alerts.deleteCancel'), style: 'cancel' },
-        {
-          text: t('subscription.alerts.deleteConfirm'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await subscriptionService.delete(subscription.id);
-              showSuccess(t('subscription.success.deleted'));
-              await fetchData();
-            } catch (err: any) {
-              Alert.alert(t('common.error'), getErrorMessage(err, t('subscription.errors.deleteFailed')));
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async (subscription: Subscription) => {
+    const confirmed = await showConfirm({
+      title: t('subscription.alerts.deleteTitle'),
+      message: t('subscription.alerts.deleteMessage', { name: subscription.name }),
+      confirmText: t('subscription.alerts.deleteConfirm'),
+      cancelText: t('subscription.alerts.deleteCancel'),
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      await subscriptionService.delete(subscription.id);
+      showSuccess(t('subscription.success.deleted'));
+      await fetchData();
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, t('subscription.errors.deleteFailed')));
+    }
   };
 
   const handlePauseResume = async (subscription: Subscription) => {
@@ -492,7 +489,7 @@ export default function SubscriptionScreen() {
       }
       await fetchData();
     } catch (err: any) {
-      Alert.alert(t('common.error'), getErrorMessage(err, t('subscription.errors.updateFailed')));
+      toast.error(getErrorMessage(err, t('subscription.errors.updateFailed')));
     }
   };
 
@@ -586,7 +583,9 @@ export default function SubscriptionScreen() {
         </View>
         {item.category && (
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryIcon}>{item.category.icon}</Text>
+            {/[^ -]/.test(item.category.icon ?? '') && (
+              <Text style={styles.categoryIcon}>{item.category.icon}</Text>
+            )}
             <Text style={styles.categoryText}>{item.category.name}</Text>
           </View>
         )}
@@ -673,38 +672,30 @@ export default function SubscriptionScreen() {
       <View style={styles.filtersContainer}>
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>{t('subscription.filterFrequencyLabel')}</Text>
-          <View style={styles.filterPickerContainer}>
-            <Picker
-              selectedValue={filterFrequency}
-              onValueChange={(value) => setFilterFrequency(value)}
-              style={styles.filterPicker}
-              dropdownIconColor="#fff"
-            >
-              <Picker.Item label={t('subscription.filterAll')} value="" />
-              <Picker.Item label={t('subscription.cycle.oneTime')} value="one-time" />
-              <Picker.Item label={t('subscription.cycle.weekly')} value="weekly" />
-              <Picker.Item label={t('subscription.cycle.monthly')} value="monthly" />
-              <Picker.Item label={t('subscription.cycle.quarterly')} value="quarterly" />
-              <Picker.Item label={t('subscription.cycle.yearly')} value="yearly" />
-            </Picker>
-          </View>
+          <AppPicker
+            selectedValue={filterFrequency}
+            onValueChange={(value) => setFilterFrequency(value)}
+            items={[
+              { label: t('subscription.filterAll'), value: '' },
+              { label: t('subscription.cycle.oneTime'), value: 'one-time' },
+              { label: t('subscription.cycle.weekly'), value: 'weekly' },
+              { label: t('subscription.cycle.monthly'), value: 'monthly' },
+              { label: t('subscription.cycle.quarterly'), value: 'quarterly' },
+              { label: t('subscription.cycle.yearly'), value: 'yearly' },
+            ]}
+          />
         </View>
 
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>{t('subscription.filterCategoryLabel')}</Text>
-          <View style={styles.filterPickerContainer}>
-            <Picker
-              selectedValue={filterCategoryId}
-              onValueChange={(value) => setFilterCategoryId(value)}
-              style={styles.filterPicker}
-              dropdownIconColor="#fff"
-            >
-              <Picker.Item label={t('subscription.filterAllCategories')} value="" />
-              {categories.map((cat) => (
-                <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-              ))}
-            </Picker>
-          </View>
+          <AppPicker
+            selectedValue={filterCategoryId}
+            onValueChange={(value) => setFilterCategoryId(value)}
+            items={[
+              { label: t('subscription.filterAllCategories'), value: '' },
+              ...categories.map((cat): PickerItem => ({ label: cat.name, value: cat.id })),
+            ]}
+          />
         </View>
       </View>
 
@@ -799,38 +790,30 @@ export default function SubscriptionScreen() {
 
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
                   <Text style={styles.label}>{t('subscription.modal.billingCycle')}</Text>
-                  <View style={styles.pickerContainer}>
-                    <Picker
-                      selectedValue={formData.billingCycle}
-                      onValueChange={(value) => setFormData({ ...formData, billingCycle: value })}
-                      style={styles.picker}
-                      dropdownIconColor="#fff"
-                    >
-                      <Picker.Item label={t('subscription.cycle.oneTime')} value="ONE_TIME" />
-                      <Picker.Item label={t('subscription.cycle.weeklyShort')} value="WEEKLY" />
-                      <Picker.Item label={t('subscription.cycle.monthlyShort')} value="MONTHLY" />
-                      <Picker.Item label={t('subscription.cycle.quarterlyShort')} value="QUARTERLY" />
-                      <Picker.Item label={t('subscription.cycle.yearly')} value="YEARLY" />
-                    </Picker>
-                  </View>
+                  <AppPicker
+                    selectedValue={formData.billingCycle}
+                    onValueChange={(value) => setFormData({ ...formData, billingCycle: value as SubscriptionFormData['billingCycle'] })}
+                    items={[
+                      { label: t('subscription.cycle.oneTime'), value: 'ONE_TIME' },
+                      { label: t('subscription.cycle.weeklyShort'), value: 'WEEKLY' },
+                      { label: t('subscription.cycle.monthlyShort'), value: 'MONTHLY' },
+                      { label: t('subscription.cycle.quarterlyShort'), value: 'QUARTERLY' },
+                      { label: t('subscription.cycle.yearly'), value: 'YEARLY' },
+                    ]}
+                  />
                 </View>
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.label}>{t('subscription.modal.category')}</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={formData.categoryId}
-                    onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
-                    style={styles.picker}
-                    dropdownIconColor="#fff"
-                  >
-                    <Picker.Item label={t('subscription.modal.noCategory')} value="" />
-                    {categories.map((cat) => (
-                      <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-                    ))}
-                  </Picker>
-                </View>
+                <AppPicker
+                  selectedValue={formData.categoryId}
+                  onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                  items={[
+                    { label: t('subscription.modal.noCategory'), value: '' },
+                    ...categories.map((cat): PickerItem => ({ label: cat.name, value: cat.id })),
+                  ]}
+                />
               </View>
 
               <View style={styles.formGroup}>
@@ -1035,17 +1018,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 8,
-  },
-  filterPickerContainer: {
-    backgroundColor: '#2d2d5f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3d3d6f',
-    overflow: 'hidden',
-  },
-  filterPicker: {
-    color: '#fff',
-    backgroundColor: '#2d2d5f',
   },
   centerContent: {
     flex: 1,
@@ -1265,17 +1237,6 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: 'top',
-  },
-  pickerContainer: {
-    backgroundColor: '#1a1a3e',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3d3d6f',
-    overflow: 'hidden',
-  },
-  picker: {
-    color: '#fff',
-    backgroundColor: '#1a1a3e',
   },
   errorLabel: {
     color: '#f87171',

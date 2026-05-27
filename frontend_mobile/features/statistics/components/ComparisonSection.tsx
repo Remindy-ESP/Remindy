@@ -18,7 +18,7 @@ function formatAmount(amount: number, currency = 'EUR'): string {
       maximumFractionDigits: 2,
     }).format(amount);
   } catch {
-    return `${amount.toFixed(2)} ${currency}`;
+    return `${(amount ?? 0).toFixed(2)} ${currency}`;
   }
 }
 

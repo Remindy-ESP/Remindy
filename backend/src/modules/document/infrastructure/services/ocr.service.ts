@@ -123,6 +123,8 @@ export class OcrService {
       'image/bmp',
       'image/tiff',
       'image/webp',
+      'image/heic',
+      'image/heif',
     ];
 
     return supportedTypes.includes(mimeType.toLowerCase());

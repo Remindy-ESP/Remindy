@@ -8,8 +8,9 @@ import {
     ActivityIndicator,
     RefreshControl,
     Animated,
-    Alert,
 } from 'react-native';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -47,9 +48,9 @@ export default function NotificationsScreen() {
                 categoryService.getAll().catch(() => []),
                 subscriptionService.getAll().catch(() => []),
             ]);
-            setNotifications(data || []);
-            setCategories(cats || []);
-            setSubscriptions(subs || []);
+            setNotifications(Array.isArray(data) ? data : []);
+            setCategories(Array.isArray(cats) ? cats : []);
+            setSubscriptions(Array.isArray(subs) ? subs : []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
             setError(err.response?.data?.message || t('notifications.loadError'));
@@ -113,7 +114,7 @@ export default function NotificationsScreen() {
             setNotifications(prev => prev.filter(n => n.id !== id));
         } catch (err) {
             console.error('Failed to delete notification', err);
-            Alert.alert('Erreur', 'Impossible de supprimer la notification');
+            toast.error('Impossible de supprimer la notification');
         }
     };
 
@@ -126,27 +127,22 @@ export default function NotificationsScreen() {
         }
     };
 
-    const handleDeleteAll = () => {
-        Alert.alert(
-            t('notifications.deleteAllTitle'),
-            t('notifications.deleteAllMessage'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await notificationService.deleteAllNotifications();
-                            setNotifications([]);
-                        } catch (err) {
-                            console.error('Failed to delete all notifications', err);
-                            Alert.alert('Erreur', 'Impossible de supprimer les notifications');
-                        }
-                    }
-                }
-            ]
-        );
+    const handleDeleteAll = async () => {
+        const confirmed = await showConfirm({
+            title: t('notifications.deleteAllTitle'),
+            message: t('notifications.deleteAllMessage'),
+            confirmText: t('common.delete'),
+            cancelText: t('common.cancel'),
+            destructive: true,
+        });
+        if (!confirmed) return;
+        try {
+            await notificationService.deleteAllNotifications();
+            setNotifications([]);
+        } catch (err) {
+            console.error('Failed to delete all notifications', err);
+            toast.error('Impossible de supprimer les notifications');
+        }
     };
 
     const hasUnread = filteredNotifications.some(n => !n.read_at);

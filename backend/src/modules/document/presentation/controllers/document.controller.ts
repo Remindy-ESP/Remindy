@@ -104,10 +104,14 @@ export class DocumentController {
       'image/bmp',
       'image/tiff',
       'image/webp',
+      'image/heic',
+      'image/heif',
     ];
 
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException(`Invalid file type: ${file.mimetype}`);
+      throw new BadRequestException(
+        `Unsupported file type: ${file.mimetype}. Accepted: PDF, JPEG, PNG, GIF, BMP, TIFF, WEBP, HEIC`,
+      );
     }
 
     const appDto: UploadDocumentAppDto = {

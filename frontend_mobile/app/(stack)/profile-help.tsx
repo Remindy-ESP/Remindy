@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import { useRouter } from 'expo-router';
 import onboardingService from '@/services/local/onboarding.service';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 import ScreenHeader from '@/components/ScreenHeader';
 import { profileCardStyles as shared } from '@/styles/profileCard';
 
@@ -32,9 +32,9 @@ export default function ProfileHelpScreen() {
     try {
       setResettingGuide(true);
       await onboardingService.resetOnboarding();
-      Alert.alert(t('profile.help.guide.resetSuccessTitle'), t('profile.help.guide.resetSuccessMessage'));
+      toast.success(t('profile.help.guide.resetSuccessMessage'));
     } catch {
-      Alert.alert(t('profile.help.guide.resetErrorTitle'), t('profile.help.guide.resetErrorMessage'));
+      toast.error(t('profile.help.guide.resetErrorMessage'));
     } finally {
       setResettingGuide(false);
     }

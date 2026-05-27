@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import ScreenHeader from '@/components/ScreenHeader';
@@ -75,11 +75,11 @@ export default function ProfileSecurityScreen() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert(t('profile.security.successTitle'), t('profile.security.successAlert'));
+      toast.success(t('profile.security.successAlert'));
     } catch (err) {
       const message = getErrorMessage(err, t('profile.security.updateFailed'));
       setError(message);
-      Alert.alert(t('profile.security.errorTitle'), message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

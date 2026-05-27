@@ -9,6 +9,7 @@ export interface Budget {
   startDate: string;
   endDate: string | null;
   categoryId: string | null;
+  subscriptionIds: string[];
   isActive: boolean;
   notes?: string | null;
   createdAt: string;
@@ -30,6 +31,7 @@ export interface CreateBudgetInput {
   startDate: string;
   endDate?: string | null;
   categoryId?: string | null;
+  subscriptionIds?: string[];
   isActive?: boolean;
   notes?: string;
 }
@@ -42,6 +44,7 @@ export interface UpdateBudgetInput {
   startDate?: string;
   endDate?: string | null;
   categoryId?: string | null;
+  subscriptionIds?: string[];
   isActive?: boolean;
   notes?: string;
 }

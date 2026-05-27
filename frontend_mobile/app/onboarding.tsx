@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import onboardingService from '@/services/local/onboarding.service';
 import { useTranslation } from '@/context/I18nContext';
+import { toast } from '@/context/ToastContext';
 
 type OnboardingStep = {
   key: string;
@@ -87,7 +87,7 @@ export default function OnboardingScreen() {
 
       router.replace('/');
     } catch {
-      Alert.alert(t('auth.onboarding.saveErrorTitle'), t('auth.onboarding.saveErrorMessage'));
+      toast.error(t('auth.onboarding.saveErrorMessage'));
     } finally {
       setSaving(false);
     }
