@@ -27,6 +27,7 @@ function withSpending(overrides: Partial<BudgetWithSpending> = {}): BudgetWithSp
     remaining: 40,
     progress: 0.2,
     isOverBudget: false,
+    subscriptionIds: [],
     ...overrides,
   };
 }

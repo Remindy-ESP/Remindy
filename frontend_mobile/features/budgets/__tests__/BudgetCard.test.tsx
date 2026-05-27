@@ -20,6 +20,7 @@ function makeBudget(overrides: Partial<BudgetWithSpending> = {}): BudgetWithSpen
     remaining: 37.5,
     progress: 0.25,
     isOverBudget: false,
+    subscriptionIds: [],
     ...overrides,
   };
 }
