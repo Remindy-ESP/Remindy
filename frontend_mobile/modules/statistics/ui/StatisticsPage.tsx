@@ -3,12 +3,12 @@ import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-nat
 import { useFocusEffect } from '@react-navigation/native';
 import { useStatistics } from '@/modules/statistics/application/useStatistics';
 import { useExpenseSummary } from '@/modules/statistics/application/useExpenseSummary';
-import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
-import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
-import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
+import { PeriodFilterTabs } from '@/modules/statistics/ui/PeriodFilterTabs';
+import { ExpenseSummaryHeader } from '@/modules/statistics/ui/ExpenseSummaryHeader';
+import { ComparisonInfoModal } from '@/modules/statistics/ui/ComparisonInfoModal';
 import { AnalyticsSection } from '@/features/statistics/components/AnalyticsSection';
 import { BudgetSummaryCard } from '@/features/budgets/components/BudgetSummaryCard';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
 
 export default function StatisticsScreen() {

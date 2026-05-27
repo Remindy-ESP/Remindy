@@ -18,10 +18,10 @@ import { categoryService } from '@/modules/categories/infrastructure/categoryApi
 import { subscriptionService } from '@/modules/subscriptions/infrastructure/subscriptionApi';
 import type { Category, Subscription } from '@/services/api';
 import { useAuth } from '@/modules/auth/application/AuthContext';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { formatDate } from '@/utils/format';
 import Button from '@/shared/ui/Button';
-import CategoryDropdown from '@/components/CategoryDropdown';
+import CategoryDropdown from '@/modules/dashboard/ui/CategoryDropdown';
 import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
 
 export default function NotificationsScreen() {

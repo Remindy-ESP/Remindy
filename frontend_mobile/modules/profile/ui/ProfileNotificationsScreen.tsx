@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 import { userService } from '@/services/api';

@@ -11,7 +11,7 @@ const mockBack = global.__mockRouterBack as jest.Mock;
 jest.spyOn(Alert, 'alert');
 
 const mockLogout = jest.fn();
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({
     logout: mockLogout,
   }),

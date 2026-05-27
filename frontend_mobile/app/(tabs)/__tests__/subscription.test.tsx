@@ -84,7 +84,7 @@ jest.mock('@react-native-community/datetimepicker', () => {
 // ---------------------------------------------------------------------------
 // CoachMarkTarget & config
 // ---------------------------------------------------------------------------
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const React = require('react');
   return ({ children }: any) => <React.Fragment>{children}</React.Fragment>;
 });

@@ -12,11 +12,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from '@/context/I18nContext';
+import { useAuth } from '@/modules/auth/application/AuthContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { userService } from '@/services/api';
 import type { UpdateUserRequest } from '@/services/api';
-import UserAvatar from '@/components/profile/UserAvatar';
+import UserAvatar from '@/modules/profile/ui/UserAvatar';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 
 type FieldKey = 'firstName' | 'lastName' | 'phone' | 'language' | 'timezone';

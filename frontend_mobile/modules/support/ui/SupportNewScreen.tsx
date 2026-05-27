@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketCategory } from '@/services/api/support.service';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 
 const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {

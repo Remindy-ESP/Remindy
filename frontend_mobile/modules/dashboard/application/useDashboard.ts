@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
 import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
 import type { Category, Event } from '@/services/api/types';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import i18n from '@/i18n';
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';

@@ -13,7 +13,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketSummary } from '@/services/api/support.service';
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { supportScreenStyles as shared } from '@/shared/styles/supportScreen';
 
 function TicketRow({ ticket, onPress }: { ticket: SupportTicketSummary; onPress: () => void }) {

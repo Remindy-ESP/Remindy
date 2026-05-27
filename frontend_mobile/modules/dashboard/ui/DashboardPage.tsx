@@ -8,16 +8,16 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Localization from 'expo-localization';
 import { useDashboard } from '@/modules/dashboard/application/useDashboard';
 import type { AggregatedEvent } from '@/modules/dashboard/application/useDashboard';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import Button from '@/shared/ui/Button';
-import AddOperationButton from '@/components/AddOperationButton';
-import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import AddOperationButton from '@/modules/dashboard/ui/AddOperationButton';
+import CoachMarkTarget from '@/shared/ui/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
-import AddOperationModal from '@/components/AddOperationModal';
+import { DailyExpensesSummary } from '@/modules/dashboard/ui/DailyExpensesSummary';
+import AddOperationModal from '@/modules/dashboard/ui/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
-import CategoryDropdown from '@/components/CategoryDropdown';
-import BrandLogo from '@/components/BrandLogo';
+import CategoryDropdown from '@/modules/dashboard/ui/CategoryDropdown';
+import BrandLogo from '@/modules/dashboard/ui/BrandLogo';
 
 export default function DashboardScreen() {
   const router = useRouter();

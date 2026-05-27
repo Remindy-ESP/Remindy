@@ -21,11 +21,11 @@ import { subscriptionService } from '@/modules/subscriptions/infrastructure/subs
 import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
 import { reminderService } from '@/modules/notifications/infrastructure/reminderApi';
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '@/services/api';
-import CoachMarkTarget from '@/components/system/CoachMarkTarget';
+import CoachMarkTarget from '@/shared/ui/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { formatShortDate } from '@/utils/format';
-import BrandLogo from '@/components/BrandLogo';
+import BrandLogo from '@/modules/dashboard/ui/BrandLogo';
 
 interface SubscriptionFormData {
   name: string;

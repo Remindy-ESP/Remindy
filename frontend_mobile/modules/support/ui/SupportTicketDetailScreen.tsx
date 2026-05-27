@@ -17,7 +17,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketDetail, SupportTicketMessage } from '@/services/api/support.service';
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { supportScreenStyles as shared } from '@/shared/styles/supportScreen';
 
 function MessageBubble({ message }: { message: SupportTicketMessage }) {

@@ -13,8 +13,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from '@/context/I18nContext';
+import { useAuth } from '@/modules/auth/application/AuthContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { getErrorMessage } from '@/services/api';
 import onboardingService from '@/services/local/onboarding.service';
 

@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import GlobalHeader from '@/shared/ui/GlobalHeader';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/modules/auth/application/AuthContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
 import { usePushNotifications } from '@/modules/notifications/application/usePushNotifications';
 

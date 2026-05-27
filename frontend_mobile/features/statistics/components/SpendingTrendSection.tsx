@@ -1,9 +1,9 @@
 import React from 'react';
-import { useTranslation } from '@/context/I18nContext';
-import { ChartContainer } from '@/components/charts/ChartContainer';
-import { LineChart, LineChartPoint } from '@/components/charts/LineChart';
+import { useTranslation } from '@/shared/application/I18nContext';
+import { ChartContainer } from '@/shared/ui/charts/ChartContainer';
+import { LineChart, LineChartPoint } from '@/shared/ui/charts/LineChart';
 import { useComparison } from '../hooks/useComparison';
-import type { PeriodDateRange } from '@/components/PeriodFilter/usePeriodFilter';
+import type { PeriodDateRange } from '@/shared/ui/PeriodFilter/usePeriodFilter';
 
 export interface SpendingTrendSectionProps {
   range: PeriodDateRange;

@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from '@/context/I18nContext';
-import UserAvatar from '@/components/profile/UserAvatar';
+import { useAuth } from '@/modules/auth/application/AuthContext';
+import { useTranslation } from '@/shared/application/I18nContext';
+import UserAvatar from '@/modules/profile/ui/UserAvatar';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { formatRoleLabel } from '@/utils/role';
 

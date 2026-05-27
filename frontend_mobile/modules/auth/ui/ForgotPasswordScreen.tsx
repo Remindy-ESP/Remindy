@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { authFormStyles as styles } from '@/shared/styles/authForm';
 import FormFeedback from '@/shared/ui/FormFeedback';
 

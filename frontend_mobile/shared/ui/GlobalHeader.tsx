@@ -14,9 +14,9 @@ import { useRouter } from 'expo-router';
 
 import BurgerMenu from './BurgerMenu';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
-import { useAuth } from '@/context/AuthContext';
-import { useTranslation } from '@/context/I18nContext';
-import UserAvatar from '@/components/profile/UserAvatar';
+import { useAuth } from '@/modules/auth/application/AuthContext';
+import { useTranslation } from '@/shared/application/I18nContext';
+import UserAvatar from '@/modules/profile/ui/UserAvatar';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 

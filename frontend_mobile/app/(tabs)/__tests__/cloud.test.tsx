@@ -146,13 +146,13 @@ jest.mock('@/services/api', () => ({
 // ---------------------------------------------------------------------------
 // Lightweight component stubs
 // ---------------------------------------------------------------------------
-jest.mock('@/components/cloud/StorageQuotaWidget', () => {
+jest.mock('@/modules/cloud/ui/StorageQuotaWidget', () => {
   const { View, Text } = require('react-native');
   return ({ quota }: any) =>
     quota ? <View testID="quota-widget"><Text>{quota.usedFormatted}</Text></View> : null;
 });
 
-jest.mock('@/components/cloud/FolderNavigationBar', () => {
+jest.mock('@/modules/cloud/ui/FolderNavigationBar', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ onNavigate, folderPath }: any) => (
     <View testID="folder-nav-bar">
@@ -168,7 +168,7 @@ jest.mock('@/components/cloud/FolderNavigationBar', () => {
   );
 });
 
-jest.mock('@/components/cloud/DocumentList', () => {
+jest.mock('@/modules/cloud/ui/DocumentList', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
   return ({ folders, documents, onFolderPress, onFolderMenuPress, onDocumentPress, onDocumentMenuPress, onRefresh }: any) => {
     const isEmpty = (folders?.length ?? 0) === 0 && (documents?.length ?? 0) === 0;
@@ -212,7 +212,7 @@ jest.mock('@/components/cloud/DocumentList', () => {
   };
 });
 
-jest.mock('@/components/cloud/DocumentActionsMenu', () => {
+jest.mock('@/modules/cloud/ui/DocumentActionsMenu', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onView, onDownload, onInfo, onRename, onMove, onLink, onDelete }: any) => {
     if (!visible) return null;
@@ -231,7 +231,7 @@ jest.mock('@/components/cloud/DocumentActionsMenu', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/CreateFolderModal', () => {
+jest.mock('@/modules/cloud/ui/modals/CreateFolderModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -244,7 +244,7 @@ jest.mock('@/components/cloud/modals/CreateFolderModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/RenameFolderModal', () => {
+jest.mock('@/modules/cloud/ui/modals/RenameFolderModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -257,7 +257,7 @@ jest.mock('@/components/cloud/modals/RenameFolderModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/RenameDocumentModal', () => {
+jest.mock('@/modules/cloud/ui/modals/RenameDocumentModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -270,7 +270,7 @@ jest.mock('@/components/cloud/modals/RenameDocumentModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/DeleteConfirmationModal', () => {
+jest.mock('@/modules/cloud/ui/modals/DeleteConfirmationModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, title, message, onClose, onConfirm }: any) => {
     if (!visible) return null;
@@ -285,7 +285,7 @@ jest.mock('@/components/cloud/modals/DeleteConfirmationModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/MoveToFolderModal', () => {
+jest.mock('@/modules/cloud/ui/modals/MoveToFolderModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -298,7 +298,7 @@ jest.mock('@/components/cloud/modals/MoveToFolderModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/DocumentDetailsModal', () => {
+jest.mock('@/modules/cloud/ui/modals/DocumentDetailsModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose }: any) => {
     if (!visible) return null;
@@ -310,7 +310,7 @@ jest.mock('@/components/cloud/modals/DocumentDetailsModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/LinkToSubscriptionModal', () => {
+jest.mock('@/modules/cloud/ui/modals/LinkToSubscriptionModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -324,7 +324,7 @@ jest.mock('@/components/cloud/modals/LinkToSubscriptionModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/PDFViewerModal', () => {
+jest.mock('@/modules/cloud/ui/modals/PDFViewerModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, pdfUri, fileName }: any) => {
     if (!visible) return null;
@@ -338,7 +338,7 @@ jest.mock('@/components/cloud/modals/PDFViewerModal', () => {
   };
 });
 
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const { View } = require('react-native');
   return ({ children, ...p }: any) => <View {...p}>{children}</View>;
 });
@@ -897,7 +897,7 @@ describe('CloudScreen', () => {
     ];
 
     // Override link modal to submit subId
-    jest.doMock('@/components/cloud/modals/LinkToSubscriptionModal', () => {
+    jest.doMock('@/modules/cloud/ui/modals/LinkToSubscriptionModal', () => {
       const { View, TouchableOpacity, Text } = require('react-native');
       return ({ visible, onClose, onSubmit }: any) => {
         if (!visible) return null;

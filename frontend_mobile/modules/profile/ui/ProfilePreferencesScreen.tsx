@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation, type SupportedLanguage } from '@/context/I18nContext';
+import { useTranslation, type SupportedLanguage } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 

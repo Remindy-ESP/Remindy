@@ -35,7 +35,7 @@ jest.mock('expo-router', () => ({
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
-jest.mock('../../../context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: jest.fn(() => ({
     user: { id: 'test-user-id', email: 'test@example.com', name: 'Test User' },
     token: 'mock-token',
@@ -104,7 +104,7 @@ jest.mock('react-native-calendars', () => ({
 // ---------------------------------------------------------------------------
 // CoachMarkTarget & config
 // ---------------------------------------------------------------------------
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const React = require('react');
   return ({ children }: any) => <React.Fragment>{children}</React.Fragment>;
 });
@@ -129,7 +129,7 @@ jest.mock('@/shared/ui/Button', () => {
   );
 });
 
-jest.mock('@/components/AddOperationButton', () => {
+jest.mock('@/modules/dashboard/ui/AddOperationButton', () => {
   const React = require('react');
   const { TouchableOpacity } = require('react-native');
   return ({ onPress }: any) => (
@@ -137,7 +137,7 @@ jest.mock('@/components/AddOperationButton', () => {
   );
 });
 
-jest.mock('@/components/AddOperationModal', () => {
+jest.mock('@/modules/dashboard/ui/AddOperationModal', () => {
   const React = require('react');
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onManualEntry, onPdfInsert }: any) => {
@@ -158,7 +158,7 @@ jest.mock('@/components/AddOperationModal', () => {
   };
 });
 
-jest.mock('@/components/BrandLogo', () => {
+jest.mock('@/modules/dashboard/ui/BrandLogo', () => {
   const React = require('react');
   const { View } = require('react-native');
   return ({ name, categoryIcon, size }: any) => (
@@ -166,7 +166,7 @@ jest.mock('@/components/BrandLogo', () => {
   );
 });
 
-jest.mock('@/components/DailyExpensesSummary', () => {
+jest.mock('@/modules/dashboard/ui/DailyExpensesSummary', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
   return {

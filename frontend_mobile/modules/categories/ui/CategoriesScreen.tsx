@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { categoryService } from '@/services/api/category.service';
 import type { Category } from '@/services/api';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 
 export default function CategoriesScreen() {
   const { t } = useTranslation();
