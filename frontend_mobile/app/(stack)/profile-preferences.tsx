@@ -8,8 +8,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation, type SupportedLanguage } from '@/context/I18nContext';
-import ScreenHeader from '@/components/ScreenHeader';
-import { profileCardStyles as shared } from '@/styles/profileCard';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 
 export default function ProfilePreferencesScreen() {
   const { t, language, setLanguage } = useTranslation();

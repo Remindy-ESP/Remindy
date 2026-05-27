@@ -16,9 +16,9 @@ import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
-import ScreenHeader from '@/components/ScreenHeader';
-import { profileCardStyles as shared } from '@/styles/profileCard';
-import FormFeedback from '@/components/FormFeedback';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { profileCardStyles as shared } from '@/shared/styles/profileCard';
+import FormFeedback from '@/shared/ui/FormFeedback';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();

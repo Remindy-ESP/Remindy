@@ -17,7 +17,7 @@ import { useTranslation } from '@/context/I18nContext';
 import { userService } from '@/services/api';
 import type { UpdateUserRequest } from '@/services/api';
 import UserAvatar from '@/components/profile/UserAvatar';
-import ScreenHeader from '@/components/ScreenHeader';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
 
 type FieldKey = 'firstName' | 'lastName' | 'phone' | 'language' | 'timezone';
 

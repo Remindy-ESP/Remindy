@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import BurgerMenu from '../BurgerMenu';
+import BurgerMenu from '@/shared/ui/BurgerMenu';
 import { AppRoute } from '@/navigation/MenuConfig';
 
 // Mock expo-router

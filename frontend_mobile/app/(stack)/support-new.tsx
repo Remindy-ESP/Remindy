@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { supportService } from '@/services/api/support.service';
 import type { SupportTicketCategory } from '@/services/api/support.service';
 import { useTranslation } from '@/context/I18nContext';
-import ScreenHeader from '@/components/ScreenHeader';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
 
 const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
   technical: 'Technique / Technical',

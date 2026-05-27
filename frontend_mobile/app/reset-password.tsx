@@ -13,8 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/context/I18nContext';
-import { authFormStyles as styles } from '@/styles/authForm';
-import FormFeedback from '@/components/FormFeedback';
+import { authFormStyles as styles } from '@/shared/styles/authForm';
+import FormFeedback from '@/shared/ui/FormFeedback';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();

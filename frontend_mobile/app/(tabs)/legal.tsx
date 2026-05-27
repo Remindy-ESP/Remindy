@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { useTranslation } from '@/context/I18nContext';
-import { screenHeaderStyles as shared } from '@/styles/screenHeader';
+import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

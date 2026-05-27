@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import GlobalHeader from '../GlobalHeader';
+import GlobalHeader from '@/shared/ui/GlobalHeader';
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
@@ -25,7 +25,7 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 // Mock BurgerMenu
-jest.mock('../BurgerMenu', () => {
+jest.mock('@/shared/ui/BurgerMenu', () => {
   return function MockBurgerMenu() {
     const { View } = require('react-native');
     return <View testID="burger-menu" />;

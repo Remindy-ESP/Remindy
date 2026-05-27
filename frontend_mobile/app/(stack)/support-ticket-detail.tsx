@@ -18,7 +18,7 @@ import { supportService } from '@/services/api/support.service';
 import type { SupportTicketDetail, SupportTicketMessage } from '@/services/api/support.service';
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/context/I18nContext';
-import { supportScreenStyles as shared } from '@/styles/supportScreen';
+import { supportScreenStyles as shared } from '@/shared/styles/supportScreen';
 
 function MessageBubble({ message }: { message: SupportTicketMessage }) {
   const isUser = message.authorType === 'user';

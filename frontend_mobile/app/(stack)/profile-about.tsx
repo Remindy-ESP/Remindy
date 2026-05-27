@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from '@/context/I18nContext';
-import ScreenHeader from '@/components/ScreenHeader';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
 
 const APP_VERSION = '1.0.0';
 const SUPPORT_EMAIL = 'support@remindy.com';

@@ -9,7 +9,7 @@ import * as Localization from 'expo-localization';
 import { useDashboard } from '@/hooks/useDashboard';
 import type { AggregatedEvent } from '@/hooks/useDashboard';
 import { useTranslation } from '@/context/I18nContext';
-import Button from '@/components/Button';
+import Button from '@/shared/ui/Button';
 import AddOperationButton from '@/components/AddOperationButton';
 import CoachMarkTarget from '@/components/system/CoachMarkTarget';
 import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';

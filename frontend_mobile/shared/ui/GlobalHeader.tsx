@@ -16,7 +16,7 @@ import BurgerMenu from './BurgerMenu';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
-import UserAvatar from './profile/UserAvatar';
+import UserAvatar from '@/components/profile/UserAvatar';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 

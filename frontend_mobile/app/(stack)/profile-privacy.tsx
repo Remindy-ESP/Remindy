@@ -13,8 +13,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { userService } from '@/services/api';
-import ScreenHeader from '@/components/ScreenHeader';
-import { profileCardStyles as shared } from '@/styles/profileCard';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 
 export default function ProfilePrivacyScreen() {
   const router = useRouter();

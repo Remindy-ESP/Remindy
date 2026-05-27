@@ -20,9 +20,9 @@ import type { Category, Subscription } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import { formatDate } from '@/utils/format';
-import Button from '@/components/Button';
+import Button from '@/shared/ui/Button';
 import CategoryDropdown from '@/components/CategoryDropdown';
-import { screenHeaderStyles as shared } from '@/styles/screenHeader';
+import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
 
 export default function NotificationsScreen() {
     const { user } = useAuth();

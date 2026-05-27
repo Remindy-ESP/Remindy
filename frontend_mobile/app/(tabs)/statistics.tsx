@@ -9,7 +9,7 @@ import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal
 import { AnalyticsSection } from '@/features/statistics/components/AnalyticsSection';
 import { BudgetSummaryCard } from '@/features/budgets/components/BudgetSummaryCard';
 import { useTranslation } from '@/context/I18nContext';
-import { screenHeaderStyles as shared } from '@/styles/screenHeader';
+import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
 
 export default function StatisticsScreen() {
   const { t } = useTranslation();

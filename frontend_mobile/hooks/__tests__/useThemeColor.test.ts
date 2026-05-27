@@ -1,15 +1,15 @@
 import { renderHook } from '@testing-library/react-native';
-import { useThemeColor } from '../useThemeColor';
+import { useThemeColor } from '@/shared/hooks/useThemeColor';
 
 // Mock useColorScheme to control what theme is active
-jest.mock('@/hooks/useColorScheme', () => ({
+jest.mock('@/shared/hooks/useColorScheme', () => ({
   useColorScheme: jest.fn(() => 'light'),
 }));
 
 describe('useThemeColor', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { useColorScheme } = require('@/hooks/useColorScheme');
+    const { useColorScheme } = require('@/shared/hooks/useColorScheme');
     useColorScheme.mockReturnValue('light');
   });
 
@@ -21,7 +21,7 @@ describe('useThemeColor', () => {
   });
 
   it('returns color from props when dark theme and dark prop is provided', () => {
-    const { useColorScheme } = require('@/hooks/useColorScheme');
+    const { useColorScheme } = require('@/shared/hooks/useColorScheme');
     useColorScheme.mockReturnValue('dark');
 
     const { result } = renderHook(() =>
@@ -39,7 +39,7 @@ describe('useThemeColor', () => {
   });
 
   it('returns Colors.dark.text when dark theme and no props provided', () => {
-    const { useColorScheme } = require('@/hooks/useColorScheme');
+    const { useColorScheme } = require('@/shared/hooks/useColorScheme');
     useColorScheme.mockReturnValue('dark');
 
     const { result } = renderHook(() =>
@@ -58,7 +58,7 @@ describe('useThemeColor', () => {
   });
 
   it('returns Colors.dark.background when no props and dark theme', () => {
-    const { useColorScheme } = require('@/hooks/useColorScheme');
+    const { useColorScheme } = require('@/shared/hooks/useColorScheme');
     useColorScheme.mockReturnValue('dark');
 
     const { result } = renderHook(() =>
@@ -69,7 +69,7 @@ describe('useThemeColor', () => {
   });
 
   it('falls back to Colors when theme is null (defaults to light)', () => {
-    const { useColorScheme } = require('@/hooks/useColorScheme');
+    const { useColorScheme } = require('@/shared/hooks/useColorScheme');
     useColorScheme.mockReturnValue(null);
 
     const { result } = renderHook(() =>
@@ -88,7 +88,7 @@ describe('useThemeColor', () => {
   });
 
   it('falls back to Colors when prop for current theme is missing', () => {
-    const { useColorScheme } = require('@/hooks/useColorScheme');
+    const { useColorScheme } = require('@/shared/hooks/useColorScheme');
     useColorScheme.mockReturnValue('dark');
 
     // Only provide light prop, no dark prop → should fall back to Colors.dark.text

@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { useColorScheme } from '../useColorScheme.web';
+import { useColorScheme } from '@/shared/hooks/useColorScheme.web';
 
 // The jest-expo preset mocks react-native fully.
 // useColorScheme from react-native returns 'light' in the test environment.

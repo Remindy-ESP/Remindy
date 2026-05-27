@@ -119,7 +119,7 @@ jest.mock('@/features/coach-marks/coach-marks.config', () => ({
 // ---------------------------------------------------------------------------
 // Native components used by dashboard
 // ---------------------------------------------------------------------------
-jest.mock('@/components/Button', () => {
+jest.mock('@/shared/ui/Button', () => {
   const React = require('react');
   const { TouchableOpacity, Text } = require('react-native');
   return ({ onPress, label }: any) => (

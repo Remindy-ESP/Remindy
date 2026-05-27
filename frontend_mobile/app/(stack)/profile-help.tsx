@@ -13,8 +13,8 @@ import { useRouter } from 'expo-router';
 import onboardingService from '@/services/local/onboarding.service';
 import { useCoachMarks } from '@/features/coach-marks/CoachMarksContext';
 import { useTranslation } from '@/context/I18nContext';
-import ScreenHeader from '@/components/ScreenHeader';
-import { profileCardStyles as shared } from '@/styles/profileCard';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 
 export default function ProfileHelpScreen() {
   const router = useRouter();
