@@ -1,0 +1,11 @@
+{
+  "headerTitle": "Notifications",
+  "headerSubtitle": "Your alerts and reminders",
+  "loadError": "Error loading notifications",
+  "retry": "Retry",
+  "empty": "No notifications for now",
+  "deleteAllTitle": "Delete all notifications",
+  "deleteAllMessage": "Are you sure you want to delete all notifications?",
+  "deleteError": "Unable to delete notification",
+  "deleteAllError": "Unable to delete notifications"
+}

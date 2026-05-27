@@ -1,0 +1,17 @@
+{
+  "documentsLoadFailed": "Failed to load documents",
+  "documentUploadFailed": "Failed to upload document",
+  "documentDeleteFailed": "Failed to delete document",
+  "documentUpdateFailed": "Failed to update document",
+  "ocrReprocessFailed": "Failed to reprocess OCR",
+  "foldersLoadFailed": "Failed to load folders",
+  "folderCreateFailed": "Failed to create folder",
+  "folderUpdateFailed": "Failed to update folder",
+  "folderDeleteFailed": "Failed to delete folder",
+  "documentMoveFailed": "Failed to move document",
+  "statisticsLoadFailed": "Failed to load statistics",
+  "storageQuotaLoadFailed": "Failed to load storage quota",
+  "dashboardLoadFailed": "Failed to load dashboard data",
+  "expenseSummaryLoadFailed": "Failed to load expense summary",
+  "generic": "An error occurred"
+}

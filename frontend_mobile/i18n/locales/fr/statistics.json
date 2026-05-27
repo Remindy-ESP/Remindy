@@ -1,0 +1,37 @@
+{
+  "loading": "Chargement des statistiques...",
+  "errorPrefix": "Erreur : {{message}}",
+  "errorHint": "Vérifiez que le serveur est lancé et votre connexion réseau",
+  "headerTitle": "Statistiques",
+  "headerSubtitle": "Consultez vos statistiques",
+  "summaryTitle": "Bilan des dépenses",
+  "summaryUnavailable": "Bilan indisponible : {{message}}",
+  "breakdownTitle": "Répartition par catégorie",
+  "noExpenses": "Aucune dépense pour cette période",
+  "transaction": {
+    "one": "{{count}} transaction",
+    "other": "{{count}} transactions"
+  },
+  "periods": {
+    "day": "Ce jour",
+    "week": "Semaine",
+    "month": "Mensuel",
+    "year": "Année"
+  },
+  "comparisonLabels": {
+    "day": "Comparo M-1",
+    "week": "Comparo S-1",
+    "month": "Comparo M-1",
+    "year": "Comparo A-1"
+  },
+  "comparison": {
+    "infoAccessibility": "Plus d'informations sur la comparaison",
+    "closeAccessibility": "Fermer",
+    "info": {
+      "day": "Comparaison du cumul des dépenses depuis le début du mois jusqu'au jour actuel avec la même période du mois précédent.\nExemple : du 1er au 5 octobre vs du 1er au 5 septembre.",
+      "week": "Comparaison du cumul des dépenses de la semaine passée avec la semaine précédente.\nExemple : semaine du 6 octobre, à celle du 13 octobre",
+      "month": "Comparaison du total dépensé depuis le début du mois avec le mois précédent. Même si en début de mois le comparo sera indécent.\nExemple : octobre vs septembre.",
+      "year": "Comparaison des dépenses de l'année actuelle avec celle de l'année précédente.\nExemple : 2025 vs 2024."
+    }
+  }
+}

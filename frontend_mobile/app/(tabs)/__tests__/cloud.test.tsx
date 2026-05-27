@@ -7,7 +7,6 @@
  * testID handles and invoke the callbacks the screen passes.
  */
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import CloudScreen from '../cloud';
 
@@ -88,7 +87,7 @@ const mockUploadDocument = jest.fn(() => Promise.resolve());
 const mockUpdateDocument = jest.fn(() => Promise.resolve());
 const mockDeleteDocument = jest.fn(() => Promise.resolve());
 
-jest.mock('@/hooks/useDocuments', () => ({
+jest.mock('@/modules/cloud/application/useDocuments', () => ({
   useDocuments: () => ({
     documents: hookState.documents,
     loading: hookState.docsLoading,
@@ -105,7 +104,7 @@ const mockUpdateFolder = jest.fn(() => Promise.resolve());
 const mockDeleteFolder = jest.fn(() => Promise.resolve());
 const mockMoveDocumentToFolder = jest.fn(() => Promise.resolve());
 
-jest.mock('@/hooks/useFolders', () => ({
+jest.mock('@/modules/cloud/application/useFolders', () => ({
   useFolders: () => ({
     folders: hookState.folders,
     loading: hookState.foldersLoading,
@@ -119,7 +118,7 @@ jest.mock('@/hooks/useFolders', () => ({
 
 const mockFetchQuota = jest.fn(() => Promise.resolve());
 
-jest.mock('@/hooks/useStorageQuota', () => ({
+jest.mock('@/modules/cloud/application/useStorageQuota', () => ({
   useStorageQuota: () => ({
     quota: hookState.quota,
     fetchQuota: mockFetchQuota,
@@ -146,13 +145,13 @@ jest.mock('@/services/api', () => ({
 // ---------------------------------------------------------------------------
 // Lightweight component stubs
 // ---------------------------------------------------------------------------
-jest.mock('@/components/cloud/StorageQuotaWidget', () => {
+jest.mock('@/modules/cloud/ui/StorageQuotaWidget', () => {
   const { View, Text } = require('react-native');
   return ({ quota }: any) =>
     quota ? <View testID="quota-widget"><Text>{quota.usedFormatted}</Text></View> : null;
 });
 
-jest.mock('@/components/cloud/FolderNavigationBar', () => {
+jest.mock('@/modules/cloud/ui/FolderNavigationBar', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ onNavigate, folderPath }: any) => (
     <View testID="folder-nav-bar">
@@ -168,7 +167,7 @@ jest.mock('@/components/cloud/FolderNavigationBar', () => {
   );
 });
 
-jest.mock('@/components/cloud/DocumentList', () => {
+jest.mock('@/modules/cloud/ui/DocumentList', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
   return ({ folders, documents, onFolderPress, onFolderMenuPress, onDocumentPress, onDocumentMenuPress, onRefresh }: any) => {
     const isEmpty = (folders?.length ?? 0) === 0 && (documents?.length ?? 0) === 0;
@@ -212,7 +211,7 @@ jest.mock('@/components/cloud/DocumentList', () => {
   };
 });
 
-jest.mock('@/components/cloud/DocumentActionsMenu', () => {
+jest.mock('@/modules/cloud/ui/DocumentActionsMenu', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onView, onDownload, onInfo, onRename, onMove, onLink, onDelete }: any) => {
     if (!visible) return null;
@@ -231,7 +230,7 @@ jest.mock('@/components/cloud/DocumentActionsMenu', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/CreateFolderModal', () => {
+jest.mock('@/modules/cloud/ui/modals/CreateFolderModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -244,7 +243,7 @@ jest.mock('@/components/cloud/modals/CreateFolderModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/RenameFolderModal', () => {
+jest.mock('@/modules/cloud/ui/modals/RenameFolderModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -257,7 +256,7 @@ jest.mock('@/components/cloud/modals/RenameFolderModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/RenameDocumentModal', () => {
+jest.mock('@/modules/cloud/ui/modals/RenameDocumentModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -270,7 +269,7 @@ jest.mock('@/components/cloud/modals/RenameDocumentModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/DeleteConfirmationModal', () => {
+jest.mock('@/modules/cloud/ui/modals/DeleteConfirmationModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, title, message, onClose, onConfirm }: any) => {
     if (!visible) return null;
@@ -285,7 +284,7 @@ jest.mock('@/components/cloud/modals/DeleteConfirmationModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/MoveToFolderModal', () => {
+jest.mock('@/modules/cloud/ui/modals/MoveToFolderModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -298,7 +297,7 @@ jest.mock('@/components/cloud/modals/MoveToFolderModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/DocumentDetailsModal', () => {
+jest.mock('@/modules/cloud/ui/modals/DocumentDetailsModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose }: any) => {
     if (!visible) return null;
@@ -310,7 +309,7 @@ jest.mock('@/components/cloud/modals/DocumentDetailsModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/LinkToSubscriptionModal', () => {
+jest.mock('@/modules/cloud/ui/modals/LinkToSubscriptionModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onSubmit }: any) => {
     if (!visible) return null;
@@ -324,7 +323,7 @@ jest.mock('@/components/cloud/modals/LinkToSubscriptionModal', () => {
   };
 });
 
-jest.mock('@/components/cloud/modals/PDFViewerModal', () => {
+jest.mock('@/modules/cloud/ui/modals/PDFViewerModal', () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, pdfUri, fileName }: any) => {
     if (!visible) return null;
@@ -338,15 +337,43 @@ jest.mock('@/components/cloud/modals/PDFViewerModal', () => {
   };
 });
 
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const { View } = require('react-native');
   return ({ children, ...p }: any) => <View {...p}>{children}</View>;
 });
 
 // ---------------------------------------------------------------------------
-// Alert spy
+// Toast / Confirm / ActionSheet context mocks
 // ---------------------------------------------------------------------------
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => {
+  const toastError = jest.fn();
+  const toastSuccess = jest.fn();
+  const toastInfo = jest.fn();
+  const toastFn: any = jest.fn();
+  toastFn.error = toastError;
+  toastFn.success = toastSuccess;
+  toastFn.info = toastInfo;
+  return {
+    toast: toastFn,
+    ToastProvider: ({ children }: any) => children,
+  };
+});
+
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: jest.fn().mockResolvedValue(true),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  showActionSheet: jest.fn(),
+  ActionSheetProvider: ({ children }: any) => children,
+}));
+
+// Get references to mock functions from the mocked modules
+const { toast: _mockedToast } = jest.requireMock('@/context/ToastContext');
+const mockToast = { error: _mockedToast.error as jest.Mock, success: _mockedToast.success as jest.Mock, info: _mockedToast.info as jest.Mock };
+const mockShowConfirm: jest.Mock = jest.requireMock('@/context/ConfirmContext').showConfirm;
+const mockShowActionSheet: jest.Mock = jest.requireMock('@/context/ActionSheetContext').showActionSheet;
 
 // ---------------------------------------------------------------------------
 // Data factories
@@ -389,6 +416,11 @@ describe('CloudScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetHookState();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
+    mockShowActionSheet.mockClear();
+    mockShowConfirm.mockResolvedValue(true);
 
     mockGetAll.mockResolvedValue([]);
     mockGetAccessToken.mockResolvedValue('mock-token');
@@ -568,13 +600,13 @@ describe('CloudScreen', () => {
 
   // ---- upload ----
 
-  it('shows quota-exceeded alert when availableBytes <= 0', async () => {
+  it('shows quota-exceeded toast when availableBytes <= 0', async () => {
     hookState.quota = { availableBytes: 0, totalFormatted: '1 GB', usedFormatted: '1 GB', usagePercentage: 100 };
     const { getByText } = render(<CloudScreen />);
     await waitFor(() => getByText('Ajouter un document'));
 
     await act(async () => { fireEvent.press(getByText('Ajouter un document')); });
-    expect(Alert.alert).toHaveBeenCalledWith('Quota dépassé', expect.any(String));
+    expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
   });
 
   it('does not upload when document picker is cancelled', async () => {
@@ -586,7 +618,7 @@ describe('CloudScreen', () => {
     expect(mockUploadDocument).not.toHaveBeenCalled();
   });
 
-  it('shows file-too-large alert when selected file > 10 MB', async () => {
+  it('shows file-too-large toast when selected file > 10 MB', async () => {
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,
       assets: [{ uri: 'file://big.pdf', name: 'big.pdf', mimeType: 'application/pdf', size: 11 * 1024 * 1024 }],
@@ -595,10 +627,10 @@ describe('CloudScreen', () => {
     await waitFor(() => getByText('Ajouter un document'));
 
     await act(async () => { fireEvent.press(getByText('Ajouter un document')); });
-    expect(Alert.alert).toHaveBeenCalledWith('Fichier trop volumineux', expect.any(String));
+    expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
   });
 
-  it('shows insufficient-space alert when file is larger than available quota', async () => {
+  it('shows insufficient-space toast when file is larger than available quota', async () => {
     hookState.quota = { availableBytes: 100, totalFormatted: '1 KB', usedFormatted: '900 B', usagePercentage: 90 };
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,
@@ -608,10 +640,10 @@ describe('CloudScreen', () => {
     await waitFor(() => getByText('Ajouter un document'));
 
     await act(async () => { fireEvent.press(getByText('Ajouter un document')); });
-    expect(Alert.alert).toHaveBeenCalledWith('Espace insuffisant', expect.any(String));
+    expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
   });
 
-  it('uploads a document successfully and shows success alert', async () => {
+  it('uploads a document successfully and shows success toast', async () => {
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,
       assets: [{ uri: 'file://doc.pdf', name: 'doc.pdf', mimeType: 'application/pdf', size: 1024 }],
@@ -622,11 +654,11 @@ describe('CloudScreen', () => {
     await act(async () => { fireEvent.press(getByText('Ajouter un document')); });
     await waitFor(() => {
       expect(mockUploadDocument).toHaveBeenCalledWith(expect.objectContaining({ file: expect.objectContaining({ name: 'doc.pdf' }) }));
-      expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
+      expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
-  it('shows error alert when upload fails', async () => {
+  it('shows error toast when upload fails', async () => {
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,
       assets: [{ uri: 'file://doc.pdf', name: 'doc.pdf', mimeType: 'application/pdf', size: 1024 }],
@@ -637,7 +669,7 @@ describe('CloudScreen', () => {
     await waitFor(() => getByText('Ajouter un document'));
 
     await act(async () => { fireEvent.press(getByText('Ajouter un document')); });
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String)));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
   it('shows server error message from response when upload fails', async () => {
@@ -651,7 +683,7 @@ describe('CloudScreen', () => {
     await waitFor(() => getByText('Ajouter un document'));
 
     await act(async () => { fireEvent.press(getByText('Ajouter un document')); });
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Server error'));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith('Server error'));
   });
 
   // ---- folder navigation ----
@@ -683,15 +715,17 @@ describe('CloudScreen', () => {
     // guard: nothing crashes
   });
 
-  // ---- folder menu (Alert-based) ----
+  // ---- folder menu (ActionSheet-based) ----
 
-  it('shows Alert with rename/delete options when folder menu button is pressed', async () => {
+  it('shows ActionSheet with rename/delete options when folder menu button is pressed', async () => {
     hookState.folders = [makeFolder()];
     const { getByTestId } = render(<CloudScreen />);
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    expect(Alert.alert).toHaveBeenCalledWith('Test Folder', 'Que souhaitez-vous faire ?', expect.any(Array));
+    expect(mockShowActionSheet).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Test Folder' })
+    );
   });
 
   it('opens RenameFolderModal from folder menu rename action', async () => {
@@ -700,10 +734,10 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    const [,, buttons] = (Alert.alert as jest.Mock).mock.calls[0];
-    const renameBtn = buttons.find((b: any) => b.text === 'Renommer');
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const renameAction = call.actions.find((a: any) => !a.destructive && !a.cancel);
 
-    await act(async () => { renameBtn.onPress(); });
+    await act(async () => { renameAction.onPress(); });
     expect(queryByTestId('rename-folder-modal')).toBeTruthy();
   });
 
@@ -713,8 +747,9 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    const [,, buttons] = (Alert.alert as jest.Mock).mock.calls[0];
-    await act(async () => { buttons.find((b: any) => b.text === 'Renommer').onPress(); });
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const renameAction = call.actions.find((a: any) => !a.destructive && !a.cancel);
+    await act(async () => { renameAction.onPress(); });
 
     await act(async () => { fireEvent.press(getByTestId('rename-folder-submit')); });
     expect(mockUpdateFolder).toHaveBeenCalledWith('folder-1', { name: 'Renamed Folder' });
@@ -726,8 +761,9 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    const [,, buttons] = (Alert.alert as jest.Mock).mock.calls[0];
-    await act(async () => { buttons.find((b: any) => b.text === 'Supprimer').onPress(); });
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const deleteAction = call.actions.find((a: any) => a.destructive === true);
+    await act(async () => { deleteAction.onPress(); });
 
     expect(queryByTestId('delete-confirm-modal')).toBeTruthy();
   });
@@ -738,8 +774,9 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    const [,, buttons] = (Alert.alert as jest.Mock).mock.calls[0];
-    await act(async () => { buttons.find((b: any) => b.text === 'Supprimer').onPress(); });
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const deleteAction = call.actions.find((a: any) => a.destructive === true);
+    await act(async () => { deleteAction.onPress(); });
 
     await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
     expect(mockDeleteFolder).toHaveBeenCalledWith('folder-1');
@@ -751,8 +788,9 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    const [,, buttons] = (Alert.alert as jest.Mock).mock.calls[0];
-    await act(async () => { buttons.find((b: any) => b.text === 'Supprimer').onPress(); });
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const deleteAction = call.actions.find((a: any) => a.destructive === true);
+    await act(async () => { deleteAction.onPress(); });
 
     await act(async () => { fireEvent.press(getByTestId('delete-cancel-btn')); });
     expect(queryByTestId('delete-confirm-modal')).toBeNull();
@@ -897,7 +935,7 @@ describe('CloudScreen', () => {
     ];
 
     // Override link modal to submit subId
-    jest.doMock('@/components/cloud/modals/LinkToSubscriptionModal', () => {
+    jest.doMock('@/modules/cloud/ui/modals/LinkToSubscriptionModal', () => {
       const { View, TouchableOpacity, Text } = require('react-native');
       return ({ visible, onClose, onSubmit }: any) => {
         if (!visible) return null;
@@ -932,7 +970,7 @@ describe('CloudScreen', () => {
     await act(async () => { fireEvent.press(getByTestId('link-sub-submit')); });
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Limite atteinte', expect.any(String));
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -957,6 +995,39 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('action-delete'));
     await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
     expect(mockDeleteDocument).toHaveBeenCalledWith('doc-1');
+  });
+
+  it('refreshes quota after successful document delete', async () => {
+    hookState.documents = [makeDoc()];
+    const { getByTestId } = render(<CloudScreen />);
+    await waitFor(() => getByTestId('doc-press-doc-1'));
+
+    mockFetchQuota.mockClear();
+    mockFetchDocuments.mockClear();
+    mockFetchFolders.mockClear();
+
+    fireEvent.press(getByTestId('doc-press-doc-1'));
+    fireEvent.press(getByTestId('action-delete'));
+    await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
+
+    await waitFor(() => expect(mockFetchQuota).toHaveBeenCalled());
+  });
+
+  it('shows a toast when delete fails', async () => {
+    hookState.documents = [makeDoc()];
+    mockDeleteDocument.mockRejectedValueOnce(new Error('Boom'));
+    mockToast.error.mockClear();
+
+    const { getByTestId } = render(<CloudScreen />);
+    await waitFor(() => getByTestId('doc-press-doc-1'));
+
+    fireEvent.press(getByTestId('doc-press-doc-1'));
+    fireEvent.press(getByTestId('action-delete'));
+    await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
+
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalled());
+    const lastToastCall = mockToast.error.mock.calls[mockToast.error.mock.calls.length - 1][0];
+    expect(String(lastToastCall)).toContain('Boom');
   });
 
   it('shows subscription-linked message in delete modal when doc has subscription_id', async () => {
@@ -1008,8 +1079,9 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-1'));
 
     fireEvent.press(getByTestId('folder-menu-folder-1'));
-    const [,, buttons] = (Alert.alert as jest.Mock).mock.calls[0];
-    await act(async () => { buttons.find((b: any) => b.text === 'Supprimer').onPress(); });
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const deleteAction = call.actions.find((a: any) => a.destructive === true);
+    await act(async () => { deleteAction.onPress(); });
 
     const msg = getByTestId('delete-modal-message');
     expect(msg.props.children).toContain('dossier');
@@ -1029,7 +1101,7 @@ describe('CloudScreen', () => {
     await waitFor(() => expect(queryByTestId('pdf-viewer-modal')).toBeTruthy());
   });
 
-  it('shows auth error alert when getAccessToken returns null on view', async () => {
+  it('shows auth error toast when getAccessToken returns null on view', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockResolvedValue(null as any);
     const { getByTestId } = render(<CloudScreen />);
@@ -1038,10 +1110,10 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('doc-press-doc-1'));
     await act(async () => { fireEvent.press(getByTestId('action-view')); });
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Non authentifié'));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
-  it('shows error alert when getAccessToken throws on view', async () => {
+  it('shows error toast when getAccessToken throws on view', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockRejectedValue(new Error('auth error'));
     const { getByTestId } = render(<CloudScreen />);
@@ -1050,7 +1122,7 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('doc-press-doc-1'));
     await act(async () => { fireEvent.press(getByTestId('action-view')); });
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String)));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
   it('closes PDFViewerModal and resets pdfUri/token', async () => {
@@ -1089,7 +1161,7 @@ describe('CloudScreen', () => {
     jest.useRealTimers();
   });
 
-  it('shows error alert on download when status is not 200', async () => {
+  it('shows error toast on download when status is not 200', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockResolvedValue('token');
     mockDownloadAsync.mockResolvedValue({ status: 500, uri: '' });
@@ -1100,10 +1172,10 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('doc-press-doc-1'));
     await act(async () => { fireEvent.press(getByTestId('action-download')); });
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de télécharger le document'));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
-  it('shows auth error alert when getAccessToken returns null on download', async () => {
+  it('shows auth error toast when getAccessToken returns null on download', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockResolvedValue(null as any);
     const { getByTestId } = render(<CloudScreen />);
@@ -1112,10 +1184,10 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('doc-press-doc-1'));
     await act(async () => { fireEvent.press(getByTestId('action-download')); });
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Non authentifié'));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
-  it('shows error when sharing is not available after download', async () => {
+  it('shows error toast when sharing is not available after download', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockResolvedValue('token');
     mockDownloadAsync.mockResolvedValue({ status: 200, uri: 'file://cache/test.pdf' });
@@ -1127,10 +1199,10 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('doc-press-doc-1'));
     await act(async () => { fireEvent.press(getByTestId('action-download')); });
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.stringContaining('disponible')));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
-  it('shows fallback alert when shareAsync throws', async () => {
+  it('shows fallback toast when shareAsync throws', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockResolvedValue('token');
     mockDownloadAsync.mockResolvedValue({ status: 200, uri: 'file://cache/test.pdf' });
@@ -1146,11 +1218,11 @@ describe('CloudScreen', () => {
     await waitFor(() => expect(mockDownloadAsync).toHaveBeenCalled());
 
     await act(async () => { jest.runAllTimers(); });
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Document téléchargé', expect.any(String)));
+    await waitFor(() => expect(mockToast.info).toHaveBeenCalledWith(expect.any(String)));
     jest.useRealTimers();
   });
 
-  it('shows error alert when downloadAsync throws an exception', async () => {
+  it('shows error toast when downloadAsync throws an exception', async () => {
     hookState.documents = [makeDoc()];
     mockGetAccessToken.mockResolvedValue('token');
     mockDownloadAsync.mockRejectedValue(new Error('network error'));
@@ -1161,7 +1233,7 @@ describe('CloudScreen', () => {
     fireEvent.press(getByTestId('doc-press-doc-1'));
     await act(async () => { fireEvent.press(getByTestId('action-download')); });
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String)));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
   // ---- document filtering by folder ----
@@ -1186,9 +1258,9 @@ describe('CloudScreen', () => {
     await waitFor(() => getByTestId('folder-menu-folder-x'));
 
     fireEvent.press(getByTestId('folder-menu-folder-x'));
-    const calls = (Alert.alert as jest.Mock).mock.calls;
-    const [,, buttons] = calls[0];
-    await act(async () => { buttons.find((b: any) => b.text === 'Supprimer').onPress(); });
+    const call = mockShowActionSheet.mock.calls[0][0];
+    const deleteAction = call.actions.find((a: any) => a.destructive === true);
+    await act(async () => { deleteAction.onPress(); });
 
     await act(async () => { fireEvent.press(getByTestId('delete-confirm-btn')); });
     expect(mockDeleteFolder).toHaveBeenCalledWith('folder-x');

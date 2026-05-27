@@ -60,13 +60,21 @@ describe('GetMyPreferencesUseCase', () => {
       expect(preferencesRepo.findByUserId).toHaveBeenCalledWith(userId);
     });
 
-    it('should throw NotFoundException when preferences not found', async () => {
+    // Branch: !prefs → throw NotFoundException (line 6)
+    it('should throw NotFoundException when preferences not found (null)', async () => {
       const userId = 'user-404';
 
       preferencesRepo.findByUserId.mockResolvedValue(null);
 
       await expect(useCase.execute(userId)).rejects.toThrow(NotFoundException);
       await expect(useCase.execute(userId)).rejects.toThrow('User preferences not found');
+    });
+
+    // Branch: !prefs → throw NotFoundException (undefined)
+    it('should throw NotFoundException when preferences not found (undefined)', async () => {
+      preferencesRepo.findByUserId.mockResolvedValue(undefined as any);
+
+      await expect(useCase.execute('user-undef')).rejects.toThrow(NotFoundException);
     });
 
     it('should handle different user ids', async () => {

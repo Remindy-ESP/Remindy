@@ -7,49 +7,46 @@ import { RegisterRequestDto } from '../dto/register-request.dto';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
+import { SendVerificationEmailUseCase } from './send-verification-email.use-case';
+
+const BASE_USER = {
+  id: 'user-id',
+  email: 'test@example.com',
+  passwordHash: 'hashedPassword',
+  firstName: 'Jane',
+  lastName: 'Smith',
+  phone: '+33123456789',
+  role_key: Role.USER_FREEMIUM,
+  status: UserStatus.ACTIVE,
+  failedLoginCount: 0,
+  emailVerified: false,
+  mfaEnabled: false,
+  createdAt: new Date(),
+};
 
 describe('RegisterUserUseCase', () => {
   let useCase: RegisterUserUseCase;
   let userRepo: jest.Mocked<IUserAuthRepository>;
   let passwordService: jest.Mocked<IPasswordService>;
   let preferencesRepo: jest.Mocked<UserPreferencesRepository>;
+  let sendVerificationEmailUseCase: jest.Mocked<SendVerificationEmailUseCase>;
 
   beforeEach(async () => {
-    const mockUserRepo: Partial<jest.Mocked<IUserAuthRepository>> = {
-      findByEmail: jest.fn(),
-      save: jest.fn(),
-    };
-
-    const mockPasswordService: Partial<jest.Mocked<IPasswordService>> = {
-      hash: jest.fn(),
-    };
-
-    const mockPreferencesRepo: Partial<jest.Mocked<UserPreferencesRepository>> = {
-      createDefaultPreferences: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegisterUserUseCase,
-        {
-          provide: IUserAuthRepository,
-          useValue: mockUserRepo,
-        },
-        {
-          provide: IPasswordService,
-          useValue: mockPasswordService,
-        },
-        {
-          provide: UserPreferencesRepository,
-          useValue: mockPreferencesRepo,
-        },
+        { provide: IUserAuthRepository, useValue: { findByEmail: jest.fn(), save: jest.fn() } },
+        { provide: IPasswordService, useValue: { hash: jest.fn() } },
+        { provide: UserPreferencesRepository, useValue: { createDefaultPreferences: jest.fn() } },
+        { provide: SendVerificationEmailUseCase, useValue: { execute: jest.fn() } },
       ],
     }).compile();
 
-    useCase = module.get<RegisterUserUseCase>(RegisterUserUseCase);
+    useCase = module.get(RegisterUserUseCase);
     userRepo = module.get(IUserAuthRepository);
     passwordService = module.get(IPasswordService);
     preferencesRepo = module.get(UserPreferencesRepository);
+    sendVerificationEmailUseCase = module.get(SendVerificationEmailUseCase);
   });
 
   it('should be defined', () => {
@@ -65,85 +62,56 @@ describe('RegisterUserUseCase', () => {
       phone: '+1234567890',
     };
 
-    it('should successfully register a new user', async () => {
-      const hashedPassword = 'hashedPassword123';
+    it('should successfully register a new user and send verification email', async () => {
+      userRepo.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashedPassword');
       const savedUser = new AuthUser({
+        ...BASE_USER,
         id: 'user-new-123',
         email: registerDto.email,
-        passwordHash: hashedPassword,
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        phone: registerDto.phone,
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
       });
-
-      userRepo.findByEmail.mockResolvedValue(null);
-      passwordService.hash.mockResolvedValue(hashedPassword);
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
+      sendVerificationEmailUseCase.execute.mockResolvedValue(undefined);
 
       const result = await useCase.execute(registerDto);
 
-      expect(result).toBe(savedUser);
       expect(userRepo.findByEmail).toHaveBeenCalledWith(registerDto.email);
       expect(passwordService.hash).toHaveBeenCalledWith(registerDto.password);
       expect(userRepo.save).toHaveBeenCalled();
       expect(preferencesRepo.createDefaultPreferences).toHaveBeenCalledWith('user-new-123');
+      expect(sendVerificationEmailUseCase.execute).toHaveBeenCalledWith('user-new-123');
+      expect(result).toBe(savedUser);
     });
 
     it('should throw error when email already exists', async () => {
-      const existingUser = new AuthUser({
-        id: 'existing-user',
-        email: registerDto.email,
-        passwordHash: 'someHash',
-        firstName: 'John',
-        lastName: 'Doe',
-        phone: '',
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
-      });
-
-      userRepo.findByEmail.mockResolvedValue(existingUser);
+      userRepo.findByEmail.mockResolvedValue(new AuthUser({ ...BASE_USER }));
 
       await expect(useCase.execute(registerDto)).rejects.toThrow('Email already used');
+
       expect(passwordService.hash).not.toHaveBeenCalled();
       expect(userRepo.save).not.toHaveBeenCalled();
+      expect(sendVerificationEmailUseCase.execute).not.toHaveBeenCalled();
     });
 
-    it('should handle registration with minimal information', async () => {
+    it('should handle minimal information', async () => {
       const minimalDto: RegisterRequestDto = {
         email: 'minimal@example.com',
         password: 'password123',
       };
-
+      userRepo.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('hashedPassword');
       const savedUser = new AuthUser({
+        ...BASE_USER,
         id: 'user-minimal',
         email: minimalDto.email,
-        passwordHash: 'hashedPassword',
         firstName: '',
         lastName: '',
         phone: '',
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
       });
-
-      userRepo.findByEmail.mockResolvedValue(null);
-      passwordService.hash.mockResolvedValue('hashedPassword');
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
+      sendVerificationEmailUseCase.execute.mockResolvedValue(undefined);
 
       const result = await useCase.execute(minimalDto);
 
@@ -155,24 +123,10 @@ describe('RegisterUserUseCase', () => {
     it('should assign USER_FREEMIUM role by default', async () => {
       userRepo.findByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashedPassword');
-
-      const savedUser = new AuthUser({
-        id: 'user-new-id',
-        email: registerDto.email,
-        passwordHash: 'hashedPassword',
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        phone: registerDto.phone,
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
-      });
-
+      const savedUser = new AuthUser({ ...BASE_USER, id: 'user-role' });
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
+      sendVerificationEmailUseCase.execute.mockResolvedValue(undefined);
 
       const result = await useCase.execute(registerDto);
 
@@ -180,95 +134,65 @@ describe('RegisterUserUseCase', () => {
     });
 
     it('should hash password before saving', async () => {
-      const plainPassword = 'MySecurePassword123';
-      const hashedPassword = 'superHashedVersion';
-
-      const dtoWithPlainPassword = { ...registerDto, password: plainPassword };
-
       userRepo.findByEmail.mockResolvedValue(null);
-      passwordService.hash.mockResolvedValue(hashedPassword);
-
-      const savedUser = new AuthUser({
-        id: 'user-new-id',
-        email: registerDto.email,
-        passwordHash: hashedPassword,
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        phone: registerDto.phone,
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
-      });
-
+      passwordService.hash.mockResolvedValue('superHashedVersion');
+      const savedUser = new AuthUser({ ...BASE_USER, passwordHash: 'superHashedVersion' });
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
+      sendVerificationEmailUseCase.execute.mockResolvedValue(undefined);
 
-      const result = await useCase.execute(dtoWithPlainPassword);
+      const result = await useCase.execute({ ...registerDto, password: 'MySecurePassword123' });
 
-      expect(passwordService.hash).toHaveBeenCalledWith(plainPassword);
-      expect(result.getPasswordHash()).toBe(hashedPassword);
-      expect(result.getPasswordHash()).not.toBe(plainPassword);
+      expect(passwordService.hash).toHaveBeenCalledWith('MySecurePassword123');
+      expect(result.getPasswordHash()).toBe('superHashedVersion');
     });
 
-    it('should create default preferences after user creation', async () => {
-      const userId = 'new-user-456';
-      const savedUser = new AuthUser({
-        id: userId,
-        email: registerDto.email,
-        passwordHash: 'hashedPassword',
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        phone: registerDto.phone,
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
-      });
-
+    it('should use empty strings when fields are undefined', async () => {
       userRepo.findByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashedPassword');
+      const savedUser = new AuthUser({
+        ...BASE_USER,
+        id: 'user-empty',
+        firstName: '',
+        lastName: '',
+        phone: '',
+      });
       userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
+      sendVerificationEmailUseCase.execute.mockResolvedValue(undefined);
 
-      await useCase.execute(registerDto);
+      const result = await useCase.execute({
+        email: 'empty@example.com',
+        password: 'password',
+        firstName: undefined as any,
+        lastName: undefined as any,
+        phone: undefined as any,
+      });
 
-      expect(preferencesRepo.createDefaultPreferences).toHaveBeenCalledWith(userId);
-      expect(preferencesRepo.createDefaultPreferences).toHaveBeenCalledTimes(1);
+      expect(result.getFirstName()).toBe('');
+      expect(result.getLastName()).toBe('');
+      expect(result.getPhone()).toBe('');
     });
 
-    it('should preserve all user data fields', async () => {
+    it('should preserve provided fields', async () => {
       userRepo.findByEmail.mockResolvedValue(null);
       passwordService.hash.mockResolvedValue('hashedPassword');
+      const savedUser = new AuthUser({ ...BASE_USER, id: 'user-provided' });
+      userRepo.save.mockResolvedValue(savedUser);
+      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined as any);
+      sendVerificationEmailUseCase.execute.mockResolvedValue(undefined);
 
-      const savedUser = new AuthUser({
-        id: 'user-new-id',
-        email: registerDto.email,
-        passwordHash: 'hashedPassword',
-        firstName: registerDto.firstName,
-        lastName: registerDto.lastName,
-        phone: registerDto.phone,
-        role_key: Role.USER_FREEMIUM,
-        status: UserStatus.ACTIVE,
-        failedLoginCount: 0,
-        emailVerified: false,
-        mfaEnabled: false,
-        createdAt: new Date(),
+      const result = await useCase.execute({
+        email: 'provided@example.com',
+        password: 'password123',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        phone: '+33123456789',
       });
 
-      userRepo.save.mockResolvedValue(savedUser);
-      preferencesRepo.createDefaultPreferences.mockResolvedValue(undefined);
-
-      const result = await useCase.execute(registerDto);
-
-      expect(result.getEmail()).toBe(registerDto.email);
-      expect(result.getFirstName()).toBe(registerDto.firstName);
-      expect(result.getLastName()).toBe(registerDto.lastName);
-      expect(result.getPhone()).toBe(registerDto.phone);
+      expect(result.getFirstName()).toBe('Jane');
+      expect(result.getLastName()).toBe('Smith');
+      expect(result.getPhone()).toBe('+33123456789');
     });
   });
 });

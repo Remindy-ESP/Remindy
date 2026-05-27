@@ -1,6 +1,9 @@
 import { validate } from 'class-validator';
 import { UpdateUserPreferencesDto, UserPreferencesResponseDto } from './user-preferences.dto';
-import { UserPreferenceEntity } from 'src/infrastructure/database/entities/user-preference.entity';
+import {
+  UserPreferenceEntity,
+  Theme,
+} from 'src/infrastructure/database/entities/user-preference.entity';
 
 describe('UpdateUserPreferencesDto', () => {
   describe('validation', () => {
@@ -141,7 +144,7 @@ describe('UserPreferencesResponseDto', () => {
     it('should map entity to DTO correctly', () => {
       const entity = new UserPreferenceEntity();
       entity.userId = 'user-123';
-      entity.theme = 'dark';
+      entity.theme = Theme.DARK;
       entity.notificationEmail = true;
       entity.notificationPush = false;
       entity.notificationSms = false;
@@ -166,7 +169,7 @@ describe('UserPreferencesResponseDto', () => {
     });
 
     it('should handle different theme values', () => {
-      const themes = ['light', 'dark', 'auto'];
+      const themes: Theme[] = [Theme.LIGHT, Theme.DARK, Theme.AUTO];
 
       themes.forEach(theme => {
         const entity = new UserPreferenceEntity();
@@ -192,7 +195,7 @@ describe('UserPreferencesResponseDto', () => {
       currencies.forEach(currency => {
         const entity = new UserPreferenceEntity();
         entity.userId = 'user-123';
-        entity.theme = 'light';
+        entity.theme = Theme.LIGHT;
         entity.notificationEmail = true;
         entity.notificationPush = true;
         entity.notificationSms = false;

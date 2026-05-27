@@ -4,10 +4,10 @@ import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import GlobalHeader from '@/components/GlobalHeader';
-import { useAuth } from '@/context/AuthContext';
+import GlobalHeader from '@/shared/ui/GlobalHeader';
+import { useAuth } from '@/modules/auth/application/AuthContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { usePushNotifications } from '@/modules/notifications/application/usePushNotifications';
 
 export default function TabLayout() {
     const router = useRouter();
@@ -32,8 +32,8 @@ export default function TabLayout() {
 
     if (!isAuthenticated) return null;
 
-    const footerRoutes = APP_ROUTES.filter(r => r.showInFooter);
-    const hiddenRoutes = APP_ROUTES.filter(r => !r.showInFooter);
+    const footerRoutes = APP_ROUTES.filter(r => r.showInFooter && r.route.startsWith('/(tabs)/'));
+    const hiddenRoutes = APP_ROUTES.filter(r => !r.showInFooter && r.route.startsWith('/(tabs)/'));
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#06071D' }} edges={['bottom']}>
@@ -77,14 +77,6 @@ export default function TabLayout() {
                         options={{ href: null }}
                     />
                 ))}
-                <Tabs.Screen name="profile" options={{ href: null }} />
-                <Tabs.Screen name="profile-edit" options={{ href: null }} />
-                <Tabs.Screen name="profile-security" options={{ href: null }} />
-                <Tabs.Screen name="profile-preferences" options={{ href: null }} />
-                <Tabs.Screen name="profile-privacy" options={{ href: null }} />
-                <Tabs.Screen name="profile-help" options={{ href: null }} />
-                <Tabs.Screen name="profile-about" options={{ href: null }} />
-                <Tabs.Screen name="categories" options={{ href: null }} />
             </Tabs>
         </SafeAreaView>
     );

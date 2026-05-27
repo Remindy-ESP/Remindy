@@ -185,7 +185,8 @@ describe('CategoryController', () => {
 
       findAllUseCase.execute.mockResolvedValue(categories);
 
-      const result = await controller.findAll({});
+      const req = { user: { userId: 'user-123', role: 'USER_FREEMIUM' } } as any;
+      const result = await controller.findAll(req, {});
 
       expect(result).toHaveLength(2);
       expect(result[0].id).toBe('cat-1');
@@ -210,7 +211,8 @@ describe('CategoryController', () => {
 
       findAllUseCase.execute.mockResolvedValue(categories);
 
-      const result = await controller.findAll(filters);
+      const req = { user: { userId: 'user-123', role: 'USER_FREEMIUM' } } as any;
+      const result = await controller.findAll(req, filters);
 
       expect(result).toHaveLength(1);
       expect(findAllUseCase.execute).toHaveBeenCalledWith(
@@ -235,7 +237,8 @@ describe('CategoryController', () => {
 
       findAllUseCase.execute.mockResolvedValue(categories);
 
-      const result = await controller.findAll(filters);
+      const req = { user: { userId: 'user-123', role: 'USER_FREEMIUM' } } as any;
+      const result = await controller.findAll(req, filters);
 
       expect(result).toHaveLength(1);
       expect(findAllUseCase.execute).toHaveBeenCalledWith(
@@ -260,7 +263,8 @@ describe('CategoryController', () => {
 
       findAllUseCase.execute.mockResolvedValue(categories);
 
-      const result = await controller.findAll(filters);
+      const req = { user: { userId: 'user-123', role: 'USER_FREEMIUM' } } as any;
+      const result = await controller.findAll(req, filters);
 
       expect(result).toHaveLength(1);
       expect(result[0].isSystem).toBe(true);

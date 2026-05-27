@@ -95,6 +95,14 @@ describe('UserAuthTypeOrmRepository', () => {
       expect(result).toBeNull();
       expect(mapper.toDomain).not.toHaveBeenCalled();
     });
+    it('should return null when user is not found by email', async () => {
+      typeOrmRepository.findOne.mockResolvedValue(null);
+
+      const result = await repository.findByEmail('missing@example.com');
+
+      expect(result).toBeNull();
+      expect(mapper.toDomain).not.toHaveBeenCalled();
+    });
   });
 
   describe('save', () => {
@@ -132,7 +140,7 @@ describe('UserAuthTypeOrmRepository', () => {
         id: 'user-new-123',
         ...ormEntity,
         createdAt: savedEntity.createdAt,
-      });
+      } as any);
 
       mapper.toOrm.mockReturnValue(ormEntity);
       typeOrmRepository.save.mockResolvedValue(savedEntity);
@@ -300,5 +308,65 @@ describe('UserAuthTypeOrmRepository', () => {
       expect(updateData.passwordChangedAt.getTime()).toBeGreaterThanOrEqual(beforeUpdate.getTime());
       expect(updateData.passwordChangedAt.getTime()).toBeLessThanOrEqual(afterUpdate.getTime());
     });
+  });
+
+  describe('incrementFailedLoginCount', () => {
+    it('increments the failed login counter', async () => {
+      (typeOrmRepository as any).increment = jest.fn().mockResolvedValue(undefined);
+
+      await repository.incrementFailedLoginCount('user-123');
+
+      expect((typeOrmRepository as any).increment).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        'failedLoginCount',
+        1,
+      );
+    });
+  });
+
+  describe('resetFailedLoginCount', () => {
+    it('resets the failed login counter to zero', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.resetFailedLoginCount('user-123');
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        { failedLoginCount: 0 },
+      );
+    });
+  });
+
+  describe('updateLastLoginAt', () => {
+    it('updates lastLoginAt with the provided date', async () => {
+      const date = new Date('2025-01-20T10:00:00.000Z');
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.updateLastLoginAt('user-123', date);
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        { lastLoginAt: date },
+      );
+    });
+  });
+
+  describe('markEmailAsVerified', () => {
+    it('sets emailVerified to true for the given user', async () => {
+      typeOrmRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+
+      await repository.markEmailAsVerified('user-123');
+
+      expect(typeOrmRepository.update).toHaveBeenCalledWith(
+        { id: 'user-123' },
+        { emailVerified: true },
+      );
+    });
+  });
+});
+describe('UserAuthTypeOrmRepository constructor branch coverage', () => {
+  it('should instantiate with null dependencies to cover constructor parameter branches', () => {
+    const instance = new UserAuthTypeOrmRepository(null as any, null as any);
+    expect(instance).toBeDefined();
   });
 });

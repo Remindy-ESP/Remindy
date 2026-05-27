@@ -6,7 +6,7 @@ export class AuthUser {
     private readonly props: {
       id?: string;
       email: string;
-      passwordHash: string;
+      passwordHash: string | null;
       role_key: Role;
       status: UserStatus;
       firstName: string;
@@ -17,10 +17,13 @@ export class AuthUser {
       mfaEnabled: boolean;
       mfaSecret?: string;
       createdAt?: Date;
+      googleId?: string | null;
+      microsoftId?: string | null;
+      appleId?: string | null;
     },
   ) {}
 
-  // Factory
+  // Factory — traditional email/password sign-up
   static createNew(params: {
     email: string;
     passwordHash: string;
@@ -44,6 +47,31 @@ export class AuthUser {
     });
   }
 
+  // Factory — OAuth sign-in (no password)
+  static createFromOAuth(params: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    googleId?: string;
+    microsoftId?: string;
+    appleId?: string;
+  }) {
+    return new AuthUser({
+      email: params.email,
+      passwordHash: null,
+      firstName: params.firstName,
+      lastName: params.lastName,
+      role_key: Role.USER_FREEMIUM,
+      status: UserStatus.ACTIVE,
+      failedLoginCount: 0,
+      emailVerified: true,
+      mfaEnabled: false,
+      googleId: params.googleId,
+      microsoftId: params.microsoftId,
+      appleId: params.appleId,
+    });
+  }
+
   getId(): string {
     if (!this.props.id) {
       throw new Error('AuthUser ID is not defined');
@@ -62,9 +90,11 @@ export class AuthUser {
   getFirstName() {
     return this.props.firstName;
   }
+
   getLastName() {
     return this.props.lastName;
   }
+
   getPhone() {
     return this.props.phone;
   }
@@ -95,5 +125,17 @@ export class AuthUser {
 
   getCreatedAt() {
     return this.props.createdAt;
+  }
+
+  getGoogleId() {
+    return this.props.googleId ?? null;
+  }
+
+  getMicrosoftId() {
+    return this.props.microsoftId ?? null;
+  }
+
+  getAppleId() {
+    return this.props.appleId ?? null;
   }
 }

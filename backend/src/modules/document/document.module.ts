@@ -24,10 +24,10 @@ import { OcrEventListener } from './application/events/ocr-event.listener';
     TypeOrmModule.forFeature([DocumentEntity]),
     EventEmitterModule.forRoot(),
     MulterModule.register({
-      storage: memoryStorage(), // Store files in memory (will be uploaded to R2)
+      storage: memoryStorage(),
       limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB max file size
-        files: 1, // Only 1 file at a time
+        fileSize: 100 * 1024 * 1024, // hard cap: matches the admin maxFileSize; per-role enforcement happens in QuotaService
+        files: 1,
       },
     }),
   ],

@@ -20,8 +20,10 @@ import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-c
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case';
 import { IEmailService } from './infrastructure/services/email.service';
-import { BrevoEmailService } from './infrastructure/services/sendgrid-email.service';
+import { GmailEmailService } from './infrastructure/services/sendgrid-email.service';
 import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
+import { SendVerificationEmailUseCase } from './application/use-cases/send-verification-email.use-case';
+import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-case';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard';
 import { UsersModule } from '../user/user.module';
 import { JwtRefreshGuard } from './presentation/guards/jwt-refresh.guard';
@@ -32,6 +34,10 @@ import { UserMfaTypeOrmRepository } from '../admin/infrastructure/database/repos
 import { TotpService } from '../admin/infrastructure/services/totp.service';
 import { CryptoService } from '../admin/infrastructure/services/crypto.service';
 import { AdminModule } from '../admin/admin.module';
+import { OAuthLoginUseCase } from './application/use-cases/oauth-login.use-case';
+import { GoogleOAuthService } from './infrastructure/services/google-oauth.service';
+import { MicrosoftOAuthService } from './infrastructure/services/microsoft-oauth.service';
+import { AppleOAuthService } from './infrastructure/services/apple-oauth.service';
 @Module({
   imports: [
     forwardRef(() => UsersModule),
@@ -43,10 +49,16 @@ import { AdminModule } from '../admin/admin.module';
   providers: [
     RegisterUserUseCase,
     LoginUseCase,
+    OAuthLoginUseCase,
+    GoogleOAuthService,
+    MicrosoftOAuthService,
+    AppleOAuthService,
     RefreshTokenUseCase,
     LogoutUseCase,
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
+    SendVerificationEmailUseCase,
+    VerifyEmailUseCase,
     JwtTokenService,
     JwtRefreshStrategy,
     JwtStrategy,
@@ -82,9 +94,16 @@ import { AdminModule } from '../admin/admin.module';
     },
     {
       provide: IEmailService,
-      useClass: BrevoEmailService,
+      useClass: GmailEmailService,
     },
   ],
-  exports: [JwtTokenService, ITokenService, UserMfaTypeOrmRepository, TotpService],
+  exports: [
+    JwtTokenService,
+    ITokenService,
+    IEmailService,
+    UserMfaTypeOrmRepository,
+    TotpService,
+    ForgotPasswordUseCase,
+  ],
 })
 export class AuthModule {}

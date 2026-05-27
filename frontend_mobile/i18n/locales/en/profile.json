@@ -1,0 +1,189 @@
+{
+  "loadingProfile": "Loading profile...",
+  "fallbackUserName": "User",
+  "fallbackEmail": "user@remindy.com",
+  "fallbackRole": "user",
+  "sections": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "support": "Support"
+  },
+  "menu": {
+    "notifications": "Notifications",
+    "preferences": "Preferences",
+    "security": "Security",
+    "privacy": "Privacy",
+    "help": "Help",
+    "about": "About"
+  },
+  "editButton": "Edit",
+  "infoLabels": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "language": "Language",
+    "timezone": "Timezone"
+  },
+  "logout": {
+    "button": "Log out",
+    "confirmTitle": "Log out",
+    "confirmMessage": "Are you sure you want to log out?",
+    "cancel": "Cancel",
+    "errorTitle": "Error",
+    "errorMessage": "Logout failed. Please try again."
+  },
+  "edit": {
+    "title": "Edit profile",
+    "subtitle": "Edit your profile information",
+    "errorTitle": "Error",
+    "userNotFound": "User not found.",
+    "successTitle": "Success",
+    "successMessage": "Profile updated.",
+    "updateFailed": "Unable to update profile.",
+    "clear": "Clear",
+    "fields": {
+      "firstName": "First name",
+      "firstNamePlaceholder": "First name",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Last name",
+      "phone": "Phone",
+      "phonePlaceholder": "+33612345678",
+      "language": "Language",
+      "languagePlaceholder": "fr",
+      "timezone": "Timezone",
+      "timezonePlaceholder": "Europe/Paris"
+    },
+    "photo": {
+      "add": "Add a photo",
+      "change": "Change photo",
+      "remove": "Remove",
+      "hint": "Crop the image as a square to center the area kept in the round avatar.",
+      "permissionTitle": "Permission required",
+      "permissionMessage": "Allow access to your photos to pick an image.",
+      "emptyFile": "The image file is empty.",
+      "uploadSuccess": "Profile photo updated.",
+      "uploadFailed": "Unable to update profile photo.",
+      "deleteConfirmTitle": "Remove photo",
+      "deleteConfirmMessage": "Do you want to remove your profile photo?",
+      "deleteSuccess": "Profile photo removed.",
+      "deleteFailed": "Unable to remove profile photo."
+    },
+    "helpText": "Optional fields can be empty. Leaving \"Phone\", \"First name\" or \"Last name\" empty clears the value.",
+    "save": "Save"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "subtitle": "Profile settings and user options",
+    "message": "Profile preferences will be configured here.",
+    "language": "Language",
+    "languageHint": "Choose the application language.",
+    "languageOptions": {
+      "fr": "Français",
+      "en": "English"
+    }
+  },
+  "notificationSettings": {
+    "title": "Notifications",
+    "subtitle": "Manage your notification channels",
+    "loading": "Loading preferences...",
+    "loadError": "Unable to load notification preferences.",
+    "channelsTitle": "Notification channels",
+    "channelsDescription": "Choose how you want to receive your subscription alerts and reminders.",
+    "push": {
+      "label": "Push notifications",
+      "description": "Alerts directly on your phone"
+    },
+    "email": {
+      "label": "Email notifications",
+      "description": "Receive an email for each reminder"
+    },
+    "infoNote": "Renewal and trial ending notifications will be sent through the channels enabled above."
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Change your password",
+    "cardTitle": "Change password",
+    "cardBody": "Enter your current password then choose a new secure password.",
+    "validation": {
+      "currentRequired": "Current password required",
+      "newRequired": "New password required",
+      "newTooShort": "The new password must contain at least 8 characters",
+      "sameAsOld": "The new password must be different from the previous one",
+      "mismatch": "Passwords do not match"
+    },
+    "successInline": "Password changed successfully.",
+    "successTitle": "Success",
+    "successAlert": "Your password has been changed.",
+    "errorTitle": "Error",
+    "updateFailed": "Unable to change the password.",
+    "placeholders": {
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm the new password"
+    },
+    "submit": "Update",
+    "forgot": {
+      "title": "Forgot your password?",
+      "body": "If you don't remember your current password, use the email reset flow.",
+      "button": "Request a reset link"
+    }
+  },
+  "privacy": {
+    "title": "Privacy",
+    "subtitle": "Data, export and account deletion",
+    "data": {
+      "title": "Data management",
+      "body": "You can request an export of your personal data before deleting your account.",
+      "exportButton": "Export my data",
+      "exportTitle": "Export requested",
+      "exportStatus": "Status: {{status}}\nFormat: {{format}}\nId: {{id}}",
+      "exportFailed": "Unable to request data export."
+    },
+    "danger": {
+      "title": "Danger zone",
+      "body": "Account deletion is irreversible on the user side. The backend currently performs a soft delete.",
+      "deleteButton": "Delete my account",
+      "confirmTitle": "Delete account",
+      "confirmMessage": "This action erases your data via account deletion (backend soft delete). Do you want to continue?",
+      "deletedTitle": "Account deleted",
+      "deletedMessage": "Your account has been deleted.",
+      "deleteFailed": "Unable to delete account."
+    },
+    "errorTitle": "Error",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "help": {
+    "title": "Help",
+    "subtitle": "User guide and quick assistance",
+    "guide": {
+      "title": "Getting started guide",
+      "body": "Discover the main features of Remindy: dashboard, subscriptions, cloud, promotions and security, with highlights of important areas right in the app.",
+      "openButton": "View interactive guide",
+      "resetButton": "Reset the welcome guide",
+      "resetSuccessTitle": "Guide reset",
+      "resetSuccessMessage": "The guide will be offered again next time you open the application.",
+      "resetErrorTitle": "Error",
+      "resetErrorMessage": "Unable to reset the guide right now."
+    },
+    "support": {
+      "title": "Support",
+      "body": "Contact our team directly from the app. Track your requests and receive replies right here.",
+      "newButton": "New ticket",
+      "myTicketsButton": "My tickets"
+    }
+  },
+  "about": {
+    "title": "About",
+    "subtitle": "Information about the app",
+    "appName": "Remindy",
+    "description": "App to track subscriptions, reminders and manage your everyday services.",
+    "versionLabel": "Version",
+    "contactLabel": "Contact",
+    "emailUnavailableTitle": "Email unavailable",
+    "emailUnavailableMessage": "Contact us at {{email}}",
+    "emailErrorTitle": "Error",
+    "emailErrorMessage": "Unable to open your email app.\n{{email}}"
+  }
+}

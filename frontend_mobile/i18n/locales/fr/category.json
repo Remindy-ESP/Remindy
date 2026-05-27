@@ -1,0 +1,31 @@
+{
+  "loading": "Chargement des catégories...",
+  "errorLoad": "Impossible de charger les catégories.",
+  "errorTitle": "Erreur",
+  "errorCreate": "Impossible de créer la catégorie.",
+  "errorRename": "Impossible de renommer la catégorie.",
+  "errorDelete": "Impossible de supprimer la catégorie.",
+  "nameRequired": "Le nom de la catégorie est requis.",
+  "systemSection": "Catégories système",
+  "userSection": "Mes catégories",
+  "systemEmpty": "Aucune catégorie système.",
+  "userEmpty": "Aucune catégorie personnalisée.",
+  "systemBadge": "SYSTÈME",
+  "addNew": "Nouvelle catégorie",
+  "createModal": {
+    "title": "Nouvelle catégorie",
+    "name": "Nom",
+    "namePlaceholder": "Ex: Santé, Loisirs...",
+    "color": "Couleur",
+    "submit": "Créer"
+  },
+  "renameModal": {
+    "title": "Renommer \"{{name}}\"",
+    "newName": "Nouveau nom",
+    "submit": "Renommer"
+  },
+  "deleteModal": {
+    "title": "Supprimer la catégorie",
+    "message": "Supprimer \"{{name}}\" ?"
+  }
+}

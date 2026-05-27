@@ -21,8 +21,10 @@ import { ReminderModule } from './modules/reminder/reminder.module';
 import { CategoryModule } from './modules/category/category.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SeedModule } from './modules/seed/seed.module';
+import { StatisticsModule } from './modules/statistics/statistics.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { SupportModule } from './modules/support/support.module';
+import { BudgetsModule } from './modules/budgets/budgets.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -65,7 +67,9 @@ import { ThrottlerGuard } from '@nestjs/throttler';
     AuditModule,
     SchedulerModule,
     SeedModule,
+    StatisticsModule,
     SupportModule,
+    BudgetsModule,
   ],
   controllers: [AppController],
   providers: [

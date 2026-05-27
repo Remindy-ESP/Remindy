@@ -1,0 +1,84 @@
+{
+  "loading": "Loading operations...",
+  "headerTitle": "Operations",
+  "addButton": "+ Add",
+  "totalSuffix": " ({{count}} total)",
+  "count": {
+    "one": "%{count} operation",
+    "other": "%{count} operations"
+  },
+  "empty": "No operations.",
+  "emptyHint": "Tap the + button to create your first operation.",
+  "filteredEmpty": "No operation matches the filters.",
+  "filteredEmptyHint": "Try changing the filters above.",
+  "filterFrequencyLabel": "Payment type",
+  "filterCategoryLabel": "Category",
+  "filterAll": "All",
+  "filterAllCategories": "All",
+  "cycle": {
+    "oneTime": "One-time",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "weeklyShort": "Week",
+    "monthlyShort": "Month",
+    "quarterlyShort": "Quarter"
+  },
+  "card": {
+    "startPrefix": "Start: {{date}}",
+    "naDate": "N/A",
+    "invalidDate": "Invalid Date"
+  },
+  "modal": {
+    "titleAdd": "Add an operation",
+    "titleEdit": "Edit operation",
+    "name": "Name *",
+    "namePlaceholder": "e.g. Netflix, Spotify",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional description...",
+    "price": "Price *",
+    "pricePlaceholder": "15.99 or 15,99",
+    "billingCycle": "Billing cycle *",
+    "category": "Category",
+    "noCategory": "No category",
+    "startDate": "Start date *",
+    "endDate": "End date (optional)",
+    "datePlaceholder": "DD/MM/YYYY",
+    "reminder": "Notification reminder",
+    "reminderPlaceholder": "3",
+    "cancel": "Cancel",
+    "create": "Create",
+    "update": "Update"
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "priceInvalid": "Price must be greater than 0 (e.g. 15.99 or 15,99)",
+    "startDateRequired": "Start date is required"
+  },
+  "alerts": {
+    "deleteTitle": "Delete operation",
+    "deleteMessage": "Are you sure you want to delete your operation \"{{name}}\"?",
+    "deleteCancel": "Cancel",
+    "deleteConfirm": "Delete",
+    "invalidPriceFormat": "Invalid price format"
+  },
+  "success": {
+    "created": "Operation created successfully",
+    "updated": "Operation updated successfully",
+    "deleted": "Operation deleted successfully",
+    "paused": "Operation paused successfully",
+    "resumed": "Operation resumed successfully"
+  },
+  "errors": {
+    "loadFailed": "Failed to load subscriptions",
+    "saveFailed": "Failed to save the operation",
+    "deleteFailed": "Failed to delete the operation",
+    "updateFailed": "Failed to update the operation"
+  },
+  "reminderDaysBefore": {
+    "one": "Reminder %{count} day before",
+    "other": "Reminder %{count} days before"
+  },
+  "importedFromDocument": "Imported from document {{documentId}}"
+}

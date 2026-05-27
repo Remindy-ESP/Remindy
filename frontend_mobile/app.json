@@ -1,20 +1,22 @@
 {
   "expo": {
-    "name": "frontend_mobile",
-    "slug": "frontend_mobile",
+    "name": "Remindy",
+    "slug": "remindy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontendmobile",
+    "scheme": "remindy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.remindy.app"
     },
     "android": {
+      "package": "com.remindy.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/adaptive_icon.png",
+        "backgroundColor": "#06071D"
       },
       "edgeToEdgeEnabled": true
     },
@@ -31,7 +33,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#06071D"
         }
       ],
       "expo-secure-store",
@@ -44,7 +46,8 @@
           "icon": "./assets/images/icon.png",
           "color": "#6366f1"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

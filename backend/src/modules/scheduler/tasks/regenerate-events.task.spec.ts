@@ -70,7 +70,10 @@ describe('RegenerateEventsTask', () => {
         mockSubscription,
         { ...mockSubscription, id: 'sub-456', name: 'Spotify' },
       ]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent]);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
+        mockEvent,
+        mockEvent,
+      ] as any);
 
       await task.handleCron();
 
@@ -109,7 +112,7 @@ describe('RegenerateEventsTask', () => {
       ]);
       eventGeneratorService.regenerateEventsIfNeeded
         .mockRejectedValueOnce(new Error('Failed to generate events'))
-        .mockResolvedValueOnce([mockEvent]);
+        .mockResolvedValueOnce([mockEvent] as any);
 
       await task.handleCron();
 
@@ -145,7 +148,10 @@ describe('RegenerateEventsTask', () => {
 
     it('should log when events are generated for subscription', async () => {
       subscriptionRepository.findAll.mockResolvedValue([mockSubscription]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent]);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
+        mockEvent,
+        mockEvent,
+      ] as any);
 
       await task.handleCron();
 
@@ -161,7 +167,10 @@ describe('RegenerateEventsTask', () => {
         mockSubscription,
         { ...mockSubscription, id: 'sub-456', name: 'Spotify' },
       ]);
-      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([mockEvent, mockEvent]);
+      eventGeneratorService.regenerateEventsIfNeeded.mockResolvedValue([
+        mockEvent,
+        mockEvent,
+      ] as any);
 
       const result = await task.triggerManually();
 
@@ -195,9 +204,9 @@ describe('RegenerateEventsTask', () => {
         { ...mockSubscription, id: 'sub-789', name: 'Disney+' },
       ]);
       eventGeneratorService.regenerateEventsIfNeeded
-        .mockResolvedValueOnce([mockEvent])
+        .mockResolvedValueOnce([mockEvent] as any)
         .mockRejectedValueOnce(new Error('Failed'))
-        .mockResolvedValueOnce([mockEvent, mockEvent]);
+        .mockResolvedValueOnce([mockEvent, mockEvent] as any);
 
       const result = await task.triggerManually();
 

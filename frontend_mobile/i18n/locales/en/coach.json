@@ -1,0 +1,31 @@
+{
+  "step": "Step {{current}}/{{total}}",
+  "skip": "Skip",
+  "previous": "Previous",
+  "next": "Next",
+  "finish": "Finish",
+  "openingRoute": "Opening the corresponding page…",
+  "searchingTarget": "Looking for the area to highlight…",
+  "steps": {
+    "dashboard": {
+      "title": "Dashboard",
+      "message": "The calendar helps you visualize your dates and events at a glance."
+    },
+    "subscription": {
+      "title": "Subscriptions",
+      "message": "Add and manage your subscriptions from this button."
+    },
+    "cloud": {
+      "title": "Cloud / Documents",
+      "message": "Import your documents here to organize them and link them to your subscriptions."
+    },
+    "promotion": {
+      "title": "Promotions",
+      "message": "Each promo row is clickable, with code copy and access to the partner site."
+    },
+    "profile-security": {
+      "title": "Security",
+      "message": "Change your password here and access the reset flow if needed."
+    }
+  }
+}

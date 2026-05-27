@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-import { UserTypeOrmRepository } from './user-typeorm.repository';
+import { UserTypeOrmRepository, UserRepository } from './user-typeorm.repository';
 import { EUser } from '../../../../infrastructure/database/entities/user.entity';
 
 describe('UserTypeOrmRepository', () => {
@@ -37,6 +37,11 @@ describe('UserTypeOrmRepository', () => {
 
   it('should be defined', () => {
     expect(repository).toBeDefined();
+  });
+
+  // Covers the re-exported UserRepository getter (export { UserRepository } at bottom of file)
+  it('re-exports UserRepository from the domain layer', () => {
+    expect(UserRepository).toBeDefined();
   });
 
   describe('findByIdWithPreferences', () => {

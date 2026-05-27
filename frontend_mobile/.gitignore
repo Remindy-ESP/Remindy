@@ -19,7 +19,9 @@ clover.xml
 coverage.json
 .coverage
 
-# Native
+# Native — auto-générés par `npx expo prebuild`, ne pas commiter
+android/
+ios/
 .kotlin/
 *.orig.*
 *.jks
@@ -51,3 +53,6 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+
+# Auto-generated env backups
+.env.backup-*

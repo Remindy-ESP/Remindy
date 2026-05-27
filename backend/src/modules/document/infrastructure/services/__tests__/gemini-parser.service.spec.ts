@@ -19,7 +19,9 @@ describe('GeminiParserService', () => {
       getGenerativeModel: jest.fn().mockReturnValue(mockModel),
     } as any;
 
-    GoogleGenerativeAI.mockImplementation(() => mockGenAI);
+    (GoogleGenerativeAI as jest.MockedClass<typeof GoogleGenerativeAI>).mockImplementation(
+      () => mockGenAI,
+    );
 
     const mockConfigService = {
       get: jest.fn((key: string) => {

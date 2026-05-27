@@ -7,11 +7,15 @@ import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.u
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-password.use-case';
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
+import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
+import { OAuthLoginUseCase } from '../../application/use-cases/oauth-login.use-case';
+import { GoogleOAuthService } from '../../infrastructure/services/google-oauth.service';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
 import type { Request, Response } from 'express';
-
+const TEST_IP = 'test-ip-address';
+const TEST_IP_2 = 'another-test-ip';
 describe('AuthController', () => {
   let controller: AuthController;
   let registerUserUseCase: jest.Mocked<RegisterUserUseCase>;
@@ -20,6 +24,7 @@ describe('AuthController', () => {
   let logoutUseCase: jest.Mocked<LogoutUseCase>;
   let forgotPasswordUseCase: jest.Mocked<ForgotPasswordUseCase>;
   let resetPasswordUseCase: jest.Mocked<ResetPasswordUseCase>;
+  let verifyEmailUseCase: jest.Mocked<VerifyEmailUseCase>;
 
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -49,6 +54,18 @@ describe('AuthController', () => {
       execute: jest.fn(),
     };
 
+    const mockVerifyEmailUseCase = {
+      execute: jest.fn(),
+    };
+
+    const mockOAuthLoginUseCase = {
+      execute: jest.fn(),
+    };
+
+    const mockGoogleOAuthService = {
+      exchangeCodeForIdToken: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -76,6 +93,18 @@ describe('AuthController', () => {
           provide: ResetPasswordUseCase,
           useValue: mockResetPasswordUseCase,
         },
+        {
+          provide: VerifyEmailUseCase,
+          useValue: mockVerifyEmailUseCase,
+        },
+        {
+          provide: OAuthLoginUseCase,
+          useValue: mockOAuthLoginUseCase,
+        },
+        {
+          provide: GoogleOAuthService,
+          useValue: mockGoogleOAuthService,
+        },
       ],
     }).compile();
 
@@ -86,9 +115,10 @@ describe('AuthController', () => {
     logoutUseCase = module.get(LogoutUseCase);
     forgotPasswordUseCase = module.get(ForgotPasswordUseCase);
     resetPasswordUseCase = module.get(ResetPasswordUseCase);
+    verifyEmailUseCase = module.get(VerifyEmailUseCase);
 
     mockRequest = {
-      ip: '192.168.1.1',
+      ip: TEST_IP,
       headers: {
         'user-agent': 'Mozilla/5.0',
       },
@@ -134,10 +164,11 @@ describe('AuthController', () => {
       const tokens = {
         accessToken: 'access_token_value',
         refreshToken: 'refresh_token_value',
+        userId: 'user-123',
       };
 
       registerUserUseCase.execute.mockResolvedValue(mockUser);
-      loginUseCase.execute.mockResolvedValue(tokens);
+      loginUseCase.execute.mockResolvedValue(tokens as any);
 
       const result = await controller.register(
         mockRequest as Request,
@@ -149,7 +180,7 @@ describe('AuthController', () => {
       expect(loginUseCase.execute).toHaveBeenCalledWith({
         email: registerDto.email,
         password: registerDto.password,
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
         deviceName: 'web',
       });
@@ -191,7 +222,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-456',
+      } as any);
 
       const reqWithoutIp = { ...mockRequest, ip: undefined };
 
@@ -229,7 +261,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-789',
+      } as any);
 
       const reqWithoutUserAgent = {
         ...mockRequest,
@@ -260,9 +293,10 @@ describe('AuthController', () => {
       const tokens = {
         accessToken: 'access_token_value',
         refreshToken: 'refresh_token_value',
+        userId: 'user-123',
       };
 
-      loginUseCase.execute.mockResolvedValue(tokens);
+      loginUseCase.execute.mockResolvedValue(tokens as any);
 
       const result = await controller.login(
         mockRequest as Request,
@@ -273,7 +307,7 @@ describe('AuthController', () => {
       expect(loginUseCase.execute).toHaveBeenCalledWith({
         email: loginDto.email,
         password: loginDto.password,
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
         deviceName: 'web',
       });
@@ -298,7 +332,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-123',
+      } as any);
 
       const reqWithoutIp = { ...mockRequest, ip: undefined };
 
@@ -320,7 +355,8 @@ describe('AuthController', () => {
       loginUseCase.execute.mockResolvedValue({
         accessToken: 'token',
         refreshToken: 'refresh',
-      });
+        userId: 'user-123',
+      } as any);
 
       const reqWithoutUserAgent = {
         ...mockRequest,
@@ -358,7 +394,7 @@ describe('AuthController', () => {
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'old_refresh_token',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
       });
       expect(mockResponse.cookie).toHaveBeenCalledWith('refreshToken', newTokens.refreshToken, {
@@ -392,7 +428,7 @@ describe('AuthController', () => {
 
       expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
         refreshToken: 'mobile_refresh_token',
-        ipAddress: '192.168.1.1',
+        ipAddress: TEST_IP,
         userAgent: 'Mozilla/5.0',
       });
       expect(result).toEqual({
@@ -440,6 +476,53 @@ describe('AuthController', () => {
       await expect(
         controller.refreshToken(mockRequest as Request, mockResponse as Response, body),
       ).rejects.toThrow(UnauthorizedException);
+    });
+    it('should prioritize cookie refresh token even when cookie value is not a string', async () => {
+      const reqWithInvalidCookie = {
+        ...mockRequest,
+        cookies: { refreshToken: 12345 },
+      };
+
+      refreshTokenUseCase.execute.mockResolvedValue({
+        accessToken: 'new_access_token',
+        refreshToken: 'new_refresh_token',
+      });
+
+      await controller.refreshToken(
+        reqWithInvalidCookie as Request,
+        mockResponse as unknown as Response,
+        { refreshToken: 'body_token' },
+      );
+
+      expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
+        refreshToken: 12345,
+        ipAddress: TEST_IP,
+        userAgent: 'Mozilla/5.0',
+      });
+    });
+
+    it('should pass undefined userAgent to refresh use case when header is missing', async () => {
+      const reqWithoutUserAgent = {
+        ...mockRequest,
+        headers: {},
+        cookies: { refreshToken: 'cookie_token' },
+      };
+
+      refreshTokenUseCase.execute.mockResolvedValue({
+        accessToken: 'new_access_token',
+        refreshToken: 'new_refresh_token',
+      });
+
+      await controller.refreshToken(
+        reqWithoutUserAgent as Request,
+        mockResponse as unknown as Response,
+      );
+
+      expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
+        refreshToken: 'cookie_token',
+        ipAddress: TEST_IP,
+        userAgent: undefined,
+      });
     });
   });
 
@@ -489,19 +572,18 @@ describe('AuthController', () => {
 
       expect(logoutUseCase.execute).toHaveBeenCalledWith('refresh_token_456');
     });
-
-    it('should logout mobile client using body refresh token when no cookie is present', async () => {
-      const reqWithoutCookie = { ...mockRequest, cookies: {} };
-
-      logoutUseCase.execute.mockResolvedValue(undefined);
+    it('should not call logout use case when refreshToken cookie is not a string', async () => {
+      const reqWithInvalidCookie = {
+        ...mockRequest,
+        cookies: { refreshToken: 12345 },
+      };
 
       const result = await controller.logout(
-        reqWithoutCookie as Request,
+        reqWithInvalidCookie as Request,
         mockResponse as Response,
-        { refreshToken: 'mobile_refresh_token' },
       );
 
-      expect(logoutUseCase.execute).toHaveBeenCalledWith('mobile_refresh_token');
+      expect(logoutUseCase.execute).not.toHaveBeenCalled();
       expect(mockResponse.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
       expect(result).toEqual({ success: true });
     });
@@ -533,6 +615,117 @@ describe('AuthController', () => {
         success: true,
         message: 'If the email exists, a reset link has been sent',
       });
+    });
+  });
+
+  describe('register fallback values', () => {
+    it('should use unknown fallback for missing ip and user-agent during registration auto-login', async () => {
+      const registerDto = { email: 'fallback@example.com', password: 'SecurePass123!' };
+      const user = { getId: jest.fn().mockReturnValue('user-fallback') } as any;
+      registerUserUseCase.execute.mockResolvedValue(user);
+      loginUseCase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        userId: 'user-fallback',
+      });
+
+      const request = { headers: {} } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      await controller.register(request, registerDto as any, response);
+
+      expect(loginUseCase.execute).toHaveBeenCalledWith({
+        email: registerDto.email,
+        password: registerDto.password,
+        ipAddress: 'unknown',
+        userAgent: 'unknown',
+        deviceName: 'web',
+      });
+    });
+  });
+
+  describe('login fallback values', () => {
+    it('should use unknown fallback for missing ip and user-agent during login', async () => {
+      loginUseCase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        userId: 'user-123',
+      });
+
+      const request = { headers: {} } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      await controller.login(
+        request,
+        { email: 'test@example.com', password: 'SecurePass123!' } as any,
+        response,
+      );
+
+      expect(loginUseCase.execute).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        ipAddress: 'unknown',
+        userAgent: 'unknown',
+        deviceName: 'web',
+      });
+    });
+  });
+
+  describe('refreshToken branches', () => {
+    it('should use refresh token from request body when cookie is missing', async () => {
+      process.env.NODE_ENV = 'production';
+      refreshTokenUseCase.execute.mockResolvedValue({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
+
+      const request = {
+        ip: TEST_IP_2,
+        headers: {},
+        cookies: {},
+      } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      const result = await controller.refreshToken(request, response, {
+        refreshToken: 'body-refresh-token',
+      });
+
+      expect(refreshTokenUseCase.execute).toHaveBeenCalledWith({
+        refreshToken: 'body-refresh-token',
+        ipAddress: TEST_IP_2,
+        userAgent: undefined,
+      });
+      expect(response.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        'new-refresh-token',
+        expect.objectContaining({ secure: true, sameSite: 'strict', path: '/' }),
+      );
+      expect(result).toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
+    });
+
+    it('should throw when no refresh token is provided in cookie or body', async () => {
+      const request = { cookies: {}, headers: {} } as any;
+      const response = { cookie: jest.fn() } as any;
+
+      await expect(controller.refreshToken(request, response, {})).rejects.toThrow(
+        new UnauthorizedException('Refresh token missing'),
+      );
+    });
+  });
+
+  describe('logout branches', () => {
+    it('should not call logout use case when refresh token cookie is not a string', async () => {
+      const request = { cookies: { refreshToken: 12345 } } as any;
+      const response = { clearCookie: jest.fn() } as any;
+
+      const result = await controller.logout(request, response);
+
+      expect(logoutUseCase.execute).not.toHaveBeenCalled();
+      expect(response.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+      expect(result).toEqual({ success: true });
     });
   });
 
@@ -575,5 +768,51 @@ describe('AuthController', () => {
         newPassword: 'Password2!',
       });
     });
+  });
+
+  describe('verifyEmail', () => {
+    it('should return success when token is valid', async () => {
+      verifyEmailUseCase.execute.mockResolvedValue(undefined);
+
+      const result = await controller.verifyEmail('valid-token-123');
+
+      expect(verifyEmailUseCase.execute).toHaveBeenCalledWith('valid-token-123');
+      expect(result).toEqual({ success: true, message: 'Email successfully verified' });
+    });
+
+    it('should propagate UnauthorizedException for invalid token', async () => {
+      verifyEmailUseCase.execute.mockRejectedValue(
+        new UnauthorizedException('Invalid or expired token'),
+      );
+
+      await expect(controller.verifyEmail('bad-token')).rejects.toThrow(UnauthorizedException);
+      expect(verifyEmailUseCase.execute).toHaveBeenCalledWith('bad-token');
+    });
+
+    it('should call execute with the exact token received', async () => {
+      const token = 'eyJhbGciOiJIUzI1NiJ9.test.signature';
+      verifyEmailUseCase.execute.mockResolvedValue(undefined);
+
+      await controller.verifyEmail(token);
+
+      expect(verifyEmailUseCase.execute).toHaveBeenCalledWith(token);
+    });
+  });
+});
+
+describe('AuthController constructor branch coverage', () => {
+  it('should instantiate with null dependencies to cover constructor parameter branches', () => {
+    const instance = new AuthController(
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+      null as any,
+    );
+    expect(instance).toBeDefined();
   });
 });

@@ -1,0 +1,11 @@
+{
+  "title": "Deals",
+  "subtitle": "Partner offers and available promo codes",
+  "copiedTitle": "Promo code copied",
+  "copiedMessage": "{{brand}}: {{code}}",
+  "linkUnavailableTitle": "Link unavailable",
+  "linkUnavailableMessage": "Cannot open {{url}}",
+  "openErrorMessage": "Cannot open the partner website right now.",
+  "copyAccessibility": "Copy {{brand}} promo code",
+  "openAccessibility": "Open {{brand}} website"
+}

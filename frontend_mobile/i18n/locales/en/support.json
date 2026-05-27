@@ -1,0 +1,38 @@
+{
+  "new": {
+    "title": "New ticket",
+    "subtitle": "Describe your issue in detail",
+    "subjectLabel": "Subject",
+    "subjectPlaceholder": "Briefly describe your issue",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Choose a category (optional)",
+    "categoryNone": "No category",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Describe your issue in detail...",
+    "submitButton": "Submit",
+    "validationTitle": "Required fields",
+    "validationMessage": "Subject and message are required.",
+    "successTitle": "Ticket submitted",
+    "successMessage": "Your ticket has been created. Our team will respond shortly.",
+    "errorTitle": "Error",
+    "errorMessage": "Unable to create the ticket. Please try again."
+  },
+  "tickets": {
+    "title": "My tickets",
+    "subtitle": "Track your support requests",
+    "empty": "No tickets yet.\nCreate one if you need help.",
+    "newButton": "New ticket",
+    "error": "Unable to load your tickets.",
+    "retry": "Retry"
+  },
+  "detail": {
+    "noMessages": "No messages",
+    "replyPlaceholder": "Your message...",
+    "closed": "This ticket is closed",
+    "errorTitle": "Error",
+    "errorMessage": "Unable to load the ticket.",
+    "sendErrorMessage": "Unable to send the message.",
+    "notFound": "Ticket not found.",
+    "back": "Back"
+  }
+}

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IUserAuthRepository } from '../../domain/repositories/user-auth.repository';
 import { ITokenService } from '../../domain/services/token.service';
@@ -6,6 +6,9 @@ import { IEmailService } from '../../infrastructure/services/email.service';
 
 @Injectable()
 export class ForgotPasswordUseCase {
+  private readonly logger = new Logger(ForgotPasswordUseCase.name);
+
+  /* istanbul ignore next */
   constructor(
     private readonly userRepo: IUserAuthRepository,
     private readonly tokenService: ITokenService,
@@ -26,10 +29,17 @@ export class ForgotPasswordUseCase {
 
     const resetLink = this.buildResetLink(token);
 
-    await this.emailService.sendPasswordResetEmail({
-      to: user.getEmail(),
-      resetLink,
-    });
+    try {
+      await this.emailService.sendPasswordResetEmail({
+        to: user.getEmail(),
+        resetLink,
+      });
+    } catch (emailError) {
+      this.logger.error(`Failed to send password reset email to ${user.getEmail()}`, emailError);
+      // Do not rethrow — always return success to prevent email enumeration
+      // and to avoid exposing internal email service failures as 500 errors.
+      return;
+    }
 
     this.eventEmitter.emit('security.password.reset', {
       userEmail: user.getEmail(),

@@ -11,6 +11,11 @@ import { AdminReplyTicketDto } from '../presentation/dto/admin-reply-ticket.dto'
 import { SupportTicketAuthorType } from 'src/modules/support/domain/enums/support-ticket-author-type.enum';
 import { AdminTicketsPolicy } from '../domain/policies/admin-tickets.policy';
 import { SupportTicketStatus } from 'src/modules/support/domain/enums/support-ticket-status.enum';
+import {
+  mapPerson,
+  mapTicketBase,
+  mapTicketMessage,
+} from 'src/modules/support/infrastructure/mappers/support-ticket-view.mapper';
 
 @Injectable()
 export class AdminTicketsService {
@@ -79,31 +84,8 @@ export class AdminTicketsService {
 
     return {
       items: rows.map(ticket => ({
-        id: ticket.id,
-        subject: ticket.subject,
-        status: ticket.status,
-        priority: ticket.priority,
-        category: ticket.category,
-        createdAt: ticket.createdAt,
-        updatedAt: ticket.updatedAt,
-        lastReplyAt: ticket.lastReplyAt,
-        closedAt: ticket.closedAt,
-        user: ticket.user
-          ? {
-              id: ticket.user.id,
-              email: ticket.user.email,
-              firstName: ticket.user.firstName,
-              lastName: ticket.user.lastName,
-            }
-          : null,
-        assignedAdmin: ticket.assignedAdmin
-          ? {
-              id: ticket.assignedAdmin.id,
-              email: ticket.assignedAdmin.email,
-              firstName: ticket.assignedAdmin.firstName,
-              lastName: ticket.assignedAdmin.lastName,
-            }
-          : null,
+        ...mapTicketBase(ticket),
+        user: mapPerson(ticket.user),
       })),
       total,
       page: query.page,
@@ -134,57 +116,9 @@ export class AdminTicketsService {
     }
 
     return {
-      id: ticket.id,
-      subject: ticket.subject,
-      status: ticket.status,
-      priority: ticket.priority,
-      category: ticket.category,
-      createdAt: ticket.createdAt,
-      updatedAt: ticket.updatedAt,
-      lastReplyAt: ticket.lastReplyAt,
-      closedAt: ticket.closedAt,
-      user: ticket.user
-        ? {
-            id: ticket.user.id,
-            email: ticket.user.email,
-            firstName: ticket.user.firstName,
-            lastName: ticket.user.lastName,
-          }
-        : null,
-      assignedAdmin: ticket.assignedAdmin
-        ? {
-            id: ticket.assignedAdmin.id,
-            email: ticket.assignedAdmin.email,
-            firstName: ticket.assignedAdmin.firstName,
-            lastName: ticket.assignedAdmin.lastName,
-          }
-        : null,
-      messages: (ticket.messages ?? []).map(message => ({
-        id: message.id,
-        authorType: message.authorType,
-        body: message.body,
-        createdAt: message.createdAt,
-        author:
-          message.authorType === SupportTicketAuthorType.USER
-            ? message.authorUser
-              ? {
-                  id: message.authorUser.id,
-                  email: message.authorUser.email,
-                  firstName: message.authorUser.firstName,
-                  lastName: message.authorUser.lastName,
-                }
-              : null
-            : message.authorType === SupportTicketAuthorType.ADMIN
-              ? message.authorAdmin
-                ? {
-                    id: message.authorAdmin.id,
-                    email: message.authorAdmin.email,
-                    firstName: message.authorAdmin.firstName,
-                    lastName: message.authorAdmin.lastName,
-                  }
-                : null
-              : null,
-      })),
+      ...mapTicketBase(ticket),
+      user: mapPerson(ticket.user),
+      messages: (ticket.messages ?? []).map(mapTicketMessage),
     };
   }
 
@@ -232,14 +166,7 @@ export class AdminTicketsService {
         authorType: savedMessage.authorType,
         body: savedMessage.body,
         createdAt: savedMessage.createdAt,
-        author: adminUser
-          ? {
-              id: adminUser.id,
-              email: adminUser.email,
-              firstName: adminUser.firstName,
-              lastName: adminUser.lastName,
-            }
-          : null,
+        author: mapPerson(adminUser),
       },
     };
   }

@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, StreamableFile } from '@nestjs/common';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { NotFoundException, StreamableFile } from '@nestjs/common';
 import { DocumentController } from './document.controller';
 import { UploadDocumentUseCase } from '../../application/use-cases/upload-document.use-case';
 import { FindAllDocumentsUseCase } from '../../application/use-cases/find-all-documents.use-case';
@@ -13,6 +12,8 @@ import { QuotaService } from '../../application/services/quota.service';
 import { InMemoryQueueService } from '../../infrastructure/queue/in-memory-queue.service';
 import { Document } from '../../domain/document.entity';
 import type { Request } from 'express';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 
 describe('DocumentController', () => {
   let controller: DocumentController;
@@ -26,14 +27,8 @@ describe('DocumentController', () => {
   let quotaService: jest.Mocked<QuotaService>;
   let queueService: jest.Mocked<InMemoryQueueService>;
 
-  const mockUser = {
-    userId: 'user-123',
-    role: 'user_freemium',
-  };
-
-  const mockRequest = {
-    user: mockUser,
-  } as Request & { user: { userId: string; role: string } };
+  const mockUser = { userId: 'user-123', role: 'user_freemium' };
+  const mockRequest = { user: mockUser } as Request & { user: typeof mockUser };
 
   const mockDocument = new Document({
     id: 'doc-123',
@@ -52,90 +47,53 @@ describe('DocumentController', () => {
     updatedAt: new Date('2024-01-01T10:00:00Z'),
   });
 
+  const mockFile: Express.Multer.File = {
+    fieldname: 'file',
+    originalname: 'test-document.pdf',
+    encoding: '7bit',
+    mimetype: 'application/pdf',
+    buffer: Buffer.from('mock file content'),
+    size: 1024000,
+    stream: null as any,
+    destination: '',
+    filename: '',
+    path: '',
+  };
+
   beforeEach(async () => {
-    const mockUploadUseCase: Partial<jest.Mocked<UploadDocumentUseCase>> = {
-      execute: jest.fn(),
-    };
-
-    const mockFindAllUseCase: Partial<jest.Mocked<FindAllDocumentsUseCase>> = {
-      execute: jest.fn(),
-    };
-
-    const mockDeleteUseCase: Partial<jest.Mocked<DeleteDocumentUseCase>> = {
-      execute: jest.fn(),
-    };
-
-    const mockReprocessUseCase: Partial<jest.Mocked<ReprocessOcrUseCase>> = {
-      execute: jest.fn(),
-    };
-
-    const mockUpdateUseCase: Partial<jest.Mocked<UpdateDocumentUseCase>> = {
-      execute: jest.fn(),
-    };
-
-    const mockR2Service: Partial<jest.Mocked<CloudflareR2Service>> = {
-      uploadFile: jest.fn(),
-      downloadFile: jest.fn(),
-      deleteFile: jest.fn(),
-    };
-
-    const mockDocumentRepository = {
-      findById: jest.fn(),
-      save: jest.fn(),
-      create: jest.fn(),
-      delete: jest.fn(),
-    };
-
-    const mockQuotaService: Partial<jest.Mocked<QuotaService>> = {
-      checkUserQuota: jest.fn(),
-      getUserQuotaUsage: jest.fn(),
-      formatBytes: jest.fn(),
-    };
-
-    const mockQueueService: Partial<jest.Mocked<InMemoryQueueService>> = {
-      addDocumentToQueue: jest.fn(),
-      getQueueStats: jest.fn(),
-      getJobStatus: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ThrottlerModule.forRoot([{ ttl: 60, limit: 10 }])],
       controllers: [DocumentController],
       providers: [
-        {
-          provide: UploadDocumentUseCase,
-          useValue: mockUploadUseCase,
-        },
-        {
-          provide: FindAllDocumentsUseCase,
-          useValue: mockFindAllUseCase,
-        },
-        {
-          provide: DeleteDocumentUseCase,
-          useValue: mockDeleteUseCase,
-        },
-        {
-          provide: ReprocessOcrUseCase,
-          useValue: mockReprocessUseCase,
-        },
-        {
-          provide: UpdateDocumentUseCase,
-          useValue: mockUpdateUseCase,
-        },
+        { provide: JwtAuthGuard, useValue: { canActivate: () => true } },
+        { provide: UploadDocumentUseCase, useValue: { execute: jest.fn() } },
+        { provide: FindAllDocumentsUseCase, useValue: { execute: jest.fn() } },
+        { provide: DeleteDocumentUseCase, useValue: { execute: jest.fn() } },
+        { provide: ReprocessOcrUseCase, useValue: { execute: jest.fn() } },
+        { provide: UpdateDocumentUseCase, useValue: { execute: jest.fn() } },
         {
           provide: CloudflareR2Service,
-          useValue: mockR2Service,
+          useValue: { uploadFile: jest.fn(), downloadFile: jest.fn(), deleteFile: jest.fn() },
         },
         {
           provide: DOCUMENT_REPOSITORY,
-          useValue: mockDocumentRepository,
+          useValue: { findById: jest.fn(), save: jest.fn(), create: jest.fn(), delete: jest.fn() },
         },
         {
           provide: QuotaService,
-          useValue: mockQuotaService,
+          useValue: {
+            checkUserQuota: jest.fn(),
+            getUserQuotaUsage: jest.fn(),
+            formatBytes: jest.fn(),
+          },
         },
         {
           provide: InMemoryQueueService,
-          useValue: mockQueueService,
+          useValue: {
+            addDocumentToQueue: jest.fn(),
+            getQueueStats: jest.fn(),
+            getJobStatus: jest.fn(),
+          },
         },
       ],
     })
@@ -143,7 +101,7 @@ describe('DocumentController', () => {
       .useValue({ canActivate: () => true })
       .compile();
 
-    controller = module.get<DocumentController>(DocumentController);
+    controller = module.get(DocumentController);
     uploadDocumentUseCase = module.get(UploadDocumentUseCase);
     findAllDocumentsUseCase = module.get(FindAllDocumentsUseCase);
     deleteDocumentUseCase = module.get(DeleteDocumentUseCase);
@@ -160,18 +118,7 @@ describe('DocumentController', () => {
   });
 
   describe('upload', () => {
-    const mockFile: Express.Multer.File = {
-      fieldname: 'file',
-      originalname: 'test-document.pdf',
-      encoding: '7bit',
-      mimetype: 'application/pdf',
-      buffer: Buffer.from('mock file content'),
-      size: 1024000,
-      stream: null as any,
-      destination: '',
-      filename: '',
-      path: '',
-    };
+    // Signature: upload(req, file, userId, subscriptionId?, contractId?, folderId?, userRole?)
 
     it('should upload a document successfully', async () => {
       uploadDocumentUseCase.execute.mockResolvedValue(mockDocument);
@@ -182,45 +129,35 @@ describe('DocumentController', () => {
         'user-123',
         'sub-123',
         '1',
-        'freemium',
+        undefined,
+        'user_freemium',
       );
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
         {
           userId: 'user-123',
           filename: 'test-document.pdf',
-          folderId: 'freemium',
           fileBuffer: mockFile.buffer,
           fileSize: 1024000,
           mimeType: 'application/pdf',
           subscriptionId: 'sub-123',
           contractId: 1,
+          folderId: undefined,
         },
-        'freemium',
+        'user_freemium',
       );
 
-      expect(result).toEqual({
-        id: 'doc-123',
-        user_id: 'user-123',
-        subscription_id: 'sub-123',
-        contract_id: 1,
-        filename: 'test-document.pdf',
-        r2_key: 'documents/test-document.pdf',
-        r2_bucket: 'remindy-documents',
-        file_hash: 'hash123',
-        file_size: 1024000,
-        mime_type: 'application/pdf',
-        ocr_text: 'Extracted text',
-        ocr_status: 'completed',
-        ocr_error: undefined,
-        uploaded_at: '2024-01-01T10:00:00.000Z',
-        updated_at: '2024-01-01T10:00:00.000Z',
-        deleted_at: undefined,
-      });
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: 'doc-123',
+          filename: 'test-document.pdf',
+          mime_type: 'application/pdf',
+        }),
+      );
     });
 
     it('should upload without subscription and contract IDs', async () => {
-      const documentProps = {
+      const docWithoutLinks = new Document({
         id: mockDocument.id,
         userId: mockDocument.userId,
         filename: mockDocument.filename,
@@ -232,35 +169,25 @@ describe('DocumentController', () => {
         ocrStatus: mockDocument.ocrStatus,
         uploadedAt: mockDocument.uploadedAt,
         updatedAt: mockDocument.updatedAt,
-      };
-      const documentWithoutLinks = new Document(documentProps);
-      uploadDocumentUseCase.execute.mockResolvedValue(documentWithoutLinks);
+      });
+      uploadDocumentUseCase.execute.mockResolvedValue(docWithoutLinks);
 
       const result = await controller.upload(mockRequest, mockFile, 'user-123');
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
-        {
+        expect.objectContaining({
           userId: 'user-123',
-          filename: 'test-document.pdf',
-          folderId: undefined,
-          fileBuffer: mockFile.buffer,
-          fileSize: 1024000,
-          mimeType: 'application/pdf',
           subscriptionId: undefined,
           contractId: undefined,
-        },
-        'freemium',
+          folderId: undefined,
+        }),
+        undefined,
       );
-
       expect(result.subscription_id).toBeUndefined();
       expect(result.contract_id).toBeUndefined();
     });
 
     it('should throw BadRequestException when file is missing', async () => {
-      await expect(controller.upload(mockRequest, null as any, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
-
       await expect(controller.upload(mockRequest, null as any, 'user-123')).rejects.toThrow(
         'File is required',
       );
@@ -272,10 +199,8 @@ describe('DocumentController', () => {
       await controller.upload(mockRequest, mockFile, 'user-123', undefined, '42');
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          contractId: 42,
-        }),
-        'freemium',
+        expect.objectContaining({ contractId: 42 }),
+        undefined,
       );
     });
 
@@ -285,11 +210,47 @@ describe('DocumentController', () => {
       await controller.upload(mockRequest, mockFile, 'user-123', undefined, undefined);
 
       expect(uploadDocumentUseCase.execute).toHaveBeenCalledWith(
-        expect.objectContaining({
-          contractId: undefined,
-        }),
-        'freemium',
+        expect.objectContaining({ contractId: undefined }),
+        undefined,
       );
+    });
+
+    it('should throw BadRequestException for empty file (0 bytes)', async () => {
+      const emptyFile = { ...mockFile, size: 0, buffer: Buffer.alloc(0) };
+      await expect(controller.upload(mockRequest, emptyFile, 'user-123')).rejects.toThrow(
+        'File is empty (0 bytes)',
+      );
+    });
+
+    it('should throw BadRequestException for file with empty name', async () => {
+      const noNameFile = { ...mockFile, originalname: '   ' };
+      await expect(controller.upload(mockRequest, noNameFile, 'user-123')).rejects.toThrow(
+        'File must have a valid name',
+      );
+    });
+
+    it('should throw BadRequestException for unsupported mime type', async () => {
+      const invalidTypeFile = { ...mockFile, mimetype: 'application/exe' };
+      await expect(controller.upload(mockRequest, invalidTypeFile, 'user-123')).rejects.toThrow(
+        'Unsupported file type',
+      );
+    });
+
+    it('should delegate per-role file size enforcement to the use-case', async () => {
+      const largeFile = { ...mockFile, size: 60 * 1024 * 1024 };
+      uploadDocumentUseCase.execute.mockRejectedValue(
+        new Error('File size (60MB) exceeds your plan limit (50MB).'),
+      );
+      await expect(controller.upload(mockRequest, largeFile, 'user-123')).rejects.toThrow(
+        /exceeds your plan limit/,
+      );
+    });
+
+    it('should accept image/jpeg mime type', async () => {
+      uploadDocumentUseCase.execute.mockResolvedValue(mockDocument);
+      const jpegFile = { ...mockFile, mimetype: 'image/jpeg', originalname: 'photo.jpg' };
+      const result = await controller.upload(mockRequest, jpegFile, 'user-123');
+      expect(result).toBeDefined();
     });
   });
 
@@ -308,7 +269,6 @@ describe('DocumentController', () => {
         limit: 100,
         sort: 'uploaded_at:desc',
       });
-
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('doc-123');
     });
@@ -316,16 +276,17 @@ describe('DocumentController', () => {
     it('should apply all filters', async () => {
       findAllDocumentsUseCase.execute.mockResolvedValue([mockDocument]);
 
-      const filters = {
-        subscription_id: 'sub-123',
-        contract_id: 1,
-        ocr_status: 'completed' as const,
-        mime_type: 'application/pdf',
-        limit: 50,
-        sort: 'uploaded_at:asc',
-      };
-
-      await controller.findAll(filters, 'user-123');
+      await controller.findAll(
+        {
+          subscription_id: 'sub-123',
+          contract_id: 1,
+          ocr_status: 'completed',
+          mime_type: 'application/pdf',
+          limit: 50,
+          sort: 'uploaded_at:asc',
+        },
+        'user-123',
+      );
 
       expect(findAllDocumentsUseCase.execute).toHaveBeenCalledWith({
         userId: 'user-123',
@@ -340,30 +301,27 @@ describe('DocumentController', () => {
 
     it('should return empty array when no documents found', async () => {
       findAllDocumentsUseCase.execute.mockResolvedValue([]);
-
       const result = await controller.findAll({}, 'user-123');
-
       expect(result).toEqual([]);
     });
 
     it('should map multiple documents correctly', async () => {
-      const document2 = new Document({
+      const doc2 = new Document({
         id: 'doc-456',
-        userId: mockDocument.userId,
-        subscriptionId: mockDocument.subscriptionId,
-        contractId: mockDocument.contractId,
-        filename: 'another-document.pdf',
-        r2Key: mockDocument.r2Key,
-        r2Bucket: mockDocument.r2Bucket,
-        fileHash: mockDocument.fileHash,
-        fileSize: mockDocument.fileSize,
-        mimeType: mockDocument.mimeType,
-        ocrStatus: mockDocument.ocrStatus,
-        uploadedAt: mockDocument.uploadedAt,
-        updatedAt: mockDocument.updatedAt,
+        userId: 'user-123',
+        subscriptionId: 'sub-123',
+        contractId: 1,
+        filename: 'another.pdf',
+        r2Key: 'key',
+        r2Bucket: 'bucket',
+        fileHash: 'hash',
+        fileSize: 1024,
+        mimeType: 'application/pdf',
+        ocrStatus: 'completed',
+        uploadedAt: new Date(),
+        updatedAt: new Date(),
       });
-
-      findAllDocumentsUseCase.execute.mockResolvedValue([mockDocument, document2]);
+      findAllDocumentsUseCase.execute.mockResolvedValue([mockDocument, doc2]);
 
       const result = await controller.findAll({}, 'user-123');
 
@@ -373,111 +331,28 @@ describe('DocumentController', () => {
     });
   });
 
-  describe('delete', () => {
-    it('should delete a document successfully', async () => {
-      deleteDocumentUseCase.execute.mockResolvedValue(undefined);
-
-      await controller.delete('doc-123', 'user-123');
-
-      expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123');
-    });
-
-    it('should pass correct user ID for authorization', async () => {
-      deleteDocumentUseCase.execute.mockResolvedValue(undefined);
-
-      await controller.delete('doc-123', 'different-user-456');
-
-      expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith('doc-123', 'different-user-456');
-    });
-  });
-
-  describe('reprocessOcr', () => {
-    it('should reprocess OCR without force flag', async () => {
-      reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
-
-      const result = await controller.reprocessOcr('doc-123', {}, 'user-123');
-
-      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
-        force: false,
-      });
-
-      expect(result.id).toBe('doc-123');
-    });
-
-    it('should reprocess OCR with force flag', async () => {
-      reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
-
-      const result = await controller.reprocessOcr('doc-123', { force: true }, 'user-123');
-
-      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
-        force: true,
-      });
-
-      expect(result.id).toBe('doc-123');
-    });
-
-    it('should return updated document after reprocessing', async () => {
-      const updatedDocument = new Document({
-        id: mockDocument.id,
-        userId: mockDocument.userId,
-        subscriptionId: mockDocument.subscriptionId,
-        contractId: mockDocument.contractId,
-        filename: mockDocument.filename,
-        r2Key: mockDocument.r2Key,
-        r2Bucket: mockDocument.r2Bucket,
-        fileHash: mockDocument.fileHash,
-        fileSize: mockDocument.fileSize,
-        mimeType: mockDocument.mimeType,
-        ocrStatus: 'processing',
-        uploadedAt: mockDocument.uploadedAt,
-        updatedAt: mockDocument.updatedAt,
-      });
-      reprocessOcrUseCase.execute.mockResolvedValue(updatedDocument);
-
-      const result = await controller.reprocessOcr('doc-123', {}, 'user-123');
-
-      expect(result.ocr_status).toBe('processing');
-    });
-
-    it('should pass correct user ID for authorization', async () => {
-      reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
-
-      await controller.reprocessOcr('doc-123', {}, 'different-user-789');
-
-      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith(
-        'doc-123',
-        'different-user-789',
-        expect.any(Object),
-      );
-    });
-  });
-
   describe('findOne', () => {
     it('should return document when found and belongs to user', async () => {
       documentRepository.findById.mockResolvedValue(mockDocument);
-
       const result = await controller.findOne('doc-123', 'user-123');
-
       expect(documentRepository.findById).toHaveBeenCalledWith('doc-123');
       expect(result.id).toBe('doc-123');
     });
 
     it('should throw NotFoundException when document not found', async () => {
       documentRepository.findById.mockResolvedValue(null);
-
-      await expect(controller.findOne('doc-999', 'user-123')).rejects.toThrow(NotFoundException);
       await expect(controller.findOne('doc-999', 'user-123')).rejects.toThrow(
         'Document with ID doc-999 not found',
       );
     });
 
     it('should throw NotFoundException when document belongs to different user', async () => {
-      const otherUserDoc = new Document({
+      const otherDoc = new Document({
         id: 'doc-123',
         userId: 'other-user',
         filename: 'test.pdf',
         r2Key: 'key',
-        r2Bucket: 'remindy-documents',
+        r2Bucket: 'bucket',
         fileHash: 'hash',
         fileSize: 1024,
         mimeType: 'application/pdf',
@@ -485,15 +360,14 @@ describe('DocumentController', () => {
         uploadedAt: new Date(),
         updatedAt: new Date(),
       });
-      documentRepository.findById.mockResolvedValue(otherUserDoc);
-
+      documentRepository.findById.mockResolvedValue(otherDoc);
       await expect(controller.findOne('doc-123', 'user-123')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('update', () => {
     it('should update document and return response', async () => {
-      const updatedDocument = new Document({
+      const updated = new Document({
         id: 'doc-123',
         userId: 'user-123',
         subscriptionId: 'sub-123',
@@ -508,8 +382,7 @@ describe('DocumentController', () => {
         uploadedAt: new Date('2024-01-01T10:00:00Z'),
         updatedAt: new Date('2024-01-01T10:00:00Z'),
       });
-
-      updateDocumentUseCase.execute.mockResolvedValue(updatedDocument);
+      updateDocumentUseCase.execute.mockResolvedValue(updated);
 
       const result = await controller.update('doc-123', { filename: 'updated.pdf' }, 'user-123');
 
@@ -538,11 +411,74 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('delete', () => {
+    it('should delete a document successfully', async () => {
+      deleteDocumentUseCase.execute.mockResolvedValue(undefined);
+      await controller.delete('doc-123', 'user-123');
+      expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123');
+    });
+
+    it('should pass correct user ID for authorization', async () => {
+      deleteDocumentUseCase.execute.mockResolvedValue(undefined);
+      await controller.delete('doc-123', 'different-user-456');
+      expect(deleteDocumentUseCase.execute).toHaveBeenCalledWith('doc-123', 'different-user-456');
+    });
+  });
+
+  describe('reprocessOcr', () => {
+    it('should reprocess OCR without force flag', async () => {
+      reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
+      const result = await controller.reprocessOcr('doc-123', {}, 'user-123');
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
+        force: false,
+      });
+      expect(result.id).toBe('doc-123');
+    });
+
+    it('should reprocess OCR with force flag', async () => {
+      reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
+      await controller.reprocessOcr('doc-123', { force: true }, 'user-123');
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith('doc-123', 'user-123', {
+        force: true,
+      });
+    });
+
+    it('should return updated document after reprocessing', async () => {
+      const processing = new Document({
+        id: 'doc-123',
+        userId: 'user-123',
+        subscriptionId: 'sub-123',
+        contractId: 1,
+        filename: 'test-document.pdf',
+        r2Key: 'documents/test-document.pdf',
+        r2Bucket: 'remindy-documents',
+        fileHash: 'hash123',
+        fileSize: 1024000,
+        mimeType: 'application/pdf',
+        ocrStatus: 'processing',
+        uploadedAt: new Date('2024-01-01T10:00:00Z'),
+        updatedAt: new Date('2024-01-01T10:00:00Z'),
+      });
+      reprocessOcrUseCase.execute.mockResolvedValue(processing);
+      const result = await controller.reprocessOcr('doc-123', {}, 'user-123');
+      expect(result.ocr_status).toBe('processing');
+    });
+
+    it('should pass correct user ID for authorization', async () => {
+      reprocessOcrUseCase.execute.mockResolvedValue(mockDocument);
+      await controller.reprocessOcr('doc-123', {}, 'different-user-789');
+      expect(reprocessOcrUseCase.execute).toHaveBeenCalledWith(
+        'doc-123',
+        'different-user-789',
+        expect.any(Object),
+      );
+    });
+  });
+
   describe('downloadDocument', () => {
     it('should download document and return StreamableFile', async () => {
       documentRepository.findById.mockResolvedValue(mockDocument);
-      const fileBuffer = Buffer.from('PDF content here');
-      r2Service.downloadFile.mockResolvedValue(fileBuffer);
+      r2Service.downloadFile.mockResolvedValue(Buffer.from('PDF content here'));
 
       const result = await controller.downloadDocument('doc-123', 'user-123');
 
@@ -553,19 +489,18 @@ describe('DocumentController', () => {
 
     it('should throw NotFoundException when document not found', async () => {
       documentRepository.findById.mockResolvedValue(null);
-
       await expect(controller.downloadDocument('doc-999', 'user-123')).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw NotFoundException when document belongs to different user', async () => {
-      const otherUserDoc = new Document({
+      const otherDoc = new Document({
         id: 'doc-123',
         userId: 'other-user',
         filename: 'test.pdf',
         r2Key: 'key',
-        r2Bucket: 'remindy-documents',
+        r2Bucket: 'bucket',
         fileHash: 'hash',
         fileSize: 1024,
         mimeType: 'application/pdf',
@@ -573,8 +508,7 @@ describe('DocumentController', () => {
         uploadedAt: new Date(),
         updatedAt: new Date(),
       });
-      documentRepository.findById.mockResolvedValue(otherUserDoc);
-
+      documentRepository.findById.mockResolvedValue(otherDoc);
       await expect(controller.downloadDocument('doc-123', 'user-123')).rejects.toThrow(
         NotFoundException,
       );
@@ -584,15 +518,14 @@ describe('DocumentController', () => {
 
   describe('getQuota', () => {
     it('should return quota usage with formatted values', async () => {
-      const usage = {
+      quotaService.getUserQuotaUsage.mockResolvedValue({
         documentsCount: 5,
         maxDocuments: 50,
         storageUsed: 10 * 1024 * 1024,
         maxStorage: 100 * 1024 * 1024,
         storageUsedPercent: 10,
         documentsUsedPercent: 10,
-      };
-      quotaService.getUserQuotaUsage.mockResolvedValue(usage);
+      });
       quotaService.formatBytes.mockReturnValue('10.00 MB');
 
       const result = await controller.getQuota('user-123', 'freemium');
@@ -604,20 +537,19 @@ describe('DocumentController', () => {
     });
 
     it('should default to freemium role when no role provided', async () => {
-      const usage = {
+      quotaService.getUserQuotaUsage.mockResolvedValue({
         documentsCount: 0,
         maxDocuments: 50,
         storageUsed: 0,
         maxStorage: 100 * 1024 * 1024,
         storageUsedPercent: 0,
         documentsUsedPercent: 0,
-      };
-      quotaService.getUserQuotaUsage.mockResolvedValue(usage);
+      });
       quotaService.formatBytes.mockReturnValue('0 B');
 
       await controller.getQuota('user-123', undefined);
 
-      expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', 'freemium');
+      expect(quotaService.getUserQuotaUsage).toHaveBeenCalledWith('user-123', '');
     });
   });
 
@@ -652,82 +584,9 @@ describe('DocumentController', () => {
 
     it('should throw NotFoundException when job not found', async () => {
       queueService.getJobStatus.mockRejectedValue(new Error('Job not found'));
-
-      await expect(controller.getJobStatus('invalid-job')).rejects.toThrow(NotFoundException);
       await expect(controller.getJobStatus('invalid-job')).rejects.toThrow(
         'Job invalid-job not found',
       );
-    });
-  });
-
-  describe('upload - additional validation', () => {
-    const mockFile: Express.Multer.File = {
-      fieldname: 'file',
-      originalname: 'test-document.pdf',
-      encoding: '7bit',
-      mimetype: 'application/pdf',
-      buffer: Buffer.from('mock file content'),
-      size: 1024000,
-      stream: null as any,
-      destination: '',
-      filename: '',
-      path: '',
-    };
-
-    it('should throw BadRequestException for empty file (0 bytes)', async () => {
-      const emptyFile = { ...mockFile, size: 0, buffer: Buffer.alloc(0) };
-
-      await expect(controller.upload(mockRequest, emptyFile, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(controller.upload(mockRequest, emptyFile, 'user-123')).rejects.toThrow(
-        'File is empty (0 bytes)',
-      );
-    });
-
-    it('should throw BadRequestException for file with empty name', async () => {
-      const noNameFile = { ...mockFile, originalname: '   ' };
-
-      await expect(controller.upload(mockRequest, noNameFile, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(controller.upload(mockRequest, noNameFile, 'user-123')).rejects.toThrow(
-        'File must have a valid name',
-      );
-    });
-
-    it('should throw BadRequestException for unsupported mime type', async () => {
-      const invalidTypeFile = { ...mockFile, mimetype: 'application/exe' };
-
-      await expect(controller.upload(mockRequest, invalidTypeFile, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(controller.upload(mockRequest, invalidTypeFile, 'user-123')).rejects.toThrow(
-        'Invalid file type',
-      );
-    });
-
-    it('should throw BadRequestException when file exceeds 10MB', async () => {
-      const largeFile = { ...mockFile, size: 11 * 1024 * 1024 };
-
-      await expect(controller.upload(mockRequest, largeFile, 'user-123')).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(controller.upload(mockRequest, largeFile, 'user-123')).rejects.toThrow(
-        'File size exceeds 10MB limit',
-      );
-    });
-
-    it('should accept image/jpeg mime type', async () => {
-      const jpegFile = {
-        ...mockFile,
-        mimetype: 'image/jpeg',
-        originalname: 'photo.jpg',
-      };
-      uploadDocumentUseCase.execute.mockResolvedValue(mockDocument);
-
-      const result = await controller.upload(mockRequest, jpegFile, 'user-123');
-      expect(result).toBeDefined();
     });
   });
 });

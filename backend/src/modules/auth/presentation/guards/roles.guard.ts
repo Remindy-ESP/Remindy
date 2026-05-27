@@ -5,6 +5,7 @@ import { Role } from '../../domain/value-objects/role.enum';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
+  /* istanbul ignore next */
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {

@@ -1,0 +1,25 @@
+{
+  "loading": "Loading home page…",
+  "errorPrefix": "Error: {{message}}",
+  "errorHint": "Make sure the backend server is running and your network connection is stable",
+  "categoriesDropdown": "Categories",
+  "categoriesEmpty": "No categories available. Please add some categories first.",
+  "allCategories": "All categories",
+  "expensesTitle": "Your spending details",
+  "noExpenses": "No expense for this period",
+  "generalCategory": "General",
+  "fileTooLargeTitle": "File too large",
+  "fileTooLargeMessage": "The file cannot exceed 10 MB. Please choose a smaller one.",
+  "ocrFailedTitle": "Analysis failed",
+  "ocrFailedMessage": "Automatic document analysis failed. You can enter the information manually.",
+  "uploadErrorFallback": "An error occurred while uploading the document.",
+  "uploading": "Analyzing…",
+  "uploadingHint": "AI data extraction",
+  "uploadingHint2": "This can take up to 30 seconds",
+  "periods": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Monthly",
+    "year": "Year"
+  }
+}

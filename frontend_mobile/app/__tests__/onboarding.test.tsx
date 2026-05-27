@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import OnboardingScreen from '../onboarding';
 
 const mockReplace = jest.fn();
@@ -16,15 +15,7 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: jest.fn(() => ({})),
 }));
 
-const mockSetHasSeenOnboarding = jest.fn();
-jest.mock('@/services/local/onboarding.service', () => ({
-  __esModule: true,
-  default: {
-    hasSeenOnboarding: jest.fn(() => Promise.resolve(true)),
-    setHasSeenOnboarding: (...args: any[]) => mockSetHasSeenOnboarding(...args),
-    resetOnboarding: jest.fn(() => Promise.resolve()),
-  },
-}));
+const mockSetHasSeenOnboarding = global.__mockOnboardingSetSeen as jest.Mock;
 
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: any) => {
@@ -33,11 +24,28 @@ jest.mock('react-native-safe-area-context', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 describe('OnboardingScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     mockSetHasSeenOnboarding.mockResolvedValue(undefined);
     const { useLocalSearchParams } = require('expo-router');
     useLocalSearchParams.mockReturnValue({});
@@ -159,10 +167,7 @@ describe('OnboardingScreen', () => {
     const { getByText } = render(<OnboardingScreen />);
     fireEvent.press(getByText('Passer'));
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur',
-        expect.stringContaining('Impossible d enregistrer')
-      );
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 

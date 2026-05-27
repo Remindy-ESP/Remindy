@@ -42,7 +42,7 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 // Mock GlobalHeader
-jest.mock('@/components/GlobalHeader', () => {
+jest.mock('@/shared/ui/GlobalHeader', () => {
   return function MockGlobalHeader() {
     const { View } = require('react-native');
     return <View />;
@@ -51,7 +51,7 @@ jest.mock('@/components/GlobalHeader', () => {
 
 // Mock AuthContext
 const mockUseAuth = jest.fn();
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
@@ -60,7 +60,7 @@ jest.mock('@/navigation/MenuConfig', () => ({
   APP_ROUTES: [
     {
       key: 'dashboard',
-      label: 'Accueil',
+      labelKey: 'nav.dashboard',
       route: '/(tabs)/dashboard',
       showInBurger: true,
       showInFooter: true,
@@ -68,7 +68,7 @@ jest.mock('@/navigation/MenuConfig', () => ({
     },
     {
       key: 'cloud',
-      label: 'Cloud',
+      labelKey: 'nav.cloud',
       route: '/(tabs)/cloud',
       showInBurger: true,
       showInFooter: false,
@@ -163,13 +163,13 @@ describe('TabLayout', () => {
     expect(rendered).toBeTruthy();
   });
 
-  it('renders static hidden screens like profile, categories, etc.', () => {
+  it('renders all tab screens including hidden ones', () => {
     mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
 
     render(<TabLayout />);
 
     const names = capturedScreenProps.map((p: any) => p.name);
-    expect(names).toContain('profile');
-    expect(names).toContain('categories');
+    expect(names).toContain('dashboard');
+    expect(names).toContain('cloud');
   });
 });

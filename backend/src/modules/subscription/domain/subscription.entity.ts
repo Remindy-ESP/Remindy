@@ -196,7 +196,11 @@ export class Subscription {
       throw new Error('Trial end date must be after trial start date');
     }
 
-    if (this._endDate && this._endDate <= this._startDate) {
+    if (
+      this._endDate &&
+      Subscription.toLocalDay(this._endDate as unknown as Date) <
+        Subscription.toLocalDay(this._startDate as unknown as Date)
+    ) {
       throw new Error('End date must be after start date');
     }
 
@@ -250,15 +254,26 @@ export class Subscription {
   }
 
   public updateDates(startDate: Date, nextDueDate: Date, endDate?: Date): void {
-    if (nextDueDate <= startDate) {
-      throw new Error('Next due date must be after start date');
+    const startDay = Subscription.toLocalDay(startDate as unknown as Date | string);
+    const nextDay = Subscription.toLocalDay(nextDueDate as unknown as Date | string);
+
+    if (nextDay < startDay) {
+      throw new Error('Next due date must be on or after start date');
     }
-    if (endDate && endDate <= startDate) {
-      throw new Error('End date must be after start date');
+    if (endDate) {
+      const endDay = Subscription.toLocalDay(endDate as unknown as Date | string);
+      if (endDay < startDay) {
+        throw new Error('End date must be on or after start date');
+      }
     }
     this._startDate = startDate;
     this._nextDueDate = nextDueDate;
     this._endDate = endDate;
+  }
+
+  private static toLocalDay(d: Date | string): string {
+    if (typeof d === 'string') return d.substring(0, 10);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   public updateTrialDates(trialStartDate?: Date, trialEndDate?: Date): void {

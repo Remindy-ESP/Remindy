@@ -1,0 +1,11 @@
+{
+  "headerTitle": "Notifications",
+  "headerSubtitle": "Vos alertes et rappels",
+  "loadError": "Erreur lors du chargement des notifications",
+  "retry": "Réessayer",
+  "empty": "Pas de notifications pour le moment",
+  "deleteAllTitle": "Supprimer toutes les notifications",
+  "deleteAllMessage": "Êtes-vous sûr de vouloir supprimer toutes les notifications ?",
+  "deleteError": "Impossible de supprimer la notification",
+  "deleteAllError": "Impossible de supprimer les notifications"
+}

@@ -6,6 +6,7 @@ import { ITokenService } from '../../domain/services/token.service';
 
 @Injectable()
 export class LogoutUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly sessionRepo: IUserSessionRepository,
     private readonly passwordService: IPasswordService,

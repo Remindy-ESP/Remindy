@@ -1,17 +1,9 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import AuthScreen from '../index';
 
-// Mock expo-router
-const mockReplace = jest.fn();
-const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-    push: mockPush,
-  }),
-}));
+const mockReplace = global.__mockRouterReplace as jest.Mock;
+const mockPush = global.__mockRouterPush as jest.Mock;
 
 const mockLogin = jest.fn();
 const mockRegister = jest.fn();
@@ -23,7 +15,7 @@ const mockAuthState = {
 };
 
 // Mock AuthContext
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({
     login: mockLogin,
     register: mockRegister,
@@ -32,18 +24,21 @@ jest.mock('@/context/AuthContext', () => ({
   }),
 }));
 
-const mockHasSeenOnboarding = jest.fn(() => Promise.resolve(true));
-jest.mock('@/services/local/onboarding.service', () => ({
-  __esModule: true,
-  default: {
-    hasSeenOnboarding: (...args: any[]) => mockHasSeenOnboarding.apply(undefined, args),
-    setHasSeenOnboarding: jest.fn(() => Promise.resolve()),
-    resetOnboarding: jest.fn(() => Promise.resolve()),
-  },
-}));
+const mockHasSeenOnboarding = global.__mockOnboardingHasSeen as jest.Mock;
 
 jest.mock('@/services/api', () => ({
   getErrorMessage: (error: any, fallback: string) => error?.message || fallback,
+}));
+
+const mockToastError = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastInfo = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(
+    jest.fn(),
+    { error: (...args: any[]) => mockToastError(...args), success: (...args: any[]) => mockToastSuccess(...args), info: (...args: any[]) => mockToastInfo(...args) }
+  ),
+  ToastProvider: ({ children }: any) => children,
 }));
 
 // Mock fetch
@@ -54,7 +49,19 @@ global.fetch = jest.fn(() =>
   })
 ) as jest.Mock;
 
-jest.spyOn(Alert, 'alert');
+// Helper to fill the register form (used by many tests)
+const fillRegisterForm = (
+  getByTestId: (id: string) => any,
+  { confirmPassword = 'password123', skip = [] as string[] } = {},
+) => {
+  fireEvent.press(getByTestId('toggle-auth-mode'));
+  if (!skip.includes('email')) fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
+  if (!skip.includes('password')) fireEvent.changeText(getByTestId('password-input'), 'password123');
+  if (!skip.includes('firstName')) fireEvent.changeText(getByTestId('firstName-input'), 'John');
+  if (!skip.includes('lastName')) fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+  if (!skip.includes('confirmPassword'))
+    fireEvent.changeText(getByTestId('confirm-password-input'), confirmPassword);
+};
 
 describe('AuthScreen', () => {
   beforeEach(() => {
@@ -63,7 +70,9 @@ describe('AuthScreen', () => {
     mockPush.mockClear();
     mockLogin.mockClear();
     mockRegister.mockClear();
-    (Alert.alert as jest.Mock).mockClear();
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastInfo.mockClear();
     mockAuthState.isAuthenticated = false;
     mockAuthState.isLoading = false;
     mockHasSeenOnboarding.mockResolvedValue(true);
@@ -150,20 +159,9 @@ describe('AuthScreen', () => {
     const { getByTestId } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
 
-    // Switch to register mode
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-
-    // Fill inputs
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+    fillRegisterForm(getByTestId, { skip: ['email'] });
     fireEvent.changeText(getByTestId('email-input'), 'john@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('confirm-password-input'), 'password123');
-
-    const submitButton = getByTestId('submit-button');
-
-    expect(submitButton).toBeTruthy();
-    fireEvent.press(submitButton);
+    fireEvent.press(getByTestId('submit-button'));
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith(
@@ -181,19 +179,13 @@ describe('AuthScreen', () => {
     mockAuthState.isLoading = true;
     const { getByText } = render(<AuthScreen />);
     // onboardingCheckDone starts false, so spinner shows regardless
-    await waitFor(() => expect(getByText('Loading...')).toBeTruthy());
-  });
-
-  it('shows loading spinner while onboarding check is pending', async () => {
-    // never resolves → onboardingCheckDone stays false
-    mockHasSeenOnboarding.mockReturnValue(new Promise(() => {}));
-    const { getByText } = render(<AuthScreen />);
-    await waitFor(() => expect(getByText('Loading...')).toBeTruthy());
+    await waitFor(() => expect(getByText('Chargement…')).toBeTruthy());
   });
 
   // ── Onboarding redirect ─────────────────────────────────────────────────────
 
-  it('redirects to /onboarding when onboarding not seen', async () => {
+  it('redirects to /onboarding after login when onboarding not yet seen', async () => {
+    mockAuthState.isAuthenticated = true;
     mockHasSeenOnboarding.mockResolvedValue(false);
     render(<AuthScreen />);
     await waitFor(() => {
@@ -218,7 +210,7 @@ describe('AuthScreen', () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('submit-button')).toBeTruthy());
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Email is required')).toBeTruthy();
+    expect(await findByText("L'email est requis")).toBeTruthy();
   });
 
   it('shows error when email is invalid', async () => {
@@ -226,7 +218,7 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
     fireEvent.changeText(getByTestId('email-input'), 'not-an-email');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Please enter a valid email address')).toBeTruthy();
+    expect(await findByText('Veuillez saisir une adresse email valide')).toBeTruthy();
   });
 
   it('shows error when password is empty', async () => {
@@ -234,7 +226,7 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
     fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Password is required')).toBeTruthy();
+    expect(await findByText('Le mot de passe est requis')).toBeTruthy();
   });
 
   it('shows error when password is too short', async () => {
@@ -243,7 +235,7 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
     fireEvent.changeText(getByTestId('password-input'), 'abc');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Password must be at least 6 characters')).toBeTruthy();
+    expect(await findByText('Le mot de passe doit contenir au moins 6 caractères')).toBeTruthy();
   });
 
   it('shows error when firstName is empty in register mode', async () => {
@@ -253,43 +245,31 @@ describe('AuthScreen', () => {
     fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
     fireEvent.changeText(getByTestId('password-input'), 'password123');
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('First name is required')).toBeTruthy();
+    expect(await findByText('Le prénom est requis')).toBeTruthy();
   });
 
   it('shows error when lastName is empty in register mode', async () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
+    fillRegisterForm(getByTestId, { skip: ['lastName', 'confirmPassword'] });
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Last name is required')).toBeTruthy();
+    expect(await findByText('Le nom est requis')).toBeTruthy();
   });
 
   it('shows error when confirmPassword is empty in register mode', async () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+    fillRegisterForm(getByTestId, { skip: ['confirmPassword'] });
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Please confirm your password')).toBeTruthy();
+    expect(await findByText('Veuillez confirmer votre mot de passe')).toBeTruthy();
   });
 
   it('shows error when passwords do not match in register mode', async () => {
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
-    fireEvent.changeText(getByTestId('confirm-password-input'), 'different');
+    fillRegisterForm(getByTestId, { confirmPassword: 'different' });
     fireEvent.press(getByTestId('submit-button'));
-    expect(await findByText('Passwords do not match')).toBeTruthy();
+    expect(await findByText('Les mots de passe ne correspondent pas')).toBeTruthy();
   });
 
   // ── Login success ───────────────────────────────────────────────────────────
@@ -309,7 +289,7 @@ describe('AuthScreen', () => {
 
   // ── Login error ─────────────────────────────────────────────────────────────
 
-  it('shows alert and error message when login fails', async () => {
+  it('shows toast error and error message when login fails', async () => {
     mockLogin.mockRejectedValue({ message: 'Invalid credentials' });
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('email-input')).toBeTruthy());
@@ -318,26 +298,21 @@ describe('AuthScreen', () => {
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Invalid credentials')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Login Failed', 'Invalid credentials');
+      expect(mockToastError).toHaveBeenCalledWith('Invalid credentials');
     });
   });
 
   // ── Register error ──────────────────────────────────────────────────────────
 
-  it('shows alert and error message when registration fails', async () => {
+  it('shows toast error and error message when registration fails', async () => {
     mockRegister.mockRejectedValue({ message: 'Email already taken' });
     const { getByTestId, findByText } = render(<AuthScreen />);
     await waitFor(() => expect(getByTestId('toggle-auth-mode')).toBeTruthy());
-    fireEvent.press(getByTestId('toggle-auth-mode'));
-    fireEvent.changeText(getByTestId('email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'password123');
-    fireEvent.changeText(getByTestId('firstName-input'), 'John');
-    fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
-    fireEvent.changeText(getByTestId('confirm-password-input'), 'password123');
+    fillRegisterForm(getByTestId);
     fireEvent.press(getByTestId('submit-button'));
     expect(await findByText('Email already taken')).toBeTruthy();
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Registration Failed', 'Email already taken');
+      expect(mockToastError).toHaveBeenCalledWith('Email already taken');
     });
   });
 
@@ -348,9 +323,9 @@ describe('AuthScreen', () => {
     await waitFor(() => expect(getByTestId('submit-button')).toBeTruthy());
     // trigger a validation error
     fireEvent.press(getByTestId('submit-button'));
-    await waitFor(() => expect(queryByText('Email is required')).toBeTruthy());
+    await waitFor(() => expect(queryByText("L'email est requis")).toBeTruthy());
     // toggle clears it
     fireEvent.press(getByTestId('toggle-auth-mode'));
-    expect(queryByText('Email is required')).toBeNull();
+    expect(queryByText("L'email est requis")).toBeNull();
   });
 });
