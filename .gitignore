@@ -5,3 +5,11 @@ node_modules/
 docs private/
 .env
 .env.develop
+
+# Fichiers projet / documents (ne pas commiter dans le repo code)
+*.pdf
+PBS*.png
+WBS_*.png
+PBS_*.png
+remindy_*.png
+*Remindy*.jpg
