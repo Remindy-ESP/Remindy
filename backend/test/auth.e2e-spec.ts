@@ -14,6 +14,8 @@ import { LogoutUseCase } from '../src/modules/auth/application/use-cases/logout.
 import { ForgotPasswordUseCase } from '../src/modules/auth/application/use-cases/forgot-password.use-case';
 import { ResetPasswordUseCase } from '../src/modules/auth/application/use-cases/reset-password.use-case';
 import { VerifyEmailUseCase } from '../src/modules/auth/application/use-cases/verify-email.use-case';
+import { OAuthLoginUseCase } from '../src/modules/auth/application/use-cases/oauth-login.use-case';
+import { GoogleOAuthService } from '../src/modules/auth/infrastructure/services/google-oauth.service';
 import { JwtRefreshGuard } from '../src/modules/auth/presentation/guards/jwt-refresh.guard';
 
 const TEST_USER_CREDENTIAL = 'fake-password-for-tests';
@@ -37,6 +39,8 @@ describe('AuthController (e2e)', () => {
   const forgotPasswordUseCase = { execute: jest.fn() };
   const resetPasswordUseCase = { execute: jest.fn() };
   const verifyEmailUseCase = { execute: jest.fn() };
+  const oauthLoginUseCase = { execute: jest.fn() };
+  const googleOAuthService = { exchangeCodeForIdToken: jest.fn() };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -49,6 +53,8 @@ describe('AuthController (e2e)', () => {
         { provide: ForgotPasswordUseCase, useValue: forgotPasswordUseCase },
         { provide: ResetPasswordUseCase, useValue: resetPasswordUseCase },
         { provide: VerifyEmailUseCase, useValue: verifyEmailUseCase },
+        { provide: OAuthLoginUseCase, useValue: oauthLoginUseCase },
+        { provide: GoogleOAuthService, useValue: googleOAuthService },
       ],
     })
       .overrideGuard(JwtRefreshGuard)

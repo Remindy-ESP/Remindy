@@ -10,7 +10,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { Reflector } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import multer from 'multer';
+import { MulterModule } from '@nestjs/platform-express';
 
 import { DocumentController } from '../src/modules/document/presentation/controllers/document.controller';
 import { UploadDocumentUseCase } from '../src/modules/document/application/use-cases/upload-document.use-case';
@@ -93,6 +93,12 @@ describe('DocumentController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [
+        // FileInterceptor relies on MulterModule for the file-size limit
+        // (in prod this lives in DocumentModule); enforce the 10MB cap the
+        // oversized-upload test expects.
+        MulterModule.register({ limits: { fileSize: 10 * 1024 * 1024 } }),
+      ],
       controllers: [DocumentController],
       providers: [
         // Reflector is required by JwtAuthGuard constructor
@@ -119,7 +125,6 @@ describe('DocumentController (e2e)', () => {
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: false }),
     );
-    app.use('/documents/upload', multer({ limits: { fileSize: 10 * 1024 * 1024 } }).single('file'));
     await app.init();
     const server = (app as any).getHttpServer();
     const router = server._events?.request?._router;
