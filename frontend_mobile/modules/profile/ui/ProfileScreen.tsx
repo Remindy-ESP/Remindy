@@ -17,16 +17,16 @@ import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { formatRoleLabel } from '@/utils/role';
 
 
-type InfoRowProps = {
+type InfoRowProps = Readonly<{
   label: string;
   value?: string | null;
-};
+}>;
 
 function InfoRow({ label, value }: InfoRowProps) {
   return (
     <View style={styles.infoRow}>
       <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value && value.trim() ? value : '-'}</Text>
+      <Text style={styles.infoValue}>{value?.trim() ? value : '-'}</Text>
     </View>
   );
 }

@@ -69,7 +69,7 @@ export default function DashboardScreen() {
       if (!event.dueDate) return;
       try {
         const eventDateObj = new Date(event.dueDate);
-        if (isNaN(eventDateObj.getTime())) return;
+        if (Number.isNaN(eventDateObj.getTime())) return;
         const dateKey = eventDateObj.toISOString().split('T')[0];
         marks[dateKey] = {
           marked: true,
@@ -397,7 +397,7 @@ export default function DashboardScreen() {
                     </View>
                   </View>
                   <Text style={styles.expenseAmount}>
-                    {parseFloat(event.totalAmount.toFixed(2))}€
+                    {Number.parseFloat(event.totalAmount.toFixed(2))}€
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -536,21 +536,27 @@ export default function DashboardScreen() {
                 </View>
                 <View style={[
                   styles.modalStatusBadge,
-                  { backgroundColor:
-                    selectedExpense?.subscription?.status === 'active' ? 'rgba(76, 175, 80, 0.15)' :
-                    selectedExpense?.subscription?.status === 'trial' ? 'rgba(255, 193, 7, 0.15)' :
-                    selectedExpense?.subscription?.status === 'paused' ? 'rgba(255, 152, 0, 0.15)' :
-                    'rgba(244, 67, 54, 0.15)'
-                  },
+                  { backgroundColor: (() => {
+                    const status = selectedExpense?.subscription?.status;
+                    switch (status) {
+                      case 'active': return 'rgba(76, 175, 80, 0.15)';
+                      case 'trial': return 'rgba(255, 193, 7, 0.15)';
+                      case 'paused': return 'rgba(255, 152, 0, 0.15)';
+                      default: return 'rgba(244, 67, 54, 0.15)';
+                    }
+                  })() },
                 ]}>
                   <Text style={[
                     styles.modalStatusText,
-                    { color:
-                      selectedExpense?.subscription?.status === 'active' ? '#4CAF50' :
-                      selectedExpense?.subscription?.status === 'trial' ? '#FFC107' :
-                      selectedExpense?.subscription?.status === 'paused' ? '#FF9800' :
-                      '#F44336'
-                    },
+                    { color: (() => {
+                      const status = selectedExpense?.subscription?.status;
+                      switch (status) {
+                        case 'active': return '#4CAF50';
+                        case 'trial': return '#FFC107';
+                        case 'paused': return '#FF9800';
+                        default: return '#F44336';
+                      }
+                    })() },
                   ]}>
                     {(() => {
                       const status = selectedExpense?.subscription?.status;

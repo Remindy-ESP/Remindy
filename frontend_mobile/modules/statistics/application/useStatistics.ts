@@ -3,6 +3,7 @@ import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
 import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
 import type { Event, Category } from '@/services/api/types';
 import { PERIOD_LABELS, type Period } from '@/types/statistics';
+import { isDateInPeriod } from '@/utils/eventFilter';
 import i18n from '@/i18n';
 
 export type TimePeriod = Period;
@@ -58,33 +59,7 @@ export function useStatistics() {
       if (!event.dueDate) return false;
       const eventDate = new Date(event.dueDate);
       if (isNaN(eventDate.getTime())) return false;
-
-      switch (period) {
-        case 'day':
-          return eventDate.toISOString().split('T')[0] === now.toISOString().split('T')[0];
-
-        case 'week': {
-          const startOfWeek = new Date(now);
-          startOfWeek.setDate(now.getDate() - now.getDay());
-          startOfWeek.setHours(0, 0, 0, 0);
-          const endOfWeek = new Date(startOfWeek);
-          endOfWeek.setDate(startOfWeek.getDate() + 6);
-          endOfWeek.setHours(23, 59, 59, 999);
-          return eventDate >= startOfWeek && eventDate <= endOfWeek;
-        }
-
-        case 'month':
-          return (
-            eventDate.getMonth() === now.getMonth() &&
-            eventDate.getFullYear() === now.getFullYear()
-          );
-
-        case 'year':
-          return eventDate.getFullYear() === now.getFullYear();
-
-        default:
-          return false;
-      }
+      return isDateInPeriod(eventDate, period, now);
     });
   }, [events]);
 

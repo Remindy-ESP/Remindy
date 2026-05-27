@@ -3,6 +3,7 @@ import { categoryService } from '@/modules/categories/infrastructure/categoryApi
 import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
 import type { Category, Event } from '@/services/api/types';
 import { useTranslation } from '@/shared/application/I18nContext';
+import { isDateInPeriod } from '@/utils/eventFilter';
 import i18n from '@/i18n';
 
 export type TimePeriod = 'day' | 'week' | 'month' | 'year';
@@ -70,38 +71,8 @@ export function useDashboard() {
       if (!event.dueDate) return false;
       const eventDate = new Date(event.dueDate);
       if (isNaN(eventDate.getTime())) return false;
-
-      // Apply category filter
       if (categoryName && event.subscription?.category?.name !== categoryName) return false;
-
-      switch (period) {
-        case 'day':
-          return eventDate.toISOString().split('T')[0] === referenceDate.toISOString().split('T')[0];
-
-        case 'week': {
-          const startOfWeek = new Date(referenceDate);
-          startOfWeek.setDate(referenceDate.getDate() - referenceDate.getDay());
-          startOfWeek.setHours(0, 0, 0, 0);
-
-          const endOfWeek = new Date(startOfWeek);
-          endOfWeek.setDate(startOfWeek.getDate() + 6);
-          endOfWeek.setHours(23, 59, 59, 999);
-
-          return eventDate >= startOfWeek && eventDate <= endOfWeek;
-        }
-
-        case 'month':
-          return (
-            eventDate.getMonth() === referenceDate.getMonth() &&
-            eventDate.getFullYear() === referenceDate.getFullYear()
-          );
-
-        case 'year':
-          return eventDate.getFullYear() === referenceDate.getFullYear();
-
-        default:
-          return false;
-      }
+      return isDateInPeriod(eventDate, period, referenceDate);
     });
 
     // For 'year': aggregate by subscription ID, sum all occurrence amounts

@@ -16,7 +16,7 @@ import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { supportScreenStyles as shared } from '@/shared/styles/supportScreen';
 
-function TicketRow({ ticket, onPress }: { ticket: SupportTicketSummary; onPress: () => void }) {
+function TicketRow({ ticket, onPress }: Readonly<{ ticket: SupportTicketSummary; onPress: () => void }>) {
   return (
     <TouchableOpacity style={styles.ticketCard} onPress={onPress} activeOpacity={0.8}>
       <View style={styles.ticketHeader}>
@@ -61,7 +61,7 @@ export default function SupportTicketsScreen() {
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { void load(); }, [load]));
+  useFocusEffect(useCallback(() => { load().catch(console.error); }, [load]));
 
   return (
     <View style={styles.container}>
@@ -82,16 +82,18 @@ export default function SupportTicketsScreen() {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {loading && (
         <ActivityIndicator color='#4B4FC9' style={{ marginTop: 40 }} />
-      ) : error ? (
+      )}
+      {!loading && error && (
         <View style={styles.center}>
           <Text style={styles.errorText}>{t('support.tickets.error')}</Text>
-          <TouchableOpacity style={shared.retryButton} onPress={() => void load()} activeOpacity={0.8}>
+          <TouchableOpacity style={shared.retryButton} onPress={() => load().catch(console.error)} activeOpacity={0.8}>
             <Text style={shared.retryText}>{t('support.tickets.retry')}</Text>
           </TouchableOpacity>
         </View>
-      ) : (
+      )}
+      {!loading && !error && (
         <FlatList
           data={tickets}
           keyExtractor={item => item.id}
@@ -99,7 +101,7 @@ export default function SupportTicketsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={() => void load(true)}
+              onRefresh={() => load(true).catch(console.error)}
               tintColor='#4B4FC9'
             />
           }

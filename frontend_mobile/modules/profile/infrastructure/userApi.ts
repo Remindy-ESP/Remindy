@@ -83,10 +83,11 @@ class UserService {
   /**
    * Export user data (RGPD compliance)
    */
-  async exportData(data: RequestRgpdExport = { format: 'json' }): Promise<RgpdExportResponse> {
+  async exportData(data?: RequestRgpdExport): Promise<RgpdExportResponse> {
+    const exportParams: RequestRgpdExport = data ?? { format: 'json' };
     const response = await apiClient.post<RgpdExportResponse>(
       `${this.BASE_PATH}/export-data`,
-      data
+      exportParams
     );
     return response.data;
   }

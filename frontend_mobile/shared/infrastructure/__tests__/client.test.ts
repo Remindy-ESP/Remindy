@@ -8,8 +8,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiClient } from '../apiClient';
-import apiClientDefault from '../apiClient';
+import apiClientDefault, { apiClient } from '../apiClient';
 import axios from 'axios';
 
 const ACCESS_TOKEN_KEY = '@remindy_access_token';

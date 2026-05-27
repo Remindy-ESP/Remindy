@@ -3,13 +3,11 @@ import type { StorageQuota } from '@/services/api/types';
 
 class StorageService {
   async getQuota(): Promise<StorageQuota> {
-    try {
-      const response = await apiClient.get<StorageQuota>('/storage/quota');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get<StorageQuota>('/storage/quota');
+    return response.data;
   }
 }
 
-export default new StorageService();
+const storageService = new StorageService();
+export { storageService };
+export default storageService;

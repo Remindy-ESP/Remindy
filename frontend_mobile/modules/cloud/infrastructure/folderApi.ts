@@ -3,49 +3,31 @@ import type { Folder, CreateFolderRequest, UpdateFolderRequest, FolderFilters } 
 
 class FolderService {
   async createFolder(params: CreateFolderRequest): Promise<Folder> {
-    try {
-      const response = await apiClient.post<Folder>('/folders', params);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.post<Folder>('/folders', params);
+    return response.data;
   }
 
   async getAllFolders(filters?: FolderFilters): Promise<Folder[]> {
-    try {
-      const response = await apiClient.get<Folder[]>('/folders', {
-        params: filters,
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get<Folder[]>('/folders', {
+      params: filters,
+    });
+    return response.data;
   }
 
   async updateFolder(id: string, params: UpdateFolderRequest): Promise<Folder> {
-    try {
-      const response = await apiClient.put<Folder>(`/folders/${id}`, params);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.put<Folder>(`/folders/${id}`, params);
+    return response.data;
   }
 
   async deleteFolder(id: string): Promise<void> {
-    try {
-      await apiClient.delete(`/folders/${id}`);
-    } catch (error) {
-      throw error;
-    }
+    await apiClient.delete(`/folders/${id}`);
   }
 
   async moveDocumentToFolder(folderId: string, documentId: string): Promise<void> {
-    try {
-      await apiClient.post(`/folders/${folderId}/documents/${documentId}`);
-    } catch (error) {
-      throw error;
-    }
+    await apiClient.post(`/folders/${folderId}/documents/${documentId}`);
   }
 }
 
-export default new FolderService();
+const folderService = new FolderService();
+export { folderService };
+export default folderService;

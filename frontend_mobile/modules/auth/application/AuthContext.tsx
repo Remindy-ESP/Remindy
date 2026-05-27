@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   ReactNode,
 } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -34,7 +35,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -163,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(result.accessToken);
   }, []);
 
-  const value: AuthContextType = {
+  const value: AuthContextType = useMemo(() => ({
     user,
     token,
     isAuthenticated: !!user,
@@ -174,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser,
     loginWithGoogle,
     loginWithApple,
-  };
+  }), [user, token, isLoading, login, register, logout, refreshUser, loginWithGoogle, loginWithApple]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

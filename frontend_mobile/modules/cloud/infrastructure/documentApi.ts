@@ -102,12 +102,8 @@ class DocumentService {
    * Get a specific document by ID
    */
   async getDocument(id: string): Promise<DocumentResponse> {
-    try {
-      const response = await client.get<DocumentResponse>(`/documents/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await client.get<DocumentResponse>(`/documents/${id}`);
+    return response.data;
   }
 
   /**
@@ -121,14 +117,10 @@ class DocumentService {
     limit?: number;
     sort?: string;
   }): Promise<DocumentResponse[]> {
-    try {
-      const response = await client.get<DocumentResponse[]>('/documents', {
-        params: filters,
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await client.get<DocumentResponse[]>('/documents', {
+      params: filters,
+    });
+    return response.data;
   }
 
   /**
@@ -139,38 +131,26 @@ class DocumentService {
     folder_id?: string;
     subscription_id?: string | null;
   }): Promise<DocumentResponse> {
-    try {
-      const response = await client.put<DocumentResponse>(`/documents/${id}`, params);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await client.put<DocumentResponse>(`/documents/${id}`, params);
+    return response.data;
   }
 
   /**
    * Delete a document (soft delete)
    */
   async deleteDocument(id: string): Promise<void> {
-    try {
-      await client.delete(`/documents/${id}`);
-    } catch (error) {
-      throw error;
-    }
+    await client.delete(`/documents/${id}`);
   }
 
   /**
    * Reprocess OCR for a document
    */
   async reprocessOcr(id: string, force?: boolean): Promise<DocumentResponse> {
-    try {
-      const response = await client.post<DocumentResponse>(
-        `/documents/${id}/reprocess-ocr`,
-        { force: force || false }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await client.post<DocumentResponse>(
+      `/documents/${id}/reprocess-ocr`,
+      { force: force || false }
+    );
+    return response.data;
   }
 
   /**
@@ -197,13 +177,11 @@ class DocumentService {
     storageUsedFormatted: string;
     maxStorageFormatted: string;
   }> {
-    try {
-      const response = await client.get('/documents/quota');
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await client.get('/documents/quota');
+    return response.data;
   }
 }
 
-export default new DocumentService();
+const documentService = new DocumentService();
+export { documentService };
+export default documentService;

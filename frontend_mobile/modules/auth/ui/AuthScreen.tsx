@@ -44,14 +44,14 @@ export default function AuthScreen() {
   useEffect(() => {
     if (!isAuthenticated || authLoading) return;
 
-    void (async () => {
+    (async () => {
       const seen = await onboardingService.hasSeenOnboarding();
-      if (!seen) {
-        router.replace('/onboarding' as any);
-      } else {
+      if (seen) {
         router.replace('/(tabs)/dashboard');
+      } else {
+        router.replace('/onboarding' as any);
       }
-    })();
+    })().catch(console.error);
   }, [isAuthenticated, authLoading]);
 
   const validateEmail = (email: string): boolean => {

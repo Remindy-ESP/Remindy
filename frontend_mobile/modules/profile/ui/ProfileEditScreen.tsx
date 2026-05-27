@@ -29,7 +29,7 @@ type FormState = {
   timezone: string;
 };
 
-type FormFieldProps = {
+type FormFieldProps = Readonly<{
   label: string;
   value: string;
   placeholder: string;
@@ -39,7 +39,7 @@ type FormFieldProps = {
   keyboardType?: 'default' | 'phone-pad';
   autoCapitalize?: 'none' | 'words';
   testID?: string;
-};
+}>;
 
 function FormField({
   label,
@@ -147,26 +147,24 @@ export default function ProfileEditScreen() {
     const extensionMatch = asset.uri.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
     const extension = extensionMatch?.[1]?.toLowerCase();
 
-    const mimeType =
-      asset.mimeType ||
-      (extension === 'png'
-        ? 'image/png'
-        : extension === 'webp'
-          ? 'image/webp'
-          : extension === 'jpg' || extension === 'jpeg'
-            ? 'image/jpeg'
-            : undefined);
+    const getMimeFromExtension = (ext: string | undefined): string | undefined => {
+      if (ext === 'png') return 'image/png';
+      if (ext === 'webp') return 'image/webp';
+      if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+      return undefined;
+    };
+    const mimeType = asset.mimeType || getMimeFromExtension(extension);
 
-    if (!mimeType || !mimeType.startsWith('image/')) {
+    if (!mimeType?.startsWith('image/')) {
       throw new Error('Unsupported image type.');
     }
 
-    const normalizedExt =
-      mimeType === 'image/png'
-        ? 'png'
-        : mimeType === 'image/webp'
-          ? 'webp'
-          : 'jpg';
+    const getNormalizedExt = (mime: string): string => {
+      if (mime === 'image/png') return 'png';
+      if (mime === 'image/webp') return 'webp';
+      return 'jpg';
+    };
+    const normalizedExt = getNormalizedExt(mimeType);
 
     const fileName = fileNameFromPicker || `profile-photo-${Date.now()}.${normalizedExt}`;
 

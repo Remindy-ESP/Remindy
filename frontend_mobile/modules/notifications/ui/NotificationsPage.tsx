@@ -62,7 +62,7 @@ export default function NotificationsScreen() {
     useFocusEffect(
         React.useCallback(() => {
             if (user) {
-                void fetchNotifications();
+                fetchNotifications().catch(console.error);
             }
         }, [user, fetchNotifications])
     );
@@ -93,7 +93,7 @@ export default function NotificationsScreen() {
 
     const onRefresh = () => {
         setRefreshing(true);
-        void fetchNotifications();
+        fetchNotifications().catch(console.error);
     };
 
     const handleMarkAsRead = async (id: string) => {
@@ -328,14 +328,15 @@ export default function NotificationsScreen() {
                 />
             )}
 
-            {error ? (
+            {error && (
                 <View style={styles.centered}>
                     <Text style={styles.errorText}>{error}</Text>
                     <TouchableOpacity style={styles.retryButton} onPress={fetchNotifications}>
                         <Text style={styles.retryText}>{t('notifications.retry')}</Text>
                     </TouchableOpacity>
                 </View>
-            ) : filteredNotifications.length === 0 ? (
+            )}
+            {!error && filteredNotifications.length === 0 && (
                 <View style={styles.emptyContainer}>
                     <Ionicons name="notifications-off-outline" size={64} color="#555" />
                     <Text style={styles.emptyText}>
@@ -344,7 +345,8 @@ export default function NotificationsScreen() {
                             : t('notifications.empty')}
                     </Text>
                 </View>
-            ) : (
+            )}
+            {!error && filteredNotifications.length > 0 && (
                 <FlatList
                     data={filteredNotifications}
                     keyExtractor={(item) => item.id}

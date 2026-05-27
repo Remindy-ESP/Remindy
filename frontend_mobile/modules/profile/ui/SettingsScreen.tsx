@@ -14,12 +14,12 @@ import { useAuth } from '@/modules/auth/application/AuthContext';
 import { useTranslation } from '@/shared/application/I18nContext';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 
-type MenuItemProps = {
+type MenuItemProps = Readonly<{
   testID: string;
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
-};
+}>;
 
 function MenuItem({ testID, icon, label, onPress }: MenuItemProps) {
   return (

@@ -4,7 +4,6 @@ import { Text } from 'react-native';
 import { AuthProvider, useAuth } from '../AuthContext';
 import { authService } from '@/modules/auth/infrastructure/authApi';
 import { userService } from '@/services/api';
-import { apiClient } from '@/services/api';
 import type { User, AuthResponse } from '@/services/api/types';
 
 jest.mock('@/modules/auth/infrastructure/authApi', () => ({

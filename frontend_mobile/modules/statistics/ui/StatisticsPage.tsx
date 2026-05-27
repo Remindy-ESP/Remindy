@@ -71,17 +71,19 @@ export default function StatisticsScreen() {
 
       <PeriodFilterTabs selectedPeriod={activePeriod} onPeriodChange={setActivePeriod} />
 
-      {summaryError ? (
+      {summaryError && (
         <View style={styles.summaryErrorCard}>
           <Text style={styles.summaryErrorText}>
             {t('statistics.summaryUnavailable', { message: summaryError })}
           </Text>
         </View>
-      ) : summaryLoading || !summary ? (
+      )}
+      {!summaryError && (summaryLoading || !summary) && (
         <View style={styles.summaryLoadingCard}>
           <ActivityIndicator size="small" color="#9ca3af" />
         </View>
-      ) : (
+      )}
+      {!summaryError && !summaryLoading && summary && (
         <ExpenseSummaryHeader
           periodLabel={summary.periodLabel}
           totalAmount={summary.currentTotal}

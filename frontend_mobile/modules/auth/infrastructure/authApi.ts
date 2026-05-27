@@ -1,5 +1,4 @@
-import apiClient from '@/shared/infrastructure/apiClient';
-import { apiClient as client } from '@/shared/infrastructure/apiClient';
+import apiClient, { apiClient as client } from '@/shared/infrastructure/apiClient';
 import {
   LoginRequest,
   RegisterRequest,

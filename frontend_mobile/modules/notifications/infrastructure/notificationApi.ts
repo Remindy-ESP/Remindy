@@ -1,5 +1,5 @@
 import client from '@/shared/infrastructure/apiClient';
-import { Notification, NotificationFilter, NotificationResponse, PaginatedResponse } from '@/services/api/types';
+import { Notification, NotificationFilter } from '@/services/api/types';
 
 export const notificationService = {
   /**

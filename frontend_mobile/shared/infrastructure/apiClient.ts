@@ -13,7 +13,7 @@ const REFRESH_TOKEN_KEY = '@remindy_refresh_token';
  * Base API client with axios
  */
 class ApiClient {
-  private client: AxiosInstance;
+  private readonly client: AxiosInstance;
   private isRefreshing = false;
   private failedQueue: Array<{
     resolve: (value?: unknown) => void;
@@ -59,7 +59,7 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as unknown as InternalAxiosRequestConfig & { _retry?: boolean };
 
         // If error is 401 and we haven't retried yet, attempt token refresh
         if (error.response?.status === 401 && !originalRequest._retry) {
@@ -72,7 +72,7 @@ class ApiClient {
                 return this.client(originalRequest);
               })
               .catch((err) => {
-                return Promise.reject(err);
+                throw err;
               });
           }
 
@@ -86,7 +86,7 @@ class ApiClient {
               await this.clearTokens();
               this.isRefreshing = false;
               this.onAuthFailureCb?.();
-              return Promise.reject(error);
+              throw error;
             }
 
             // Call refresh endpoint
@@ -122,13 +122,13 @@ class ApiClient {
             await this.clearTokens();
             this.isRefreshing = false;
             this.onAuthFailureCb?.();
-            return Promise.reject(error);
+            throw error;
           } finally {
             this.isRefreshing = false;
           }
         }
 
-        return Promise.reject(error);
+        throw error;
       }
     );
   }

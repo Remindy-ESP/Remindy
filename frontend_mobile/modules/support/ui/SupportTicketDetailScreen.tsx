@@ -20,18 +20,19 @@ import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { supportScreenStyles as shared } from '@/shared/styles/supportScreen';
 
-function MessageBubble({ message }: { message: SupportTicketMessage }) {
+function MessageBubble({ message }: Readonly<{ message: SupportTicketMessage }>) {
   const isUser = message.authorType === 'user';
   const isSystem = message.authorType === 'system';
 
-  const authorLabel = isSystem
-    ? 'Système'
-    : message.author
-      ? [message.author.firstName, message.author.lastName].filter(Boolean).join(' ') ||
-        message.author.email
-      : isUser
-        ? 'Vous'
-        : 'Support';
+  const getAuthorLabel = (): string => {
+    if (isSystem) return 'Système';
+    if (message.author) {
+      return [message.author.firstName, message.author.lastName].filter(Boolean).join(' ') ||
+        message.author.email;
+    }
+    return isUser ? 'Vous' : 'Support';
+  };
+  const authorLabel = getAuthorLabel();
 
   return (
     <View style={[styles.bubbleWrap, isUser ? styles.bubbleRight : styles.bubbleLeft]}>
@@ -41,7 +42,11 @@ function MessageBubble({ message }: { message: SupportTicketMessage }) {
       <View
         style={[
           styles.bubble,
-          isUser ? styles.bubbleUser : isSystem ? styles.bubbleSystem : styles.bubbleAdmin,
+          (() => {
+            if (isUser) return styles.bubbleUser;
+            if (isSystem) return styles.bubbleSystem;
+            return styles.bubbleAdmin;
+          })(),
         ]}
       >
         <Text style={[styles.bubbleText, isUser && styles.bubbleTextUser]}>
@@ -79,7 +84,7 @@ export default function SupportTicketDetailScreen() {
     }
   }, [id, t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { load().catch(console.error); }, [load]);
 
   const handleReply = async () => {
     if (!id || !replyText.trim()) return;
@@ -147,7 +152,7 @@ export default function SupportTicketDetailScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => void load(true)}
+            onRefresh={() => load(true).catch(console.error)}
             tintColor='#4B4FC9'
           />
         }
@@ -159,7 +164,12 @@ export default function SupportTicketDetailScreen() {
       />
 
       {/* Reply bar */}
-      {!isClosed ? (
+      {isClosed ? (
+        <View style={styles.closedBar}>
+          <Ionicons name='lock-closed-outline' size={16} color='#6B6E8A' />
+          <Text style={styles.closedText}>{t('support.detail.closed')}</Text>
+        </View>
+      ) : (
         <View style={styles.replyBar}>
           <TextInput
             style={styles.replyInput}
@@ -172,7 +182,7 @@ export default function SupportTicketDetailScreen() {
           />
           <TouchableOpacity
             style={[styles.sendButton, (!replyText.trim() || sending) && styles.sendButtonDisabled]}
-            onPress={() => void handleReply()}
+            onPress={() => handleReply().catch(console.error)}
             disabled={!replyText.trim() || sending}
             activeOpacity={0.8}
           >
@@ -182,11 +192,6 @@ export default function SupportTicketDetailScreen() {
               <Ionicons name='send' size={18} color='#fff' />
             )}
           </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.closedBar}>
-          <Ionicons name='lock-closed-outline' size={16} color='#6B6E8A' />
-          <Text style={styles.closedText}>{t('support.detail.closed')}</Text>
         </View>
       )}
     </KeyboardAvoidingView>
