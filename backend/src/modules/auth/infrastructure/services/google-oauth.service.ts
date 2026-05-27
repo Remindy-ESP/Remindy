@@ -13,7 +13,7 @@ export class GoogleOAuthService {
     const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
     const res = await fetch(url);
     if (!res.ok) throw new UnauthorizedException('Invalid Google token');
-    const data = (await res.json()) as any;
+    const data = await res.json();
     if (!data.sub) throw new UnauthorizedException('Invalid Google token payload');
     return {
       providerId: data.sub as string,
@@ -35,7 +35,7 @@ export class GoogleOAuthService {
         grant_type: 'authorization_code',
       }).toString(),
     });
-    const data = (await res.json()) as any;
+    const data = await res.json();
     if (!res.ok || !data.id_token) {
       console.error('[Google token exchange] status:', res.status, 'body:', JSON.stringify(data));
       throw new UnauthorizedException('Google code exchange failed');

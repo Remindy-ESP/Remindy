@@ -232,7 +232,7 @@ describe('DocumentController', () => {
     it('should throw BadRequestException for unsupported mime type', async () => {
       const invalidTypeFile = { ...mockFile, mimetype: 'application/exe' };
       await expect(controller.upload(mockRequest, invalidTypeFile, 'user-123')).rejects.toThrow(
-        'Invalid file type',
+        'Unsupported file type',
       );
     });
 

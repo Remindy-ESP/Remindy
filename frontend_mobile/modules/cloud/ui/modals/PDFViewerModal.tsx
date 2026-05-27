@@ -1,158 +1,214 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Alert } from 'react-native';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+  Image,
+  ScrollView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useTranslation } from '@/shared/application/I18nContext';
+import { toast } from '@/context/ToastContext';
 
 interface PDFViewerModalProps {
   visible: boolean;
   pdfUri: string;
   fileName: string;
+  mimeType?: string;
   authToken?: string;
   onClose: () => void;
 }
 
-export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, onClose }: PDFViewerModalProps) {
+function buildPdfJsHtml(base64: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #06071D; font-family: sans-serif; }
+    #status { color: #9ca3af; text-align: center; padding: 40px 20px; font-size: 14px; }
+    #pdf-render { width: 100%; }
+    canvas { display: block; width: 100% !important; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+  <div id="status">Chargement...</div>
+  <div id="pdf-render"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    var b64 = "${base64}";
+    var raw = atob(b64);
+    var buf = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) buf[i] = raw.charCodeAt(i);
+    pdfjsLib.getDocument({ data: buf }).promise.then(function(pdf) {
+      document.getElementById('status').style.display = 'none';
+      var container = document.getElementById('pdf-render');
+      var dpr = window.devicePixelRatio || 2;
+      function renderPage(n) {
+        pdf.getPage(n).then(function(page) {
+          var baseScale = window.innerWidth / page.getViewport({ scale: 1 }).width;
+          var scale = baseScale * dpr;
+          var vp = page.getViewport({ scale: scale });
+          var canvas = document.createElement('canvas');
+          canvas.width = vp.width;
+          canvas.height = vp.height;
+          canvas.style.width = window.innerWidth + 'px';
+          canvas.style.height = (vp.height / dpr) + 'px';
+          container.appendChild(canvas);
+          page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise.then(function() {
+            if (n < pdf.numPages) renderPage(n + 1);
+          });
+        });
+      }
+      renderPage(1);
+    }).catch(function(e) {
+      var el = document.getElementById('status');
+      el.textContent = 'Erreur : ' + e.message;
+      el.style.color = '#E74C3C';
+    });
+  </script>
+</body>
+</html>`;
+}
+
+export default function PDFViewerModal({
+  visible,
+  pdfUri,
+  fileName,
+  mimeType,
+  authToken,
+  onClose,
+}: PDFViewerModalProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [localUri, setLocalUri] = useState<string | null>(null);
+  const [htmlFileUri, setHtmlFileUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const isImage = (mimeType ?? '').startsWith('image/');
 
   useEffect(() => {
     if (visible && pdfUri) {
-      downloadPDF();
+      loadDocument();
+    }
+    if (!visible) {
+      setLocalUri(null);
+      setHtmlFileUri(null);
+      setError(null);
     }
   }, [visible, pdfUri]);
 
-  const downloadPDF = async () => {
+  const loadDocument = async () => {
     try {
       setLoading(true);
       setError(null);
+      setLocalUri(null);
+      setHtmlFileUri(null);
 
-      // Create a local file path for the PDF
       const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-
-      console.log('[PDFViewer] Downloading from:', pdfUri);
-      console.log('[PDFViewer] Saving to:', fileUri);
-
-      // Download the PDF with authentication if needed
       const downloadOptions: FileSystem.DownloadOptions = authToken
-        ? {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
+        ? { headers: { Authorization: `Bearer ${authToken}`, 'ngrok-skip-browser-warning': 'true' } }
         : {};
 
-      const downloadResult = await FileSystem.downloadAsync(pdfUri, fileUri, downloadOptions);
+      const result = await FileSystem.downloadAsync(pdfUri, fileUri, downloadOptions);
+      if (result.status !== 200) throw new Error(`Download failed: ${result.status}`);
 
-      if (downloadResult.status === 200) {
-        console.log('[PDFViewer] Download successful');
-
-        // For iOS, we can use file:// directly
-        if (Platform.OS === 'ios') {
-          setLocalUri(downloadResult.uri);
-        } else {
-          // For Android, read as base64 and embed in HTML
-          const base64 = await FileSystem.readAsStringAsync(downloadResult.uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          const html = `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-                <style>
-                  body, html {
-                    margin: 0;
-                    padding: 0;
-                    height: 100%;
-                    overflow: hidden;
-                    background-color: #06071D;
-                  }
-                  iframe {
-                    width: 100%;
-                    height: 100%;
-                    border: none;
-                  }
-                </style>
-              </head>
-              <body>
-                <iframe src="data:application/pdf;base64,${base64}"></iframe>
-              </body>
-            </html>
-          `;
-
-          setLocalUri(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-        }
+      if (isImage) {
+        // Images: render directly with React Native <Image> — no WebView needed
+        setLocalUri(result.uri);
+      } else if (Platform.OS === 'ios') {
+        // iOS WKWebView renders PDF natively from file:// URI
+        setLocalUri(result.uri);
       } else {
-        throw new Error(`Download failed with status ${downloadResult.status}`);
+        // Android: write PDF.js HTML to a cache file to avoid large-string WebView limit
+        const base64 = await FileSystem.readAsStringAsync(result.uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const html = buildPdfJsHtml(base64);
+        const htmlUri = `${FileSystem.cacheDirectory}pdfviewer_${Date.now()}.html`;
+        await FileSystem.writeAsStringAsync(htmlUri, html, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+        setHtmlFileUri(htmlUri);
       }
     } catch (err: any) {
-      console.error('[PDFViewer] Error:', err);
+      console.error('[DocumentViewer] Error:', err);
       setError(err.message || t('cloud.modals.pdfViewer.loadError'));
-      Alert.alert(t('common.error'), t('cloud.modals.pdfViewer.loadError'));
+      toast.error(t('cloud.modals.pdfViewer.loadError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      presentationStyle="fullScreen"
-    >
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen">
       <View style={styles.container}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.fileName} numberOfLines={1}>
-            {fileName}
-          </Text>
+          <Text style={styles.fileName} numberOfLines={1}>{fileName}</Text>
           <View style={styles.placeholder} />
         </View>
 
-        {/* PDF Viewer */}
-        <View style={styles.pdfContainer}>
+        <View style={styles.content}>
           {loading && (
-            <View style={styles.loadingContainer}>
+            <View style={styles.centered}>
               <ActivityIndicator size="large" color="#6366f1" />
               <Text style={styles.loadingText}>{t('cloud.modals.pdfViewer.loading')}</Text>
             </View>
           )}
 
-          {error && (
-            <View style={styles.errorContainer}>
+          {!loading && error && (
+            <View style={styles.centered}>
               <Ionicons name="alert-circle" size={48} color="#E74C3C" />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
 
-          {!error && localUri && (
+          {!loading && !error && isImage && localUri && (
+            <ScrollView
+              style={styles.imageScroll}
+              contentContainerStyle={styles.imageContainer}
+              maximumZoomScale={5}
+              minimumZoomScale={1}
+            >
+              <Image
+                source={{ uri: localUri }}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </ScrollView>
+          )}
+
+          {!loading && !error && !isImage && (localUri || htmlFileUri) && (
             <WebView
-              source={{ uri: localUri }}
+              source={htmlFileUri ? { uri: htmlFileUri } : { uri: localUri! }}
               style={styles.webview}
               onLoadStart={() => setLoading(true)}
               onLoadEnd={() => setLoading(false)}
-              onError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                console.error('[PDFViewer] WebView error:', nativeEvent);
+              onError={(e) => {
+                console.error('[DocumentViewer] WebView error:', e.nativeEvent);
                 setError(t('cloud.modals.pdfViewer.webviewError'));
                 setLoading(false);
               }}
               javaScriptEnabled={true}
               domStorageEnabled={true}
-              startInLoadingState={true}
-              scalesPageToFit={true}
+              scalesPageToFit={false}
               allowFileAccess={true}
               allowUniversalAccessFromFileURLs={true}
               originWhitelist={['*']}
+              mixedContentMode="always"
             />
           )}
         </View>
@@ -162,10 +218,7 @@ export default function PDFViewerModal({ visible, pdfUri, fileName, authToken, o
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#06071D',
-  },
+  container: { flex: 1, backgroundColor: '#06071D' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -177,9 +230,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#373848',
     paddingTop: Platform.OS === 'ios' ? 50 : 12,
   },
-  closeButton: {
-    padding: 4,
-  },
+  closeButton: { padding: 4 },
   fileName: {
     flex: 1,
     color: '#fff',
@@ -188,39 +239,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 12,
   },
-  placeholder: {
-    width: 36,
-  },
-  pdfContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: '#06071D',
-  },
-  loadingContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#06071D',
-    zIndex: 1,
-  },
-  loadingText: {
-    color: '#9ca3af',
-    fontSize: 14,
-    marginTop: 12,
-  },
-  errorContainer: {
+  placeholder: { width: 36 },
+  content: { flex: 1 },
+  centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#06071D',
   },
+  loadingText: { color: '#9ca3af', fontSize: 14, marginTop: 12 },
   errorText: {
     color: '#E74C3C',
     fontSize: 16,
@@ -228,4 +255,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 32,
   },
+  imageScroll: { flex: 1, backgroundColor: '#06071D' },
+  imageContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+  },
+  image: { width: '100%', height: undefined, aspectRatio: 1 },
+  webview: { flex: 1, backgroundColor: '#06071D' },
 });

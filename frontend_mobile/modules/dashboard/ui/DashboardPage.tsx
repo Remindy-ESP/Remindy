@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,6 +18,7 @@ import AddOperationModal from '@/modules/dashboard/ui/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
 import CategoryDropdown from '@/modules/dashboard/ui/CategoryDropdown';
 import BrandLogo from '@/modules/dashboard/ui/BrandLogo';
+import { toast } from '@/context/ToastContext';
 
 function ModalDetailRow({
   icon,
@@ -192,11 +193,7 @@ export default function DashboardScreen() {
       // Check file size (max 10MB)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (selectedFile.size && selectedFile.size > maxSize) {
-        Alert.alert(
-          t('dashboard.fileTooLargeTitle'),
-          t('dashboard.fileTooLargeMessage'),
-          [{ text: t('common.ok') }]
-        );
+        toast.error(t('dashboard.fileTooLargeMessage'));
         return;
       }
 
@@ -244,11 +241,7 @@ export default function DashboardScreen() {
       }
 
       if (documentWithParsedData.ocr_status === 'failed') {
-        Alert.alert(
-          t('dashboard.ocrFailedTitle'),
-          t('dashboard.ocrFailedMessage'),
-          [{ text: t('common.ok') }]
-        );
+        toast.info(t('dashboard.ocrFailedMessage'));
       }
 
       // Navigate to subscription page with parsed data
@@ -278,11 +271,7 @@ export default function DashboardScreen() {
         errorMessage = error.response.data.message;
       }
 
-      Alert.alert(
-        t('common.error'),
-        errorMessage,
-        [{ text: t('common.ok') }]
-      );
+      toast.error(errorMessage);
     } finally {
       setUploadingDocument(false);
     }

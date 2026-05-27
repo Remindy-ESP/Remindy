@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import ProfileSecurityScreen from '../profile-security';
 
@@ -14,11 +13,28 @@ jest.mock('@/services/api', () => ({
   getErrorMessage: (error: any, fallback: string) => error?.message || fallback,
 }));
 
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 describe('ProfileSecurityScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
   });
 
   it('validates required fields before submit', async () => {
@@ -41,7 +57,7 @@ describe('ProfileSecurityScreen', () => {
 
     await waitFor(() => {
       expect(mockChangePassword).toHaveBeenCalledWith('OldPassword123', 'NewPassword123');
-      expect(Alert.alert).toHaveBeenCalledWith('Succès', 'Votre mot de passe a été modifié.');
+      expect(mockToast.success).toHaveBeenCalledWith('Votre mot de passe a été modifié.');
     });
   });
 
@@ -123,7 +139,7 @@ describe('ProfileSecurityScreen', () => {
     expect(await findByText('Unauthorized')).toBeTruthy();
     // And an alert should have been shown
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Unauthorized');
+      expect(mockToast.error).toHaveBeenCalledWith('Unauthorized');
     });
   });
 

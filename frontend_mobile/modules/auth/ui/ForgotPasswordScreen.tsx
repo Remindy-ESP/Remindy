@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +13,7 @@ import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { authFormStyles as styles } from '@/shared/styles/authForm';
 import FormFeedback from '@/shared/ui/FormFeedback';
+import { toast } from '@/context/ToastContext';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function ForgotPasswordScreen() {
     } catch (err) {
       const message = getErrorMessage(err, t('auth.forgot.errorSend'));
       setError(message);
-      Alert.alert(t('common.error'), message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

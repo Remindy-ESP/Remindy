@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -15,6 +14,7 @@ import { authService, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { authFormStyles as styles } from '@/shared/styles/authForm';
 import FormFeedback from '@/shared/ui/FormFeedback';
+import { toast } from '@/context/ToastContext';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -65,16 +65,11 @@ export default function ResetPasswordScreen() {
       setLoading(true);
       await authService.resetPassword(token.trim(), newPassword);
       setSuccess(t('auth.reset.success'));
-      Alert.alert(t('auth.reset.successAlertTitle'), t('auth.reset.successAlertMessage'), [
-        {
-          text: t('common.ok'),
-          onPress: () => router.replace('/'),
-        },
-      ]);
+      router.replace('/');
     } catch (err) {
       const message = getErrorMessage(err, t('auth.reset.errorFallback'));
       setError(message);
-      Alert.alert(t('common.error'), message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

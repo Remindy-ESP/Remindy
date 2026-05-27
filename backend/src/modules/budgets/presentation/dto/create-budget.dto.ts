@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
+  IsArray,
   IsNumber,
   IsBoolean,
   IsEnum,
@@ -78,6 +79,16 @@ export class CreateBudgetDto {
   @IsOptional()
   @IsUUID()
   categoryId?: string;
+
+  @ApiProperty({
+    description: 'Explicit list of subscription IDs linked to this budget',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID(4, { each: true })
+  subscriptionIds?: string[];
 
   @ApiProperty({
     description: 'Whether the budget is active',

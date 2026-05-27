@@ -17,6 +17,7 @@ jest.mock('expo-router', () => ({
       },
     }
   ),
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn(), back: jest.fn() }),
 }));
 
 jest.mock('expo-status-bar', () => ({
@@ -50,6 +51,37 @@ jest.mock('@/shared/ui/system/AppStatusScreen', () => {
 });
 
 jest.mock('@/shared/ui/system/CoachMarksOverlay', () => () => null);
+
+jest.mock('@/context/ToastContext', () => ({
+  ToastProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+  toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn(), info: jest.fn() }),
+}));
+
+jest.mock('@/context/ConfirmContext', () => ({
+  ConfirmProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+  showConfirm: jest.fn(),
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  ActionSheetProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+  showActionSheet: jest.fn(),
+}));
+
+jest.mock('@/shared/application/I18nContext', () => ({
+  I18nProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+}));
 
 describe('RootLayout', () => {
   it('renders without crashing', () => {

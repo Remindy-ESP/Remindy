@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { subscriptionService } from '@/modules/subscriptions/infrastructure/subscriptionApi';
 import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
@@ -7,6 +8,8 @@ import { reminderService } from '@/modules/notifications/infrastructure/reminder
 import { Subscription, Category, CreateSubscriptionRequest, getErrorMessage } from '@/services/api';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { formatShortDate } from '@/utils/format';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 
 type BillingCycle = 'ONE_TIME' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY';
 
@@ -207,8 +210,8 @@ export function useSubscriptionScreen() {
         subscriptionService.getAll(Object.keys(filters).length > 0 ? filters : undefined),
         categoryService.getAll(),
       ]);
-      setSubscriptions(subscriptionsData);
-      setCategories(categoriesData);
+      setSubscriptions(Array.isArray(subscriptionsData) ? subscriptionsData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (err: any) {
       console.error('Error fetching data:', err);
       setError(getErrorMessage(err, t('subscription.errors.loadFailed')));
@@ -217,9 +220,11 @@ export function useSubscriptionScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchData().catch(console.error);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData().catch(console.error);
+    }, [filterFrequency, filterCategoryId])
+  );
 
   useEffect(() => {
     if (!openAdd) return;
@@ -248,10 +253,6 @@ export function useSubscriptionScreen() {
       parsedFrequency: undefined, parsedCategory: undefined,
     });
   }, [openAdd, categories]);
-
-  useEffect(() => {
-    if (!loading) fetchData().catch(console.error);
-  }, [filterFrequency, filterCategoryId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -335,7 +336,7 @@ export function useSubscriptionScreen() {
     if (!validateForm()) return;
     const parsedPrice = parsePriceInput(priceInput);
     if (parsedPrice === null) {
-      Alert.alert(t('common.error'), t('subscription.alerts.invalidPriceFormat'));
+      toast.error(t('subscription.alerts.invalidPriceFormat'));
       return;
     }
     try {
@@ -356,31 +357,24 @@ export function useSubscriptionScreen() {
       setModalVisible(false);
       await fetchData();
     } catch (err: any) {
-      Alert.alert(t('common.error'), getErrorMessage(err, t('subscription.errors.saveFailed')));
+      toast.error(getErrorMessage(err, t('subscription.errors.saveFailed')));
     }
   };
 
-  const handleDelete = (subscription: Subscription) => {
-    Alert.alert(
-      t('subscription.alerts.deleteTitle'),
-      t('subscription.alerts.deleteMessage', { name: subscription.name }),
-      [
-        { text: t('subscription.alerts.deleteCancel'), style: 'cancel' },
-        {
-          text: t('subscription.alerts.deleteConfirm'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await subscriptionService.delete(subscription.id);
-              showSuccess(t('subscription.success.deleted'));
-              await fetchData();
-            } catch (err: any) {
-              Alert.alert(t('common.error'), getErrorMessage(err, t('subscription.errors.deleteFailed')));
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async (subscription: Subscription) => {
+    const confirmed = await showConfirm({
+      title: t('subscription.alerts.deleteTitle'),
+      message: t('subscription.alerts.deleteMessage', { name: subscription.name }),
+      destructive: true,
+    });
+    if (!confirmed) return;
+    try {
+      await subscriptionService.delete(subscription.id);
+      showSuccess(t('subscription.success.deleted'));
+      await fetchData();
+    } catch (err: any) {
+      toast.error(getErrorMessage(err, t('subscription.errors.deleteFailed')));
+    }
   };
 
   const handlePauseResume = async (subscription: Subscription) => {
@@ -394,7 +388,7 @@ export function useSubscriptionScreen() {
       }
       await fetchData();
     } catch (err: any) {
-      Alert.alert(t('common.error'), getErrorMessage(err, t('subscription.errors.updateFailed')));
+      toast.error(getErrorMessage(err, t('subscription.errors.updateFailed')));
     }
   };
 

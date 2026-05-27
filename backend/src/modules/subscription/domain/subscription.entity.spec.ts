@@ -266,18 +266,23 @@ describe('Subscription domain entity', () => {
       expect(s.endDate).toBe(end);
     });
 
-    it('throws when nextDueDate is before or equal to startDate', () => {
+    it('throws when nextDueDate is before startDate', () => {
       const s = new Subscription(makeValidProps());
       expect(() => s.updateDates(new Date('2025-06-01'), new Date('2025-05-01'))).toThrow(
-        'Next due date must be after start date',
+        'Next due date must be on or after start date',
       );
     });
 
-    it('throws when endDate is before or equal to startDate', () => {
+    it('allows nextDueDate equal to startDate (one-time subscriptions)', () => {
+      const s = new Subscription(makeValidProps());
+      expect(() => s.updateDates(new Date('2025-05-15'), new Date('2025-05-15'))).not.toThrow();
+    });
+
+    it('throws when endDate is before startDate', () => {
       const s = new Subscription(makeValidProps());
       expect(() =>
         s.updateDates(new Date('2025-06-01'), new Date('2025-07-01'), new Date('2025-05-01')),
-      ).toThrow('End date must be after start date');
+      ).toThrow('End date must be on or after start date');
     });
   });
 

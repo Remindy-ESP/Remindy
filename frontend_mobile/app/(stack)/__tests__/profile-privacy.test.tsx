@@ -1,8 +1,6 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ProfilePrivacyScreen from '../profile-privacy';
-import { mockAlertPressButton } from './test-utils';
 
 const mockReplace = global.__mockRouterReplace as jest.Mock;
 const mockBack = global.__mockRouterBack as jest.Mock;
@@ -23,11 +21,29 @@ jest.mock('@/services/api', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert');
+let _mockConfirmResult = true;
+const mockShowConfirm = jest.fn().mockImplementation(() => Promise.resolve(_mockConfirmResult));
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: (...args: any[]) => mockShowConfirm(...args),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+const mockToastError = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastInfo = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(
+    jest.fn(),
+    { error: (...args: any[]) => mockToastError(...args), success: (...args: any[]) => mockToastSuccess(...args), info: (...args: any[]) => mockToastInfo(...args) }
+  ),
+  ToastProvider: ({ children }: any) => children,
+}));
 
 describe('ProfilePrivacyScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    _mockConfirmResult = true;
+    mockShowConfirm.mockImplementation(() => Promise.resolve(_mockConfirmResult));
   });
 
   it('requests data export', async () => {
@@ -46,7 +62,7 @@ describe('ProfilePrivacyScreen', () => {
   });
 
   it('deletes account after confirmation', async () => {
-    mockAlertPressButton(1);
+    mockShowConfirm.mockResolvedValueOnce(true);
     mockDeleteMe.mockResolvedValue(undefined);
     mockLogout.mockResolvedValue(undefined);
 
@@ -60,18 +76,18 @@ describe('ProfilePrivacyScreen', () => {
     });
   });
 
-  it('shows error alert when data export fails', async () => {
+  it('shows error toast when data export fails', async () => {
     mockExportData.mockRejectedValue(new Error("Erreur d'export"));
 
     const { getByTestId } = render(<ProfilePrivacyScreen />);
     fireEvent.press(getByTestId('export-data-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', "Erreur d'export");
+      expect(mockToastError).toHaveBeenCalledWith("Erreur d'export");
     });
   });
 
-  it('shows error alert when export fails with response data message', async () => {
+  it('shows error toast when export fails with response data message', async () => {
     const apiError = { response: { data: { message: 'Export non autorise' } } };
     mockExportData.mockRejectedValue(apiError);
 
@@ -79,29 +95,24 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('export-data-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Export non autorise');
+      expect(mockToastError).toHaveBeenCalledWith('Export non autorise');
     });
   });
 
   it('cancels account deletion when cancel button is pressed', async () => {
-    mockAlertPressButton(0);
+    mockShowConfirm.mockResolvedValueOnce(false);
 
     const { getByTestId } = render(<ProfilePrivacyScreen />);
     fireEvent.press(getByTestId('delete-account-button'));
 
-    // Should show confirmation dialog but not call deleteMe
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Supprimer le compte',
-        expect.any(String),
-        expect.any(Array)
-      );
+      expect(mockShowConfirm).toHaveBeenCalledWith(expect.objectContaining({ title: expect.any(String) }));
     });
     expect(mockDeleteMe).not.toHaveBeenCalled();
   });
 
-  it('shows error alert when account deletion API call fails', async () => {
-    mockAlertPressButton(1);
+  it('shows error toast when account deletion API call fails', async () => {
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     mockDeleteMe.mockRejectedValue(new Error('Suppression echouee'));
     mockLogout.mockResolvedValue(undefined);
@@ -111,12 +122,12 @@ describe('ProfilePrivacyScreen', () => {
 
     await waitFor(() => {
       expect(mockDeleteMe).toHaveBeenCalled();
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Suppression echouee');
+      expect(mockToastError).toHaveBeenCalledWith('Suppression echouee');
     });
   });
 
-  it('shows error alert when deletion fails with response data message', async () => {
-    mockAlertPressButton(1);
+  it('shows error toast when deletion fails with response data message', async () => {
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     const apiError = { response: { data: { message: 'Compte introuvable' } } };
     mockDeleteMe.mockRejectedValue(apiError);
@@ -125,11 +136,11 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('delete-account-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Compte introuvable');
+      expect(mockToastError).toHaveBeenCalledWith('Compte introuvable');
     });
   });
 
-  it('shows fallback error message for export when error has no response or message', async () => {
+  it('shows fallback error toast for export when error has no response or message', async () => {
     // Error with neither response.data.message nor .message — triggers third branch
     mockExportData.mockRejectedValue({});
 
@@ -137,15 +148,14 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('export-data-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur',
+      expect(mockToastError).toHaveBeenCalledWith(
         "Impossible de demander l'export des données."
       );
     });
   });
 
-  it('shows fallback error message for delete when error has only message property', async () => {
-    mockAlertPressButton(1);
+  it('shows fallback error toast for delete when error has only message property', async () => {
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     // Error with message but no response — exercises second branch
     mockDeleteMe.mockRejectedValue({ message: 'Network error' });
@@ -154,12 +164,12 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('delete-account-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Network error');
+      expect(mockToastError).toHaveBeenCalledWith('Network error');
     });
   });
 
   it('uses error.message for delete when response.data.message is empty', async () => {
-    mockAlertPressButton(1);
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     // response.data.message is falsy, falls through to error.message
     const apiError = { response: { data: { message: '' } }, message: 'Fallback message' };
@@ -169,7 +179,7 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('delete-account-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Fallback message');
+      expect(mockToastError).toHaveBeenCalledWith('Fallback message');
     });
   });
 
@@ -181,12 +191,12 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('export-data-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Export fallback');
+      expect(mockToastError).toHaveBeenCalledWith('Export fallback');
     });
   });
 
   it('uses error.message for delete when response exists but data is null', async () => {
-    mockAlertPressButton(1);
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     // response exists but data is null — so data?.message is undefined, falls to error.message
     const apiError = { response: { data: null }, message: 'Null data message' };
@@ -196,7 +206,7 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('delete-account-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Null data message');
+      expect(mockToastError).toHaveBeenCalledWith('Null data message');
     });
   });
 
@@ -208,7 +218,7 @@ describe('ProfilePrivacyScreen', () => {
     fireEvent.press(getByTestId('export-data-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Null data export');
+      expect(mockToastError).toHaveBeenCalledWith('Null data export');
     });
   });
 
@@ -224,4 +234,3 @@ describe('ProfilePrivacyScreen', () => {
     expect(mockBack).toHaveBeenCalled();
   });
 });
-

@@ -8,6 +8,7 @@ export interface UpdateBudgetAppDto {
   startDate?: Date;
   endDate?: Date | null;
   categoryId?: string | null;
+  subscriptionIds?: string[];
   isActive?: boolean;
   notes?: string;
 }

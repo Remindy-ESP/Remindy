@@ -39,6 +39,7 @@ export class BudgetService {
       startDate: dto.startDate,
       endDate: dto.endDate ?? null,
       categoryId: dto.categoryId ?? null,
+      subscriptionIds: dto.subscriptionIds ?? [],
       isActive: dto.isActive ?? true,
       notes: dto.notes,
     });
@@ -74,6 +75,7 @@ export class BudgetService {
     if (dto.currency !== undefined) existing.updateCurrency(dto.currency);
     if (dto.period !== undefined) existing.updatePeriod(dto.period);
     if (dto.categoryId !== undefined) existing.updateCategoryId(dto.categoryId);
+    if (dto.subscriptionIds !== undefined) existing.updateSubscriptionIds(dto.subscriptionIds);
     if (dto.notes !== undefined) existing.updateNotes(dto.notes);
     if (dto.isActive !== undefined) {
       if (dto.isActive) existing.activate();
@@ -123,14 +125,20 @@ export class BudgetService {
     const windowStart = budget.startDate;
     const windowEnd = budget.computeEndDate();
 
-    const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({
-      userId: budget.userId,
-    });
+    let allowedSubscriptionIds: Set<string>;
 
-    const allowedSubscriptionIds = filterSubscriptionIdsForBudget(
-      userSubscriptions,
-      budget.categoryId ?? null,
-    );
+    if (budget.subscriptionIds.length > 0) {
+      // Explicit subscription links take priority over category filtering
+      allowedSubscriptionIds = new Set(budget.subscriptionIds);
+    } else {
+      const userSubscriptions = await this.findAllSubscriptionsUseCase.execute({
+        userId: budget.userId,
+      });
+      allowedSubscriptionIds = filterSubscriptionIdsForBudget(
+        userSubscriptions,
+        budget.categoryId ?? null,
+      );
+    }
 
     if (allowedSubscriptionIds.size === 0) {
       return buildSpending(0, budget.amount, windowStart, windowEnd);

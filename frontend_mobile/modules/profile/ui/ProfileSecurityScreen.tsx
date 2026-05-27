@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -19,6 +18,7 @@ import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 import FormFeedback from '@/shared/ui/FormFeedback';
+import { toast } from '@/context/ToastContext';
 
 export default function ProfileSecurityScreen() {
   const router = useRouter();
@@ -75,11 +75,11 @@ export default function ProfileSecurityScreen() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      Alert.alert(t('profile.security.successTitle'), t('profile.security.successAlert'));
+      toast.success(t('profile.security.successAlert'));
     } catch (err) {
       const message = getErrorMessage(err, t('profile.security.updateFailed'));
       setError(message);
-      Alert.alert(t('profile.security.errorTitle'), message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -75,11 +75,13 @@ export default function BaseInputModal({
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#000',
-    marginBottom: 24,
+    backgroundColor: '#252545',
+    borderRadius: 10,
+    padding: 13,
+    fontSize: 15,
+    color: '#fff',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#2E356F',
   },
 });

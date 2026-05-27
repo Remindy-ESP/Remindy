@@ -52,21 +52,23 @@ export default function BaseModal({
 export const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    backgroundColor: '#1B1B3A',
+    borderRadius: 16,
     padding: 24,
     width: '85%',
     maxWidth: 400,
+    borderWidth: 1,
+    borderColor: '#2E356F',
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
     marginBottom: 20,
   },
   buttons: {
@@ -75,12 +77,15 @@ export const modalStyles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    padding: 12,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#252545',
+    borderWidth: 1,
+    borderColor: '#2E356F',
   },
   submitButton: {
     backgroundColor: '#6366f1',
@@ -89,14 +94,14 @@ export const modalStyles = StyleSheet.create({
     opacity: 0.5,
   },
   cancelText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '500',
+    color: '#cbd5f5',
+    fontSize: 15,
+    fontWeight: '600',
   },
   submitText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
 

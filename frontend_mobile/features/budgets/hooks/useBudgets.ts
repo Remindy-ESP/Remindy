@@ -39,11 +39,12 @@ export function useBudgets(options: UseBudgetsOptions = {}): UseBudgetsResult {
       const f: BudgetListFilters = { isActive, categoryId };
       if (withSpending) {
         const result = await budgetsApi.listWithSpending(f);
-        setBudgetsWithSpending(result);
-        setBudgets(result);
+        const safe = Array.isArray(result) ? result : [];
+        setBudgetsWithSpending(safe);
+        setBudgets(safe);
       } else {
         const result = await budgetsApi.list(f);
-        setBudgets(result);
+        setBudgets(Array.isArray(result) ? result : []);
         setBudgetsWithSpending([]);
       }
     } catch (err) {

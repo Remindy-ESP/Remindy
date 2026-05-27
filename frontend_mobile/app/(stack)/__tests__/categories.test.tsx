@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import CategoriesScreen from '../categories';
 
 // useFocusEffect: call the callback once using React.useEffect semantics
@@ -26,7 +25,38 @@ jest.mock('@/services/api/category.service', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert');
+// ---------------------------------------------------------------------------
+// Toast / Confirm / ActionSheet context mocks
+// ---------------------------------------------------------------------------
+jest.mock('@/context/ToastContext', () => {
+  const toastError = jest.fn();
+  const toastSuccess = jest.fn();
+  const toastInfo = jest.fn();
+  const toastFn: any = jest.fn();
+  toastFn.error = toastError;
+  toastFn.success = toastSuccess;
+  toastFn.info = toastInfo;
+  return {
+    toast: toastFn,
+    ToastProvider: ({ children }: any) => children,
+  };
+});
+
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: jest.fn().mockResolvedValue(true),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  showActionSheet: jest.fn(),
+  ActionSheetProvider: ({ children }: any) => children,
+}));
+
+// Get references to mock functions from the mocked modules
+const { toast: _mockedToast } = jest.requireMock('@/context/ToastContext');
+const mockToast = { error: _mockedToast.error as jest.Mock, success: _mockedToast.success as jest.Mock, info: _mockedToast.info as jest.Mock };
+const mockShowConfirm: jest.Mock = jest.requireMock('@/context/ConfirmContext').showConfirm;
+const mockShowActionSheet: jest.Mock = jest.requireMock('@/context/ActionSheetContext').showActionSheet;
 
 const mockSystemCategory = {
   id: 'sys-1',
@@ -41,7 +71,7 @@ const mockSystemCategory = {
 const mockUserCategory = {
   id: 'user-1',
   name: 'Ma Categorie',
-  icon: 'folder',
+  icon: '📁',
   color: '#6366f1',
   isSystem: false,
   createdAt: '2024-01-01T00:00:00.000Z',
@@ -69,6 +99,9 @@ async function openRenameModal(utils: ReturnType<typeof render>) {
 describe('CategoriesScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockShowConfirm.mockResolvedValue(true);
     mockGetAll.mockResolvedValue([mockSystemCategory, mockUserCategory]);
     mockCreate.mockResolvedValue({ id: 'new-1', name: 'New', isSystem: false });
     mockUpdate.mockResolvedValue({ ...mockUserCategory, name: 'Renamed' });
@@ -141,11 +174,11 @@ describe('CategoriesScreen', () => {
     expect(utils.getAllByText('Nouvelle catégorie').length).toBeGreaterThan(0);
   });
 
-  it('shows alert when creating with empty name', async () => {
+  it('shows toast when creating with empty name', async () => {
     const utils = render(<CategoriesScreen />);
     await openCreateModal(utils);
     fireEvent.press(utils.getByText('Créer'));
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Le nom de la catégorie est requis.');
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
   });
 
   it('creates a category with valid name', async () => {
@@ -155,19 +188,19 @@ describe('CategoriesScreen', () => {
     fireEvent.press(utils.getByText('Créer'));
     await waitFor(() => {
       expect(mockCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'Nouvelle', icon: 'folder' })
+        expect.objectContaining({ name: 'Nouvelle', icon: '📁' })
       );
     });
   });
 
-  it('shows alert when create fails', async () => {
+  it('shows toast when create fails', async () => {
     mockCreate.mockRejectedValueOnce(new Error('Server error'));
     const utils = render(<CategoriesScreen />);
     await openCreateModal(utils);
     fireEvent.changeText(utils.getByPlaceholderText('Ex: Santé, Loisirs...'), 'Nouvelle');
     fireEvent.press(utils.getByText('Créer'));
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de créer la catégorie.');
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -193,11 +226,11 @@ describe('CategoriesScreen', () => {
     fireEvent.changeText(inputs[0], 'Nouveau Nom');
     fireEvent.press(utils.getByText('Renommer'));
     await waitFor(() => {
-      expect(mockUpdate).toHaveBeenCalledWith('user-1', { name: 'Nouveau Nom', color: '#6366f1' });
+      expect(mockUpdate).toHaveBeenCalledWith('user-1', { name: 'Nouveau Nom', color: '#6366f1', icon: '📁' });
     });
   });
 
-  it('shows alert when rename fails', async () => {
+  it('shows toast when rename fails', async () => {
     mockUpdate.mockRejectedValueOnce(new Error('Server error'));
     const utils = render(<CategoriesScreen />);
     await openRenameModal(utils);
@@ -205,45 +238,38 @@ describe('CategoriesScreen', () => {
     fireEvent.changeText(inputs[0], 'Nouveau Nom');
     fireEvent.press(utils.getByText('Renommer'));
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de renommer la catégorie.');
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
   it('opens delete confirmation for a user category', async () => {
+    mockShowConfirm.mockResolvedValueOnce(false); // don't actually delete
     const { getByTestId } = render(<CategoriesScreen />);
     await waitFor(() => expect(getByTestId('delete-category-user-1')).toBeTruthy());
     fireEvent.press(getByTestId('delete-category-user-1'));
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Supprimer la catégorie',
-      'Supprimer "Ma Categorie" ?',
-      expect.any(Array)
-    );
+    await waitFor(() => expect(mockShowConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({ destructive: true })
+    ));
   });
 
   it('deletes a category when confirmed', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      const deleteButton = buttons?.find((b: any) => b.text === 'Supprimer');
-      deleteButton?.onPress?.();
-    });
+    mockShowConfirm.mockResolvedValueOnce(true);
     const { getByTestId } = render(<CategoriesScreen />);
     await waitFor(() => expect(getByTestId('delete-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('delete-category-user-1'));
+    await act(async () => { fireEvent.press(getByTestId('delete-category-user-1')); });
     await waitFor(() => {
       expect(mockDelete).toHaveBeenCalledWith('user-1');
     });
   });
 
-  it('shows alert when delete fails', async () => {
+  it('shows toast when delete fails', async () => {
     mockDelete.mockRejectedValueOnce(new Error('Server error'));
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      const deleteButton = buttons?.find((b: any) => b.text === 'Supprimer');
-      deleteButton?.onPress?.();
-    });
+    mockShowConfirm.mockResolvedValueOnce(true);
     const { getByTestId } = render(<CategoriesScreen />);
     await waitFor(() => expect(getByTestId('delete-category-user-1')).toBeTruthy());
-    fireEvent.press(getByTestId('delete-category-user-1'));
+    await act(async () => { fireEvent.press(getByTestId('delete-category-user-1')); });
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Impossible de supprimer la catégorie.');
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 

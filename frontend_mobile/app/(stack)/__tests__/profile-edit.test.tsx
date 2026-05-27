@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import ProfileEditScreen from '../profile-edit';
 
@@ -63,20 +62,31 @@ jest.mock('@/modules/profile/ui/UserAvatar', () => {
   return ({ testID }: any) => <View testID={testID ?? 'user-avatar'} />;
 });
 
-// ----- Alert spy -----
-jest.spyOn(Alert, 'alert');
+// ----- ConfirmContext -----
+let _mockConfirmResult = true;
+const mockShowConfirm = jest.fn().mockImplementation(() => Promise.resolve(_mockConfirmResult));
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: (...args: any[]) => mockShowConfirm(...args),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+// ----- ToastContext -----
+const mockToastError = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastInfo = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(
+    jest.fn(),
+    { error: (...args: any[]) => mockToastError(...args), success: (...args: any[]) => mockToastSuccess(...args), info: (...args: any[]) => mockToastInfo(...args) }
+  ),
+  ToastProvider: ({ children }: any) => children,
+}));
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 const renderScreen = () => render(<ProfileEditScreen />);
-
-const getLastAlertButton = (text: string) => {
-  const calls = (Alert.alert as jest.Mock).mock.calls;
-  const buttons = calls[calls.length - 1][2];
-  return buttons.find((b: any) => b.text === text);
-};
 
 const mockImageAsset = (
   uri: string,
@@ -101,6 +111,8 @@ describe('ProfileEditScreen', () => {
 
     // Reset to default user
     mockUser = defaultUser();
+    _mockConfirmResult = true;
+    mockShowConfirm.mockImplementation(() => Promise.resolve(_mockConfirmResult));
 
     mockUpdateMe.mockResolvedValue(undefined);
     mockRefreshUser.mockResolvedValue(undefined);
@@ -293,7 +305,7 @@ describe('ProfileEditScreen', () => {
     expect(mockRefreshUser).toHaveBeenCalled();
   });
 
-  it('shows success alert after saving', async () => {
+  it('shows success toast after saving', async () => {
     mockUpdateMe.mockResolvedValue(undefined);
     const { getByTestId } = renderScreen();
 
@@ -303,7 +315,7 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('save-profile-button'));
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
+    expect(mockToastSuccess).toHaveBeenCalled();
   });
 
   it('calls router.back() after successful save', async () => {
@@ -321,7 +333,7 @@ describe('ProfileEditScreen', () => {
 
   it('sends undefined for empty language field on save', async () => {
     mockUpdateMe.mockResolvedValue(undefined);
-    const { getByTestId, getAllByText } = renderScreen();
+    const { getByTestId } = renderScreen();
 
     // Clear language (no clear button – it has no onClear prop, just change text to '')
     fireEvent.changeText(getByTestId('input-language'), '');
@@ -355,7 +367,7 @@ describe('ProfileEditScreen', () => {
 
   // ---- save (error path) ----
 
-  it('shows error alert when updateMe fails with generic error', async () => {
+  it('shows error toast when updateMe fails with generic error', async () => {
     mockUpdateMe.mockRejectedValue(new Error('Network error'));
     const { getByTestId } = renderScreen();
 
@@ -365,7 +377,7 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('save-profile-button'));
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Network error');
+    expect(mockToastError).toHaveBeenCalledWith('Network error');
   });
 
   it('shows server error message from response.data.message', async () => {
@@ -380,7 +392,7 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('save-profile-button'));
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Validation failed');
+    expect(mockToastError).toHaveBeenCalledWith('Validation failed');
   });
 
   it('renders with disabled save button and empty fields when user is null', () => {
@@ -407,7 +419,7 @@ describe('ProfileEditScreen', () => {
     expect(mockRequestMediaLibraryPermissionsAsync).toHaveBeenCalled();
   });
 
-  it('shows permission alert when media library permission is denied', async () => {
+  it('shows error toast when media library permission is denied', async () => {
     mockRequestMediaLibraryPermissionsAsync.mockResolvedValue({ granted: false });
     const { getByTestId } = renderScreen();
 
@@ -415,7 +427,7 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('choose-photo-button'));
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Permission requise', expect.any(String));
+    expect(mockToastError).toHaveBeenCalled();
   });
 
   it('does nothing when image picker is cancelled', async () => {
@@ -440,17 +452,17 @@ describe('ProfileEditScreen', () => {
       expect.objectContaining({ uri: 'file://photo.jpg', type: 'image/jpeg' })
     );
     expect(mockRefreshUser).toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
+    expect(mockToastSuccess).toHaveBeenCalled();
   });
 
-  it('shows error alert when photo upload fails', async () => {
+  it('shows error toast when photo upload fails', async () => {
     mockJpeg();
     mockUploadMyPhoto.mockRejectedValue(new Error('Upload failed'));
 
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Upload failed');
+    expect(mockToastError).toHaveBeenCalledWith('Upload failed');
   });
 
   it('shows server error when photo upload fails with response message', async () => {
@@ -460,7 +472,7 @@ describe('ProfileEditScreen', () => {
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'File type not supported');
+    expect(mockToastError).toHaveBeenCalledWith('File type not supported');
   });
 
   it('shows error for empty file (fileSize <= 0)', async () => {
@@ -469,7 +481,7 @@ describe('ProfileEditScreen', () => {
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Le fichier image est vide.');
+    expect(mockToastError).toHaveBeenCalledWith('Le fichier image est vide.');
     expect(mockUploadMyPhoto).not.toHaveBeenCalled();
   });
 
@@ -527,7 +539,7 @@ describe('ProfileEditScreen', () => {
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('choose-photo-button')); });
 
-    expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
+    expect(mockToastError).toHaveBeenCalledWith(expect.any(String));
   });
 
   it('choose-photo button is disabled while upload is in progress', async () => {
@@ -554,7 +566,7 @@ describe('ProfileEditScreen', () => {
 
   // ---- photo removal ----
 
-  it('shows confirmation alert when remove photo is pressed', async () => {
+  it('shows confirmation dialog when remove photo is pressed', async () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
     const { getByTestId } = renderScreen();
 
@@ -562,16 +574,13 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('remove-photo-button'));
     });
 
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Supprimer la photo',
-      expect.any(String),
-      expect.any(Array)
-    );
+    expect(mockShowConfirm).toHaveBeenCalledWith(expect.objectContaining({ title: expect.any(String) }));
   });
 
   it('calls deleteMyPhoto when removal is confirmed', async () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
     mockDeleteMyPhoto.mockResolvedValue(undefined);
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     const { getByTestId } = renderScreen();
 
@@ -579,50 +588,47 @@ describe('ProfileEditScreen', () => {
       fireEvent.press(getByTestId('remove-photo-button'));
     });
 
-    await act(async () => { getLastAlertButton('Supprimer').onPress(); });
-
-    expect(mockDeleteMyPhoto).toHaveBeenCalled();
-    expect(mockRefreshUser).toHaveBeenCalled();
-    expect(Alert.alert).toHaveBeenCalledWith('Succès', expect.any(String));
+    await waitFor(() => {
+      expect(mockDeleteMyPhoto).toHaveBeenCalled();
+      expect(mockRefreshUser).toHaveBeenCalled();
+      expect(mockToastSuccess).toHaveBeenCalled();
+    });
   });
 
   it('does not call deleteMyPhoto when removal is cancelled', async () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
+    mockShowConfirm.mockResolvedValueOnce(false);
+
     const { getByTestId } = renderScreen();
 
     await act(async () => { fireEvent.press(getByTestId('remove-photo-button')); });
-
-    const cancelButton = getLastAlertButton('Annuler');
-    if (cancelButton?.onPress) {
-      await act(async () => { cancelButton.onPress(); });
-    }
 
     expect(mockDeleteMyPhoto).not.toHaveBeenCalled();
   });
 
-  it('shows error alert when photo deletion fails', async () => {
+  it('shows error toast when photo deletion fails', async () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
     mockDeleteMyPhoto.mockRejectedValue(new Error('Delete error'));
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('remove-photo-button')); });
-    await act(async () => { getLastAlertButton('Supprimer').onPress(); });
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Delete error');
+      expect(mockToastError).toHaveBeenCalledWith('Delete error');
     });
   });
 
   it('shows server error message when photo deletion fails with response', async () => {
     mockUser = { ...mockUser, photoR2Key: 'photo/key.jpg' };
     mockDeleteMyPhoto.mockRejectedValue({ response: { data: { message: 'Photo not found' } } });
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     const { getByTestId } = renderScreen();
     await act(async () => { fireEvent.press(getByTestId('remove-photo-button')); });
-    await act(async () => { getLastAlertButton('Supprimer').onPress(); });
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Photo not found');
+      expect(mockToastError).toHaveBeenCalledWith('Photo not found');
     });
   });
 

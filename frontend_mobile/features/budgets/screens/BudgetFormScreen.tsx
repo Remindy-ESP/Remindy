@@ -5,13 +5,15 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTranslation } from '@/shared/application/I18nContext';
+import { toast } from '@/context/ToastContext';
 import { categoryService } from '@/services/api/category.service';
-import type { Category } from '@/services/api/types';
+import { subscriptionService } from '@/services/api';
+import type { Category, Subscription } from '@/services/api/types';
 import {
   BudgetFormFields,
   BudgetFormValues,
@@ -47,8 +49,11 @@ export function BudgetFormScreen({
   const isEdit = Boolean(budgetId);
   const { budget, loading: loadingBudget, update } = useBudget(budgetId);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(true);
   const [values, setValues] = useState<BudgetFormValues>(EMPTY_VALUES);
+  const [selectedSubscriptionIds, setSelectedSubscriptionIds] = useState<string[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof BudgetFormValues, string>>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -70,6 +75,23 @@ export function BudgetFormScreen({
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await subscriptionService.getAll();
+        if (!cancelled) setSubscriptions(data);
+      } catch {
+        if (!cancelled) setSubscriptions([]);
+      } finally {
+        if (!cancelled) setLoadingSubscriptions(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (budget) {
       setValues({
         name: budget.name,
@@ -82,8 +104,15 @@ export function BudgetFormScreen({
         isActive: budget.isActive,
         notes: budget.notes ?? '',
       });
+      setSelectedSubscriptionIds(budget.subscriptionIds ?? []);
     }
   }, [budget]);
+
+  const toggleSubscription = (id: string) => {
+    setSelectedSubscriptionIds(prev =>
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id],
+    );
+  };
 
   const validate = (): boolean => {
     const next: Partial<Record<keyof BudgetFormValues, string>> = {};
@@ -112,6 +141,7 @@ export function BudgetFormScreen({
         startDate: new Date(values.startDate).toISOString(),
         endDate: values.endDate ? new Date(values.endDate).toISOString() : null,
         categoryId: values.categoryId ?? null,
+        subscriptionIds: selectedSubscriptionIds,
         isActive: values.isActive ?? true,
         notes: values.notes,
       };
@@ -126,13 +156,20 @@ export function BudgetFormScreen({
       else router.back();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
-      Alert.alert('Error', message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loadingBudget || loadingCategories) {
+  const selectionLabel = (() => {
+    const count = selectedSubscriptionIds.length;
+    if (count === 0) return t('budgets.form.subscriptionsPlaceholder');
+    if (count === 1) return t('budgets.form.subscriptionSelected', { count });
+    return t('budgets.form.subscriptionsSelected', { count });
+  })();
+
+  if (loadingBudget || loadingCategories || loadingSubscriptions) {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color="#6366f1" />
@@ -152,6 +189,41 @@ export function BudgetFormScreen({
           categories={categories}
           errors={errors}
         />
+
+        {/* Subscription picker */}
+        <View style={styles.fieldBlock}>
+          <Text style={styles.fieldLabel}>{t('budgets.form.subscriptionsLabel')}</Text>
+          <Text style={styles.selectionSummary}>{selectionLabel}</Text>
+          {subscriptions.length === 0 ? (
+            <Text style={styles.emptyNote}>{t('budgets.form.noSubscriptions')}</Text>
+          ) : (
+            <View style={styles.subscriptionList}>
+              {subscriptions.map(sub => {
+                const selected = selectedSubscriptionIds.includes(sub.id);
+                return (
+                  <TouchableOpacity
+                    key={sub.id}
+                    style={[styles.subscriptionRow, selected && styles.subscriptionRowSelected]}
+                    onPress={() => toggleSubscription(sub.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+                      {selected && <Ionicons name="checkmark" size={14} color="#fff" />}
+                    </View>
+                    <View style={styles.subscriptionInfo}>
+                      <Text style={styles.subscriptionName} numberOfLines={1}>
+                        {sub.name}
+                      </Text>
+                      <Text style={styles.subscriptionAmount}>
+                        {(sub.amount ?? 0).toFixed(2)} {sub.currency}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -201,4 +273,70 @@ const styles = StyleSheet.create({
   submitText: { color: '#fff', fontWeight: '700' },
   cancelText: { color: '#cbd5f5', fontWeight: '600' },
   disabled: { opacity: 0.6 },
+  fieldBlock: {
+    backgroundColor: '#1B1B3A',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  fieldLabel: {
+    color: '#9ca3af',
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  selectionSummary: {
+    color: '#6366f1',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  emptyNote: {
+    color: '#6b7280',
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  subscriptionList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  subscriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#252545',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  subscriptionRowSelected: {
+    borderColor: '#6366f1',
+    backgroundColor: '#1e1e40',
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#4b5563',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#6366f1',
+    borderColor: '#6366f1',
+  },
+  subscriptionInfo: { flex: 1 },
+  subscriptionName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  subscriptionAmount: {
+    color: '#9ca3af',
+    fontSize: 12,
+    marginTop: 2,
+  },
 });

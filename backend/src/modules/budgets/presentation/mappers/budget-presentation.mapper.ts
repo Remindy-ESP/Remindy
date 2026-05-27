@@ -18,6 +18,7 @@ export class BudgetPresentationMapper {
       startDate: new Date(dto.startDate),
       endDate: dto.endDate ? new Date(dto.endDate) : null,
       categoryId: dto.categoryId ?? null,
+      subscriptionIds: dto.subscriptionIds ?? [],
       isActive: dto.isActive,
       notes: dto.notes,
     };
@@ -32,6 +33,7 @@ export class BudgetPresentationMapper {
       startDate: dto.startDate ? new Date(dto.startDate) : undefined,
       endDate: dto.endDate === undefined ? undefined : dto.endDate ? new Date(dto.endDate) : null,
       categoryId: dto.categoryId,
+      subscriptionIds: dto.subscriptionIds,
       isActive: dto.isActive,
       notes: dto.notes,
     };
@@ -47,6 +49,7 @@ export class BudgetPresentationMapper {
     dto.startDate = budget.startDate;
     dto.endDate = budget.endDate ?? null;
     dto.categoryId = budget.categoryId ?? null;
+    dto.subscriptionIds = budget.subscriptionIds;
     dto.isActive = budget.isActive;
     dto.notes = budget.notes ?? null;
     dto.createdAt = budget.createdAt!;

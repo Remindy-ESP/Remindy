@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import SupportTicketDetailScreen from '../support-ticket-detail';
 
 const mockBack = jest.fn();
@@ -20,7 +19,21 @@ jest.mock('@/services/api/support.service', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 const mockTicket = {
   id: 'ticket-1',
@@ -53,6 +66,9 @@ const mockClosedTicket = { ...mockTicket, status: 'closed' as const };
 describe('SupportTicketDetailScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     mockGetById.mockResolvedValue(mockTicket);
     mockReply.mockResolvedValue(undefined);
   });
@@ -163,7 +179,7 @@ describe('SupportTicketDetailScreen', () => {
     });
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -171,7 +187,7 @@ describe('SupportTicketDetailScreen', () => {
     mockGetById.mockRejectedValueOnce(new Error('Not found'));
     render(<SupportTicketDetailScreen />);
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
