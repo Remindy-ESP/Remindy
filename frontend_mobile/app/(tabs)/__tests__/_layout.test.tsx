@@ -42,7 +42,7 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 // Mock GlobalHeader
-jest.mock('@/components/GlobalHeader', () => {
+jest.mock('@/shared/ui/GlobalHeader', () => {
   return function MockGlobalHeader() {
     const { View } = require('react-native');
     return <View />;
@@ -51,7 +51,7 @@ jest.mock('@/components/GlobalHeader', () => {
 
 // Mock AuthContext
 const mockUseAuth = jest.fn();
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
 

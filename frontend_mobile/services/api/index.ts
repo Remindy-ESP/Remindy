@@ -34,4 +34,4 @@ export { default as reminderService } from './reminder.service';
 export * from './types';
 
 // Export utilities
-export * from './utils';
+export * from '@/shared/infrastructure/apiUtils';
