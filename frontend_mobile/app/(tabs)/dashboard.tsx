@@ -17,6 +17,7 @@ import { DailyExpensesSummary } from '@/components/DailyExpensesSummary';
 import AddOperationModal from '@/components/AddOperationModal';
 import { documentService, folderService } from '@/services/api';
 import CategoryDropdown from '@/components/CategoryDropdown';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -378,7 +379,14 @@ export default function DashboardScreen() {
                   onPress={() => setSelectedExpense(event)}
                 >
                   <View style={styles.expenseLeft}>
-                    <View style={styles.expenseIconPlaceholder} />
+                    <View style={{ marginRight: 12 }}>
+                      <BrandLogo
+                        name={event.subscription?.name || event.title}
+                        categoryIcon={event.subscription?.category?.icon}
+                        categoryColor={event.subscription?.category?.color}
+                        size={40}
+                      />
+                    </View>
                     <View>
                       <Text style={styles.expenseTitle}>
                         {event.subscription?.name || event.title}
@@ -445,7 +453,12 @@ export default function DashboardScreen() {
             {/* Header */}
             <View style={styles.modalHeader}>
               <View style={styles.modalIconCircle}>
-                <Ionicons name="card-outline" size={28} color="#6366f1" />
+                <BrandLogo
+                  name={selectedExpense?.subscription?.name || selectedExpense?.title || ''}
+                  categoryIcon={selectedExpense?.subscription?.category?.icon}
+                  categoryColor={selectedExpense?.subscription?.category?.color}
+                  size={50}
+                />
               </View>
               <Text style={styles.modalTitle}>
                 {selectedExpense?.subscription?.name || selectedExpense?.title || ''}
