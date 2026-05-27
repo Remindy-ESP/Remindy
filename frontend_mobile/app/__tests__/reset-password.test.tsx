@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ResetPasswordScreen from '../reset-password';
 
@@ -30,7 +29,16 @@ jest.mock('@/services/api', () => ({
   getErrorMessage: jest.fn((err: any, fallback: string) => err?.message || fallback),
 }));
 
-jest.spyOn(Alert, 'alert');
+const mockToastError = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastInfo = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(
+    jest.fn(),
+    { error: (...args: any[]) => mockToastError(...args), success: (...args: any[]) => mockToastSuccess(...args), info: (...args: any[]) => mockToastInfo(...args) }
+  ),
+  ToastProvider: ({ children }: any) => children,
+}));
 
 describe('ResetPasswordScreen', () => {
   beforeEach(() => {
@@ -39,11 +47,6 @@ describe('ResetPasswordScreen', () => {
   });
 
   it('submits reset password request with token from params', async () => {
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (buttons && buttons[0] && buttons[0].onPress) {
-        buttons[0].onPress();
-      }
-    });
     mockResetPassword.mockResolvedValue(undefined);
 
     const { getByTestId } = render(<ResetPasswordScreen />);
@@ -107,8 +110,7 @@ describe('ResetPasswordScreen', () => {
     expect(mockResetPassword).not.toHaveBeenCalled();
   });
 
-  it('shows error alert when API call fails', async () => {
-    (Alert.alert as jest.Mock).mockImplementation(() => {});
+  it('shows error toast when API call fails', async () => {
     mockResetPassword.mockRejectedValue(new Error('Token invalide'));
 
     const { getByTestId, getByText } = render(<ResetPasswordScreen />);
@@ -117,14 +119,12 @@ describe('ResetPasswordScreen', () => {
     fireEvent.press(getByTestId('reset-submit-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Token invalide');
+      expect(mockToastError).toHaveBeenCalledWith('Token invalide');
       expect(getByText('Token invalide')).toBeTruthy();
     });
   });
 
   it('shows success message after reset and displays it in the UI', async () => {
-    // Do not trigger the OK button press to keep the success message visible
-    (Alert.alert as jest.Mock).mockImplementation(() => {});
     mockResetPassword.mockResolvedValue(undefined);
 
     const { getByTestId, getByText } = render(<ResetPasswordScreen />);
@@ -145,10 +145,6 @@ describe('ResetPasswordScreen', () => {
 
   it('handles array token param by using the first element', async () => {
     mockParamsToken = ['first-token', 'second-token'];
-
-    (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-      if (buttons && buttons[0]?.onPress) buttons[0].onPress();
-    });
     mockResetPassword.mockResolvedValue(undefined);
 
     const { getByTestId } = render(<ResetPasswordScreen />);
@@ -185,4 +181,3 @@ describe('ResetPasswordScreen', () => {
     }
   });
 });
-

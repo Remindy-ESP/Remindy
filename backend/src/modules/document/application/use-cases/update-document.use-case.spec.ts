@@ -247,7 +247,7 @@ describe('UpdateDocumentUseCase', () => {
       repository.findById.mockResolvedValue(doc);
       repository.update.mockResolvedValue(updatedDoc);
 
-      const result = await useCase.execute('doc-123', 'user-123', { folderId: null });
+      const result = await useCase.execute('doc-123', 'user-123', { folderId: null as any });
       expect(result).toBeDefined();
     });
 

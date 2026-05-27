@@ -1,0 +1,51 @@
+{
+  "appName": "Remindy",
+  "ok": "OK",
+  "cancel": "Cancel",
+  "save": "Save",
+  "delete": "Delete",
+  "edit": "Edit",
+  "rename": "Rename",
+  "confirm": "Confirm",
+  "close": "Close",
+  "back": "Back",
+  "next": "Next",
+  "previous": "Previous",
+  "retry": "Retry",
+  "loading": "Loading…",
+  "search": "Search",
+  "create": "Create",
+  "add": "Add",
+  "or": "OR",
+  "yes": "Yes",
+  "no": "No",
+  "error": "Error",
+  "success": "Success",
+  "details": "Details",
+  "actions": "Actions",
+  "submit": "Submit",
+  "validate": "Validate",
+  "today": "Today",
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "An unexpected problem prevented this page from loading. You can try again.",
+    "action": "Retry"
+  },
+  "headerMenu": {
+    "profile": "Profile",
+    "categories": "Categories",
+    "settings": "Settings"
+  },
+  "placeholder": {
+    "cardTitle": "Coming soon",
+    "message": "This page will be available soon."
+  },
+  "addOperation": {
+    "title": "New operation",
+    "manual": "Enter manually",
+    "pdf": "Insert PDF"
+  },
+  "dailyExpenses": {
+    "title": "Today's expenses"
+  }
+}

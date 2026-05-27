@@ -1,0 +1,31 @@
+{
+  "step": "Étape {{current}}/{{total}}",
+  "skip": "Passer",
+  "previous": "Précédent",
+  "next": "Suivant",
+  "finish": "Terminer",
+  "openingRoute": "Ouverture de la page correspondante…",
+  "searchingTarget": "Recherche de la zone à mettre en avant…",
+  "steps": {
+    "dashboard": {
+      "title": "Tableau de bord",
+      "message": "Le calendrier vous aide à visualiser vos dates et événements en un coup d'œil."
+    },
+    "subscription": {
+      "title": "Abonnements",
+      "message": "Ajoutez et gérez vos abonnements depuis ce bouton."
+    },
+    "cloud": {
+      "title": "Cloud / Documents",
+      "message": "Importez vos documents ici pour les classer et les relier à vos abonnements."
+    },
+    "promotion": {
+      "title": "Promotions",
+      "message": "Chaque ligne promo est cliquable, avec copie du code et accès au site partenaire."
+    },
+    "profile-security": {
+      "title": "Sécurité",
+      "message": "Modifiez votre mot de passe ici et accédez au flux de réinitialisation si besoin."
+    }
+  }
+}

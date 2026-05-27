@@ -1,807 +1,428 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { UserController } from './user.controller';
-import { UserService } from '../../domain/services/user.service';
-import { UserPreferencesService } from '../../domain/services/user-preferences.service';
-import { GetMyProfileUseCase } from '../../application/use-cases/get-my-profile.use-case';
-import { UpdateMyProfileUseCase } from '../../application/use-cases/update-my-profile.use-case';
-import { GetMyPreferencesUseCase } from '../../application/use-cases/get-my-preferences.use-case';
-import { UpdateUserPreferencesUseCase } from '../../application/use-cases/update-user-preferences.use-case';
-import { RequestRgpdExportUseCase } from '../../application/use-cases/request-rgpd-export.use-case';
-import { RgpdExportService } from '../../../user/application/services/rgpd-export.service';
-import { CloudflareR2Service } from 'src/modules/document/infrastructure/services/cloudflare-r2.service';
-import { JwtAuthGuard } from 'src/modules/auth/presentation/guards/jwt-auth.guard';
-import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
-import { Role } from 'src/modules/auth/domain/value-objects/role.enum';
 import type { Request, Response } from 'express';
-
-// ─── Helpers ───────────────────────────────────────────────────────────────────
-
-function makeRequest(userId: string, overrides: Record<string, unknown> = {}): Request {
-  return {
-    user: { userId, role: Role.USER_PREMIUM },
-    ip: '192.168.1.1',
-    socket: { remoteAddress: '192.168.1.1' },
-    ...overrides,
-  } as unknown as Request;
-}
-
-function makeResponse(): jest.Mocked<Response> {
-  return {
-    clearCookie: jest.fn(),
-  } as unknown as jest.Mocked<Response>;
-}
-
-// ─── Mocks ────────────────────────────────────────────────────────────────────
-
-const mockUserProfile = {
-  id: 'user-123',
-  email: 'test@example.com',
-  firstName: 'John',
-  lastName: 'Doe',
-  phone: '+33612345678',
-  photoR2Key: null,
-  role_key: Role.USER_PREMIUM,
-  status: UserStatus.VERIFIED,
-  timezone: 'Europe/Paris',
-  language: 'fr',
-  emailVerified: true,
-  mfaEnabled: false,
-  lastLoginAt: new Date('2025-01-15'),
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2025-01-15'),
-};
-
-const mockUserEntity = {
-  ...mockUserProfile,
-  role_key: Role.USER_PREMIUM,
-};
-
-const mockPreferences = {
-  userId: 'user-123',
-  theme: 'dark',
-  notificationEmail: true,
-  notificationPush: false,
-  notificationSms: false,
-  defaultReminderDelay: 3,
-  currency: 'EUR',
-  showOnlineStatus: true,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
-
-const mockExportResponse = {
-  id: 'export-123',
-  userId: 'user-123',
-  status: 'pending',
-  format: 'json',
-  requestedBy: 'user',
-  createdAt: new Date(),
-};
-
-// ─── Test Suite ───────────────────────────────────────────────────────────────
+import { UserController } from './user.controller';
+const TEST_IP = 'test-ip-address';
 
 describe('UserController', () => {
   let controller: UserController;
-  let userService: jest.Mocked<UserService>;
-  let getMyProfileUseCase: jest.Mocked<GetMyProfileUseCase>;
-  let updateMyProfileUseCase: jest.Mocked<UpdateMyProfileUseCase>;
-  let getMyPreferencesUseCase: jest.Mocked<GetMyPreferencesUseCase>;
-  let updateUserPreferencesUseCase: jest.Mocked<UpdateUserPreferencesUseCase>;
-  let rgpdExportService: jest.Mocked<RgpdExportService>;
-  let r2Service: jest.Mocked<CloudflareR2Service>;
+  let userService: any;
+  let userPreferencesService: any;
+  let getMyProfileUseCase: any;
+  let updateMyProfileUseCase: any;
+  let getMyPreferencesUseCase: any;
+  let updateUserPreferencesUseCase: any;
+  let requestRgpdExportUseCase: any;
+  let rgpdExportService: any;
+  let r2Service: any;
 
-  beforeEach(async () => {
-    const mockUserService = {
+  const profile = {
+    id: 'user-1',
+    email: 'user@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+    phone: null,
+    photoR2Key: null,
+    role_key: 'USER_FREEMIUM',
+    status: 'active',
+    timezone: 'Europe/Paris',
+    language: 'fr',
+    emailVerified: true,
+    createdAt: new Date('2025-01-01T00:00:00.000Z'),
+  };
+
+  beforeEach(() => {
+    userService = {
       getUserProfile: jest.fn(),
       updateUserProfile: jest.fn(),
       deleteAccount: jest.fn(),
     };
-
-    const mockUserPreferencesService = {
-      getUserPreferences: jest.fn(),
-      updateUserPreferences: jest.fn(),
-    };
-
-    const mockGetMyProfileUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockUpdateMyProfileUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockGetMyPreferencesUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockUpdateUserPreferencesUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockRequestRgpdExportUseCase = {
-      execute: jest.fn(),
-    };
-
-    const mockRgpdExportService = {
-      createExportRequest: jest.fn(),
-      getExportStatus: jest.fn(),
-      getUserExports: jest.fn(),
-      processExport: jest.fn(),
-    };
-
-    const mockR2Service = {
+    userPreferencesService = {};
+    getMyProfileUseCase = { execute: jest.fn() };
+    updateMyProfileUseCase = { execute: jest.fn() };
+    getMyPreferencesUseCase = { execute: jest.fn() };
+    updateUserPreferencesUseCase = { execute: jest.fn() };
+    requestRgpdExportUseCase = { execute: jest.fn() };
+    rgpdExportService = { createExportRequest: jest.fn() };
+    r2Service = {
       uploadFile: jest.fn(),
-      getSignedUrl: jest.fn(),
       deleteFile: jest.fn(),
+      getSignedUrl: jest.fn(),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UserController],
-      providers: [
-        { provide: UserService, useValue: mockUserService },
-        { provide: UserPreferencesService, useValue: mockUserPreferencesService },
-        { provide: GetMyProfileUseCase, useValue: mockGetMyProfileUseCase },
-        { provide: UpdateMyProfileUseCase, useValue: mockUpdateMyProfileUseCase },
-        { provide: GetMyPreferencesUseCase, useValue: mockGetMyPreferencesUseCase },
-        { provide: UpdateUserPreferencesUseCase, useValue: mockUpdateUserPreferencesUseCase },
-        { provide: RequestRgpdExportUseCase, useValue: mockRequestRgpdExportUseCase },
-        { provide: RgpdExportService, useValue: mockRgpdExportService },
-        { provide: CloudflareR2Service, useValue: mockR2Service },
-      ],
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
-
-    controller = module.get<UserController>(UserController);
-    userService = module.get(UserService);
-    getMyProfileUseCase = module.get(GetMyProfileUseCase);
-    updateMyProfileUseCase = module.get(UpdateMyProfileUseCase);
-    getMyPreferencesUseCase = module.get(GetMyPreferencesUseCase);
-    updateUserPreferencesUseCase = module.get(UpdateUserPreferencesUseCase);
-    rgpdExportService = module.get(RgpdExportService);
-    r2Service = module.get(CloudflareR2Service);
+    controller = new UserController(
+      userService,
+      userPreferencesService,
+      getMyProfileUseCase,
+      updateMyProfileUseCase,
+      getMyPreferencesUseCase,
+      updateUserPreferencesUseCase,
+      requestRgpdExportUseCase,
+      rgpdExportService,
+      r2Service,
+    );
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('getProfile extracts the user id from the request', async () => {
+    userService.getUserProfile.mockResolvedValue(profile);
+
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+
+    await expect(controller.getProfile(req)).resolves.toBe(profile);
+    expect(userService.getUserProfile).toHaveBeenCalledWith('user-1');
   });
 
-  // ─── getProfile ────────────────────────────────────────────────────────────
-
-  describe('getProfile', () => {
-    it('should return user profile', async () => {
-      userService.getUserProfile.mockResolvedValue(mockUserProfile as any);
-
-      const req = makeRequest('user-123');
-      const result = await controller.getProfile(req);
-
-      expect(result).toBe(mockUserProfile);
-      expect(userService.getUserProfile).toHaveBeenCalledWith('user-123');
-    });
-
-    it('should throw UnauthorizedException when user is not in request', async () => {
-      const req = { user: null } as unknown as Request;
-
-      await expect(controller.getProfile(req)).rejects.toThrow(UnauthorizedException);
-    });
+  it('throws when extracting user id from an unauthenticated request', () => {
+    expect(() => (controller as any).extractUserIdFromRequest({})).toThrow(UnauthorizedException);
   });
 
-  // ─── getMe ─────────────────────────────────────────────────────────────────
-
-  describe('getMe', () => {
-    it('should return current user profile without photo', async () => {
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      getMyProfileUseCase.execute.mockResolvedValue(userWithNoPhoto as any);
-
-      const req = makeRequest('user-123');
-      const result = await controller.getMe(req);
-
-      expect(getMyProfileUseCase.execute).toHaveBeenCalledWith({ userId: 'user-123' });
-      expect(result.id).toBe('user-123');
-      expect(result.email).toBe('test@example.com');
-    });
-
-    it('should return current user profile with signed photo URL', async () => {
-      const userWithPhoto = { ...mockUserEntity, photoR2Key: 'users/user-123/photo.jpg' };
-      getMyProfileUseCase.execute.mockResolvedValue(userWithPhoto as any);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/signed-url');
-
-      const req = makeRequest('user-123');
-      const result = await controller.getMe(req);
-
-      expect(r2Service.getSignedUrl).toHaveBeenCalledWith('users/user-123/photo.jpg', 86400);
-      expect(result.photoUrl).toBe('https://cdn.example.com/signed-url');
-    });
-
-    it('should return profile even if signed URL generation fails', async () => {
-      const userWithPhoto = { ...mockUserEntity, photoR2Key: 'users/user-123/photo.jpg' };
-      getMyProfileUseCase.execute.mockResolvedValue(userWithPhoto as any);
-      r2Service.getSignedUrl.mockRejectedValue(new Error('R2 error'));
-
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      const req = makeRequest('user-123');
-      const result = await controller.getMe(req);
-
-      expect(result.id).toBe('user-123');
-      expect(consoleSpy).toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
-    });
+  it('returns the base response when the user has no profile photo', async () => {
+    await expect((controller as any).toUserMeResponse(profile)).resolves.toEqual(
+      expect.objectContaining({
+        id: 'user-1',
+        email: 'user@example.com',
+        photoR2Key: undefined,
+      }),
+    );
+    expect(r2Service.getSignedUrl).not.toHaveBeenCalled();
   });
 
-  // ─── updateMe ──────────────────────────────────────────────────────────────
+  it('adds a signed photo url when the profile has a photo', async () => {
+    r2Service.getSignedUrl.mockResolvedValue('https://signed.example/photo');
 
-  describe('updateMe', () => {
-    it('should update current user and return updated profile', async () => {
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      getMyProfileUseCase.execute.mockResolvedValue(userWithNoPhoto as any);
-
-      const req = makeRequest('user-123');
-      const dto = { firstName: 'Jane' };
-
-      const result = await controller.updateMe(req, dto);
-
-      expect(updateMyProfileUseCase.execute).toHaveBeenCalledWith('user-123', dto);
-      expect(getMyProfileUseCase.execute).toHaveBeenCalledWith({ userId: 'user-123' });
-      expect(result.id).toBe('user-123');
+    const result = await (controller as any).toUserMeResponse({
+      ...profile,
+      photoR2Key: 'users/user-1/photo.jpg',
     });
 
-    it('should return profile with signed URL when photo exists after update', async () => {
-      const userWithPhoto = { ...mockUserEntity, photoR2Key: 'users/user-123/photo.jpg' };
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      getMyProfileUseCase.execute.mockResolvedValue(userWithPhoto as any);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/signed-url');
-
-      const req = makeRequest('user-123');
-      const result = await controller.updateMe(req, {});
-
-      expect(result.photoUrl).toBe('https://cdn.example.com/signed-url');
-    });
+    expect(r2Service.getSignedUrl).toHaveBeenCalledWith('users/user-1/photo.jpg', 86400);
+    expect(result.photoUrl).toBe('https://signed.example/photo');
   });
 
-  // ─── uploadMyPhoto ─────────────────────────────────────────────────────────
+  it('swallows signed url generation failures and still returns the response', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    r2Service.getSignedUrl.mockRejectedValue(new Error('R2 down'));
 
-  describe('uploadMyPhoto', () => {
-    const validFile: Express.Multer.File = {
-      fieldname: 'file',
-      originalname: 'profile.jpg',
-      encoding: '7bit',
-      mimetype: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+    const result = await (controller as any).toUserMeResponse({
+      ...profile,
+      photoR2Key: 'users/user-1/photo.jpg',
+    });
+
+    expect(result.photoUrl).toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('sanitizes filenames and falls back when nothing remains', () => {
+    expect((controller as any).sanitizeFilename('My Pretty Photo!!.png')).toBe('my-pretty-photo');
+    expect((controller as any).sanitizeFilename('@@@.png')).toBe('profile-photo');
+  });
+
+  it('resolves image extensions from mime types', () => {
+    expect((controller as any).resolveImageExtension('image/png')).toBe('.png');
+    expect((controller as any).resolveImageExtension('image/webp')).toBe('.webp');
+    expect((controller as any).resolveImageExtension('image/jpeg')).toBe('.jpg');
+    expect((controller as any).resolveImageExtension('image/jpg')).toBe('.jpg');
+    expect((controller as any).resolveImageExtension('application/octet-stream')).toBe('.jpg');
+  });
+
+  it('deletePhotoSafely swallows storage deletion errors', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    r2Service.deleteFile.mockRejectedValue(new Error('delete failed'));
+
+    await expect(
+      (controller as any).deletePhotoSafely('users/user-1/photo.jpg'),
+    ).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+  });
+
+  it('rejects photo upload when file is missing', async () => {
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+
+    await expect(controller.uploadMyPhoto(req, undefined as any)).rejects.toThrow(
+      new BadRequestException('File is required'),
+    );
+  });
+
+  it('rejects photo upload when file is empty', async () => {
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+    const file = { size: 0 } as Express.Multer.File;
+
+    await expect(controller.uploadMyPhoto(req, file)).rejects.toThrow(
+      new BadRequestException('File is empty'),
+    );
+  });
+
+  it('rejects photo upload when file is too large', async () => {
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+    const file = { size: 6 * 1024 * 1024 } as Express.Multer.File;
+
+    await expect(controller.uploadMyPhoto(req, file)).rejects.toThrow(
+      'Profile photo size exceeds 5MB limit',
+    );
+  });
+
+  it('rejects photo upload when mime type is not supported', async () => {
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+    const file = {
+      size: 128,
+      mimetype: 'application/pdf',
+      originalname: 'cv.pdf',
+    } as Express.Multer.File;
+
+    await expect(controller.uploadMyPhoto(req, file)).rejects.toThrow(
+      'Unsupported image type. Allowed: JPEG, PNG, WEBP',
+    );
+  });
+
+  it('uploads a new photo, updates the profile, and removes the previous photo', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1735689600000);
+    getMyProfileUseCase.execute
+      .mockResolvedValueOnce({ ...profile, photoR2Key: 'users/user-1/old.jpg' })
+      .mockResolvedValueOnce({
+        ...profile,
+        photoR2Key: 'users/user-1/profile-photo/1735689600000-my-avatar.png',
+      });
+    r2Service.getSignedUrl.mockResolvedValue('https://signed.example/new');
+
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+    const file = {
       size: 1024,
-      stream: null as any,
-      destination: '',
-      filename: '',
-      path: '',
+      mimetype: 'image/png',
+      originalname: 'My Avatar.png',
+      buffer: Buffer.from('img'),
+    } as Express.Multer.File;
+
+    const result = await controller.uploadMyPhoto(req, file);
+
+    expect(r2Service.uploadFile).toHaveBeenCalledWith(
+      file.buffer,
+      'users/user-1/profile-photo/1735689600000-my-avatar.png',
+      'image/png',
+    );
+    expect(updateMyProfileUseCase.execute).toHaveBeenCalledWith('user-1', {
+      photoR2Key: 'users/user-1/profile-photo/1735689600000-my-avatar.png',
+    });
+    expect(r2Service.deleteFile).toHaveBeenCalledWith('users/user-1/old.jpg');
+    expect(result.photoUrl).toBe('https://signed.example/new');
+  });
+
+  it('cleans up the freshly uploaded photo if profile update fails', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1735689600000);
+    getMyProfileUseCase.execute.mockResolvedValue({ ...profile, photoR2Key: null });
+    updateMyProfileUseCase.execute.mockRejectedValue(new Error('update failed'));
+
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as unknown as Request;
+    const file = {
+      size: 1024,
+      mimetype: 'image/jpeg',
+      originalname: 'Avatar.jpg',
+      buffer: Buffer.from('img'),
+    } as Express.Multer.File;
+
+    await expect(controller.uploadMyPhoto(req, file)).rejects.toThrow('update failed');
+    expect(r2Service.deleteFile).toHaveBeenCalledWith(
+      'users/user-1/profile-photo/1735689600000-avatar.jpg',
+    );
+  });
+
+  it('deletes the current photo and clears the refresh token on account deletion', async () => {
+    getMyProfileUseCase.execute
+      .mockResolvedValueOnce({ ...profile, photoR2Key: 'users/user-1/old.jpg' })
+      .mockResolvedValueOnce({ ...profile, photoR2Key: null });
+    const req = { user: { userId: 'user-1', role: 'USER_FREEMIUM' } } as any;
+    const res = { clearCookie: jest.fn() } as unknown as Response;
+
+    await controller.deleteMe(req, res);
+    expect(userService.deleteAccount).toHaveBeenCalledWith('user-1');
+    expect(res.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+
+    const photoResult = await controller.deleteMyPhoto(req);
+    expect(updateMyProfileUseCase.execute).toHaveBeenCalledWith('user-1', { photoR2Key: '' });
+    expect(r2Service.deleteFile).toHaveBeenCalledWith('users/user-1/old.jpg');
+    expect(photoResult.photoUrl).toBeUndefined();
+  });
+
+  it('throws on deleteMe when request does not contain a user id', async () => {
+    await expect(
+      controller.deleteMe({ user: {} } as any, { clearCookie: jest.fn() } as any),
+    ).rejects.toThrow('User ID not found');
+  });
+
+  it('delegates exportData to the RGPD service and resolves ip fallback', async () => {
+    rgpdExportService.createExportRequest.mockResolvedValue({ id: 'export-1' });
+
+    const req = {
+      user: { userId: 'user-1' },
+      socket: { remoteAddress: TEST_IP },
+    } as any;
+
+    await expect(controller.exportData(req, { format: 'csv' } as any)).resolves.toEqual({
+      id: 'export-1',
+    });
+    expect(rgpdExportService.createExportRequest).toHaveBeenCalledWith(
+      'user-1',
+      { format: 'csv' },
+      TEST_IP,
+    );
+  });
+
+  it('returns preferences through the response DTO factory', async () => {
+    const prefs = {
+      userId: 'user-1',
+      notificationEmail: true,
+      notificationPush: false,
+      notificationSms: false,
+      theme: 'light',
+      currency: 'EUR',
+      defaultReminderDelay: 10,
+      showOnlineStatus: true,
     };
 
-    it('should throw BadRequestException when file is missing', async () => {
-      const req = makeRequest('user-123');
+    getMyPreferencesUseCase.execute.mockResolvedValue(prefs);
 
-      await expect(controller.uploadMyPhoto(req, undefined as any)).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(controller.uploadMyPhoto(req, undefined as any)).rejects.toThrow(
-        'File is required',
-      );
+    await expect(controller.getPreferences({ user: { userId: 'user-1' } } as any)).resolves.toEqual(
+      expect.objectContaining({ userId: 'user-1' }),
+    );
+
+    expect(getMyPreferencesUseCase.execute).toHaveBeenCalledWith('user-1');
+  });
+
+  it('maps updatePreferences through UserPreferencesMapper before delegating', async () => {
+    const dto = {
+      notificationEmail: false,
+      notificationPush: true,
+      notificationSms: false,
+      theme: 'dark',
+      language: 'en',
+      currency: 'EUR',
+      timezone: 'Europe/Paris',
+      defaultReminderDelay: 15,
+      showOnlineStatus: true,
+    };
+
+    updateUserPreferencesUseCase.execute.mockResolvedValue({
+      userId: 'user-1',
+      notificationEmail: false,
+      notificationPush: true,
+      notificationSms: false,
+      theme: 'dark',
+      currency: 'EUR',
+      defaultReminderDelay: 15,
+      showOnlineStatus: true,
     });
 
-    it('should throw BadRequestException when file is empty', async () => {
-      const emptyFile = { ...validFile, size: 0 };
-      const req = makeRequest('user-123');
+    await expect(
+      controller.updatePreferences({ user: { userId: 'user-1' } } as any, dto as any),
+    ).resolves.toEqual(expect.objectContaining({ userId: 'user-1' }));
 
-      await expect(controller.uploadMyPhoto(req, emptyFile)).rejects.toThrow(BadRequestException);
-      await expect(controller.uploadMyPhoto(req, emptyFile)).rejects.toThrow('File is empty');
-    });
-
-    it('should throw BadRequestException when file exceeds 5MB', async () => {
-      const bigFile = { ...validFile, size: 6 * 1024 * 1024 };
-      const req = makeRequest('user-123');
-
-      await expect(controller.uploadMyPhoto(req, bigFile)).rejects.toThrow(BadRequestException);
-      await expect(controller.uploadMyPhoto(req, bigFile)).rejects.toThrow(
-        'Profile photo size exceeds 5MB limit',
-      );
-    });
-
-    it('should throw BadRequestException for unsupported mime type', async () => {
-      const gifFile = { ...validFile, mimetype: 'image/gif' };
-      const req = makeRequest('user-123');
-
-      await expect(controller.uploadMyPhoto(req, gifFile)).rejects.toThrow(BadRequestException);
-      await expect(controller.uploadMyPhoto(req, gifFile)).rejects.toThrow(
-        'Unsupported image type',
-      );
-    });
-
-    it('should upload jpeg photo successfully and delete old photo', async () => {
-      const userWithOldPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/old-photo.jpg',
-      };
-      const userWithNewPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/new-photo.jpg',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithOldPhoto as any) // before upload
-        .mockResolvedValueOnce(userWithNewPhoto as any); // after upload
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.deleteFile.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/new-url');
-
-      const req = makeRequest('user-123');
-      const result = await controller.uploadMyPhoto(req, validFile);
-
-      expect(r2Service.uploadFile).toHaveBeenCalled();
-      expect(r2Service.deleteFile).toHaveBeenCalledWith('users/user-123/old-photo.jpg');
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should upload photo successfully when no previous photo exists', async () => {
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/new-photo.jpg',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithNoPhoto as any)
-        .mockResolvedValueOnce(userWithPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/signed-url');
-
-      const req = makeRequest('user-123');
-      const result = await controller.uploadMyPhoto(req, validFile);
-
-      // No old photo → deleteFile not called with old key
-      expect(r2Service.deleteFile).not.toHaveBeenCalled();
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should rollback and delete new photo if upload pipeline fails', async () => {
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      getMyProfileUseCase.execute.mockResolvedValue(userWithNoPhoto as any);
-      r2Service.uploadFile.mockRejectedValue(new Error('Upload failed'));
-      r2Service.deleteFile.mockResolvedValue(undefined);
-
-      const req = makeRequest('user-123');
-
-      await expect(controller.uploadMyPhoto(req, validFile)).rejects.toThrow('Upload failed');
-      expect(r2Service.deleteFile).toHaveBeenCalled();
-    });
-
-    it('should upload png photo successfully', async () => {
-      const pngFile = { ...validFile, mimetype: 'image/png', originalname: 'photo.png' };
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/photo.png',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithNoPhoto as any)
-        .mockResolvedValueOnce(userWithPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/photo.png');
-
-      const req = makeRequest('user-123');
-      const result = await controller.uploadMyPhoto(req, pngFile);
-
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should upload webp photo successfully', async () => {
-      const webpFile = { ...validFile, mimetype: 'image/webp', originalname: 'photo.webp' };
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/photo.webp',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithNoPhoto as any)
-        .mockResolvedValueOnce(userWithPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/photo.webp');
-
-      const req = makeRequest('user-123');
-      const result = await controller.uploadMyPhoto(req, webpFile);
-
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should upload image/jpg photo successfully', async () => {
-      const jpgFile = { ...validFile, mimetype: 'image/jpg', originalname: 'photo.jpg' };
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/photo.jpg',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithNoPhoto as any)
-        .mockResolvedValueOnce(userWithPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/photo.jpg');
-
-      const req = makeRequest('user-123');
-      const result = await controller.uploadMyPhoto(req, jpgFile);
-
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should handle deletePhotoSafely error gracefully when deleting old photo', async () => {
-      const userWithOldPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/old-photo.jpg',
-      };
-      const userWithNewPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/new-photo.jpg',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithOldPhoto as any)
-        .mockResolvedValueOnce(userWithNewPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.deleteFile.mockRejectedValue(new Error('Delete failed'));
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/new-url');
-
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      const req = makeRequest('user-123');
-      const result = await controller.uploadMyPhoto(req, validFile);
-
-      // Error in delete old photo should not propagate
-      expect(result.id).toBe('user-123');
-      expect(consoleSpy).toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
+    expect(updateUserPreferencesUseCase.execute).toHaveBeenCalledWith('user-1', {
+      notificationEmail: false,
+      notificationPush: true,
+      notificationSms: false,
+      theme: 'dark',
+      currency: 'EUR',
+      defaultReminderDelay: 15,
+      showOnlineStatus: true,
     });
   });
 
-  // ─── deleteMyPhoto ─────────────────────────────────────────────────────────
+  it('uses req.ip first when exporting data', async () => {
+    rgpdExportService.createExportRequest.mockResolvedValue({ id: 'export-ip' });
 
-  describe('deleteMyPhoto', () => {
-    it('should delete photo and return updated profile', async () => {
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/photo.jpg',
-      };
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
+    const req = {
+      ip: '203.0.113.10',
+      socket: { remoteAddress: TEST_IP },
+      user: { userId: 'user-1' },
+    } as any;
 
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithPhoto as any)
-        .mockResolvedValueOnce(userWithNoPhoto as any);
+    await controller.exportData(req, { format: 'json' } as any);
 
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.deleteFile.mockResolvedValue(undefined);
-
-      const req = makeRequest('user-123');
-      const result = await controller.deleteMyPhoto(req);
-
-      expect(updateMyProfileUseCase.execute).toHaveBeenCalledWith('user-123', { photoR2Key: '' });
-      expect(r2Service.deleteFile).toHaveBeenCalledWith('users/user-123/photo.jpg');
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should delete photo without R2 cleanup when no photo exists', async () => {
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-
-      getMyProfileUseCase.execute.mockResolvedValue(userWithNoPhoto as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-
-      const req = makeRequest('user-123');
-      const result = await controller.deleteMyPhoto(req);
-
-      expect(r2Service.deleteFile).not.toHaveBeenCalled();
-      expect(result.id).toBe('user-123');
-    });
-
-    it('should handle R2 delete error gracefully', async () => {
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/photo.jpg',
-      };
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithPhoto as any)
-        .mockResolvedValueOnce(userWithNoPhoto as any);
-
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.deleteFile.mockRejectedValue(new Error('R2 error'));
-
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      const req = makeRequest('user-123');
-      const result = await controller.deleteMyPhoto(req);
-
-      expect(result.id).toBe('user-123');
-      expect(consoleSpy).toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
-    });
+    expect(rgpdExportService.createExportRequest).toHaveBeenCalledWith(
+      'user-1',
+      { format: 'json' },
+      '203.0.113.10',
+    );
   });
 
-  // ─── deleteMe ──────────────────────────────────────────────────────────────
-
-  describe('deleteMe', () => {
-    it('should delete user account and clear cookie', async () => {
-      userService.deleteAccount.mockResolvedValue(undefined);
-
-      const req = makeRequest('user-123') as any;
-      const res = makeResponse();
-
-      await controller.deleteMe(req, res);
-
-      expect(userService.deleteAccount).toHaveBeenCalledWith('user-123');
-      expect(res.clearCookie).toHaveBeenCalledWith('refreshToken', { path: '/' });
+  it('getMe returns the mobile contract response', async () => {
+    getMyProfileUseCase.execute.mockResolvedValue({
+      ...profile,
+      photoR2Key: null,
     });
 
-    it('should throw UnauthorizedException when userId is missing', async () => {
-      const req = { user: { userId: null } } as any;
-      const res = makeResponse();
+    const req = {
+      user: { userId: 'user-1', role: 'USER_FREEMIUM' },
+    } as any;
 
-      await expect(controller.deleteMe(req, res)).rejects.toThrow(UnauthorizedException);
-      await expect(controller.deleteMe(req, res)).rejects.toThrow('User ID not found');
-    });
+    const result = await controller.getMe(req);
+
+    expect(getMyProfileUseCase.execute).toHaveBeenCalledWith({ userId: 'user-1' });
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'user-1',
+        email: 'user@example.com',
+      }),
+    );
   });
 
-  // ─── updateProfile ─────────────────────────────────────────────────────────
+  it('updateMe updates then reloads and returns the mobile response', async () => {
+    const req = {
+      user: { userId: 'user-1', role: 'USER_FREEMIUM' },
+    } as any;
 
-  describe('updateProfile', () => {
-    it('should update user profile', async () => {
-      userService.updateUserProfile.mockResolvedValue(mockUserProfile as any);
+    const dto = {
+      firstName: 'Jane',
+      lastName: 'Doe',
+    };
 
-      const req = makeRequest('user-123');
-      const dto = { firstName: 'Jane', lastName: 'Smith' };
-
-      const result = await controller.updateProfile(req, dto);
-
-      expect(userService.updateUserProfile).toHaveBeenCalledWith('user-123', dto);
-      expect(result).toBe(mockUserProfile);
+    getMyProfileUseCase.execute.mockResolvedValue({
+      ...profile,
+      firstName: 'Jane',
     });
+
+    const result = await controller.updateMe(req, dto as any);
+
+    expect(updateMyProfileUseCase.execute).toHaveBeenCalledWith('user-1', dto);
+    expect(getMyProfileUseCase.execute).toHaveBeenCalledWith({ userId: 'user-1' });
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 'user-1',
+        firstName: 'Jane',
+      }),
+    );
   });
 
-  // ─── getPreferences ────────────────────────────────────────────────────────
-
-  describe('getPreferences', () => {
-    it('should return user preferences', async () => {
-      getMyPreferencesUseCase.execute.mockResolvedValue(mockPreferences as any);
-
-      const req = makeRequest('user-123') as any;
-      const result = await controller.getPreferences(req);
-
-      expect(getMyPreferencesUseCase.execute).toHaveBeenCalledWith('user-123');
-      expect(result).toBeDefined();
-      expect(result.userId).toBe('user-123');
+  it('updateProfile delegates to userService with extracted user id', async () => {
+    userService.updateUserProfile.mockResolvedValue({
+      ...profile,
+      firstName: 'Updated',
     });
+
+    const req = {
+      user: { userId: 'user-1', role: 'USER_FREEMIUM' },
+    } as any;
+
+    const dto = {
+      firstName: 'Updated',
+    };
+
+    const result = await controller.updateProfile(req, dto as any);
+
+    expect(userService.updateUserProfile).toHaveBeenCalledWith('user-1', dto);
+    expect(result).toEqual(
+      expect.objectContaining({
+        firstName: 'Updated',
+      }),
+    );
   });
 
-  // ─── updatePreferences ─────────────────────────────────────────────────────
-
-  describe('updatePreferences', () => {
-    it('should update user preferences', async () => {
-      const updatedPrefs = { ...mockPreferences, theme: 'light' };
-      updateUserPreferencesUseCase.execute.mockResolvedValue(updatedPrefs as any);
-
-      const req = makeRequest('user-123') as any;
-      const dto = { theme: 'light' as const, notificationEmail: true };
-
-      const result = await controller.updatePreferences(req, dto);
-
-      expect(updateUserPreferencesUseCase.execute).toHaveBeenCalledWith('user-123', {
-        theme: 'light',
-        notificationEmail: true,
-        notificationPush: undefined,
-        notificationSms: undefined,
-        defaultReminderDelay: undefined,
-        currency: undefined,
-        showOnlineStatus: undefined,
-      });
-      expect(result).toBeDefined();
-    });
-  });
-
-  // ─── exportData ────────────────────────────────────────────────────────────
-
-  describe('exportData', () => {
-    it('should create export request with req.ip', async () => {
-      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse);
-
-      const req = { ...makeRequest('user-123'), ip: '10.0.0.1' } as any;
-      const dto = { format: 'json' as const };
-
-      const result = await controller.exportData(req, dto);
-
-      expect(rgpdExportService.createExportRequest).toHaveBeenCalledWith(
-        'user-123',
-        { format: 'json' },
-        '10.0.0.1',
-      );
-      expect(result).toBe(mockExportResponse);
-    });
-
-    it('should create export request using socket.remoteAddress when ip is missing', async () => {
-      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse);
-
-      const req = {
-        user: { userId: 'user-123', role: Role.USER_PREMIUM },
-        ip: undefined,
-        socket: { remoteAddress: '192.168.5.5' },
-      } as any;
-      const dto = { format: 'csv' as const };
-
-      const result = await controller.exportData(req, dto);
-
-      expect(rgpdExportService.createExportRequest).toHaveBeenCalledWith(
-        'user-123',
-        { format: 'csv' },
-        '192.168.5.5',
-      );
-      expect(result).toBe(mockExportResponse);
-    });
-
-    it('should fallback to unknown when no ip and no socket address', async () => {
-      rgpdExportService.createExportRequest.mockResolvedValue(mockExportResponse);
-
-      const req = {
-        user: { userId: 'user-123' },
-        ip: undefined,
-        socket: { remoteAddress: undefined },
-      } as any;
-      const dto = { format: 'json' as const };
-
-      await controller.exportData(req, dto);
-
-      expect(rgpdExportService.createExportRequest).toHaveBeenCalledWith(
-        'user-123',
-        { format: 'json' },
-        'unknown',
-      );
-    });
-  });
-
-  // ─── Private method coverage via edge cases ───────────────────────────────
-
-  describe('extractUserIdFromRequest (via getProfile)', () => {
-    it('should throw UnauthorizedException when user is undefined in request', async () => {
-      const req = {} as Request;
-
-      await expect(controller.getProfile(req)).rejects.toThrow(UnauthorizedException);
-      await expect(controller.getProfile(req)).rejects.toThrow('Invalid or missing JWT token');
-    });
-
-    it('should throw UnauthorizedException when userId is empty', async () => {
-      const req = { user: { userId: '' } } as unknown as Request;
-
-      await expect(controller.getProfile(req)).rejects.toThrow(UnauthorizedException);
-    });
-  });
-
-  describe('resolveImageExtension (private method coverage)', () => {
-    it('should return .jpg as fallback for unknown mime types', () => {
-      // Access private method via bracket notation
-      const ext = (controller as any).resolveImageExtension('application/octet-stream');
-      expect(ext).toBe('.jpg');
-    });
-
-    it('should return .png for image/png', () => {
-      const ext = (controller as any).resolveImageExtension('image/png');
-      expect(ext).toBe('.png');
-    });
-
-    it('should return .webp for image/webp', () => {
-      const ext = (controller as any).resolveImageExtension('image/webp');
-      expect(ext).toBe('.webp');
-    });
-
-    it('should return .jpg for image/jpeg', () => {
-      const ext = (controller as any).resolveImageExtension('image/jpeg');
-      expect(ext).toBe('.jpg');
-    });
-
-    it('should return .jpg for image/jpg', () => {
-      const ext = (controller as any).resolveImageExtension('image/jpg');
-      expect(ext).toBe('.jpg');
-    });
-  });
-
-  describe('sanitizeFilename edge cases (via uploadMyPhoto)', () => {
-    it('should sanitize special characters from filename', async () => {
-      const fileWithSpecialName = {
-        fieldname: 'file',
-        originalname: 'My Profile!! Photo.jpg',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('data'),
-        size: 512,
-        stream: null as any,
-        destination: '',
-        filename: '',
-        path: '',
-      };
-
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/my-profile--photo.jpg',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithNoPhoto as any)
-        .mockResolvedValueOnce(userWithPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/url');
-
-      const req = makeRequest('user-123');
-      await controller.uploadMyPhoto(req, fileWithSpecialName);
-
-      const uploadCall = r2Service.uploadFile.mock.calls[0];
-      const r2Key = uploadCall[1];
-      // The key should be sanitized (no special chars)
-      expect(r2Key).toMatch(/^users\/user-123\/profile-photo\//);
-    });
-
-    it('should use "profile-photo" fallback for empty sanitized filename', async () => {
-      const fileWithNoName = {
-        fieldname: 'file',
-        originalname: '',
-        encoding: '7bit',
-        mimetype: 'image/jpeg',
-        buffer: Buffer.from('data'),
-        size: 512,
-        stream: null as any,
-        destination: '',
-        filename: '',
-        path: '',
-      };
-
-      const userWithNoPhoto = { ...mockUserEntity, photoR2Key: null };
-      const userWithPhoto = {
-        ...mockUserEntity,
-        photoR2Key: 'users/user-123/profile-photo/profile-photo.jpg',
-      };
-
-      getMyProfileUseCase.execute
-        .mockResolvedValueOnce(userWithNoPhoto as any)
-        .mockResolvedValueOnce(userWithPhoto as any);
-
-      r2Service.uploadFile.mockResolvedValue(undefined as any);
-      updateMyProfileUseCase.execute.mockResolvedValue(undefined);
-      r2Service.getSignedUrl.mockResolvedValue('https://cdn.example.com/url');
-
-      const req = makeRequest('user-123');
-      await controller.uploadMyPhoto(req, fileWithNoName);
-
-      const uploadCall = r2Service.uploadFile.mock.calls[0];
-      const r2Key = uploadCall[1];
-      expect(r2Key).toContain('profile-photo');
-    });
+  it('updateProfile throws when request has no authenticated user', async () => {
+    await expect(controller.updateProfile({} as any, {} as any)).rejects.toThrow(
+      new UnauthorizedException('Invalid or missing JWT token'),
+    );
   });
 });

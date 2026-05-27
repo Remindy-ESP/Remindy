@@ -48,6 +48,9 @@ export class UserPreferenceEntity {
   @Column({ type: 'boolean', default: true })
   showOnlineStatus: boolean;
 
+  @Column({ type: 'boolean', default: true })
+  monthlyReportEnabled: boolean;
+
   @CreateDateColumn({ type: 'timestamptz', default: () => 'NOW()' })
   createdAt: Date;
 

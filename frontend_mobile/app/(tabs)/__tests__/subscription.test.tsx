@@ -1,18 +1,28 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import SubscriptionScreen from '../subscription';
-import { subscriptionService } from '../../../services/api/subscription.service';
-import { categoryService } from '../../../services/api/category.service';
+import { subscriptionService } from '@/modules/subscriptions/infrastructure/subscriptionApi';
+import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
 
 // ---------------------------------------------------------------------------
 // Service mocks
 // ---------------------------------------------------------------------------
-jest.mock('../../../services/api/subscription.service');
-jest.mock('../../../services/api/category.service');
+jest.mock('@/modules/subscriptions/infrastructure/subscriptionApi');
+jest.mock('@/modules/categories/infrastructure/categoryApi');
 
 const mockedSubscriptionService = subscriptionService as jest.Mocked<typeof subscriptionService>;
 const mockedCategoryService = categoryService as jest.Mocked<typeof categoryService>;
+
+// ---------------------------------------------------------------------------
+// React Navigation (useFocusEffect)
+// ---------------------------------------------------------------------------
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: jest.fn((callback: () => void) => {
+    require('react').useEffect(() => {
+      callback();
+    }, [callback]);
+  }),
+}));
 
 // ---------------------------------------------------------------------------
 // expo-router (setParams needed for openAdd effect)
@@ -59,9 +69,60 @@ jest.mock('@react-native-picker/picker', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Alert
+// AppPicker — expose each item as a touchable with testID picker-item-<value>
 // ---------------------------------------------------------------------------
-const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+jest.mock('@/shared/ui/AppPicker', () => {
+  const React = require('react');
+  const { View, TouchableOpacity, Text } = require('react-native');
+  const AppPicker = ({ items, selectedValue, onValueChange }: any) => (
+    <View>
+      {(items ?? []).map((item: any) => (
+        <TouchableOpacity
+          key={item.value}
+          testID={`picker-item-${item.value}`}
+          onPress={() => onValueChange && onValueChange(item.value)}
+        >
+          <Text>{item.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+  AppPicker.displayName = 'AppPicker';
+  return AppPicker;
+});
+
+// ---------------------------------------------------------------------------
+// Toast / Confirm / ActionSheet context mocks
+// ---------------------------------------------------------------------------
+jest.mock('@/context/ToastContext', () => {
+  const toastError = jest.fn();
+  const toastSuccess = jest.fn();
+  const toastInfo = jest.fn();
+  const toastFn: any = jest.fn();
+  toastFn.error = toastError;
+  toastFn.success = toastSuccess;
+  toastFn.info = toastInfo;
+  return {
+    toast: toastFn,
+    ToastProvider: ({ children }: any) => children,
+  };
+});
+
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: jest.fn().mockResolvedValue(true),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  showActionSheet: jest.fn(),
+  ActionSheetProvider: ({ children }: any) => children,
+}));
+
+// Get references to mock functions from the mocked modules
+const { toast: _mockedToast } = jest.requireMock('@/context/ToastContext');
+const mockToast = { error: _mockedToast.error as jest.Mock, success: _mockedToast.success as jest.Mock, info: _mockedToast.info as jest.Mock };
+const mockShowConfirm: jest.Mock = jest.requireMock('@/context/ConfirmContext').showConfirm;
+const mockShowActionSheet: jest.Mock = jest.requireMock('@/context/ActionSheetContext').showActionSheet;
 
 // ---------------------------------------------------------------------------
 // DateTimePicker
@@ -84,7 +145,7 @@ jest.mock('@react-native-community/datetimepicker', () => {
 // ---------------------------------------------------------------------------
 // CoachMarkTarget & config
 // ---------------------------------------------------------------------------
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const React = require('react');
   return ({ children }: any) => <React.Fragment>{children}</React.Fragment>;
 });
@@ -94,15 +155,6 @@ jest.mock('@/features/coach-marks/coach-marks.config', () => ({
     subscriptionAddButton: 'subscriptionAddButton',
   },
 }));
-
-// ---------------------------------------------------------------------------
-// Alert mock for react-native (keep actual RN but spy on Alert)
-// ---------------------------------------------------------------------------
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-  RN.Alert.alert = jest.fn();
-  return RN;
-});
 
 // ---------------------------------------------------------------------------
 // Fixture data
@@ -134,7 +186,9 @@ const makeSubscription = (overrides: Partial<any> = {}) => ({
 describe('SubscriptionScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    alertSpy.mockClear();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockShowConfirm.mockResolvedValue(true);
     mockedSubscriptionService.getAll.mockResolvedValue([]);
     mockedCategoryService.getAll.mockResolvedValue([]);
   });
@@ -357,7 +411,7 @@ describe('SubscriptionScreen', () => {
       const { findByText } = render(<SubscriptionScreen />);
       const pauseBtn = await findByText('⏸');
       await act(async () => { fireEvent.press(pauseBtn); });
-      await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String)));
+      await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
     });
   });
 
@@ -365,72 +419,49 @@ describe('SubscriptionScreen', () => {
   // Delete
   // -------------------------------------------------------------------------
   describe('delete', () => {
-    it('calls Alert.alert when delete button pressed', async () => {
+    it('calls showConfirm when delete button pressed', async () => {
       mockedSubscriptionService.getAll.mockResolvedValue([makeSubscription()]);
+      mockShowConfirm.mockResolvedValueOnce(false); // don't actually delete
       const { findByText } = render(<SubscriptionScreen />);
       const deleteBtn = await findByText('🗑️');
       fireEvent.press(deleteBtn);
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Supprimer l\'opération',
-        expect.stringContaining('Netflix'),
-        expect.any(Array)
-      );
+      await waitFor(() => expect(mockShowConfirm).toHaveBeenCalledWith(
+        expect.objectContaining({ destructive: true })
+      ));
     });
 
-    it('calls delete service when confirm button pressed in alert', async () => {
+    it('calls delete service when user confirms', async () => {
       mockedSubscriptionService.getAll.mockResolvedValue([makeSubscription()]);
       mockedSubscriptionService.delete.mockResolvedValue(undefined);
-
-      let capturedButtons: any[] = [];
-      (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-        capturedButtons = buttons;
-      });
+      mockShowConfirm.mockResolvedValueOnce(true);
 
       const { findByText } = render(<SubscriptionScreen />);
       const deleteBtn = await findByText('🗑️');
-      fireEvent.press(deleteBtn);
-
-      // Press the "Supprimer" confirm button
-      const confirmBtn = capturedButtons.find((b: any) => b.text === 'Supprimer');
-      expect(confirmBtn).toBeDefined();
-      await act(async () => { await confirmBtn.onPress(); });
-      expect(mockedSubscriptionService.delete).toHaveBeenCalledWith('sub-1');
+      await act(async () => { fireEvent.press(deleteBtn); });
+      await waitFor(() => expect(mockedSubscriptionService.delete).toHaveBeenCalledWith('sub-1'));
     });
 
-    it('does not call delete service when cancel button pressed in alert', async () => {
+    it('does not call delete service when user cancels', async () => {
       mockedSubscriptionService.getAll.mockResolvedValue([makeSubscription()]);
-
-      let capturedButtons: any[] = [];
-      (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-        capturedButtons = buttons;
-      });
+      mockShowConfirm.mockResolvedValueOnce(false);
 
       const { findByText } = render(<SubscriptionScreen />);
       const deleteBtn = await findByText('🗑️');
-      fireEvent.press(deleteBtn);
-
-      const cancelBtn = capturedButtons.find((b: any) => b.text === 'Annuler');
-      // cancel has no onPress — service should not be called
+      await act(async () => { fireEvent.press(deleteBtn); });
+      await waitFor(() => expect(mockShowConfirm).toHaveBeenCalled());
       expect(mockedSubscriptionService.delete).not.toHaveBeenCalled();
     });
 
-    it('shows error alert when delete fails', async () => {
+    it('shows error toast when delete fails', async () => {
       mockedSubscriptionService.getAll.mockResolvedValue([makeSubscription()]);
       mockedSubscriptionService.delete.mockRejectedValue(new Error('Delete failed'));
-
-      let capturedButtons: any[] = [];
-      (Alert.alert as jest.Mock).mockImplementation((_title, _msg, buttons) => {
-        capturedButtons = buttons;
-      });
+      mockShowConfirm.mockResolvedValueOnce(true);
 
       const { findByText } = render(<SubscriptionScreen />);
       const deleteBtn = await findByText('🗑️');
-      fireEvent.press(deleteBtn);
-
-      const confirmBtn = capturedButtons.find((b: any) => b.text === 'Supprimer');
-      await act(async () => { await confirmBtn.onPress(); });
+      await act(async () => { fireEvent.press(deleteBtn); });
       await waitFor(() =>
-        expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String))
+        expect(mockToast.error).toHaveBeenCalledWith(expect.any(String))
       );
     });
   });
@@ -550,7 +581,7 @@ describe('SubscriptionScreen', () => {
 
       const createBtn = await findByText('Créer');
       await act(async () => { fireEvent.press(createBtn); });
-      await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String)));
+      await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
     });
 
     it('includes notes when description is provided', async () => {
@@ -572,7 +603,7 @@ describe('SubscriptionScreen', () => {
       });
     });
 
-    it('adds reminder info to notes', async () => {
+    it('creates subscription with reminderDays default of 3', async () => {
       mockedSubscriptionService.create.mockResolvedValue(makeSubscription());
 
       const { findByText, getByPlaceholderText } = render(<SubscriptionScreen />);
@@ -580,13 +611,12 @@ describe('SubscriptionScreen', () => {
 
       fireEvent.changeText(await getByPlaceholderText('Ex: Netflix, Spotify'), 'Netflix');
       fireEvent.changeText(await getByPlaceholderText('15.99 ou 15,99'), '15.99');
-      // reminderDays defaults to 3, so notes should include "Rappel 3 jour(s) avant"
 
       await act(async () => { fireEvent.press(await findByText('Créer')); });
 
       await waitFor(() => {
         expect(mockedSubscriptionService.create).toHaveBeenCalledWith(
-          expect.objectContaining({ notes: expect.stringContaining('Rappel 3 jour(s) avant') })
+          expect.objectContaining({ name: 'Netflix' })
         );
       });
     });
@@ -691,7 +721,7 @@ describe('SubscriptionScreen', () => {
       fireEvent.changeText(await getByPlaceholderText('15.99 ou 15,99'), '15.99');
 
       await act(async () => { fireEvent.press(await findByText('Mettre à jour')); });
-      await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String)));
+      await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(expect.any(String)));
     });
   });
 

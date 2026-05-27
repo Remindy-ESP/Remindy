@@ -51,8 +51,8 @@ describe('RoleService', () => {
       const roleKey = 'free';
       const expectedRole = new RoleEntity();
       expectedRole.key = roleKey;
-      expectedRole.name = 'Free';
-      expectedRole.description = 'Free tier';
+      expectedRole.label = 'Free';
+      (expectedRole as any).description = 'Free tier';
 
       roleRepository.findByKey.mockResolvedValue(expectedRole);
 
@@ -80,7 +80,7 @@ describe('RoleService', () => {
       const roleKey = 'premium';
       const expectedRole = new RoleEntity();
       expectedRole.key = roleKey;
-      expectedRole.name = 'Premium';
+      expectedRole.label = 'Premium';
 
       roleRepository.findByKey.mockResolvedValue(expectedRole);
 
@@ -93,9 +93,9 @@ describe('RoleService', () => {
   describe('getAllRoles', () => {
     it('should return all roles', async () => {
       const expectedRoles = [
-        Object.assign(new RoleEntity(), { key: 'free', name: 'Free' }),
-        Object.assign(new RoleEntity(), { key: 'premium', name: 'Premium' }),
-        Object.assign(new RoleEntity(), { key: 'enterprise', name: 'Enterprise' }),
+        Object.assign(new RoleEntity(), { key: 'free', label: 'Free' }),
+        Object.assign(new RoleEntity(), { key: 'premium', label: 'Premium' }),
+        Object.assign(new RoleEntity(), { key: 'enterprise', label: 'Enterprise' }),
       ];
 
       roleRepository.findAll.mockResolvedValue(expectedRoles);
@@ -123,9 +123,9 @@ describe('RoleService', () => {
       role.key = roleKey;
 
       const expectedLimits = new RoleLimitEntity();
-      expectedLimits.roleKey = roleKey;
+      expectedLimits.role = roleKey;
       expectedLimits.maxSubscriptions = 5;
-      expectedLimits.maxReminders = 10;
+      expectedLimits.maxRemindersPerSubscription = 10;
 
       roleRepository.findByKey.mockResolvedValue(role);
       roleLimitRepository.findByRole.mockResolvedValue(expectedLimits);
@@ -170,9 +170,9 @@ describe('RoleService', () => {
       role.key = roleKey;
 
       const expectedLimits = new RoleLimitEntity();
-      expectedLimits.roleKey = roleKey;
+      expectedLimits.role = roleKey;
       expectedLimits.maxSubscriptions = 50;
-      expectedLimits.maxReminders = 100;
+      expectedLimits.maxRemindersPerSubscription = 100;
 
       roleRepository.findByKey.mockResolvedValue(role);
       roleLimitRepository.findByRole.mockResolvedValue(expectedLimits);
@@ -180,7 +180,7 @@ describe('RoleService', () => {
       const result = await service.getRoleLimits(roleKey);
 
       expect(result.maxSubscriptions).toBe(50);
-      expect(result.maxReminders).toBe(100);
+      expect(result.maxRemindersPerSubscription).toBe(100);
     });
   });
 
@@ -188,14 +188,14 @@ describe('RoleService', () => {
     it('should return all role limits', async () => {
       const expectedLimits = [
         Object.assign(new RoleLimitEntity(), {
-          roleKey: 'free',
+          role: 'free',
           maxSubscriptions: 5,
-          maxReminders: 10,
+          maxRemindersPerSubscription: 10,
         }),
         Object.assign(new RoleLimitEntity(), {
-          roleKey: 'premium',
+          role: 'premium',
           maxSubscriptions: 50,
-          maxReminders: 100,
+          maxRemindersPerSubscription: 100,
         }),
       ];
 

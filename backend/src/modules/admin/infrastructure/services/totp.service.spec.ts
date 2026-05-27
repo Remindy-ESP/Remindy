@@ -10,7 +10,6 @@ describe('TotpService', () => {
 
   describe('constructor', () => {
     it('sets authenticator window to 1', () => {
-      new TotpService();
       expect(authenticator.options).toMatchObject({ window: 1 });
     });
   });

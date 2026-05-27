@@ -1,6 +1,14 @@
-/**
- * API Types and Interfaces
- */
+export {
+  User,
+  UpdateUserRequest,
+  UploadUserPhotoFile,
+  ApiResponse,
+  PaginatedResponse,
+  ThemePreference,
+  UserPreferences,
+  UpdateUserPreferencesRequest,
+} from '@/shared/domain/types';
+export type { User as UserType } from '@/shared/domain/types';
 
 export interface LoginRequest {
   email: string;
@@ -17,42 +25,11 @@ export interface RegisterRequest {
 export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
+  user: import('@/shared/domain/types').User;
 }
 
 export interface RefreshTokenRequest {
   refreshToken: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  photoR2Key?: string;
-  photoUrl?: string;
-  role: string;
-  status: string;
-  timezone: string;
-  language: string;
-  emailVerified: boolean;
-  createdAt: string;
-}
-
-export interface UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  language?: string;
-  timezone?: string;
-  photoR2Key?: string;
-}
-
-export interface UploadUserPhotoFile {
-  uri: string;
-  name: string;
-  type: string;
 }
 
 export interface RequestRgpdExport {
@@ -154,7 +131,6 @@ export interface UpdateSubscriptionRequest {
   categoryId?: string;
 }
 
-// Event Types
 export interface Event {
   id: string;
   title: string;
@@ -166,19 +142,6 @@ export interface Event {
   userId: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  statusCode?: number;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
 }
 
 export interface Folder {
@@ -221,32 +184,35 @@ export interface StorageQuota {
   availableBytes: number;
   usagePercentage: number;
   documentCount: number;
+  maxDocuments: number;
+  maxFileSize: number;
   totalFormatted: string;
   usedFormatted: string;
   availableFormatted: string;
+  maxFileSizeFormatted: string;
 }
 
-export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewal' | 'document_expiry' | 'system';
+export type NotificationType = 'reminder' | 'payment_overdue' | 'subscription_renewed' | 'trial_ending' | 'document_processed' | 'subscription_renewal' | 'document_expiry' | 'system';
 export type NotificationChannel = 'email' | 'push' | 'sms';
 export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'snoozed';
 
 export interface Notification {
   id: string;
-  userId: string;
-  eventId?: string;
-  reminderId?: string;
+  user_id: string;
+  event_id?: string;
+  reminder_id?: string;
   type: NotificationType;
   channel: NotificationChannel;
   title: string;
   body: string;
-  sentAt?: string;
-  readAt?: string;
+  sent_at?: string;
+  read_at?: string;
   status: NotificationStatus;
-  snoozedUntil?: string;
-  errorMessage?: string;
+  snoozed_until?: string;
+  error_message?: string;
   metadata?: any;
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface NotificationFilter {

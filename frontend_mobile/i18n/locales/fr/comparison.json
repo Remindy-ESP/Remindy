@@ -1,0 +1,18 @@
+{
+  "sectionTitle": "Comparaison",
+  "loading": "Chargement de la comparaison...",
+  "errorPrefix": "Erreur : {{message}}",
+  "currentPeriod": "Période actuelle",
+  "previousPeriod": "Période précédente",
+  "delta": "Delta",
+  "deltaUp": "↑ {{amount}}",
+  "deltaDown": "↓ {{amount}}",
+  "deltaFlat": "= {{amount}}",
+  "percentageUp": "+{{value}}% vs période précédente",
+  "percentageDown": "{{value}}% vs période précédente",
+  "percentageStable": "Stable vs période précédente",
+  "narrativeUp": "Vous avez dépensé {{amount}} de plus que la période précédente.",
+  "narrativeDown": "Vous avez économisé {{amount}} par rapport à la période précédente.",
+  "narrativeStable": "Vos dépenses sont stables par rapport à la période précédente.",
+  "narrativeFromZero": "Aucune dépense lors de la période précédente."
+}

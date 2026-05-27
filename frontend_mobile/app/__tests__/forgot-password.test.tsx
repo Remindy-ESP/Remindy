@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert } from 'react-native';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ForgotPasswordScreen from '../forgot-password';
 
@@ -25,11 +24,28 @@ jest.mock('@/services/api', () => ({
   getErrorMessage: jest.fn((err: any, fallback: string) => err?.message || fallback),
 }));
 
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 describe('ForgotPasswordScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
   });
 
   it('submits forgot password request', async () => {
@@ -68,7 +84,6 @@ describe('ForgotPasswordScreen', () => {
   });
 
   it('shows error alert when API call fails', async () => {
-    (Alert.alert as jest.Mock).mockImplementation(() => {});
     mockForgotPassword.mockRejectedValue(new Error('Serveur indisponible'));
 
     const { getByTestId, getByText } = render(<ForgotPasswordScreen />);
@@ -76,7 +91,7 @@ describe('ForgotPasswordScreen', () => {
     fireEvent.press(getByTestId('forgot-submit-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', 'Serveur indisponible');
+      expect(mockToast.error).toHaveBeenCalledWith('Serveur indisponible');
       expect(getByText('Serveur indisponible')).toBeTruthy();
     });
   });

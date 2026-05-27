@@ -1,167 +1,251 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import axios from 'axios';
-import { BrevoEmailService } from './sendgrid-email.service';
+import * as nodemailer from 'nodemailer';
+import { Logger } from '@nestjs/common';
+import { GmailEmailService } from './sendgrid-email.service';
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+jest.mock('nodemailer');
 
-describe('BrevoEmailService', () => {
-  let service: BrevoEmailService;
+describe('GmailEmailService', () => {
+  let service: GmailEmailService;
+  const sendMailMock = jest.fn();
+  const envBackup = { ...process.env };
 
-  const originalEnv = process.env;
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-
-    // Set up environment variables used by the service
-    process.env = {
-      ...originalEnv,
-      MAIL_FROM: 'noreply@remindy.app',
-      SENDGRID_API_KEY: 'test-brevo-api-key',
-    };
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [BrevoEmailService],
-    }).compile();
-
-    service = module.get<BrevoEmailService>(BrevoEmailService);
+  beforeEach(() => {
+    service = new GmailEmailService();
+    process.env.MAIL_USER = 'remindy@gmail.com';
+    process.env.MAIL_APP_PASSWORD = 'test-app-password';
+    (nodemailer.createTransport as jest.Mock).mockReturnValue({ sendMail: sendMailMock });
+    sendMailMock.mockResolvedValue({ messageId: 'test-id' });
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    jest.clearAllMocks();
+    process.env = { ...envBackup };
   });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  describe('sendPasswordResetEmail', () => {
-    const validParams = {
+  it('sends the password reset email via Gmail SMTP', async () => {
+    await service.sendPasswordResetEmail({
       to: 'user@example.com',
-      resetLink: 'https://remindy.app/reset-password?token=abc123',
-    };
-
-    it('should call axios.post with correct URL and headers on success', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
-
-      await service.sendPasswordResetEmail(validParams);
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        'https://api.brevo.com/v3/smtp/email',
-        expect.any(Object),
-        expect.objectContaining({
-          headers: {
-            'api-key': 'test-brevo-api-key',
-            'Content-Type': 'application/json',
-          },
-        }),
-      );
+      resetLink: 'frontendmobile://reset-password?token=abc',
     });
 
-    it('should send to the correct recipient email address', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
-
-      await service.sendPasswordResetEmail(validParams);
-
-      const callArgs = mockedAxios.post.mock.calls[0];
-      const body = callArgs[1] as any;
-
-      expect(body.to).toEqual([{ email: 'user@example.com' }]);
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'remindy@gmail.com', pass: 'test-app-password' },
     });
 
-    it('should send from the configured MAIL_FROM address', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Réinitialisation de votre mot de passe',
+        html: expect.stringContaining('frontendmobile://reset-password?token=abc'),
+      }),
+    );
+  });
 
-      await service.sendPasswordResetEmail(validParams);
+  it('logs the error and rethrows when sending password reset email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP connection refused');
+    sendMailMock.mockRejectedValue(error);
 
-      const body = mockedAxios.post.mock.calls[0][1] as any;
+    await expect(
+      service.sendPasswordResetEmail({
+        to: 'user@example.com',
+        resetLink: 'frontendmobile://reset-password?token=abc',
+      }),
+    ).rejects.toBe(error);
 
-      expect(body.sender).toEqual({
-        email: 'noreply@remindy.app',
-        name: 'Remindy',
-      });
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send password reset email to user@example.com',
+      error,
+    );
+  });
+  it('sends the verification email via Gmail SMTP', async () => {
+    await service.sendVerificationEmail({
+      to: 'user@example.com',
+      verificationLink: 'http://localhost:3000/verify-email?token=xyz',
     });
 
-    it('should include the reset link in the email HTML body', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
-
-      await service.sendPasswordResetEmail(validParams);
-
-      const body = mockedAxios.post.mock.calls[0][1] as any;
-
-      expect(body.htmlContent).toContain(validParams.resetLink);
+    expect(nodemailer.createTransport).toHaveBeenCalledWith({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'remindy@gmail.com', pass: 'test-app-password' },
     });
 
-    it('should set the correct email subject', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Confirmez votre adresse email',
+        html: expect.stringContaining('http://localhost:3000/verify-email?token=xyz'),
+      }),
+    );
+  });
 
-      await service.sendPasswordResetEmail(validParams);
+  it('logs the error and rethrows when sending verification email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP connection refused');
+    sendMailMock.mockRejectedValue(error);
 
-      const body = mockedAxios.post.mock.calls[0][1] as any;
+    await expect(
+      service.sendVerificationEmail({
+        to: 'user@example.com',
+        verificationLink: 'http://localhost:3000/verify-email?token=xyz',
+      }),
+    ).rejects.toBe(error);
 
-      expect(body.subject).toBe('Réinitialisation de votre mot de passe');
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send verification email to user@example.com',
+      error,
+    );
+  });
+
+  it('sends the monthly report email via Gmail SMTP', async () => {
+    await service.sendMonthlyReport({
+      to: 'user@example.com',
+      data: {
+        userName: 'John',
+        month: 'avril 2026',
+        totalExpenses: 55.97,
+        previousTotalExpenses: 45.98,
+        percentageChange: 21.7,
+        trend: 'up',
+        categorySummary: [
+          { name: 'Streaming', total: 25.98 },
+          { name: 'Sport', total: 30 },
+        ],
+        topCategory: { name: 'Sport', total: 30 },
+        activeSubscriptionsCount: 3,
+        currency: 'EUR',
+      },
     });
 
-    it('should use the SENDGRID_API_KEY environment variable as the api-key header', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: 'Récapitulatif mensuel — avril 2026',
+        html: expect.stringContaining('55.97'),
+      }),
+    );
+  });
 
-      await service.sendPasswordResetEmail(validParams);
-
-      const config = mockedAxios.post.mock.calls[0][2] as any;
-
-      expect(config.headers['api-key']).toBe('test-brevo-api-key');
+  it('sends the monthly report email with trend down', async () => {
+    await service.sendMonthlyReport({
+      to: 'user@example.com',
+      data: {
+        userName: 'Alice',
+        month: 'mars 2026',
+        totalExpenses: 30,
+        previousTotalExpenses: 50,
+        percentageChange: -40,
+        trend: 'down',
+        categorySummary: [{ name: 'Streaming', total: 30 }],
+        topCategory: { name: 'Streaming', total: 30 },
+        activeSubscriptionsCount: 2,
+        currency: 'EUR',
+      },
     });
 
-    it('should resolve without throwing on a successful API response', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'user@example.com',
+        html: expect.stringContaining('de moins'),
+      }),
+    );
+  });
 
-      await expect(service.sendPasswordResetEmail(validParams)).resolves.toBeUndefined();
+  it('logs the error and rethrows when sending monthly report fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP timeout');
+    sendMailMock.mockRejectedValue(error);
+
+    await expect(
+      service.sendMonthlyReport({
+        to: 'user@example.com',
+        data: {
+          userName: 'John',
+          month: 'avril 2026',
+          totalExpenses: 0,
+          previousTotalExpenses: 0,
+          percentageChange: 0,
+          trend: 'stable',
+          categorySummary: [],
+          topCategory: null,
+          activeSubscriptionsCount: 0,
+          currency: 'EUR',
+        },
+      }),
+    ).rejects.toBe(error);
+
+    expect(loggerSpy).toHaveBeenCalledWith(
+      'Failed to send monthly report to user@example.com',
+      error,
+    );
+  });
+
+  it('sends a renewal notification email', async () => {
+    await service.sendNotificationEmail({
+      to: 'user@example.com',
+      data: {
+        title: 'Renouvellement',
+        body: 'Netflix — renouvellement dans 3 jour(s)',
+        subscriptionName: 'Netflix',
+        type: 'subscription_renewal',
+      },
     });
 
-    it('should throw and re-throw when axios.post rejects', async () => {
-      const networkError = new Error('Network Error');
-      mockedAxios.post.mockRejectedValue(networkError);
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: 'Remindy <remindy@gmail.com>',
+        to: 'user@example.com',
+        subject: expect.stringContaining('Renouvellement'),
+        html: expect.stringContaining('Netflix'),
+      }),
+    );
+  });
 
-      await expect(service.sendPasswordResetEmail(validParams)).rejects.toThrow('Network Error');
+  it('sends a trial ending notification email', async () => {
+    await service.sendNotificationEmail({
+      to: 'user@example.com',
+      data: {
+        title: "Période d'essai",
+        body: 'Spotify — essai gratuit se termine dans 3 jour(s)',
+        subscriptionName: 'Spotify',
+        type: 'trial_ending',
+      },
     });
 
-    it('should re-throw the original error from axios', async () => {
-      const axiosError = new Error('Request failed with status code 400');
-      (axiosError as any).response = { data: { message: 'Invalid API key' } };
-      mockedAxios.post.mockRejectedValue(axiosError);
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'user@example.com',
+        subject: expect.stringContaining("Période d'essai"),
+        html: expect.stringContaining('Spotify'),
+      }),
+    );
+  });
 
-      await expect(service.sendPasswordResetEmail(validParams)).rejects.toThrow(axiosError);
-    });
+  it('logs the error and rethrows when sending notification email fails', async () => {
+    const loggerSpy = jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const error = new Error('SMTP timeout');
+    sendMailMock.mockRejectedValue(error);
 
-    it('should re-throw even when the error has no response data', async () => {
-      const connectionError = new Error('ECONNREFUSED');
-      mockedAxios.post.mockRejectedValue(connectionError);
+    await expect(
+      service.sendNotificationEmail({
+        to: 'user@example.com',
+        data: {
+          title: 'Renouvellement',
+          body: 'Netflix — renouvellement dans 3 jour(s)',
+          subscriptionName: 'Netflix',
+          type: 'subscription_renewal',
+        },
+      }),
+    ).rejects.toBe(error);
 
-      await expect(service.sendPasswordResetEmail(validParams)).rejects.toThrow('ECONNREFUSED');
-    });
-
-    it('should send to a different recipient when called with different params', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
-      const otherParams = {
-        to: 'another@example.com',
-        resetLink: 'https://remindy.app/reset?token=xyz',
-      };
-
-      await service.sendPasswordResetEmail(otherParams);
-
-      const body = mockedAxios.post.mock.calls[0][1] as any;
-      expect(body.to).toEqual([{ email: 'another@example.com' }]);
-      expect(body.htmlContent).toContain('https://remindy.app/reset?token=xyz');
-    });
-
-    it('should send to the Brevo SMTP API endpoint', async () => {
-      mockedAxios.post.mockResolvedValue({ status: 201, data: {} });
-
-      await service.sendPasswordResetEmail(validParams);
-
-      const url = mockedAxios.post.mock.calls[0][0];
-      expect(url).toBe('https://api.brevo.com/v3/smtp/email');
-    });
+    expect(loggerSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to send notification email to user@example.com'),
+    );
   });
 });

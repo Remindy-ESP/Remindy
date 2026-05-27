@@ -1,0 +1,20 @@
+{
+  "loading": "Chargement du graphique...",
+  "empty": "Aucune donnée à afficher",
+  "errorPrefix": "Erreur : {{message}}",
+  "trend": {
+    "title": "Évolution des dépenses",
+    "subtitle": "Sur la période sélectionnée",
+    "axisLabel": "Dépenses ({{currency}})"
+  },
+  "categoryBreakdown": {
+    "title": "Répartition par catégorie",
+    "noCategory": "Sans catégorie",
+    "share": "{{percent}}% du total"
+  },
+  "comparisonBars": {
+    "title": "Comparaison période actuelle vs précédente",
+    "currentLabel": "Période actuelle",
+    "previousLabel": "Période précédente"
+  }
+}

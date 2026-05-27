@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import { Platform } from 'react-native';
 import RootLayout, { ErrorBoundary } from '../_layout';
+import { AppStatusScreenMock } from './testUtils';
 
 jest.mock('expo-router', () => ({
   Stack: Object.assign(
@@ -16,6 +17,7 @@ jest.mock('expo-router', () => ({
       },
     }
   ),
+  useRouter: () => ({ replace: jest.fn(), push: jest.fn(), back: jest.fn() }),
 }));
 
 jest.mock('expo-status-bar', () => ({
@@ -29,7 +31,7 @@ jest.mock('expo-navigation-bar', () => ({
   setButtonStyleAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   AuthProvider: ({ children }: any) => {
     const { View } = require('react-native');
     return <View>{children}</View>;
@@ -43,24 +45,43 @@ jest.mock('@/features/coach-marks/CoachMarksContext', () => ({
   },
 }));
 
-jest.mock('@/components/system/AppStatusScreen', () => {
-  const React = require('react');
-  const { View, Text, TouchableOpacity } = require('react-native');
-  return ({ code, title, message, actions }: any) => (
-    <View>
-      <Text>{code}</Text>
-      <Text>{title}</Text>
-      <Text>{message}</Text>
-      {actions.map((action: any) => (
-        <TouchableOpacity key={action.label} testID={action.testID} onPress={action.onPress}>
-          <Text>{action.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
+jest.mock('@/shared/ui/system/AppStatusScreen', () => {
+  const { AppStatusScreenMock } = require('./testUtils');
+  return AppStatusScreenMock;
 });
 
-jest.mock('@/components/system/CoachMarksOverlay', () => () => null);
+jest.mock('@/shared/ui/system/CoachMarksOverlay', () => () => null);
+
+jest.mock('@/context/ToastContext', () => ({
+  ToastProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+  toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn(), info: jest.fn() }),
+}));
+
+jest.mock('@/context/ConfirmContext', () => ({
+  ConfirmProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+  showConfirm: jest.fn(),
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  ActionSheetProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+  showActionSheet: jest.fn(),
+}));
+
+jest.mock('@/shared/application/I18nContext', () => ({
+  I18nProvider: ({ children }: any) => {
+    const { View } = require('react-native');
+    return <View>{children}</View>;
+  },
+}));
 
 describe('RootLayout', () => {
   it('renders without crashing', () => {

@@ -271,5 +271,39 @@ describe('ResetPasswordUseCase', () => {
 
       expect(sessionRepo.revokeAllForUser).toHaveBeenCalledWith('user-123');
     });
+    it('should emit password reset event after successful reset', async () => {
+      (jwt.verify as jest.Mock).mockReturnValue({ sub: 'user-123' });
+      userRepo.findById.mockResolvedValue(mockUser);
+      passwordService.hash.mockResolvedValue('hashedPassword');
+      userRepo.updatePassword.mockResolvedValue(undefined);
+      sessionRepo.revokeAllForUser.mockResolvedValue(undefined);
+
+      await useCase.execute({
+        token: 'valid-reset-token',
+        newPassword: 'NewSecurePassword123!',
+      });
+
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('security.password.reset', {
+        userEmail: 'test@example.com',
+      });
+    });
+    it('should throw UnauthorizedException when jwt.verify returns a string payload', async () => {
+      process.env.JWT_PASSWORD_RESET_SECRET = 'reset-secret';
+      (jwt.verify as jest.Mock).mockReturnValue('invalid-string-payload');
+
+      await expect(
+        useCase.execute({
+          token: 'valid-format-but-bad-payload-token',
+          newPassword: 'NewSecurePassword123!',
+        }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      await expect(
+        useCase.execute({
+          token: 'valid-format-but-bad-payload-token',
+          newPassword: 'NewSecurePassword123!',
+        }),
+      ).rejects.toThrow('Invalid token payload');
+    });
   });
 });

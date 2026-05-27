@@ -5,22 +5,35 @@ import { Repository } from 'typeorm';
 import type { INotificationRepository } from '../../notification/application/ports/notification-repository.interface';
 import { NOTIFICATION_REPOSITORY } from '../../notification/application/ports/notification-repository.interface';
 import { ExpoPushService } from '../../notification/application/services/expo-push.service';
-import { Notification } from '../../notification/domain/notification.entity';
+import { IEmailService } from '../../auth/infrastructure/services/email.service';
+import {
+  Notification,
+  NotificationType,
+  NotificationChannel,
+} from '../../notification/domain/notification.entity';
 import { SubscriptionEntity } from '../../subscription/infrastructure/persistence/subscription.entity';
 import { ReminderEntity } from '../../reminder/infrastructure/persistence/reminder.entity';
-import { NotificationEntity } from '../../notification/infrastructure/persistence/notification.entity';
+import { UserPreferenceEntity } from '../../../infrastructure/database/entities/user-preference.entity';
+import { EUser } from '../../../infrastructure/database/entities/user.entity';
 import type { PushNotificationPayload } from '../../notification/application/services/expo-push.service';
 
-interface DueNotificationRow {
+interface BaseNotificationRow {
   subscriptionId: string;
   subscriptionName: string;
   subscriptionAmount: number;
   subscriptionCurrency: string;
-  nextDueDate: string;
   userId: string;
   reminderId: string;
   reminderChannel: string;
   daysBefore: number;
+}
+
+interface DueNotificationRow extends BaseNotificationRow {
+  nextDueDate: string;
+}
+
+interface TrialEndingRow extends BaseNotificationRow {
+  trialEndDate: string;
 }
 
 @Injectable()
@@ -33,26 +46,32 @@ export class ProcessRenewalNotificationsTask {
     @Inject(NOTIFICATION_REPOSITORY)
     private readonly notificationRepository: INotificationRepository,
     private readonly expoPushService: ExpoPushService,
+    private readonly emailService: IEmailService,
+    @InjectRepository(UserPreferenceEntity)
+    private readonly preferencesRepository: Repository<UserPreferenceEntity>,
+    @InjectRepository(EUser)
+    private readonly userRepository: Repository<EUser>,
   ) {}
 
   /**
    * Cron job qui s'exécute tous les jours à 8h du matin (heure serveur)
-   * Recherche les abonnements à renouveler et crée les notifications in-app + push
-   * basées sur les rappels (reminders)
+   * Traite deux types de notifications :
+   * 1. Renouvellements d'abonnements (subscription_renewal)
+   * 2. Fins de périodes d'essai (trial_ending)
    *
-   * Optimisé : une seule requête SQL avec JOIN au lieu de boucles N+1
+   * Optimisé : requêtes SQL avec JOIN au lieu de boucles N+1
    */
   @Cron('0 8 * * *')
   async handleCron() {
-    this.logger.log('Starting renewal notifications process...');
+    this.logger.log('Starting notifications process...');
 
     try {
       const result = await this.processNotifications();
       this.logger.log(
-        `Renewal notifications process completed. Created: ${result.notificationsCreated}, Push sent: ${result.pushSent}`,
+        `Notifications process completed. Created: ${result.notificationsCreated}, Push sent: ${result.pushSent}, Emails sent: ${result.emailsSent}`,
       );
     } catch (error) {
-      this.logger.error(`Renewal notifications process failed: ${error}`);
+      this.logger.error(`Notifications process failed: ${error}`);
     }
   }
 
@@ -63,19 +82,21 @@ export class ProcessRenewalNotificationsTask {
     subscriptionsProcessed: number;
     notificationsCreated: number;
     pushSent: number;
+    emailsSent: number;
   }> {
-    this.logger.log('Manually triggering renewal notifications process...');
+    this.logger.log('Manually triggering notifications process...');
     return this.processNotifications();
   }
 
   /**
    * Core logic — shared between cron and manual trigger
-   * Uses a single optimized SQL query to find all due notifications
+   * Processes both renewal and trial ending notifications
    */
   private async processNotifications(): Promise<{
     subscriptionsProcessed: number;
     notificationsCreated: number;
     pushSent: number;
+    emailsSent: number;
   }> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -85,7 +106,222 @@ export class ProcessRenewalNotificationsTask {
     const day = String(today.getDate()).padStart(2, '0');
     const todayStr = `${year}-${month}-${day}`;
 
-    // Single optimized query: JOIN subscriptions + reminders + LEFT JOIN notifications (dedup)
+    let notificationsCreated = 0;
+    let pushSent = 0;
+    let emailsSent = 0;
+    const pushPayloads: PushNotificationPayload[] = [];
+    const emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[] = [];
+    const uniqueSubscriptionIds = new Set<string>();
+
+    // ─── 0. Transition expired trials to active ───────────────────────
+    const transitions = await this.processTrialTransitions(todayStr);
+    if (transitions > 0) {
+      this.logger.log(`Transitioned ${transitions} expired trials to active status`);
+    }
+
+    // ─── 1. Renewal notifications ───────────────────────────────────────
+    const renewalResults = await this.processRenewalNotifications(
+      todayStr,
+      pushPayloads,
+      emailPayloads,
+      uniqueSubscriptionIds,
+    );
+    notificationsCreated += renewalResults;
+
+    // ─── 2. Trial ending notifications ──────────────────────────────────
+    const trialResults = await this.processTrialEndingNotifications(
+      todayStr,
+      pushPayloads,
+      emailPayloads,
+      uniqueSubscriptionIds,
+    );
+    notificationsCreated += trialResults;
+
+    // ─── 3. Send all push notifications in batch ────────────────────────
+    if (pushPayloads.length > 0) {
+      try {
+        const pushResults = await this.expoPushService.sendToUsers(pushPayloads);
+        pushSent = [...pushResults.values()].filter(v => v).length;
+        this.logger.log(`Push notifications: ${pushSent}/${pushPayloads.length} sent successfully`);
+      } catch (error) {
+        this.logger.error(`Failed to send batch push notifications: ${error}`);
+      }
+    }
+
+    // ─── 4. Send all email notifications ────────────────────────────────
+    if (emailPayloads.length > 0) {
+      emailsSent = await this.sendEmailNotifications(emailPayloads);
+    }
+
+    return {
+      subscriptionsProcessed: uniqueSubscriptionIds.size,
+      notificationsCreated,
+      pushSent,
+      emailsSent,
+    };
+  }
+
+  /**
+   * Transition subscriptions from 'trial' to 'active' when trial period ends
+   */
+  private async processTrialTransitions(todayStr: string): Promise<number> {
+    const result = await this.subscriptionRepository
+      .createQueryBuilder()
+      .update(SubscriptionEntity)
+      .set({ status: 'active' })
+      .where('status = :trialStatus', { trialStatus: 'trial' })
+      .andWhere('trial_end_date < :today', { today: todayStr })
+      .andWhere('deleted_at IS NULL')
+      .execute();
+
+    return result.affected || 0;
+  }
+
+  /**
+   * Send email notifications for users who have notificationEmail enabled
+   */
+  private async sendEmailNotifications(
+    payloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
+  ): Promise<number> {
+    // Get unique user IDs
+    const userIds = [...new Set(payloads.map(p => p.userId))];
+
+    // Fetch preferences for all users in one query
+    const preferences = await this.preferencesRepository
+      .createQueryBuilder('p')
+      .where('p.userId IN (:...userIds)', { userIds })
+      .andWhere('p.notificationEmail = true')
+      .andWhere('p.deletedAt IS NULL')
+      .getMany();
+
+    const emailEnabledUserIds = new Set(preferences.map(p => p.userId));
+
+    if (emailEnabledUserIds.size === 0) {
+      this.logger.log('No users with email notifications enabled');
+      return 0;
+    }
+
+    // Fetch user emails in one query
+    const users = await this.userRepository
+      .createQueryBuilder('u')
+      .where('u.id IN (:...userIds)', { userIds: [...emailEnabledUserIds] })
+      .andWhere('u.deletedAt IS NULL')
+      .getMany();
+
+    const userEmailMap = new Map(users.map(u => [u.id, u.email]));
+
+    let sent = 0;
+
+    for (const payload of payloads) {
+      if (!emailEnabledUserIds.has(payload.userId)) continue;
+
+      const email = userEmailMap.get(payload.userId);
+      if (!email) continue;
+
+      try {
+        await this.emailService.sendNotificationEmail({
+          to: email,
+          data: {
+            title: payload.title,
+            body: payload.body,
+            subscriptionName: payload.subscriptionName,
+            type: payload.type,
+          },
+        });
+        sent++;
+      } catch (error) {
+        this.logger.error(`Failed to send notification email to ${email}: ${error}`);
+      }
+    }
+
+    this.logger.log(`Email notifications: ${sent}/${payloads.length} sent successfully`);
+    return sent;
+  }
+
+  /**
+   * Persist a single notification entry and queue its push/email payload.
+   * Shared by both renewal and trial-ending loops to avoid duplication.
+   */
+  private async persistNotification(
+    row: BaseNotificationRow,
+    notificationType: NotificationType,
+    pushType: string,
+    title: string,
+    body: string,
+    dateKey: string,
+    dateValue: string,
+    pushPayloads: PushNotificationPayload[],
+    emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
+  ): Promise<void> {
+    const notification = new Notification({
+      userId: row.userId,
+      reminderId: row.reminderId,
+      type: notificationType,
+      channel: row.reminderChannel as NotificationChannel,
+      title,
+      body,
+      status: 'pending',
+      metadata: {
+        subscriptionId: row.subscriptionId,
+        [dateKey]: dateValue,
+        reminderId: row.reminderId,
+      },
+    });
+    notification.markAsSent();
+    await this.notificationRepository.save(notification);
+
+    // Queue push notification
+    pushPayloads.push({
+      userId: row.userId,
+      title,
+      body,
+      data: { type: pushType, subscriptionId: row.subscriptionId, [dateKey]: dateValue },
+    });
+
+    // Queue email notification
+    emailPayloads.push({
+      userId: row.userId,
+      title,
+      body,
+      subscriptionName: row.subscriptionName,
+      type: pushType as 'subscription_renewal' | 'trial_ending',
+    });
+  }
+
+  /**
+   * Process subscription renewal notifications
+   * Finds active subscriptions whose next_due_date matches a user's reminder daysBefore
+   */
+  private async processRenewalNotifications(
+    todayStr: string,
+    pushPayloads: PushNotificationPayload[],
+    emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
+    uniqueSubscriptionIds: Set<string>,
+  ): Promise<number> {
     const dueNotifications: DueNotificationRow[] = await this.subscriptionRepository
       .createQueryBuilder('s')
       .select([
@@ -109,98 +345,138 @@ export class ProcessRenewalNotificationsTask {
          AND (r.subscription_id IS NULL OR r.subscription_id = s.id)`,
       )
       .leftJoin(
-        NotificationEntity,
+        'notifications',
         'n',
         `n.user_id = s.user_id
          AND n.type = 'subscription_renewed'
          AND n.metadata->>'subscriptionId' = CAST(s.id AS TEXT)
          AND n.metadata->>'nextDueDate' = TO_CHAR(s.next_due_date, 'YYYY-MM-DD')`,
       )
-      .where('s.status = :status', { status: 'active' })
+      .where('s.status IN (:...statuses)', { statuses: ['active', 'trial'] })
       .andWhere('s.next_due_date IS NOT NULL')
       .andWhere('s.deleted_at IS NULL')
       .andWhere(`(DATE(s.next_due_date) - DATE(:today)) = r.days_before`, { today: todayStr })
-      .andWhere('n.id IS NULL') // deduplication: no existing notification
+      .andWhere('n.id IS NULL')
       .getRawMany();
 
-    this.logger.log(`Found ${dueNotifications.length} due notification(s) to create`);
+    this.logger.log(`Found ${dueNotifications.length} renewal notification(s) to create`);
 
-    if (dueNotifications.length === 0) {
-      return { subscriptionsProcessed: 0, notificationsCreated: 0, pushSent: 0 };
-    }
-
-    let notificationsCreated = 0;
-    let pushSent = 0;
-    const pushPayloads: PushNotificationPayload[] = [];
-    const uniqueSubscriptionIds = new Set<string>();
+    let created = 0;
 
     for (const row of dueNotifications) {
       try {
         uniqueSubscriptionIds.add(row.subscriptionId);
-
-        const dueDate = new Date(row.nextDueDate);
-        const title = `Renouvellement ${row.subscriptionName} dans ${row.daysBefore} jour(s)`;
-        const body = `Votre abonnement ${row.subscriptionName} de ${row.subscriptionAmount}${row.subscriptionCurrency} sera renouvelé le ${dueDate.toLocaleDateString('fr-FR')}`;
-
-        // Create in-app notification
-        const notification = new Notification({
-          userId: row.userId,
-          reminderId: row.reminderId,
-          type: 'subscription_renewed',
-          channel: row.reminderChannel as any,
+        const title = `Renouvellement`;
+        const body = `${row.subscriptionName} — renouvellement dans ${row.daysBefore} jour(s)`;
+        await this.persistNotification(
+          row,
+          'subscription_renewed',
+          'subscription_renewal',
           title,
           body,
-          status: 'pending',
-          metadata: {
-            subscriptionId: row.subscriptionId,
-            nextDueDate: row.nextDueDate,
-            reminderId: row.reminderId,
-          },
-        });
-
-        // Mark as sent (in-app is instant)
-        notification.markAsSent();
-
-        await this.notificationRepository.save(notification);
-        notificationsCreated++;
-
-        this.logger.log(
-          `Created notification for subscription ${row.subscriptionId} - User: ${row.userId}`,
+          'nextDueDate',
+          row.nextDueDate,
+          pushPayloads,
+          emailPayloads,
         );
-
-        // Queue push notification
-        pushPayloads.push({
-          userId: row.userId,
-          title,
-          body,
-          data: {
-            type: 'subscription_renewal',
-            subscriptionId: row.subscriptionId,
-            nextDueDate: row.nextDueDate,
-          },
-        });
+        created++;
+        this.logger.log(
+          `Created renewal notification for subscription ${row.subscriptionId} - User: ${row.userId}`,
+        );
       } catch (error) {
         this.logger.error(
-          `Failed to create notification for subscription ${row.subscriptionId}: ${error}`,
+          `Failed to create renewal notification for subscription ${row.subscriptionId}: ${error}`,
         );
       }
     }
 
-    // Send push notifications in batch
-    if (pushPayloads.length > 0) {
+    return created;
+  }
+
+  /**
+   * Process trial ending notifications
+   * Finds subscriptions with status 'trial' whose trial_end_date matches a user's reminder daysBefore
+   */
+  private async processTrialEndingNotifications(
+    todayStr: string,
+    pushPayloads: PushNotificationPayload[],
+    emailPayloads: {
+      userId: string;
+      title: string;
+      body: string;
+      subscriptionName: string;
+      type: 'subscription_renewal' | 'trial_ending';
+    }[],
+    uniqueSubscriptionIds: Set<string>,
+  ): Promise<number> {
+    const trialNotifications: TrialEndingRow[] = await this.subscriptionRepository
+      .createQueryBuilder('s')
+      .select([
+        's.id AS "subscriptionId"',
+        's.name AS "subscriptionName"',
+        's.amount AS "subscriptionAmount"',
+        's.currency AS "subscriptionCurrency"',
+        'TO_CHAR(s.trial_end_date, \'YYYY-MM-DD\') AS "trialEndDate"',
+        's.user_id AS "userId"',
+        'r.id AS "reminderId"',
+        'r.channel AS "reminderChannel"',
+        'r.days_before AS "daysBefore"',
+      ])
+      .innerJoin(
+        ReminderEntity,
+        'r',
+        `r.user_id = s.user_id
+         AND r.type = 'trial_ending'
+         AND r.enabled = true
+         AND r.deleted_at IS NULL
+         AND (r.subscription_id IS NULL OR r.subscription_id = s.id)`,
+      )
+      .leftJoin(
+        'notifications',
+        'n',
+        `n.user_id = s.user_id
+         AND n.type = 'trial_ending'
+         AND n.metadata->>'subscriptionId' = CAST(s.id AS TEXT)
+         AND n.metadata->>'trialEndDate' = TO_CHAR(s.trial_end_date, 'YYYY-MM-DD')`,
+      )
+      .where('s.status = :trialStatus', { trialStatus: 'trial' })
+      .andWhere('s.trial_end_date IS NOT NULL')
+      .andWhere('s.deleted_at IS NULL')
+      .andWhere(`(DATE(s.trial_end_date) - DATE(:today)) = r.days_before`, { today: todayStr })
+      .andWhere('n.id IS NULL')
+      .getRawMany();
+
+    this.logger.log(`Found ${trialNotifications.length} trial ending notification(s) to create`);
+
+    let created = 0;
+
+    for (const row of trialNotifications) {
       try {
-        const pushResults = await this.expoPushService.sendToUsers(pushPayloads);
-        pushSent = [...pushResults.values()].filter(v => v).length;
-        this.logger.log(`Push notifications: ${pushSent}/${pushPayloads.length} sent successfully`);
+        uniqueSubscriptionIds.add(row.subscriptionId);
+        const title = `Période d'essai`;
+        const body = `${row.subscriptionName} — essai gratuit se termine dans ${row.daysBefore} jour(s)`;
+        await this.persistNotification(
+          row,
+          'trial_ending',
+          'trial_ending',
+          title,
+          body,
+          'trialEndDate',
+          row.trialEndDate,
+          pushPayloads,
+          emailPayloads,
+        );
+        created++;
+        this.logger.log(
+          `Created trial ending notification for subscription ${row.subscriptionId} - User: ${row.userId}`,
+        );
       } catch (error) {
-        this.logger.error(`Failed to send batch push notifications: ${error}`);
+        this.logger.error(
+          `Failed to create trial ending notification for subscription ${row.subscriptionId}: ${error}`,
+        );
       }
     }
 
-    return {
-      subscriptionsProcessed: uniqueSubscriptionIds.size,
-      notificationsCreated,
-      pushSent,
-    };
+    return created;
   }
 }

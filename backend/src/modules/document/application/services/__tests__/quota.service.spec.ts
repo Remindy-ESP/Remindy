@@ -12,6 +12,8 @@ describe('QuotaService', () => {
   beforeEach(async () => {
     const mockRepository: Partial<jest.Mocked<IDocumentRepository>> = {
       findByUserId: jest.fn(),
+      sumFileSizeByUserId: jest.fn().mockResolvedValue(0),
+      countByUserId: jest.fn().mockResolvedValue(0),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -34,15 +36,15 @@ describe('QuotaService', () => {
 
   describe('getQuotaLimits', () => {
     it('should return correct limits for each role', () => {
-      const freemiumLimits = service.getQuotaLimits('freemium');
+      const freemiumLimits = service.getQuotaLimits('user_freemium');
       expect(freemiumLimits.maxFileSize).toBe(10 * 1024 * 1024);
       expect(freemiumLimits.maxDocumentsCount).toBe(50);
 
-      const premiumLimits = service.getQuotaLimits('premium');
+      const premiumLimits = service.getQuotaLimits('user_premium');
       expect(premiumLimits.maxFileSize).toBe(50 * 1024 * 1024);
       expect(premiumLimits.maxDocumentsCount).toBe(1000);
 
-      const adminLimits = service.getQuotaLimits('admin');
+      const adminLimits = service.getQuotaLimits('user_admin');
       expect(adminLimits.maxDocumentsCount).toBe(-1); // unlimited
     });
   });
@@ -50,18 +52,18 @@ describe('QuotaService', () => {
   describe('checkUserQuota', () => {
     it('should pass when all quotas are respected', async () => {
       const userId = 'user-123';
-      const userRole: UserRole = 'freemium';
+      const userRole: UserRole = 'user_freemium';
       const fileSize = 5 * 1024 * 1024; // 5MB
 
-      const mockDocuments = [createMockDocument('doc-1', userId, 10 * 1024 * 1024)];
-      repository.findByUserId.mockResolvedValue(mockDocuments);
+      repository.sumFileSizeByUserId.mockResolvedValue(10 * 1024 * 1024);
+      repository.countByUserId.mockResolvedValue(1);
 
       await expect(service.checkUserQuota(userId, userRole, fileSize)).resolves.not.toThrow();
     });
 
     it('should throw ForbiddenException when file size exceeds limit', async () => {
       const userId = 'user-123';
-      const userRole: UserRole = 'freemium';
+      const userRole: UserRole = 'user_freemium';
       const fileSize = 15 * 1024 * 1024; // 15MB (limit is 10MB)
 
       repository.findByUserId.mockResolvedValue([]);
@@ -73,15 +75,11 @@ describe('QuotaService', () => {
 
     it('should throw ForbiddenException when storage limit would be exceeded', async () => {
       const userId = 'user-123';
-      const userRole: UserRole = 'freemium';
+      const userRole: UserRole = 'user_freemium';
       const fileSize = 5 * 1024 * 1024; // 5MB
 
-      // User already has 96MB stored (limit is 100MB)
-      const mockDocuments = Array(12)
-        .fill(null)
-        .map((_, i) => createMockDocument(`doc-${i}`, userId, 8 * 1024 * 1024));
-
-      repository.findByUserId.mockResolvedValue(mockDocuments);
+      repository.sumFileSizeByUserId.mockResolvedValue(96 * 1024 * 1024);
+      repository.countByUserId.mockResolvedValue(12);
 
       await expect(service.checkUserQuota(userId, userRole, fileSize)).rejects.toThrow(
         ForbiddenException,
@@ -92,14 +90,10 @@ describe('QuotaService', () => {
   describe('getUserQuotaUsage', () => {
     it('should return quota usage statistics', async () => {
       const userId = 'user-123';
-      const userRole: UserRole = 'freemium';
+      const userRole: UserRole = 'user_freemium';
 
-      const mockDocuments = [
-        createMockDocument('doc-1', userId, 10 * 1024 * 1024), // 10MB
-        createMockDocument('doc-2', userId, 15 * 1024 * 1024), // 15MB
-      ];
-
-      repository.findByUserId.mockResolvedValue(mockDocuments);
+      repository.sumFileSizeByUserId.mockResolvedValue(25 * 1024 * 1024);
+      repository.countByUserId.mockResolvedValue(2);
 
       const usage = await service.getUserQuotaUsage(userId, userRole);
 
@@ -111,11 +105,10 @@ describe('QuotaService', () => {
 
     it('should return 0 percent for admin (unlimited documents)', async () => {
       const userId = 'admin-user';
-      const userRole: UserRole = 'admin';
+      const userRole: UserRole = 'user_admin';
 
-      repository.findByUserId.mockResolvedValue([
-        createMockDocument('doc-1', userId, 5 * 1024 * 1024), // 5MB, valid
-      ]);
+      repository.sumFileSizeByUserId.mockResolvedValue(5 * 1024 * 1024);
+      repository.countByUserId.mockResolvedValue(1);
 
       const usage = await service.getUserQuotaUsage(userId, userRole);
 
@@ -128,15 +121,11 @@ describe('QuotaService', () => {
   describe('checkUserQuota - document count limit', () => {
     it('should throw ForbiddenException when document count reaches limit', async () => {
       const userId = 'user-123';
-      const userRole: UserRole = 'freemium';
-      const fileSize = 1024; // small file
+      const userRole: UserRole = 'user_freemium';
+      const fileSize = 1024;
 
-      // 50 documents = at the limit
-      const mockDocuments = Array(50)
-        .fill(null)
-        .map((_, i) => createMockDocument(`doc-${i}`, userId, 1024));
-
-      repository.findByUserId.mockResolvedValue(mockDocuments);
+      repository.countByUserId.mockResolvedValue(50);
+      repository.sumFileSizeByUserId.mockResolvedValue(50 * 1024);
 
       await expect(service.checkUserQuota(userId, userRole, fileSize)).rejects.toThrow(
         ForbiddenException,
@@ -145,17 +134,12 @@ describe('QuotaService', () => {
 
     it('should not check document count for admin (unlimited)', async () => {
       const userId = 'admin-user';
-      const userRole: UserRole = 'admin';
+      const userRole: UserRole = 'user_admin';
       const fileSize = 1024;
 
-      // Even with 1000 docs, admin should not be blocked by count
-      const mockDocuments = Array(1000)
-        .fill(null)
-        .map((_, i) => createMockDocument(`doc-${i}`, userId, 100));
+      repository.countByUserId.mockResolvedValue(1000);
+      repository.sumFileSizeByUserId.mockResolvedValue(100 * 1000);
 
-      repository.findByUserId.mockResolvedValue(mockDocuments);
-
-      // Should not throw (admin has no count limit, and storage is well within 50GB)
       await expect(service.checkUserQuota(userId, userRole, fileSize)).resolves.not.toThrow();
     });
   });
@@ -165,7 +149,8 @@ describe('QuotaService', () => {
       const userId = 'user-123';
       const fileSize = 5 * 1024 * 1024;
 
-      repository.findByUserId.mockResolvedValue([]);
+      repository.sumFileSizeByUserId.mockResolvedValue(0);
+      repository.countByUserId.mockResolvedValue(0);
 
       // Passing an unknown role should default to freemium
       await expect(
@@ -176,29 +161,30 @@ describe('QuotaService', () => {
 
   describe('getMaxFileSize / getMaxTotalStorage / getMaxDocumentsCount', () => {
     it('should return correct maxFileSize for each role', () => {
-      expect(service.getMaxFileSize('freemium')).toBe(10 * 1024 * 1024);
-      expect(service.getMaxFileSize('premium')).toBe(50 * 1024 * 1024);
-      expect(service.getMaxFileSize('admin')).toBe(100 * 1024 * 1024);
+      expect(service.getMaxFileSize('user_freemium')).toBe(10 * 1024 * 1024);
+      expect(service.getMaxFileSize('user_premium')).toBe(50 * 1024 * 1024);
+      expect(service.getMaxFileSize('user_admin')).toBe(100 * 1024 * 1024);
     });
 
     it('should return correct maxTotalStorage for each role', () => {
-      expect(service.getMaxTotalStorage('freemium')).toBe(100 * 1024 * 1024);
-      expect(service.getMaxTotalStorage('premium')).toBe(10 * 1024 * 1024 * 1024);
-      expect(service.getMaxTotalStorage('admin')).toBe(50 * 1024 * 1024 * 1024);
+      expect(service.getMaxTotalStorage('user_freemium')).toBe(100 * 1024 * 1024);
+      expect(service.getMaxTotalStorage('user_premium')).toBe(10 * 1024 * 1024 * 1024);
+      expect(service.getMaxTotalStorage('user_admin')).toBe(50 * 1024 * 1024 * 1024);
     });
 
     it('should return correct maxDocumentsCount for each role', () => {
-      expect(service.getMaxDocumentsCount('freemium')).toBe(50);
-      expect(service.getMaxDocumentsCount('premium')).toBe(1000);
-      expect(service.getMaxDocumentsCount('admin')).toBe(-1);
+      expect(service.getMaxDocumentsCount('user_freemium')).toBe(50);
+      expect(service.getMaxDocumentsCount('user_premium')).toBe(1000);
+      expect(service.getMaxDocumentsCount('user_admin')).toBe(-1);
     });
   });
 
   describe('canUserUpload', () => {
     it('should return canUpload=true when quota is OK', async () => {
-      repository.findByUserId.mockResolvedValue([]);
+      repository.sumFileSizeByUserId.mockResolvedValue(0);
+      repository.countByUserId.mockResolvedValue(0);
 
-      const result = await service.canUserUpload('user-123', 'freemium', 1024);
+      const result = await service.canUserUpload('user-123', 'user_freemium', 1024);
 
       expect(result.canUpload).toBe(true);
       expect(result.reason).toBeUndefined();
@@ -206,9 +192,10 @@ describe('QuotaService', () => {
 
     it('should return canUpload=false with reason when quota exceeded', async () => {
       const fileSize = 15 * 1024 * 1024; // exceeds freemium 10MB limit
-      repository.findByUserId.mockResolvedValue([]);
+      repository.sumFileSizeByUserId.mockResolvedValue(0);
+      repository.countByUserId.mockResolvedValue(0);
 
-      const result = await service.canUserUpload('user-123', 'freemium', fileSize);
+      const result = await service.canUserUpload('user-123', 'user_freemium', fileSize);
 
       expect(result.canUpload).toBe(false);
       expect(result.reason).toBeDefined();
@@ -216,9 +203,10 @@ describe('QuotaService', () => {
     });
 
     it('should rethrow non-ForbiddenException errors', async () => {
-      repository.findByUserId.mockRejectedValue(new Error('Database error'));
+      repository.sumFileSizeByUserId.mockRejectedValue(new Error('Database error'));
+      repository.countByUserId.mockResolvedValue(0);
 
-      await expect(service.canUserUpload('user-123', 'freemium', 1024)).rejects.toThrow(
+      await expect(service.canUserUpload('user-123', 'user_freemium', 1024)).rejects.toThrow(
         'Database error',
       );
     });
@@ -250,20 +238,15 @@ describe('QuotaService', () => {
 
   describe('getUserStorageUsed', () => {
     it('should sum file sizes of all user documents', async () => {
-      const userId = 'user-123';
-      const docs = [
-        createMockDocument('doc-1', userId, 100),
-        createMockDocument('doc-2', userId, 200),
-        createMockDocument('doc-3', userId, 300),
-      ];
-      repository.findByUserId.mockResolvedValue(docs);
+      repository.sumFileSizeByUserId.mockResolvedValue(600);
 
-      const result = await service.getUserStorageUsed(userId);
+      const result = await service.getUserStorageUsed('user-123');
       expect(result).toBe(600);
+      expect(repository.sumFileSizeByUserId).toHaveBeenCalledWith('user-123');
     });
 
     it('should return 0 when user has no documents', async () => {
-      repository.findByUserId.mockResolvedValue([]);
+      repository.sumFileSizeByUserId.mockResolvedValue(0);
       const result = await service.getUserStorageUsed('user-empty');
       expect(result).toBe(0);
     });
@@ -271,13 +254,11 @@ describe('QuotaService', () => {
 
   describe('getUserDocumentsCount', () => {
     it('should return the count of documents', async () => {
-      repository.findByUserId.mockResolvedValue([
-        createMockDocument('doc-1', 'user-123', 1024),
-        createMockDocument('doc-2', 'user-123', 2048),
-      ]);
+      repository.countByUserId.mockResolvedValue(2);
 
       const result = await service.getUserDocumentsCount('user-123');
       expect(result).toBe(2);
+      expect(repository.countByUserId).toHaveBeenCalledWith('user-123');
     });
   });
 });

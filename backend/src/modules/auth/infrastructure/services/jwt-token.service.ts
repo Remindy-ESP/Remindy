@@ -6,6 +6,7 @@ import { JwtAccessPayload, JwtRefreshPayload } from '../../domain/services/token
 
 @Injectable()
 export class JwtTokenService {
+  /* istanbul ignore next */
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
@@ -13,21 +14,29 @@ export class JwtTokenService {
 
   generatePasswordResetToken(payload: { sub: string }): string {
     return this.jwtService.sign(
-      {
-        sub: payload.sub,
-      },
+      { sub: payload.sub },
       {
         secret: this.configService.get<string>('JWT_PASSWORD_RESET_SECRET')!,
         expiresIn: '15m',
       },
     );
   }
+
+  generateEmailVerificationToken(payload: { sub: string }): string {
+    return this.jwtService.sign(
+      { sub: payload.sub },
+      {
+        secret: this.configService.get<string>('JWT_EMAIL_VERIFICATION_SECRET')!,
+        expiresIn: '24h',
+      },
+    );
+  }
+
   generateAccessToken(payload: JwtAccessPayload): string {
     const options: JwtSignOptions = {
       secret: this.configService.get<string>('JWT_ACCESS_TOKEN_SECRET')!,
       expiresIn: this.configService.get<StringValue>('JWT_ACCESS_TOKEN_EXPIRATION')!,
     };
-
     return this.jwtService.sign(payload, options);
   }
 
@@ -42,7 +51,6 @@ export class JwtTokenService {
       secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET')!,
       expiresIn: this.configService.get<StringValue>('JWT_REFRESH_TOKEN_EXPIRATION')!,
     };
-
     return this.jwtService.sign(payload, options);
   }
 

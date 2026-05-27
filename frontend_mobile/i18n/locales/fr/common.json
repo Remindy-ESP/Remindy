@@ -1,0 +1,51 @@
+{
+  "appName": "Remindy",
+  "ok": "OK",
+  "cancel": "Annuler",
+  "save": "Enregistrer",
+  "delete": "Supprimer",
+  "edit": "Modifier",
+  "rename": "Renommer",
+  "confirm": "Confirmer",
+  "close": "Fermer",
+  "back": "Retour",
+  "next": "Suivant",
+  "previous": "Précédent",
+  "retry": "Réessayer",
+  "loading": "Chargement…",
+  "search": "Rechercher",
+  "create": "Créer",
+  "add": "Ajouter",
+  "or": "OU",
+  "yes": "Oui",
+  "no": "Non",
+  "error": "Erreur",
+  "success": "Succès",
+  "details": "Détails",
+  "actions": "Actions",
+  "submit": "Envoyer",
+  "validate": "Valider",
+  "today": "Aujourd'hui",
+  "errorBoundary": {
+    "title": "Une erreur est survenue",
+    "message": "Un problème inattendu a empêché l'affichage de cette page. Vous pouvez réessayer.",
+    "action": "Réessayer"
+  },
+  "headerMenu": {
+    "profile": "Profil",
+    "categories": "Catégories",
+    "settings": "Réglages"
+  },
+  "placeholder": {
+    "cardTitle": "En préparation",
+    "message": "Cette page sera disponible bientôt."
+  },
+  "addOperation": {
+    "title": "Nouvelle opération",
+    "manual": "Saisir manuellement",
+    "pdf": "Insérer PDF"
+  },
+  "dailyExpenses": {
+    "title": "Dépenses du jour"
+  }
+}

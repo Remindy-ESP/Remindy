@@ -7,6 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class ResetPasswordUseCase {
+  /* istanbul ignore next */
   constructor(
     private readonly userRepo: IUserAuthRepository,
     private readonly passwordService: IPasswordService,

@@ -1,0 +1,20 @@
+{
+  "loading": "Loading chart...",
+  "empty": "No data to display",
+  "errorPrefix": "Error: {{message}}",
+  "trend": {
+    "title": "Spending trend",
+    "subtitle": "Over the selected period",
+    "axisLabel": "Spending ({{currency}})"
+  },
+  "categoryBreakdown": {
+    "title": "Breakdown by category",
+    "noCategory": "Uncategorized",
+    "share": "{{percent}}% of total"
+  },
+  "comparisonBars": {
+    "title": "Current vs previous period",
+    "currentLabel": "Current period",
+    "previousLabel": "Previous period"
+  }
+}

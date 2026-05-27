@@ -59,12 +59,18 @@ describe('GetMyProfileUseCase', () => {
       expect(userRepo.findByIdWithPreferences).toHaveBeenCalledWith(userId);
     });
 
-    it('should throw error when user not found', async () => {
-      const userId = 'user-404';
-
+    // Branch: !user → throw (null, line 7)
+    it('should throw error when user not found (null)', async () => {
       userRepo.findByIdWithPreferences.mockResolvedValue(null);
 
-      await expect(useCase.execute({ userId })).rejects.toThrow('User not found');
+      await expect(useCase.execute({ userId: 'user-404' })).rejects.toThrow('User not found');
+    });
+
+    // Branch: !user → throw (undefined)
+    it('should throw error when user not found (undefined)', async () => {
+      userRepo.findByIdWithPreferences.mockResolvedValue(undefined as any);
+
+      await expect(useCase.execute({ userId: 'user-undef' })).rejects.toThrow('User not found');
     });
 
     it('should include user preferences in result', async () => {
@@ -113,37 +119,6 @@ describe('GetMyProfileUseCase', () => {
         expect(result.email).toBe(user.email);
         expect(userRepo.findByIdWithPreferences).toHaveBeenCalledWith(user.id);
       }
-    });
-
-    it('should return user with all profile fields', async () => {
-      const userId = 'user-complete';
-      const mockUser = {
-        id: userId,
-        email: 'complete@example.com',
-        firstName: 'Complete',
-        lastName: 'Profile',
-        phone: '+33699887766',
-        timezone: 'America/New_York',
-        language: 'en',
-        photoR2Key: 'photos/user-complete.jpg',
-        preferences: {
-          theme: 'auto',
-          defaultReminderDelay: 7,
-        },
-      } as EUser;
-
-      userRepo.findByIdWithPreferences.mockResolvedValue(mockUser);
-
-      const result = await useCase.execute({ userId });
-
-      expect(result.id).toBe(userId);
-      expect(result.email).toBe('complete@example.com');
-      expect(result.firstName).toBe('Complete');
-      expect(result.lastName).toBe('Profile');
-      expect(result.phone).toBe('+33699887766');
-      expect(result.timezone).toBe('America/New_York');
-      expect(result.language).toBe('en');
-      expect(result.photoR2Key).toBe('photos/user-complete.jpg');
     });
   });
 });

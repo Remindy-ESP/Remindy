@@ -1,6 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
+import { render, fireEvent, waitFor, act, within } from '@testing-library/react-native';
 import DashboardScreen from '../dashboard';
 
 // ---------------------------------------------------------------------------
@@ -35,7 +34,7 @@ jest.mock('expo-router', () => ({
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
-jest.mock('../../../context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: jest.fn(() => ({
     user: { id: 'test-user-id', email: 'test@example.com', name: 'Test User' },
     token: 'mock-token',
@@ -45,6 +44,39 @@ jest.mock('../../../context/AuthContext', () => ({
     register: jest.fn(),
   })),
 }));
+
+// ---------------------------------------------------------------------------
+// Toast / Confirm / ActionSheet context mocks
+// ---------------------------------------------------------------------------
+jest.mock('@/context/ToastContext', () => {
+  const toastError = jest.fn();
+  const toastSuccess = jest.fn();
+  const toastInfo = jest.fn();
+  const toastFn: any = jest.fn();
+  toastFn.error = toastError;
+  toastFn.success = toastSuccess;
+  toastFn.info = toastInfo;
+  return {
+    toast: toastFn,
+    ToastProvider: ({ children }: any) => children,
+  };
+});
+
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: jest.fn().mockResolvedValue(true),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+jest.mock('@/context/ActionSheetContext', () => ({
+  showActionSheet: jest.fn(),
+  ActionSheetProvider: ({ children }: any) => children,
+}));
+
+// Get references to mock functions from the mocked modules
+const { toast: _mockedToast } = jest.requireMock('@/context/ToastContext');
+const mockToast = { error: _mockedToast.error as jest.Mock, success: _mockedToast.success as jest.Mock, info: _mockedToast.info as jest.Mock };
+const mockShowConfirm: jest.Mock = jest.requireMock('@/context/ConfirmContext').showConfirm;
+const mockShowActionSheet: jest.Mock = jest.requireMock('@/context/ActionSheetContext').showActionSheet;
 
 // ---------------------------------------------------------------------------
 // useDashboard — baseline factory (overridden per test where needed)
@@ -70,6 +102,7 @@ const baseUseDashboard = {
   categories: [],
   events: [],
   loading: false,
+  initialLoad: false,
   error: null,
   getEventsForDate: jest.fn(() => []),
   getEventsByCategory: jest.fn(() => []),
@@ -78,7 +111,7 @@ const baseUseDashboard = {
 
 const mockUseDashboard = jest.fn(() => ({ ...baseUseDashboard }));
 
-jest.mock('../../../hooks/useDashboard', () => ({
+jest.mock('@/modules/dashboard/application/useDashboard', () => ({
   useDashboard: (...args: any[]) => (mockUseDashboard as jest.Mock)(...args),
 }));
 
@@ -104,7 +137,7 @@ jest.mock('react-native-calendars', () => ({
 // ---------------------------------------------------------------------------
 // CoachMarkTarget & config
 // ---------------------------------------------------------------------------
-jest.mock('@/components/system/CoachMarkTarget', () => {
+jest.mock('@/shared/ui/system/CoachMarkTarget', () => {
   const React = require('react');
   return ({ children }: any) => <React.Fragment>{children}</React.Fragment>;
 });
@@ -119,7 +152,7 @@ jest.mock('@/features/coach-marks/coach-marks.config', () => ({
 // ---------------------------------------------------------------------------
 // Native components used by dashboard
 // ---------------------------------------------------------------------------
-jest.mock('@/components/Button', () => {
+jest.mock('@/shared/ui/Button', () => {
   const React = require('react');
   const { TouchableOpacity, Text } = require('react-native');
   return ({ onPress, label }: any) => (
@@ -129,7 +162,7 @@ jest.mock('@/components/Button', () => {
   );
 });
 
-jest.mock('@/components/AddOperationButton', () => {
+jest.mock('@/modules/dashboard/ui/AddOperationButton', () => {
   const React = require('react');
   const { TouchableOpacity } = require('react-native');
   return ({ onPress }: any) => (
@@ -137,7 +170,7 @@ jest.mock('@/components/AddOperationButton', () => {
   );
 });
 
-jest.mock('@/components/AddOperationModal', () => {
+jest.mock('@/modules/dashboard/ui/AddOperationModal', () => {
   const React = require('react');
   const { View, TouchableOpacity, Text } = require('react-native');
   return ({ visible, onClose, onManualEntry, onPdfInsert }: any) => {
@@ -158,7 +191,15 @@ jest.mock('@/components/AddOperationModal', () => {
   };
 });
 
-jest.mock('@/components/DailyExpensesSummary', () => {
+jest.mock('@/modules/dashboard/ui/BrandLogo', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return ({ name, categoryIcon, size }: any) => (
+    <View testID="brand-logo" />
+  );
+});
+
+jest.mock('@/modules/dashboard/ui/DailyExpensesSummary', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
   return {
@@ -201,11 +242,6 @@ jest.mock('@/services/api', () => ({
 }));
 
 // ---------------------------------------------------------------------------
-// Alert spy
-// ---------------------------------------------------------------------------
-const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 function renderDashboard(overrides: Partial<typeof baseUseDashboard> = {}) {
@@ -217,7 +253,9 @@ function renderDashboard(overrides: Partial<typeof baseUseDashboard> = {}) {
 describe('DashboardScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    alertSpy.mockClear();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     mockUseDashboard.mockReturnValue({ ...baseUseDashboard });
     mockGetAllFolders.mockResolvedValue([]);
   });
@@ -227,12 +265,12 @@ describe('DashboardScreen', () => {
   // -------------------------------------------------------------------------
   describe('loading state', () => {
     it('shows ActivityIndicator and loading text when loading=true', () => {
-      const { getByText } = renderDashboard({ loading: true });
+      const { getByText } = renderDashboard({ loading: true, initialLoad: true });
       expect(getByText('Chargement de la page d\'accueil...')).toBeTruthy();
     });
 
     it('does not render calendar when loading', () => {
-      const { queryByTestId } = renderDashboard({ loading: true });
+      const { queryByTestId } = renderDashboard({ loading: true, initialLoad: true });
       expect(queryByTestId('calendar')).toBeNull();
     });
   });
@@ -566,7 +604,7 @@ describe('DashboardScreen', () => {
   // PDF insert — file too large
   // -------------------------------------------------------------------------
   describe('handlePdfInsert — file too large', () => {
-    it('shows alert when file exceeds 10MB', async () => {
+    it('shows toast when file exceeds 10MB', async () => {
       const bigFile = {
         canceled: false,
         assets: [{ name: 'big.pdf', size: 11 * 1024 * 1024, mimeType: 'application/pdf', uri: 'file://big.pdf' }],
@@ -576,11 +614,7 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Fichier trop volumineux',
-          expect.any(String),
-          expect.any(Array)
-        );
+        expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
       });
     });
   });
@@ -622,7 +656,7 @@ describe('DashboardScreen', () => {
   // PDF insert — ocr failed
   // -------------------------------------------------------------------------
   describe('handlePdfInsert — ocr failed', () => {
-    it('shows alert when OCR analysis fails', async () => {
+    it('shows toast when OCR analysis fails', async () => {
       const file = {
         canceled: false,
         assets: [{ name: 'bad.pdf', size: 100 * 1024, mimeType: 'application/pdf', uri: 'file://bad.pdf' }],
@@ -643,11 +677,7 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Analyse échouée',
-          expect.any(String),
-          expect.any(Array)
-        );
+        expect(mockToast.info).toHaveBeenCalledWith(expect.any(String));
       });
     });
   });
@@ -656,7 +686,7 @@ describe('DashboardScreen', () => {
   // PDF insert — upload throws error
   // -------------------------------------------------------------------------
   describe('handlePdfInsert — upload error', () => {
-    it('shows error alert when upload throws', async () => {
+    it('shows error toast when upload throws', async () => {
       const file = {
         canceled: false,
         assets: [{ name: 'err.pdf', size: 100 * 1024, mimeType: 'application/pdf', uri: 'file://err.pdf' }],
@@ -668,15 +698,11 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Erreur',
-          'Upload failed',
-          expect.any(Array)
-        );
+        expect(mockToast.error).toHaveBeenCalledWith('Upload failed');
       });
     });
 
-    it('shows generic error message when error has no .message', async () => {
+    it('shows server error message from response when upload fails', async () => {
       const file = {
         canceled: false,
         assets: [{ name: 'err2.pdf', size: 100 * 1024, mimeType: 'application/pdf', uri: 'file://err2.pdf' }],
@@ -688,11 +714,7 @@ describe('DashboardScreen', () => {
       const { getByTestId } = render(<DashboardScreen />);
       fireEvent.press(getByTestId('modal-pdf-insert'));
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
-          'Erreur',
-          'Server error',
-          expect.any(Array)
-        );
+        expect(mockToast.error).toHaveBeenCalledWith('Server error');
       });
     });
   });
@@ -762,6 +784,69 @@ describe('DashboardScreen', () => {
       render(<DashboardScreen />);
       // useFocusEffect mock calls the callback immediately
       expect(fetchDashboardData).toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Subscription Detail Modal
+  // -------------------------------------------------------------------------
+  describe('subscription detail modal', () => {
+    it('does not render modal initially', () => {
+      const { queryByTestId } = renderDashboard();
+      expect(queryByTestId('expense-details-modal')).toBeNull();
+    });
+
+    it('opens modal with correct details when an expense is pressed', () => {
+      const events = [
+        {
+          id: 'e1',
+          title: 'Netflix',
+          dueDate: '2025-01-15',
+          totalAmount: 15.99,
+          subscription: { name: 'Netflix Premium', category: { name: 'Streaming' }, amount: 15.99, currency: '€', frequency: 'mensuel' },
+        },
+      ];
+      
+      const { getByTestId } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
+      
+      // Press the expense item
+      fireEvent.press(getByTestId('expense-item-e1'));
+      
+      // Modal should be visible
+      const modal = getByTestId('expense-details-modal');
+      expect(modal).toBeTruthy();
+      
+      // Modal content should be correct
+      const { getByText: getByTextInModal } = within(modal);
+      expect(getByTextInModal('Netflix Premium')).toBeTruthy();
+      expect(getByTextInModal(/15\.99/)).toBeTruthy();
+      expect(getByTextInModal('Streaming')).toBeTruthy();
+    });
+
+    it('closes modal when close button is pressed', async () => {
+      const events = [
+        {
+          id: 'e1',
+          title: 'Netflix',
+          dueDate: '2025-01-15',
+          totalAmount: 15.99,
+          subscription: { name: 'Netflix Premium', category: { name: 'Streaming' }, amount: 15.99, currency: '€', frequency: 'mensuel' },
+        },
+      ];
+      
+      const { getByTestId, queryByTestId } = renderDashboard({ getEventsForPeriod: jest.fn(() => events) as any });
+      
+      // Press the expense item to open modal
+      fireEvent.press(getByTestId('expense-item-e1'));
+      expect(getByTestId('expense-details-modal')).toBeTruthy();
+      
+      // Press close button
+      fireEvent.press(getByTestId('expense-details-close'));
+      
+      // Wait for modal to be removed from the tree or hidden
+      await waitFor(() => {
+        expect(queryByTestId('expense-details-modal')).toBeNull();
+      });
     });
   });
 });

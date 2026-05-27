@@ -47,7 +47,7 @@ describe('DeleteEventUseCase', () => {
     });
 
     repository.findById.mockResolvedValue(existingEvent);
-    repository.delete.mockResolvedValue(undefined);
+    repository.delete.mockResolvedValue(true);
 
     await useCase.execute(eventId);
 
@@ -84,7 +84,7 @@ describe('DeleteEventUseCase', () => {
     });
 
     repository.findById.mockResolvedValue(completedEvent);
-    repository.delete.mockResolvedValue(undefined);
+    repository.delete.mockResolvedValue(true);
 
     await useCase.execute(eventId);
 
@@ -106,7 +106,7 @@ describe('DeleteEventUseCase', () => {
     });
 
     repository.findById.mockResolvedValue(canceledEvent);
-    repository.delete.mockResolvedValue(undefined);
+    repository.delete.mockResolvedValue(true);
 
     await useCase.execute(eventId);
 
@@ -129,7 +129,7 @@ describe('DeleteEventUseCase', () => {
     });
 
     repository.findById.mockResolvedValue(eventWithSeries);
-    repository.delete.mockResolvedValue(undefined);
+    repository.delete.mockResolvedValue(true);
 
     await useCase.execute(eventId);
 
