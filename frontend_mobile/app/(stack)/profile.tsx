@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/context/I18nContext';
 import UserAvatar from '@/components/profile/UserAvatar';
-import ScreenHeader from '@/components/ScreenHeader';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { formatRoleLabel } from '@/utils/role';
 
 

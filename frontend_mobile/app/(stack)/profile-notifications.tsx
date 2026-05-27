@@ -10,8 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from '@/context/I18nContext';
-import ScreenHeader from '@/components/ScreenHeader';
-import { profileCardStyles as shared } from '@/styles/profileCard';
+import ScreenHeader from '@/shared/ui/ScreenHeader';
+import { profileCardStyles as shared } from '@/shared/styles/profileCard';
 import { userService } from '@/services/api';
 import type { UserPreferences } from '@/services/api/types';
 
