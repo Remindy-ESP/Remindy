@@ -158,6 +158,14 @@ jest.mock('@/components/AddOperationModal', () => {
   };
 });
 
+jest.mock('@/components/BrandLogo', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return ({ name, categoryIcon, size }: any) => (
+    <View testID="brand-logo" />
+  );
+});
+
 jest.mock('@/components/DailyExpensesSummary', () => {
   const React = require('react');
   const { View, Text } = require('react-native');
