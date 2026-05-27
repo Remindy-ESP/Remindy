@@ -18,6 +18,7 @@ import { TicketListPage } from '@/modules/support/ui/TicketListPage';
 import { TicketDetailPage } from '@/modules/support/ui/TicketDetailPage';
 import { SecurityPage } from '@/modules/security/ui/SecurityPage';
 import { RbacPage } from '@/modules/rbac/ui/RbacPage';
+import { SubscriptionsPage } from '@/modules/subscriptions/ui/SubscriptionsPage';
 import { AdminPermission } from '@/shared/domain/types';
 
 function ComingSoon({ title }: { title: string }) {
@@ -127,10 +128,14 @@ function AppRoutes() {
         <Route
           path='/subscriptions'
           element={
-            <GatedPlaceholder
-              title='Abonnements'
+            <PermissionGate
               permission={AdminPermission.SUBSCRIPTIONS_READ}
-            />
+              fallback={
+                <ComingSoon title='Abonnements — accès refusé (permission manquante)' />
+              }
+            >
+              <SubscriptionsPage />
+            </PermissionGate>
           }
         />
         <Route
