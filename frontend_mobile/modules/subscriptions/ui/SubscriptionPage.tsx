@@ -13,7 +13,7 @@ import {
   Platform,
   Switch,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import AppPicker, { PickerItem } from '@/shared/ui/AppPicker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Subscription, Category } from '@/services/api';
 import CoachMarkTarget from '@/shared/ui/system/CoachMarkTarget';
@@ -109,38 +109,30 @@ function SubscriptionFormModal({
 
               <View style={[styles.formGroup, styles.formGroupHalf]}>
                 <Text style={styles.label}>{t('subscription.modal.billingCycle')}</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={formData.billingCycle}
-                    onValueChange={(value) => setFormData({ ...formData, billingCycle: value })}
-                    style={styles.picker}
-                    dropdownIconColor="#fff"
-                  >
-                    <Picker.Item label={t('subscription.cycle.oneTime')} value="ONE_TIME" />
-                    <Picker.Item label={t('subscription.cycle.weeklyShort')} value="WEEKLY" />
-                    <Picker.Item label={t('subscription.cycle.monthlyShort')} value="MONTHLY" />
-                    <Picker.Item label={t('subscription.cycle.quarterlyShort')} value="QUARTERLY" />
-                    <Picker.Item label={t('subscription.cycle.yearly')} value="YEARLY" />
-                  </Picker>
-                </View>
+                <AppPicker
+                  selectedValue={formData.billingCycle}
+                  onValueChange={(value) => setFormData({ ...formData, billingCycle: value as SubscriptionFormData['billingCycle'] })}
+                  items={[
+                    { label: t('subscription.cycle.oneTime'), value: 'ONE_TIME' },
+                    { label: t('subscription.cycle.weeklyShort'), value: 'WEEKLY' },
+                    { label: t('subscription.cycle.monthlyShort'), value: 'MONTHLY' },
+                    { label: t('subscription.cycle.quarterlyShort'), value: 'QUARTERLY' },
+                    { label: t('subscription.cycle.yearly'), value: 'YEARLY' },
+                  ]}
+                />
               </View>
             </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>{t('subscription.modal.category')}</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={formData.categoryId}
-                  onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
-                  style={styles.picker}
-                  dropdownIconColor="#fff"
-                >
-                  <Picker.Item label={t('subscription.modal.noCategory')} value="" />
-                  {categories.map((cat) => (
-                    <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-                  ))}
-                </Picker>
-              </View>
+              <AppPicker
+                selectedValue={formData.categoryId}
+                onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                items={[
+                  { label: t('subscription.modal.noCategory'), value: '' },
+                  ...categories.map((cat): PickerItem => ({ label: cat.name, value: cat.id })),
+                ]}
+              />
             </View>
 
             <View style={styles.formGroup}>
@@ -414,38 +406,30 @@ export default function SubscriptionScreen() {
       <View style={styles.filtersContainer}>
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>{t('subscription.filterFrequencyLabel')}</Text>
-          <View style={styles.filterPickerContainer}>
-            <Picker
-              selectedValue={filterFrequency}
-              onValueChange={(value) => setFilterFrequency(value)}
-              style={styles.filterPicker}
-              dropdownIconColor="#fff"
-            >
-              <Picker.Item label={t('subscription.filterAll')} value="" />
-              <Picker.Item label={t('subscription.cycle.oneTime')} value="one-time" />
-              <Picker.Item label={t('subscription.cycle.weekly')} value="weekly" />
-              <Picker.Item label={t('subscription.cycle.monthly')} value="monthly" />
-              <Picker.Item label={t('subscription.cycle.quarterly')} value="quarterly" />
-              <Picker.Item label={t('subscription.cycle.yearly')} value="yearly" />
-            </Picker>
-          </View>
+          <AppPicker
+            selectedValue={filterFrequency}
+            onValueChange={(value) => setFilterFrequency(value)}
+            items={[
+              { label: t('subscription.filterAll'), value: '' },
+              { label: t('subscription.cycle.oneTime'), value: 'one-time' },
+              { label: t('subscription.cycle.weekly'), value: 'weekly' },
+              { label: t('subscription.cycle.monthly'), value: 'monthly' },
+              { label: t('subscription.cycle.quarterly'), value: 'quarterly' },
+              { label: t('subscription.cycle.yearly'), value: 'yearly' },
+            ]}
+          />
         </View>
 
         <View style={styles.filterGroup}>
           <Text style={styles.filterLabel}>{t('subscription.filterCategoryLabel')}</Text>
-          <View style={styles.filterPickerContainer}>
-            <Picker
-              selectedValue={filterCategoryId}
-              onValueChange={(value) => setFilterCategoryId(value)}
-              style={styles.filterPicker}
-              dropdownIconColor="#fff"
-            >
-              <Picker.Item label={t('subscription.filterAllCategories')} value="" />
-              {categories.map((cat) => (
-                <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-              ))}
-            </Picker>
-          </View>
+          <AppPicker
+            selectedValue={filterCategoryId}
+            onValueChange={(value) => setFilterCategoryId(value)}
+            items={[
+              { label: t('subscription.filterAllCategories'), value: '' },
+              ...categories.map((cat): PickerItem => ({ label: cat.name, value: cat.id })),
+            ]}
+          />
         </View>
       </View>
 
