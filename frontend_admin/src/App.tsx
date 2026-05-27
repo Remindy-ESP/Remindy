@@ -20,6 +20,7 @@ import { SecurityPage } from '@/modules/security/ui/SecurityPage';
 import { RbacPage } from '@/modules/rbac/ui/RbacPage';
 import { SubscriptionsPage } from '@/modules/subscriptions/ui/SubscriptionsPage';
 import { CloudPage } from '@/modules/cloud/ui/CloudPage';
+import { RgpdPage } from '@/modules/rgpd/ui/RgpdPage';
 import { AdminPermission } from '@/shared/domain/types';
 
 function ComingSoon({ title }: { title: string }) {
@@ -40,25 +41,6 @@ function ComingSoon({ title }: { title: string }) {
         À implémenter
       </Box>
     </Box>
-  );
-}
-
-function GatedPlaceholder({
-  title,
-  permission,
-}: {
-  title: string;
-  permission: AdminPermission;
-}) {
-  return (
-    <PermissionGate
-      permission={permission}
-      fallback={
-        <ComingSoon title={`${title} — accès refusé (permission manquante)`} />
-      }
-    >
-      <ComingSoon title={title} />
-    </PermissionGate>
   );
 }
 
@@ -155,10 +137,14 @@ function AppRoutes() {
         <Route
           path='/rgpd'
           element={
-            <GatedPlaceholder
-              title='RGPD'
+            <PermissionGate
               permission={AdminPermission.RGPD_EXPORT}
-            />
+              fallback={
+                <ComingSoon title='RGPD — accès refusé (permission manquante)' />
+              }
+            >
+              <RgpdPage />
+            </PermissionGate>
           }
         />
         <Route path='/audit' element={<AuditLogsPage />} />
