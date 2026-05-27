@@ -39,7 +39,7 @@ let mockUser: any = defaultUser();
 
 const mockRefreshUser = jest.fn(() => Promise.resolve());
 
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({ user: mockUser, refreshUser: mockRefreshUser }),
 }));
 
@@ -57,7 +57,7 @@ jest.mock('@/services/api', () => ({
 }));
 
 // ----- UserAvatar -----
-jest.mock('@/components/profile/UserAvatar', () => {
+jest.mock('@/modules/profile/ui/UserAvatar', () => {
   const { View } = require('react-native');
   return ({ testID }: any) => <View testID={testID ?? 'user-avatar'} />;
 });

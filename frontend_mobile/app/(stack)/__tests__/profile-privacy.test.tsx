@@ -6,7 +6,7 @@ const mockReplace = global.__mockRouterReplace as jest.Mock;
 const mockBack = global.__mockRouterBack as jest.Mock;
 
 const mockLogout = jest.fn();
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({
     logout: mockLogout,
   }),

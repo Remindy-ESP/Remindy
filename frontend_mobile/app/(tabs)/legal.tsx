@@ -6,8 +6,8 @@ import {
     ScrollView,
     TouchableOpacity,
 } from 'react-native';
-import { useTranslation } from '@/context/I18nContext';
-import { screenHeaderStyles as shared } from '@/styles/screenHeader';
+import { useTranslation } from '@/shared/application/I18nContext';
+import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

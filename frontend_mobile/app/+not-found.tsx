@@ -3,8 +3,8 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AppStatusScreen from '@/components/system/AppStatusScreen';
-import { useTranslation } from '@/context/I18nContext';
+import AppStatusScreen from '@/shared/ui/system/AppStatusScreen';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
 
 const footerRoutes = APP_ROUTES.filter(r => r.showInFooter && r.footerIcon);

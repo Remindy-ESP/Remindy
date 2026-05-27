@@ -25,7 +25,7 @@ jest.mock('@/context/ToastContext', () => ({
 }));
 
 const mockLogout = jest.fn();
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({
     logout: mockLogout,
   }),

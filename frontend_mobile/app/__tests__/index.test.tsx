@@ -15,7 +15,7 @@ const mockAuthState = {
 };
 
 // Mock AuthContext
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: () => ({
     login: mockLogin,
     register: mockRegister,

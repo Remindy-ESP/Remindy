@@ -5,18 +5,18 @@ import { Platform, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AuthProvider } from '@/context/AuthContext';
-import { I18nProvider } from '@/context/I18nContext';
+import { AuthProvider } from '@/modules/auth/application/AuthContext';
+import { I18nProvider } from '@/shared/application/I18nContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { ConfirmProvider } from '@/context/ConfirmContext';
 import { ActionSheetProvider } from '@/context/ActionSheetContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
-import AppStatusScreen from '@/components/system/AppStatusScreen';
+import AppStatusScreen from '@/shared/ui/system/AppStatusScreen';
 import { CoachMarksProvider } from '@/features/coach-marks/CoachMarksContext';
-import CoachMarksOverlay from '@/components/system/CoachMarksOverlay';
-import { APP_ROUTES } from '@/navigation/MenuConfig';
+import CoachMarksOverlay from '@/shared/ui/system/CoachMarksOverlay';
 import i18n from '@/i18n';
+import { APP_ROUTES } from '@/navigation/MenuConfig';
 
 const footerRoutes = APP_ROUTES.filter(r => r.showInFooter && r.footerIcon);
 

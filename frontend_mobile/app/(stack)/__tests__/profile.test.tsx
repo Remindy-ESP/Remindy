@@ -33,7 +33,7 @@ const mockUseAuth = jest.fn(() => ({
   isLoading: false,
 }));
 
-jest.mock('@/context/AuthContext', () => ({
+jest.mock('@/modules/auth/application/AuthContext', () => ({
   useAuth: (...args: any[]) => (mockUseAuth as jest.Mock)(...args),
 }));
 

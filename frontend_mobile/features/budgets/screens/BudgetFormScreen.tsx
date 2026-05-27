@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import { toast } from '@/context/ToastContext';
 import { categoryService } from '@/services/api/category.service';
 import { subscriptionService } from '@/services/api';

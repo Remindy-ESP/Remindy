@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import type { Category } from '@/services/api/types';
 import { BudgetPeriod, CreateBudgetInput } from '../types/budget.types';
 import { CategoryPicker } from './CategoryPicker';
