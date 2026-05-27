@@ -116,7 +116,7 @@ jest.mock('react-native-gesture-handler', () => {
     // A minimal stub that satisfies the .interpolate() call inside the component.
     const stubProgress = {
         interpolate: () => new Animated.Value(1),
-    } as unknown as Animated.AnimatedInterpolation<number>;
+    } as any;
 
     const Swipeable = ({ children, renderRightActions, renderLeftActions }: any) => (
         <View>
@@ -221,20 +221,21 @@ const mockShowConfirm = showConfirm as jest.Mock;
 // ---------------------------------------------------------------------------
 
 import NotificationsPage from '../NotificationsPage';
+import type { Notification } from '@/services/api/types';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-const baseNotification = {
+const baseNotification: Notification = {
     id: 'notif-1',
     user_id: 'user-1',
-    type: 'subscription_renewal' as const,
-    channel: 'push' as const,
+    type: 'subscription_renewal',
+    channel: 'push',
     title: 'Renewal',
     body: 'Due soon',
     read_at: undefined,
-    status: 'sent' as const,
+    status: 'sent',
     metadata: {},
     created_at: '2025-01-01',
 };
@@ -247,7 +248,7 @@ const readNotification = { ...baseNotification, id: 'notif-read', read_at: '2025
 // ---------------------------------------------------------------------------
 
 function setupDefaultMocks(
-    notifications: typeof baseNotification[] = [],
+    notifications: Notification[] = [],
     categories: any[] = [],
     subscriptions: any[] = [],
 ) {
