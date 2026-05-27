@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   View,
@@ -26,6 +26,7 @@ import { COACH_MARK_TARGETS } from '@/features/coach-marks/coach-marks.config';
 import { useTranslation } from '@/context/I18nContext';
 import { formatShortDate } from '@/utils/format';
 import BrandLogo from '@/components/BrandLogo';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface SubscriptionFormData {
   name: string;
@@ -74,6 +75,7 @@ export default function SubscriptionScreen() {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showTrialEndDatePicker, setShowTrialEndDatePicker] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<SubscriptionFormData>({
     name: '',
@@ -131,9 +133,39 @@ export default function SubscriptionScreen() {
     }
   };
 
-  useEffect(() => {
-    void fetchData();
-  }, []);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Build filters object
+      const filters: { frequency?: string; categoryId?: string } = {};
+      if (filterFrequency) {
+        filters.frequency = filterFrequency;
+      }
+      if (filterCategoryId) {
+        filters.categoryId = filterCategoryId;
+      }
+
+      const [subscriptionsData, categoriesData] = await Promise.all([
+        subscriptionService.getAll(Object.keys(filters).length > 0 ? filters : undefined),
+        categoryService.getAll(),
+      ]);
+      setSubscriptions(subscriptionsData);
+      setCategories(categoriesData);
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setError(getErrorMessage(err, t('subscription.errors.loadFailed')));
+    } finally {
+      setLoading(false);
+    }
+  }, [filterFrequency, filterCategoryId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void fetchData();
+    }, [fetchData])
+  );
 
   useEffect(() => {
     if (openAdd) {
@@ -195,40 +227,6 @@ export default function SubscriptionScreen() {
       });
     }
   }, [openAdd, categories]);
-
-  useEffect(() => {
-    if (!loading) {
-      void fetchData();
-    }
-  }, [filterFrequency, filterCategoryId]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Build filters object
-      const filters: { frequency?: string; categoryId?: string } = {};
-      if (filterFrequency) {
-        filters.frequency = filterFrequency;
-      }
-      if (filterCategoryId) {
-        filters.categoryId = filterCategoryId;
-      }
-
-      const [subscriptionsData, categoriesData] = await Promise.all([
-        subscriptionService.getAll(Object.keys(filters).length > 0 ? filters : undefined),
-        categoryService.getAll(),
-      ]);
-      setSubscriptions(subscriptionsData);
-      setCategories(categoriesData);
-    } catch (err: any) {
-      console.error('Error fetching data:', err);
-      setError(getErrorMessage(err, t('subscription.errors.loadFailed')));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -542,7 +540,7 @@ export default function SubscriptionScreen() {
   // Filtrer les opérations basé sur les filtres sélectionnés
   const filteredSubscriptions = subscriptions.filter((sub) => {
     // Filtrer par fréquence
-    if (filterFrequency && sub.frequency.toLowerCase() !== filterFrequency.toLowerCase()) {
+    if (filterFrequency && (sub.frequency?.toLowerCase() ?? '') !== filterFrequency.toLowerCase()) {
       return false;
     }
 
@@ -564,8 +562,8 @@ export default function SubscriptionScreen() {
             categoryColor={item.category?.color}
             size={32}
           />
-          <Text style={styles.cardTitle}>
-            {item.name.length > 30 ? `${item.name.substring(0, 30)}...` : item.name}
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {(item.name?.length ?? 0) > 30 ? `${item.name.substring(0, 30)}...` : item.name}
           </Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusText}>{item.status}</Text>
@@ -757,11 +755,13 @@ export default function SubscriptionScreen() {
               <View style={styles.formGroup}>
                 <Text style={styles.label}>{t('subscription.modal.name')}</Text>
                 <TextInput
-                  style={[styles.input, formErrors.name && styles.inputError]}
+                  style={[styles.input, focusedField === 'name' && styles.inputFocused, formErrors.name && styles.inputError]}
                   value={formData.name}
                   onChangeText={(text) => setFormData({ ...formData, name: text })}
                   placeholder={t('subscription.modal.namePlaceholder')}
                   placeholderTextColor="#9ca3af"
+                  onFocus={() => setFocusedField('name')}
+                  onBlur={() => setFocusedField(null)}
                 />
                 {formErrors.name && <Text style={styles.errorLabel}>{formErrors.name}</Text>}
               </View>
@@ -769,13 +769,15 @@ export default function SubscriptionScreen() {
               <View style={styles.formGroup}>
                 <Text style={styles.label}>{t('subscription.modal.description')}</Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[styles.input, styles.textArea, focusedField === 'description' && styles.inputFocused]}
                   value={formData.description}
                   onChangeText={(text) => setFormData({ ...formData, description: text })}
                   placeholder={t('subscription.modal.descriptionPlaceholder')}
                   placeholderTextColor="#9ca3af"
                   multiline
                   numberOfLines={3}
+                  onFocus={() => setFocusedField('description')}
+                  onBlur={() => setFocusedField(null)}
                 />
               </View>
 
@@ -783,12 +785,14 @@ export default function SubscriptionScreen() {
                 <View style={[styles.formGroup, styles.formGroupHalf]}>
                   <Text style={styles.label}>{t('subscription.modal.price')}</Text>
                   <TextInput
-                    style={[styles.input, formErrors.price && styles.inputError]}
+                    style={[styles.input, focusedField === 'price' && styles.inputFocused, formErrors.price && styles.inputError]}
                     value={priceInput}
                     onChangeText={(text) => setPriceInput(text)}
                     placeholder={t('subscription.modal.pricePlaceholder')}
                     placeholderTextColor="#9ca3af"
                     keyboardType="decimal-pad"
+                    onFocus={() => setFocusedField('price')}
+                    onBlur={() => setFocusedField(null)}
                   />
                   {formErrors.price && <Text style={styles.errorLabel}>{formErrors.price}</Text>}
                 </View>
@@ -933,7 +937,7 @@ export default function SubscriptionScreen() {
               <View style={styles.formGroup}>
                 <Text style={styles.label}>{t('subscription.modal.reminder')}</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, focusedField === 'reminder' && styles.inputFocused]}
                   value={formData.reminderDays > 0 ? formData.reminderDays.toString() : ''}
                   onChangeText={(text) => {
                     const parsed = parseInt(text);
@@ -942,6 +946,8 @@ export default function SubscriptionScreen() {
                   placeholder={t('subscription.modal.reminderPlaceholder')}
                   placeholderTextColor="#9ca3af"
                   keyboardType="number-pad"
+                  onFocus={() => setFocusedField('reminder')}
+                  onBlur={() => setFocusedField(null)}
                 />
                 <Text style={{ color: '#9ca3af', fontSize: 11, marginTop: 4 }}>
                   Nombre de jours avant le renouvellement pour recevoir une notification push
@@ -1105,6 +1111,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
+    flex: 1,
+    flexShrink: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -1249,6 +1257,10 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: '#f87171',
+  },
+  inputFocused: {
+    borderColor: '#6366f1',
+    borderWidth: 2,
   },
   textArea: {
     height: 80,

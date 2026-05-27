@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from '@/context/I18nContext';
 import type { Category } from '@/services/api/types';
 import { BudgetPeriod, CreateBudgetInput } from '../types/budget.types';
@@ -16,6 +17,19 @@ export interface BudgetFormFieldsProps {
   errors?: Partial<Record<keyof BudgetFormValues, string>>;
 }
 
+const formatDateDisplay = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+const dateToYMD = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 export function BudgetFormFields({
   values,
   onChange,
@@ -23,20 +37,27 @@ export function BudgetFormFields({
   errors,
 }: BudgetFormFieldsProps): React.ReactElement {
   const { t } = useTranslation();
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const set = <K extends keyof BudgetFormValues>(key: K, value: BudgetFormValues[K]) => {
     onChange({ ...values, [key]: value });
   };
 
+  const focusStyle = (field: string) => (focusedField === field ? styles.inputFocused : undefined);
+
   return (
     <View style={styles.container}>
       <Field label={t('budgets.form.nameLabel')} error={errors?.name}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, focusStyle('name')]}
           placeholder={t('budgets.form.namePlaceholder')}
           placeholderTextColor="#6b7280"
           value={values.name}
           onChangeText={v => set('name', v)}
+          onFocus={() => setFocusedField('name')}
+          onBlur={() => setFocusedField(null)}
           testID="budget-form-name"
           maxLength={100}
         />
@@ -46,12 +67,14 @@ export function BudgetFormFields({
         <View style={[styles.flex2, styles.gapRight]}>
           <Field label={t('budgets.form.amountLabel')} error={errors?.amount}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, focusStyle('amount')]}
               placeholder={t('budgets.form.amountPlaceholder')}
               placeholderTextColor="#6b7280"
               value={values.amount > 0 ? String(values.amount) : ''}
               onChangeText={v => set('amount', Number(v.replace(',', '.')) || 0)}
               keyboardType="decimal-pad"
+              onFocus={() => setFocusedField('amount')}
+              onBlur={() => setFocusedField(null)}
               testID="budget-form-amount"
             />
           </Field>
@@ -59,11 +82,13 @@ export function BudgetFormFields({
         <View style={styles.flex1}>
           <Field label={t('budgets.form.currencyLabel')}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, focusStyle('currency')]}
               value={values.currency}
               onChangeText={v => set('currency', v.toUpperCase().slice(0, 3))}
               autoCapitalize="characters"
               maxLength={3}
+              onFocus={() => setFocusedField('currency')}
+              onBlur={() => setFocusedField(null)}
               testID="budget-form-currency"
             />
           </Field>
@@ -94,25 +119,61 @@ export function BudgetFormFields({
       />
 
       <Field label={t('budgets.form.startDateLabel')}>
-        <TextInput
-          style={styles.input}
-          value={values.startDate}
-          onChangeText={v => set('startDate', v)}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor="#6b7280"
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowStartPicker(true)}
           testID="budget-form-start-date"
-        />
+        >
+          <Text style={values.startDate ? styles.dateButtonText : styles.dateButtonPlaceholder}>
+            {values.startDate ? formatDateDisplay(values.startDate) : 'JJ/MM/AAAA'}
+          </Text>
+          <Text style={styles.dateIcon}>📅</Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={values.startDate ? new Date(values.startDate) : new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_, date) => {
+              setShowStartPicker(Platform.OS === 'ios');
+              if (date) set('startDate', dateToYMD(date));
+            }}
+          />
+        )}
       </Field>
 
       <Field label={t('budgets.form.endDateLabel')}>
-        <TextInput
-          style={styles.input}
-          value={values.endDate ?? ''}
-          onChangeText={v => set('endDate', v.length > 0 ? v : null)}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor="#6b7280"
-          testID="budget-form-end-date"
-        />
+        <View style={styles.dateRow}>
+          <TouchableOpacity
+            style={[styles.dateButton, { flex: 1 }]}
+            onPress={() => setShowEndPicker(true)}
+            testID="budget-form-end-date"
+          >
+            <Text style={values.endDate ? styles.dateButtonText : styles.dateButtonPlaceholder}>
+              {values.endDate ? formatDateDisplay(values.endDate) : 'Optionnel'}
+            </Text>
+            <Text style={styles.dateIcon}>📅</Text>
+          </TouchableOpacity>
+          {values.endDate && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => set('endDate', null)}
+            >
+              <Text style={styles.clearButtonText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        {showEndPicker && (
+          <DateTimePicker
+            value={values.endDate ? new Date(values.endDate) : new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_, date) => {
+              setShowEndPicker(false);
+              if (date) set('endDate', dateToYMD(date));
+            }}
+          />
+        )}
       </Field>
 
       <View style={styles.switchRow}>
@@ -126,10 +187,12 @@ export function BudgetFormFields({
 
       <Field label={t('budgets.form.notesLabel')}>
         <TextInput
-          style={[styles.input, styles.textarea]}
+          style={[styles.input, styles.textarea, focusStyle('notes')]}
           value={values.notes ?? ''}
           onChangeText={v => set('notes', v)}
           multiline
+          onFocus={() => setFocusedField('notes')}
+          onBlur={() => setFocusedField(null)}
           testID="budget-form-notes"
         />
       </Field>
@@ -188,6 +251,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#2d2d5f',
+  },
+  inputFocused: {
+    borderColor: '#6366f1',
+    borderWidth: 2,
   },
   textarea: {
     minHeight: 80,
@@ -222,5 +291,43 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ef4444',
     fontSize: 12,
+  },
+  dateButton: {
+    backgroundColor: '#2d2d5f',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  dateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  dateButtonPlaceholder: {
+    color: '#6b7280',
+    fontSize: 16,
+  },
+  dateIcon: {
+    fontSize: 18,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  clearButton: {
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    width: 46,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
