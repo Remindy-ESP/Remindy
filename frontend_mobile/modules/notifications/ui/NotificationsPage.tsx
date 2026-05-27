@@ -47,9 +47,9 @@ export default function NotificationsScreen() {
                 categoryService.getAll().catch(() => []),
                 subscriptionService.getAll().catch(() => []),
             ]);
-            setNotifications(data || []);
-            setCategories(cats || []);
-            setSubscriptions(subs || []);
+            setNotifications(Array.isArray(data) ? data : []);
+            setCategories(Array.isArray(cats) ? cats : []);
+            setSubscriptions(Array.isArray(subs) ? subs : []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
             setError(err.response?.data?.message || t('notifications.loadError'));
@@ -83,8 +83,9 @@ export default function NotificationsScreen() {
 
     // Filter notifications by selected category
     const filteredNotifications = React.useMemo(() => {
-        if (!selectedCategory) return notifications;
-        return notifications.filter(n => {
+        const safeNotifications = Array.isArray(notifications) ? notifications : [];
+        if (!selectedCategory) return safeNotifications;
+        return safeNotifications.filter(n => {
             const subId = n.metadata?.subscriptionId;
             if (!subId) return false;
             return subscriptionCategoryMap[subId] === selectedCategory;
