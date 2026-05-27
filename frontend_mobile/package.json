@@ -9,6 +9,7 @@
     "start:prod": "node scripts/load-env.js production && expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
+    "android:clean": "cd android && ./gradlew clean && cd .. && npx expo run:android --no-build-cache",
     "android:staging": "node scripts/load-env.js staging && expo start --android",
     "android:prod": "node scripts/load-env.js production && expo start --android",
     "ios": "expo run:ios",

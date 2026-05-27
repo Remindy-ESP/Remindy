@@ -71,7 +71,7 @@ jest.mock('@react-native-picker/picker', () => {
 // ---------------------------------------------------------------------------
 // AppPicker — expose each item as a touchable with testID picker-item-<value>
 // ---------------------------------------------------------------------------
-jest.mock('@/components/AppPicker', () => {
+jest.mock('@/shared/ui/AppPicker', () => {
   const React = require('react');
   const { View, TouchableOpacity, Text } = require('react-native');
   const AppPicker = ({ items, selectedValue, onValueChange }: any) => (
