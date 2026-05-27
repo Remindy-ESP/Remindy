@@ -1,14 +1,28 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import SettingsScreen from '../settings';
-import { mockAlertPressButton } from './test-utils';
 
 const mockReplace = global.__mockRouterReplace as jest.Mock;
 const mockPush = global.__mockRouterPush as jest.Mock;
 const mockBack = global.__mockRouterBack as jest.Mock;
 
-jest.spyOn(Alert, 'alert');
+let _mockConfirmResult = true;
+const mockShowConfirm = jest.fn().mockImplementation(() => Promise.resolve(_mockConfirmResult));
+jest.mock('@/context/ConfirmContext', () => ({
+  showConfirm: (...args: any[]) => mockShowConfirm(...args),
+  ConfirmProvider: ({ children }: any) => children,
+}));
+
+const mockToastError = jest.fn();
+const mockToastSuccess = jest.fn();
+const mockToastInfo = jest.fn();
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(
+    jest.fn(),
+    { error: (...args: any[]) => mockToastError(...args), success: (...args: any[]) => mockToastSuccess(...args), info: (...args: any[]) => mockToastInfo(...args) }
+  ),
+  ToastProvider: ({ children }: any) => children,
+}));
 
 const mockLogout = jest.fn();
 jest.mock('@/modules/auth/application/AuthContext', () => ({
@@ -32,7 +46,12 @@ describe('SettingsScreen', () => {
     mockPush.mockClear();
     mockBack.mockClear();
     mockLogout.mockClear();
-    (Alert.alert as jest.Mock).mockClear();
+    mockToastError.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastInfo.mockClear();
+    mockShowConfirm.mockClear();
+    mockShowConfirm.mockImplementation(() => Promise.resolve(_mockConfirmResult));
+    _mockConfirmResult = true;
   });
 
   it('renders section cards and titles', () => {
@@ -89,7 +108,7 @@ describe('SettingsScreen', () => {
 
   it('calls logout handler when logout button is pressed', async () => {
     mockLogout.mockResolvedValue(undefined);
-    mockAlertPressButton(1);
+    mockShowConfirm.mockResolvedValueOnce(true);
 
     const { getByTestId } = render(<SettingsScreen />);
     fireEvent.press(getByTestId('settings-logout-button'));
@@ -100,32 +119,27 @@ describe('SettingsScreen', () => {
     });
   });
 
-  it('shows alert dialog and dismisses when cancel is pressed', () => {
-    mockAlertPressButton(0);
-
-    const { getByTestId } = render(<SettingsScreen />);
-    fireEvent.press(getByTestId('settings-logout-button'));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      expect.any(Array),
-    );
-    expect(mockLogout).not.toHaveBeenCalled();
-  });
-
-  it('shows error alert when logout throws', async () => {
-    mockLogout.mockRejectedValue(new Error('network'));
-    mockAlertPressButton(1);
+  it('shows confirm dialog and dismisses when cancel is pressed', async () => {
+    mockShowConfirm.mockResolvedValueOnce(false);
 
     const { getByTestId } = render(<SettingsScreen />);
     fireEvent.press(getByTestId('settings-logout-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur',
-        'Échec de la déconnexion. Veuillez réessayer.',
-      );
+      expect(mockShowConfirm).toHaveBeenCalledWith(expect.objectContaining({ title: expect.any(String) }));
+    });
+    expect(mockLogout).not.toHaveBeenCalled();
+  });
+
+  it('shows error toast when logout throws', async () => {
+    mockLogout.mockRejectedValue(new Error('network'));
+    mockShowConfirm.mockResolvedValueOnce(true);
+
+    const { getByTestId } = render(<SettingsScreen />);
+    fireEvent.press(getByTestId('settings-logout-button'));
+
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled();
     });
   });
 

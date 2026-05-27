@@ -49,15 +49,14 @@ describe('Budget domain entity', () => {
     });
 
     it('rejects invalid period', () => {
-      expect(
-        () => new Budget({ ...validProps, period: 'weekly' as unknown as 'monthly' }),
-      ).toThrow('Invalid period');
+      expect(() => new Budget({ ...validProps, period: 'weekly' as unknown as 'monthly' })).toThrow(
+        'Invalid period',
+      );
     });
 
     it('rejects an endDate before the startDate', () => {
       expect(
-        () =>
-          new Budget({ ...validProps, endDate: new Date('2025-12-01T00:00:00Z') }),
+        () => new Budget({ ...validProps, endDate: new Date('2025-12-01T00:00:00Z') }),
       ).toThrow('End date must be after start date');
     });
   });

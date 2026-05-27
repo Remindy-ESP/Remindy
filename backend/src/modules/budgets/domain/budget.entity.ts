@@ -4,6 +4,7 @@ export interface BudgetProps {
   id?: string;
   userId: string;
   categoryId?: string | null;
+  subscriptionIds?: string[];
   name: string;
   amount: number;
   currency: string;
@@ -21,6 +22,7 @@ export class Budget {
   private readonly _id?: string;
   private _userId: string;
   private _categoryId?: string | null;
+  private _subscriptionIds: string[];
   private _name: string;
   private _amount: number;
   private _currency: string;
@@ -37,6 +39,7 @@ export class Budget {
     this._id = props.id;
     this._userId = props.userId;
     this._categoryId = props.categoryId ?? null;
+    this._subscriptionIds = props.subscriptionIds ?? [];
     this._name = props.name;
     this._amount = props.amount;
     this._currency = props.currency;
@@ -62,6 +65,10 @@ export class Budget {
 
   get categoryId(): string | null | undefined {
     return this._categoryId;
+  }
+
+  get subscriptionIds(): string[] {
+    return this._subscriptionIds;
   }
 
   get name(): string {
@@ -175,6 +182,10 @@ export class Budget {
     this._categoryId = categoryId ?? null;
   }
 
+  public updateSubscriptionIds(ids: string[]): void {
+    this._subscriptionIds = [...ids];
+  }
+
   public updateDates(startDate: Date, endDate?: Date | null): void {
     if (endDate && endDate <= startDate) {
       throw new Error('End date must be after start date');
@@ -217,6 +228,7 @@ export class Budget {
       id: this._id,
       userId: this._userId,
       categoryId: this._categoryId,
+      subscriptionIds: this._subscriptionIds,
       name: this._name,
       amount: this._amount,
       currency: this._currency,

@@ -20,7 +20,7 @@ export function useDocuments() {
       setLoading(true);
       setError(null);
       const data = await documentService.getAllDocuments(filters);
-      setDocuments(data);
+      setDocuments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching documents:', err);
       setError(err instanceof Error ? err.message : i18n.t('errors.documentsLoadFailed'));

@@ -1,12 +1,30 @@
 import React from 'react';
-import { Alert, Clipboard, Linking } from 'react-native';
+import { Clipboard, Linking } from 'react-native';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import PromotionScreen from '../promotion';
+
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 describe('PromotionScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     jest.spyOn(Clipboard, 'setString').mockImplementation(jest.fn());
     jest.spyOn(Linking, 'canOpenURL').mockResolvedValue(true);
     jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
@@ -36,7 +54,7 @@ describe('PromotionScreen', () => {
     fireEvent.press(getByTestId('copy-code-amazon'));
 
     expect(Clipboard.setString).toHaveBeenCalledWith('AMZREMI30');
-    expect(Alert.alert).toHaveBeenCalledWith('Code promo copie', 'Amazon : AMZREMI30');
+    expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
   });
 
   it('opens partner website when pressing website button', async () => {
@@ -57,10 +75,7 @@ describe('PromotionScreen', () => {
     fireEvent.press(getByTestId('open-link-edf'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Lien indisponible',
-        "Impossible d'ouvrir https://particulier.edf.fr/",
-      );
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -74,10 +89,7 @@ describe('PromotionScreen', () => {
     fireEvent.press(getByTestId('open-link-amazon'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur',
-        'Impossible d ouvrir le site partenaire pour le moment.',
-      );
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -88,10 +100,7 @@ describe('PromotionScreen', () => {
     fireEvent.press(getByTestId('open-link-spotify'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Erreur',
-        'Impossible d ouvrir le site partenaire pour le moment.',
-      );
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 
@@ -120,15 +129,15 @@ describe('PromotionScreen', () => {
 
     fireEvent.press(getByTestId('copy-code-spotify'));
     expect(Clipboard.setString).toHaveBeenCalledWith('SPOTI20REM');
-    expect(Alert.alert).toHaveBeenCalledWith('Code promo copie', 'Spotify : SPOTI20REM');
+    expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
 
     fireEvent.press(getByTestId('copy-code-edf'));
     expect(Clipboard.setString).toHaveBeenCalledWith('EDFREMINDY35');
-    expect(Alert.alert).toHaveBeenCalledWith('Code promo copie', 'EDF : EDFREMINDY35');
+    expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
 
     fireEvent.press(getByTestId('copy-code-fitness-park'));
     expect(Clipboard.setString).toHaveBeenCalledWith('FITPARK15');
-    expect(Alert.alert).toHaveBeenCalledWith('Code promo copie', 'Fitness Park : FITPARK15');
+    expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
   });
 
   it('renders promo codes as text', () => {

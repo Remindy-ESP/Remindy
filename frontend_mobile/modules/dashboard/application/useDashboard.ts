@@ -25,6 +25,7 @@ export function useDashboard() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const timePeriods: { key: TimePeriod; label: string; value: string }[] = [
@@ -44,21 +45,20 @@ export function useDashboard() {
       setLoading(true);
       setError(null);
 
-      // Fetch categories and events in parallel
       const [categoriesData, eventsData] = await Promise.all([
         categoryService.getAll(),
         eventService.getAll(),
       ]);
 
-      setCategories(categoriesData);
-      // Exclure les événements annulés — ils ne doivent pas apparaître sur le calendrier
-      setEvents(eventsData.filter(e => e.status !== 'canceled'));
-      console.log("eventsData", JSON.stringify(eventsData));
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      const safeEvents = Array.isArray(eventsData) ? eventsData : [];
+      setEvents(safeEvents.filter(e => e.status !== 'canceled'));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setError(err instanceof Error ? err.message : i18n.t('errors.dashboardLoadFailed'));
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
 
@@ -142,12 +142,11 @@ export function useDashboard() {
     setAddOperationModalOpen,
     timePeriods,
     getEventsForPeriod,
-    // API data
     categories,
     events,
     loading,
+    initialLoad,
     error,
-    // Helper functions
     fetchDashboardData,
     getEventsForDate,
     getEventsByCategory,

@@ -25,6 +25,9 @@ export class BudgetResponseDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000', nullable: true })
   categoryId: string | null;
 
+  @ApiProperty({ type: [String], description: 'Explicitly linked subscription IDs' })
+  subscriptionIds: string[];
+
   @ApiProperty({ example: true })
   isActive: boolean;
 

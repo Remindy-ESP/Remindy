@@ -8,7 +8,6 @@ import {
     ActivityIndicator,
     RefreshControl,
     Animated,
-    Alert,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +19,8 @@ import type { Category, Subscription } from '@/services/api';
 import { useAuth } from '@/modules/auth/application/AuthContext';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { formatDate } from '@/utils/format';
+import { toast } from '@/context/ToastContext';
+import { showConfirm } from '@/context/ConfirmContext';
 import Button from '@/shared/ui/Button';
 import CategoryDropdown from '@/modules/dashboard/ui/CategoryDropdown';
 import { screenHeaderStyles as shared } from '@/shared/styles/screenHeader';
@@ -47,9 +48,9 @@ export default function NotificationsScreen() {
                 categoryService.getAll().catch(() => []),
                 subscriptionService.getAll().catch(() => []),
             ]);
-            setNotifications(data || []);
-            setCategories(cats || []);
-            setSubscriptions(subs || []);
+            setNotifications(Array.isArray(data) ? data : []);
+            setCategories(Array.isArray(cats) ? cats : []);
+            setSubscriptions(Array.isArray(subs) ? subs : []);
         } catch (err: any) {
             console.error('Failed to fetch notifications', err);
             setError(err.response?.data?.message || t('notifications.loadError'));
@@ -83,8 +84,9 @@ export default function NotificationsScreen() {
 
     // Filter notifications by selected category
     const filteredNotifications = React.useMemo(() => {
-        if (!selectedCategory) return notifications;
-        return notifications.filter(n => {
+        const safeNotifications = Array.isArray(notifications) ? notifications : [];
+        if (!selectedCategory) return safeNotifications;
+        return safeNotifications.filter(n => {
             const subId = n.metadata?.subscriptionId;
             if (!subId) return false;
             return subscriptionCategoryMap[subId] === selectedCategory;
@@ -113,7 +115,7 @@ export default function NotificationsScreen() {
             setNotifications(prev => prev.filter(n => n.id !== id));
         } catch (err) {
             console.error('Failed to delete notification', err);
-            Alert.alert('Erreur', 'Impossible de supprimer la notification');
+            toast.error(t('notifications.deleteError'));
         }
     };
 
@@ -126,27 +128,20 @@ export default function NotificationsScreen() {
         }
     };
 
-    const handleDeleteAll = () => {
-        Alert.alert(
-            t('notifications.deleteAllTitle'),
-            t('notifications.deleteAllMessage'),
-            [
-                { text: t('common.cancel'), style: 'cancel' },
-                {
-                    text: t('common.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        try {
-                            await notificationService.deleteAllNotifications();
-                            setNotifications([]);
-                        } catch (err) {
-                            console.error('Failed to delete all notifications', err);
-                            Alert.alert('Erreur', 'Impossible de supprimer les notifications');
-                        }
-                    }
-                }
-            ]
-        );
+    const handleDeleteAll = async () => {
+        const confirmed = await showConfirm({
+            title: t('notifications.deleteAllTitle'),
+            message: t('notifications.deleteAllMessage'),
+            destructive: true,
+        });
+        if (!confirmed) return;
+        try {
+            await notificationService.deleteAllNotifications();
+            setNotifications([]);
+        } catch (err) {
+            console.error('Failed to delete all notifications', err);
+            toast.error(t('notifications.deleteAllError'));
+        }
     };
 
     const hasUnread = filteredNotifications.some(n => !n.read_at);

@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import SupportNewScreen from '../support-new';
 
 const mockBack = jest.fn();
@@ -21,11 +20,28 @@ jest.mock('@/services/api/support.service', () => ({
   },
 }));
 
-jest.spyOn(Alert, 'alert');
+jest.mock('@/context/ToastContext', () => ({
+  toast: Object.assign(jest.fn(), {
+    error: jest.fn(),
+    success: jest.fn(),
+    info: jest.fn(),
+  }),
+  ToastProvider: ({ children }: any) => children,
+}));
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockToast = require('@/context/ToastContext').toast as {
+  error: jest.Mock;
+  success: jest.Mock;
+  info: jest.Mock;
+};
 
 describe('SupportNewScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockToast.error.mockClear();
+    mockToast.success.mockClear();
+    mockToast.info.mockClear();
     mockGetCategories.mockResolvedValue(['technical', 'billing', 'bug', 'other']);
     mockCreate.mockResolvedValue({ id: 'ticket-1', subject: 'Test' });
   });
@@ -67,10 +83,7 @@ describe('SupportNewScreen', () => {
     await act(async () => {
       touchables[touchables.length - 1].props.onPress?.();
     });
-    expect(Alert.alert).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String)
-    );
+    expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
@@ -93,11 +106,8 @@ describe('SupportNewScreen', () => {
         message: 'My message body',
         category: undefined,
       });
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Ticket envoye',
-        expect.any(String),
-        expect.any(Array)
-      );
+      expect(mockToast.success).toHaveBeenCalledWith(expect.any(String));
+      expect(mockBack).toHaveBeenCalled();
     });
   });
 
@@ -116,7 +126,7 @@ describe('SupportNewScreen', () => {
     });
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Erreur', expect.any(String));
+      expect(mockToast.error).toHaveBeenCalledWith(expect.any(String));
     });
   });
 

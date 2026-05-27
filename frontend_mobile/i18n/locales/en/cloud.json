@@ -54,7 +54,11 @@
     "downloadSuccessTitle": "Download successful",
     "downloadSuccessMessage": "{{filename}} has been downloaded.",
     "downloadFallbackTitle": "Document downloaded",
-    "downloadFallbackMessage": "{{filename}} has been downloaded to the app cache. You can view it by tapping \"View\"."
+    "downloadFallbackMessage": "{{filename}} has been downloaded to the app cache. You can view it by tapping \"View\".",
+    "folderAlreadyExists": "A folder with this name already exists.",
+    "folderCreateError": "Could not create the folder.",
+    "documentDeletedSuccess": "Document deleted.",
+    "folderDeletedSuccess": "Folder deleted."
   },
   "navigation": {
     "home": "Home"

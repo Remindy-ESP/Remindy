@@ -811,6 +811,7 @@ describe('AuthController constructor branch coverage', () => {
       null as any,
       null as any,
       null as any,
+      null as any,
     );
     expect(instance).toBeDefined();
   });

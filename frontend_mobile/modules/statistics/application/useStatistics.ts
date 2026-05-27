@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
 import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
 import type { Event, Category } from '@/services/api/types';
@@ -29,6 +29,7 @@ export function useStatistics() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const initialLoad = useRef(true);
 
   const timePeriods: { key: TimePeriod; label: string }[] = (
     ['day', 'week', 'month', 'year'] as const
@@ -36,19 +37,20 @@ export function useStatistics() {
 
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
+      if (initialLoad.current) setLoading(true);
       setError(null);
       const [eventsData, categoriesData] = await Promise.all([
         eventService.getAll(),
         categoryService.getAll(),
       ]);
-      setEvents(eventsData);
-      setCategories(categoriesData);
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (err) {
       console.error('Error fetching statistics data:', err);
       setError(err instanceof Error ? err.message : i18n.t('errors.statisticsLoadFailed'));
     } finally {
       setLoading(false);
+      initialLoad.current = false;
     }
   }, []);
 
@@ -63,6 +65,11 @@ export function useStatistics() {
     });
   }, [events]);
 
+  const safeAmount = (v: unknown): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const getStatsForPeriod = useCallback((period: TimePeriod): PeriodStats => {
     const periodEvents = getEventsForPeriod(period);
 
@@ -70,7 +77,7 @@ export function useStatistics() {
     const categoryMap = new Map<string, { total: number; count: number }>();
 
     periodEvents.forEach((event) => {
-      const amount = event.subscription?.amount ?? 0;
+      const amount = safeAmount(event.subscription?.amount);
       totalExpenses += amount;
 
       const catName = event.subscription?.category?.name || 'Autre';
@@ -94,10 +101,11 @@ export function useStatistics() {
       })
       .sort((a, b) => b.total - a.total);
 
+    const safeTotal = Number.isFinite(totalExpenses) ? totalExpenses : 0;
     return {
-      totalExpenses,
+      totalExpenses: safeTotal,
       transactionCount: periodEvents.length,
-      averageTransaction: periodEvents.length > 0 ? totalExpenses / periodEvents.length : 0,
+      averageTransaction: periodEvents.length > 0 ? safeTotal / periodEvents.length : 0,
       categoryBreakdown,
     };
   }, [getEventsForPeriod, categories]);

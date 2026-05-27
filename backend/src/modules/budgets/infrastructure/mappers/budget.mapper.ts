@@ -7,6 +7,7 @@ export class BudgetMapper {
       id: entity.id,
       userId: entity.userId,
       categoryId: entity.categoryId,
+      subscriptionIds: entity.subscriptions?.map(s => s.id) ?? [],
       name: entity.name,
       amount: typeof entity.amount === 'string' ? parseFloat(entity.amount) : entity.amount,
       currency: entity.currency,

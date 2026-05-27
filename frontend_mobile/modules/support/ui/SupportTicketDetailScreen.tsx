@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +18,7 @@ import type { SupportTicketDetail, SupportTicketMessage } from '@/services/api/s
 import { STATUS_LABELS, STATUS_COLORS } from '@/services/api/support-status';
 import { useTranslation } from '@/shared/application/I18nContext';
 import { supportScreenStyles as shared } from '@/shared/styles/supportScreen';
+import { toast } from '@/context/ToastContext';
 
 function MessageBubble({ message }: Readonly<{ message: SupportTicketMessage }>) {
   const isUser = message.authorType === 'user';
@@ -77,7 +77,7 @@ export default function SupportTicketDetailScreen() {
       const data = await supportService.getById(id);
       setTicket(data);
     } catch {
-      Alert.alert(t('support.detail.errorTitle'), t('support.detail.errorMessage'));
+      toast.error(t('support.detail.errorMessage'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -95,7 +95,7 @@ export default function SupportTicketDetailScreen() {
       await load(true);
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 200);
     } catch {
-      Alert.alert(t('support.detail.errorTitle'), t('support.detail.sendErrorMessage'));
+      toast.error(t('support.detail.sendErrorMessage'));
     } finally {
       setSending(false);
     }

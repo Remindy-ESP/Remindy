@@ -54,7 +54,11 @@
     "downloadSuccessTitle": "Téléchargement réussi",
     "downloadSuccessMessage": "{{filename}} a été téléchargé.",
     "downloadFallbackTitle": "Document téléchargé",
-    "downloadFallbackMessage": "{{filename}} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur \"Visualiser\"."
+    "downloadFallbackMessage": "{{filename}} a été téléchargé dans le cache de l'application. Vous pouvez le visualiser en appuyant sur \"Visualiser\".",
+    "folderAlreadyExists": "Un dossier avec ce nom existe déjà.",
+    "folderCreateError": "Impossible de créer le dossier.",
+    "documentDeletedSuccess": "Document supprimé.",
+    "folderDeletedSuccess": "Dossier supprimé."
   },
   "navigation": {
     "home": "Accueil"
