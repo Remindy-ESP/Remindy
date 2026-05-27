@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import { ThemeProvider } from '@/shared/application/ThemeContext';
 import { AuthProvider, useAuth } from '@/modules/auth/application/AuthContext';
 import { FullPageLoader } from '@/shared/ui/NetworkStates';
+import { PermissionGate } from '@/shared/ui/PermissionGate';
 import { AdminLayout } from '@/shared/ui/layout/AdminLayout';
 import { LoginPage } from '@/modules/auth/ui/LoginPage';
 import { MfaPage } from '@/modules/auth/ui/MfaPage';
@@ -13,6 +16,33 @@ import { UserDetailPage } from '@/modules/users/ui/UserDetailPage';
 import { AuditLogsPage } from '@/modules/audit/ui/AuditLogsPage';
 import { TicketListPage } from '@/modules/support/ui/TicketListPage';
 import { TicketDetailPage } from '@/modules/support/ui/TicketDetailPage';
+import { SecurityPage } from '@/modules/security/ui/SecurityPage';
+import { RbacPage } from '@/modules/rbac/ui/RbacPage';
+import { SubscriptionsPage } from '@/modules/subscriptions/ui/SubscriptionsPage';
+import { CloudPage } from '@/modules/cloud/ui/CloudPage';
+import { RgpdPage } from '@/modules/rgpd/ui/RgpdPage';
+import { AdminPermission } from '@/shared/domain/types';
+
+function ComingSoon({ title }: { title: string }) {
+  return (
+    <Box>
+      <Typography variant='h4' sx={{ mb: 2 }}>
+        {title}
+      </Typography>
+      <Box
+        sx={{
+          p: 4,
+          border: '1px dashed',
+          borderColor: 'divider',
+          borderRadius: 2,
+          color: 'text.secondary',
+        }}
+      >
+        À implémenter
+      </Box>
+    </Box>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,9 +80,74 @@ function AppRoutes() {
         <Route path='/dashboard' element={<DashboardPage />} />
         <Route path='/users' element={<UserListPage />} />
         <Route path='/users/:id' element={<UserDetailPage />} />
-        <Route path='/audit' element={<AuditLogsPage />} />
+        <Route
+          path='/security'
+          element={
+            <PermissionGate
+              permission={AdminPermission.SECURITY_READ}
+              fallback={
+                <ComingSoon title='Sécurité — accès refusé (permission manquante)' />
+              }
+            >
+              <SecurityPage />
+            </PermissionGate>
+          }
+        />
+        <Route
+          path='/rbac'
+          element={
+            <PermissionGate
+              permission={AdminPermission.RBAC_READ}
+              fallback={
+                <ComingSoon title='RBAC — accès refusé (permission manquante)' />
+              }
+            >
+              <RbacPage />
+            </PermissionGate>
+          }
+        />
         <Route path='/support' element={<TicketListPage />} />
         <Route path='/support/:id' element={<TicketDetailPage />} />
+        <Route
+          path='/subscriptions'
+          element={
+            <PermissionGate
+              permission={AdminPermission.SUBSCRIPTIONS_READ}
+              fallback={
+                <ComingSoon title='Abonnements — accès refusé (permission manquante)' />
+              }
+            >
+              <SubscriptionsPage />
+            </PermissionGate>
+          }
+        />
+        <Route
+          path='/cloud'
+          element={
+            <PermissionGate
+              permission={AdminPermission.CLOUD_READ}
+              fallback={
+                <ComingSoon title='Cloud — accès refusé (permission manquante)' />
+              }
+            >
+              <CloudPage />
+            </PermissionGate>
+          }
+        />
+        <Route
+          path='/rgpd'
+          element={
+            <PermissionGate
+              permission={AdminPermission.RGPD_EXPORT}
+              fallback={
+                <ComingSoon title='RGPD — accès refusé (permission manquante)' />
+              }
+            >
+              <RgpdPage />
+            </PermissionGate>
+          }
+        />
+        <Route path='/audit' element={<AuditLogsPage />} />
       </Route>
       <Route path='/login' element={<Navigate to='/dashboard' replace />} />
       <Route path='*' element={<Navigate to='/dashboard' replace />} />

@@ -31,7 +31,7 @@ describe('CloudflareR2Service', () => {
     };
 
     mockS3Client = {
-      send: jest.fn(),
+      send: jest.fn() as jest.Mock,
     } as any;
 
     (S3Client as jest.MockedClass<typeof S3Client>).mockImplementation(() => mockS3Client);
