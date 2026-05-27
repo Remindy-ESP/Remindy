@@ -474,6 +474,7 @@ export interface AdminDocument {
   fileSize: number;
   mimeType: string;
   ocrStatus: OcrStatus;
+  ocrText: string | null;
   ocrError: string | null;
   uploadedAt: string;
   updatedAt: string;
@@ -484,6 +485,10 @@ export interface AdminDocument {
   parsedFrequency: string | null;
   parsedCategory: string | null;
   parsingConfidence: number | null;
+}
+
+export interface ReprocessOcrRequest {
+  force?: boolean;
 }
 
 export interface AdminDocumentQuery {
