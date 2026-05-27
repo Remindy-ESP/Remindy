@@ -10,7 +10,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { useRoleActions } from '@/modules/rbac/application/useRoleActions';
 import { PermissionGate } from '@/shared/ui/PermissionGate';
 import { useAuth } from '@/modules/auth/application/AuthContext';
-import { AdminPermission, type RoleWithPermissions } from '@/shared/domain/types';
+import {
+  AdminPermission,
+  type RoleWithPermissions,
+} from '@/shared/domain/types';
 import { PermissionPickerDialog } from './PermissionPickerDialog';
 
 interface Props {

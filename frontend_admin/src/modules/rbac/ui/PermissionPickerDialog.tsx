@@ -86,7 +86,12 @@ export function PermissionPickerDialog({
   };
 
   return (
-    <Dialog open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth='sm'>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onClose}
+      fullWidth
+      maxWidth='sm'
+    >
       <DialogTitle>Ajouter des permissions</DialogTitle>
       <DialogContent dividers>
         <TextField
@@ -106,11 +111,17 @@ export function PermissionPickerDialog({
         />
 
         {available.length === 0 ? (
-          <Typography color='text.secondary' sx={{ py: 2, textAlign: 'center' }}>
+          <Typography
+            color='text.secondary'
+            sx={{ py: 2, textAlign: 'center' }}
+          >
             Toutes les permissions sont déjà assignées à ce rôle.
           </Typography>
         ) : grouped.size === 0 ? (
-          <Typography color='text.secondary' sx={{ py: 2, textAlign: 'center' }}>
+          <Typography
+            color='text.secondary'
+            sx={{ py: 2, textAlign: 'center' }}
+          >
             Aucune permission ne correspond à votre recherche.
           </Typography>
         ) : (

@@ -129,7 +129,11 @@ function StatCard({
 function buildUserSubs(overview?: DashboardOverview): SubMetric[] {
   if (!overview) return [];
   return [
-    { label: 'Actifs 7j', value: overview.users.active7d, chipColor: 'success' },
+    {
+      label: 'Actifs 7j',
+      value: overview.users.active7d,
+      chipColor: 'success',
+    },
     {
       label: 'Bannis',
       value: overview.users.banned,
@@ -377,8 +381,7 @@ export function DashboardPage() {
                 sx={
                   isFetching
                     ? {
-                        animation:
-                          'dashboard-spin 1s linear infinite',
+                        animation: 'dashboard-spin 1s linear infinite',
                         '@keyframes dashboard-spin': {
                           from: { transform: 'rotate(0deg)' },
                           to: { transform: 'rotate(360deg)' },
@@ -458,9 +461,7 @@ export function DashboardPage() {
                   {frequencyData.map((entry, index) => (
                     <Cell
                       key={entry.key}
-                      fill={
-                        FREQUENCY_COLORS[index % FREQUENCY_COLORS.length]
-                      }
+                      fill={FREQUENCY_COLORS[index % FREQUENCY_COLORS.length]}
                     />
                   ))}
                 </Pie>

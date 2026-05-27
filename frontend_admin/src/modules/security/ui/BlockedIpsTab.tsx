@@ -18,7 +18,11 @@ import AddIcon from '@mui/icons-material/Add';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import { useBlockedIps } from '@/modules/security/application/useBlockedIps';
 import { useSecurityActions } from '@/modules/security/application/useSecurityActions';
-import { ErrorState, InlineLoader, EmptyState } from '@/shared/ui/NetworkStates';
+import {
+  ErrorState,
+  InlineLoader,
+  EmptyState,
+} from '@/shared/ui/NetworkStates';
 import { PermissionGate } from '@/shared/ui/PermissionGate';
 import { AdminPermission, type BlockedIp } from '@/shared/domain/types';
 import { BlockIpDialog } from './BlockIpDialog';
@@ -45,7 +49,9 @@ export function BlockedIpsTab() {
 
   const handleUnblock = (ip: BlockedIp) => {
     if (
-      !window.confirm(`Débloquer l'IP ${ip.ipAddress} ? Cette action est tracée.`)
+      !window.confirm(
+        `Débloquer l'IP ${ip.ipAddress} ? Cette action est tracée.`
+      )
     ) {
       return;
     }
@@ -221,10 +227,7 @@ export function BlockedIpsTab() {
         )}
       </Paper>
 
-      <BlockIpDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-      />
+      <BlockIpDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
 
       <IpActivityDrawer
         ip={selectedIp}

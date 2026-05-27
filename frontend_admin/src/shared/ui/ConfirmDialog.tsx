@@ -30,7 +30,12 @@ export function ConfirmDialog({
   onClose,
 }: Props) {
   return (
-    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth='xs' fullWidth>
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onClose}
+      maxWidth='xs'
+      fullWidth
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         {typeof message === 'string' ? (

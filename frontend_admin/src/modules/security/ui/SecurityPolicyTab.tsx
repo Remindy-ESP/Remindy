@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -78,13 +78,7 @@ function formToRequest(data: FormData): UpdateSecurityPolicyRequest {
   };
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Paper sx={{ p: 3, mb: 3 }}>
       <Typography variant='subtitle1' fontWeight={600} sx={{ mb: 2 }}>

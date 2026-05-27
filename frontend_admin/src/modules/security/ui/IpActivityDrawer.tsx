@@ -6,7 +6,11 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import CloseIcon from '@mui/icons-material/Close';
 import { useIpActivity } from '@/modules/security/application/useBlockedIps';
-import { InlineLoader, ErrorState, EmptyState } from '@/shared/ui/NetworkStates';
+import {
+  InlineLoader,
+  ErrorState,
+  EmptyState,
+} from '@/shared/ui/NetworkStates';
 import { Severity, type SecurityLog } from '@/shared/domain/types';
 
 const SEVERITY_COLORS: Record<Severity, 'info' | 'warning' | 'error'> = {
@@ -52,7 +56,12 @@ function LogRow({ log }: { log: SecurityLog }) {
           sx={{ fontFamily: 'monospace', fontSize: 11 }}
         />
         {log.isSuspicious && (
-          <Chip label='Suspect' size='small' color='warning' variant='outlined' />
+          <Chip
+            label='Suspect'
+            size='small'
+            color='warning'
+            variant='outlined'
+          />
         )}
         <Typography
           variant='caption'

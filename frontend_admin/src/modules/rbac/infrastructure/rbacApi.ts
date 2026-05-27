@@ -21,18 +21,16 @@ export const rbacApi = {
 
   update(key: string, body: UpdateRoleRequest) {
     return apiClient
-      .put<RoleWithPermissions>(
-        `/admin/roles/${encodeURIComponent(key)}`,
-        body
-      )
+      .put<RoleWithPermissions>(`/admin/roles/${encodeURIComponent(key)}`, body)
       .then(r => r.data);
   },
 
   remove(key: string) {
     return apiClient
-      .delete<{ ok: true; key: string }>(
-        `/admin/roles/${encodeURIComponent(key)}`
-      )
+      .delete<{
+        ok: true;
+        key: string;
+      }>(`/admin/roles/${encodeURIComponent(key)}`)
       .then(r => r.data);
   },
 

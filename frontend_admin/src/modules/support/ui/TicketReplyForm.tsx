@@ -12,9 +12,7 @@ import Button from '@mui/material/Button';
 import SendIcon from '@mui/icons-material/Send';
 import { useTicketActions } from '@/modules/support/application/useTicketActions';
 import { PermissionGate } from '@/shared/ui/PermissionGate';
-import {
-  TICKET_STATUS_LABELS,
-} from './TicketStatusBadge';
+import { TICKET_STATUS_LABELS } from './TicketStatusBadge';
 import { AdminPermission, SupportTicketStatus } from '@/shared/domain/types';
 
 const MIN_LENGTH = 5;
@@ -26,9 +24,7 @@ const schema = z.object({
     .trim()
     .min(MIN_LENGTH, `Message trop court (${MIN_LENGTH} caractères min)`)
     .max(MAX_LENGTH, `Message trop long (${MAX_LENGTH} caractères max)`),
-  status: z
-    .union([z.literal(''), z.enum(SupportTicketStatus)])
-    .optional(),
+  status: z.union([z.literal(''), z.enum(SupportTicketStatus)]).optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -72,7 +68,12 @@ export function TicketReplyForm({ ticketId, ticketStatus }: Props) {
 
   return (
     <PermissionGate permission={AdminPermission.SUPPORT_WRITE}>
-      <Paper component='form' onSubmit={handleSubmit(onSubmit)} sx={{ p: 2 }} noValidate>
+      <Paper
+        component='form'
+        onSubmit={handleSubmit(onSubmit)}
+        sx={{ p: 2 }}
+        noValidate
+      >
         <Typography variant='subtitle2' fontWeight={700} sx={{ mb: 1.5 }}>
           Répondre
         </Typography>

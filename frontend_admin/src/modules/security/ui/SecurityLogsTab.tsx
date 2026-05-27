@@ -71,7 +71,11 @@ const columns: GridColDef<SecurityLog>[] = [
     width: 140,
     renderCell: ({ value }) =>
       value ? (
-        <Typography variant='body2' fontFamily='monospace' sx={{ fontSize: 12 }}>
+        <Typography
+          variant='body2'
+          fontFamily='monospace'
+          sx={{ fontSize: 12 }}
+        >
           {value}
         </Typography>
       ) : (

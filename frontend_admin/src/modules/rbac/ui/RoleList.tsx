@@ -17,7 +17,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { useRoleActions } from '@/modules/rbac/application/useRoleActions';
 import { PermissionGate } from '@/shared/ui/PermissionGate';
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog';
-import { AdminPermission, type RoleWithPermissions } from '@/shared/domain/types';
+import {
+  AdminPermission,
+  type RoleWithPermissions,
+} from '@/shared/domain/types';
 import { RoleFormDialog } from './RoleFormDialog';
 
 interface Props {
@@ -165,11 +168,7 @@ export function RoleList({ roles, selectedKey, onSelect }: Props) {
         })}
       </List>
 
-      <Menu
-        open={!!menuFor}
-        anchorEl={menuFor?.el ?? null}
-        onClose={closeMenu}
-      >
+      <Menu open={!!menuFor} anchorEl={menuFor?.el ?? null} onClose={closeMenu}>
         <MenuItem
           disabled={menuFor?.role.isSystem}
           onClick={() => {
@@ -206,8 +205,8 @@ export function RoleList({ roles, selectedKey, onSelect }: Props) {
             <>
               Cette action supprime définitivement le rôle{' '}
               <strong>{dialog.role.label}</strong> (
-              <code>{dialog.role.key}</code>) et ses permissions associées.
-              Elle est tracée dans l&apos;audit.
+              <code>{dialog.role.key}</code>) et ses permissions associées. Elle
+              est tracée dans l&apos;audit.
             </>
           ) : (
             ''
