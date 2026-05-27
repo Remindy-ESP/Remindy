@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { useTranslation } from '@/context/I18nContext';
-import { ChartContainer } from '@/components/charts/ChartContainer';
-import { PieChart, PieChartSlice } from '@/components/charts/PieChart';
+import { useTranslation } from '@/shared/application/I18nContext';
+import { ChartContainer } from '@/shared/ui/charts/ChartContainer';
+import { PieChart, PieChartSlice } from '@/shared/ui/charts/PieChart';
 import { CategoryGrid, CategoryGridItem } from './CategoryGrid';
 
 export interface CategoryBreakdownItem {

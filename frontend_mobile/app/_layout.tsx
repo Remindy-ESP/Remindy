@@ -3,13 +3,13 @@ import type { ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AuthProvider } from '@/context/AuthContext';
-import { I18nProvider } from '@/context/I18nContext';
+import { AuthProvider } from '@/modules/auth/application/AuthContext';
+import { I18nProvider } from '@/shared/application/I18nContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { useEffect } from 'react';
-import AppStatusScreen from '@/components/system/AppStatusScreen';
+import AppStatusScreen from '@/shared/ui/system/AppStatusScreen';
 import { CoachMarksProvider } from '@/features/coach-marks/CoachMarksContext';
-import CoachMarksOverlay from '@/components/system/CoachMarksOverlay';
+import CoachMarksOverlay from '@/shared/ui/system/CoachMarksOverlay';
 import i18n from '@/i18n';
 
 export function ErrorBoundary({ retry }: ErrorBoundaryProps) {

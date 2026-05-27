@@ -13,7 +13,7 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
-jest.mock('@/components/system/AppStatusScreen', () => {
+jest.mock('@/shared/ui/system/AppStatusScreen', () => {
   const { AppStatusScreenMock } = require('./testUtils');
   return AppStatusScreenMock;
 });

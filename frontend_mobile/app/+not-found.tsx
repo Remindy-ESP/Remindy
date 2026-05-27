@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
-import AppStatusScreen from '@/components/system/AppStatusScreen';
-import { useTranslation } from '@/context/I18nContext';
+import AppStatusScreen from '@/shared/ui/system/AppStatusScreen';
+import { useTranslation } from '@/shared/application/I18nContext';
 
 export default function NotFoundScreen() {
   const router = useRouter();

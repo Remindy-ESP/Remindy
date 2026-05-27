@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Switch } from 'react-native';
-import { useTranslation } from '@/context/I18nContext';
+import { useTranslation } from '@/shared/application/I18nContext';
 import type { Category } from '@/services/api/types';
 import { BudgetPeriod, CreateBudgetInput } from '../types/budget.types';
 import { CategoryPicker } from './CategoryPicker';

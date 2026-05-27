@@ -214,7 +214,7 @@ const translate = (key, options) => {
 };
 
 // Mock the I18nContext hook so components calling useTranslation() get FR strings.
-jest.mock('@/context/I18nContext', () => ({
+jest.mock('@/shared/application/I18nContext', () => ({
   __esModule: true,
   useTranslation: () => ({
     t: translate,

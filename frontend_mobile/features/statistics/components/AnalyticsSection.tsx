@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { PeriodFilter } from '@/components/PeriodFilter/PeriodFilter';
+import { PeriodFilter } from '@/shared/ui/PeriodFilter/PeriodFilter';
 import {
   PeriodDateRange,
   usePeriodFilter,
-} from '@/components/PeriodFilter/usePeriodFilter';
-import type { PeriodOption } from '@/components/PeriodFilter/PeriodFilter';
+} from '@/shared/ui/PeriodFilter/usePeriodFilter';
+import type { PeriodOption } from '@/shared/ui/PeriodFilter/PeriodFilter';
 
 export interface AnalyticsSectionRenderProps {
   period: PeriodOption;

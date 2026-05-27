@@ -17,7 +17,7 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
-jest.mock('@/context/I18nContext', () => ({
+jest.mock('@/shared/application/I18nContext', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     language: 'fr',

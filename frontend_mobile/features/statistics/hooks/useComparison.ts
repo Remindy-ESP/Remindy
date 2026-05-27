@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { comparisonApi, ComparisonResponse } from '../api/comparison.api';
-import type { PeriodDateRange } from '@/components/PeriodFilter/usePeriodFilter';
+import type { PeriodDateRange } from '@/shared/ui/PeriodFilter/usePeriodFilter';
 
 export interface UseComparisonOptions {
   range: PeriodDateRange | null;
