@@ -9,6 +9,7 @@ import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-passwo
 import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
 import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import { OAuthLoginUseCase } from '../../application/use-cases/oauth-login.use-case';
+import { GoogleOAuthService } from '../../infrastructure/services/google-oauth.service';
 import { AuthUser } from '../../domain/entities/auth-user.entity';
 import { Role } from '../../domain/value-objects/role.enum';
 import { UserStatus } from 'src/infrastructure/database/entities/user.entity';
@@ -61,6 +62,10 @@ describe('AuthController', () => {
       execute: jest.fn(),
     };
 
+    const mockGoogleOAuthService = {
+      exchangeCodeForIdToken: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -95,6 +100,10 @@ describe('AuthController', () => {
         {
           provide: OAuthLoginUseCase,
           useValue: mockOAuthLoginUseCase,
+        },
+        {
+          provide: GoogleOAuthService,
+          useValue: mockGoogleOAuthService,
         },
       ],
     }).compile();

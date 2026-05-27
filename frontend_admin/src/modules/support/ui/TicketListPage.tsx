@@ -24,23 +24,7 @@ import {
   SupportTicketPriority,
   SupportTicketCategory,
 } from '@/shared/domain/types';
-
-const STATUS_LABELS: Record<SupportTicketStatus, string> = {
-  [SupportTicketStatus.OPEN]: 'Ouvert',
-  [SupportTicketStatus.PENDING_USER]: 'En attente',
-  [SupportTicketStatus.RESOLVED]: 'Résolu',
-  [SupportTicketStatus.CLOSED]: 'Fermé',
-};
-
-const STATUS_COLORS: Record<
-  SupportTicketStatus,
-  'warning' | 'info' | 'success' | 'default'
-> = {
-  [SupportTicketStatus.OPEN]: 'warning',
-  [SupportTicketStatus.PENDING_USER]: 'info',
-  [SupportTicketStatus.RESOLVED]: 'success',
-  [SupportTicketStatus.CLOSED]: 'default',
-};
+import { STATUS_LABELS, STATUS_COLORS } from './ticketStatusMeta';
 
 const PRIORITY_LABELS: Record<SupportTicketPriority, string> = {
   [SupportTicketPriority.LOW]: 'Faible',
