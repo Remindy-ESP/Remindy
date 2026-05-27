@@ -19,6 +19,7 @@ import { TicketDetailPage } from '@/modules/support/ui/TicketDetailPage';
 import { SecurityPage } from '@/modules/security/ui/SecurityPage';
 import { RbacPage } from '@/modules/rbac/ui/RbacPage';
 import { SubscriptionsPage } from '@/modules/subscriptions/ui/SubscriptionsPage';
+import { CloudPage } from '@/modules/cloud/ui/CloudPage';
 import { AdminPermission } from '@/shared/domain/types';
 
 function ComingSoon({ title }: { title: string }) {
@@ -141,10 +142,14 @@ function AppRoutes() {
         <Route
           path='/cloud'
           element={
-            <GatedPlaceholder
-              title='Cloud'
+            <PermissionGate
               permission={AdminPermission.CLOUD_READ}
-            />
+              fallback={
+                <ComingSoon title='Cloud — accès refusé (permission manquante)' />
+              }
+            >
+              <CloudPage />
+            </PermissionGate>
           }
         />
         <Route
