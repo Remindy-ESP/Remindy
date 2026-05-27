@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,8 @@ import { useTranslation } from '@/shared/application/I18nContext';
 import UserAvatar from '@/modules/profile/ui/UserAvatar';
 import ScreenHeader from '@/shared/ui/ScreenHeader';
 import { formatRoleLabel } from '@/utils/role';
-import { toast } from '@/context/ToastContext';
-import { showConfirm } from '@/context/ConfirmContext';
+import { useLogout } from '@/shared/hooks/useLogout';
+import { logoutButtonStyles } from '@/shared/styles/logoutButton';
 
 
 type InfoRowProps = Readonly<{
@@ -35,27 +35,8 @@ function InfoRow({ label, value }: InfoRowProps) {
 export default function ProfileScreen() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { user, logout, isLoading } = useAuth();
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    const confirmed = await showConfirm({
-      title: t('profile.logout.confirmTitle'),
-      message: t('profile.logout.confirmMessage'),
-      destructive: true,
-    });
-    if (!confirmed) return;
-    try {
-      setLoggingOut(true);
-      await logout();
-      router.replace('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast.error(t('profile.logout.errorMessage'));
-    } finally {
-      setLoggingOut(false);
-    }
-  };
+  const { user, isLoading } = useAuth();
+  const { loggingOut, handleLogout } = useLogout();
 
   const fallbackUserName = t('profile.fallbackUserName');
 
@@ -254,50 +235,5 @@ const styles = StyleSheet.create({
     flex: 1.2,
     textAlign: 'right',
   },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  menuIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: '#1F2140',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuItemText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-    marginLeft: 12,
-  },
-  logoutButton: {
-    marginTop: 6,
-    backgroundColor: '#D94A58',
-    borderRadius: 14,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  logoutButtonDisabled: {
-    backgroundColor: '#777B99',
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  ...logoutButtonStyles,
 });

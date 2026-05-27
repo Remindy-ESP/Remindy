@@ -20,6 +20,26 @@ import CategoryDropdown from '@/modules/dashboard/ui/CategoryDropdown';
 import BrandLogo from '@/modules/dashboard/ui/BrandLogo';
 import { toast } from '@/context/ToastContext';
 
+function ModalDetailRow({
+  icon,
+  label,
+  children,
+}: Readonly<{
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  children: React.ReactNode;
+}>) {
+  return (
+    <View style={styles.modalRow}>
+      <View style={styles.modalRowLeft}>
+        <Ionicons name={icon} size={18} color="#6366f1" />
+        <Text style={styles.modalLabel}>{label}</Text>
+      </View>
+      <Text style={styles.modalValue}>{children}</Text>
+    </View>
+  );
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -464,59 +484,35 @@ export default function DashboardScreen() {
 
             {/* Details */}
             <View style={styles.modalDetails}>
-              <View style={styles.modalRow}>
-                <View style={styles.modalRowLeft}>
-                  <Ionicons name="pricetag-outline" size={18} color="#6366f1" />
-                  <Text style={styles.modalLabel}>Catégorie</Text>
-                </View>
-                <Text style={styles.modalValue}>
-                  {selectedExpense?.subscription?.category?.name || 'Général'}
-                </Text>
-              </View>
+              <ModalDetailRow icon="pricetag-outline" label="Catégorie">
+                {selectedExpense?.subscription?.category?.name || 'Général'}
+              </ModalDetailRow>
 
-              <View style={styles.modalRow}>
-                <View style={styles.modalRowLeft}>
-                  <Ionicons name="repeat-outline" size={18} color="#6366f1" />
-                  <Text style={styles.modalLabel}>Type de paiement</Text>
-                </View>
-                <Text style={styles.modalValue}>
-                  {(() => {
-                    const freq = selectedExpense?.subscription?.frequency;
-                    switch (freq) {
-                      case 'one-time': return 'Achat unique';
-                      case 'weekly': return 'Hebdomadaire';
-                      case 'monthly': return 'Mensuel';
-                      case 'quarterly': return 'Trimestriel';
-                      case 'yearly': return 'Annuel';
-                      default: return freq || '—';
-                    }
-                  })()}
-                </Text>
-              </View>
+              <ModalDetailRow icon="repeat-outline" label="Type de paiement">
+                {(() => {
+                  const freq = selectedExpense?.subscription?.frequency;
+                  switch (freq) {
+                    case 'one-time': return 'Achat unique';
+                    case 'weekly': return 'Hebdomadaire';
+                    case 'monthly': return 'Mensuel';
+                    case 'quarterly': return 'Trimestriel';
+                    case 'yearly': return 'Annuel';
+                    default: return freq || '—';
+                  }
+                })()}
+              </ModalDetailRow>
 
-              <View style={styles.modalRow}>
-                <View style={styles.modalRowLeft}>
-                  <Ionicons name="calendar-outline" size={18} color="#6366f1" />
-                  <Text style={styles.modalLabel}>Date de début</Text>
-                </View>
-                <Text style={styles.modalValue}>
-                  {selectedExpense?.subscription?.startDate
-                    ? new Date(selectedExpense.subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-                    : '—'}
-                </Text>
-              </View>
+              <ModalDetailRow icon="calendar-outline" label="Date de début">
+                {selectedExpense?.subscription?.startDate
+                  ? new Date(selectedExpense.subscription.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                  : '—'}
+              </ModalDetailRow>
 
-              <View style={styles.modalRow}>
-                <View style={styles.modalRowLeft}>
-                  <Ionicons name="calendar-clear-outline" size={18} color="#6366f1" />
-                  <Text style={styles.modalLabel}>Date de fin</Text>
-                </View>
-                <Text style={styles.modalValue}>
-                  {selectedExpense?.subscription?.endDate
-                    ? new Date(selectedExpense.subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-                    : 'Aucune'}
-                </Text>
-              </View>
+              <ModalDetailRow icon="calendar-clear-outline" label="Date de fin">
+                {selectedExpense?.subscription?.endDate
+                  ? new Date(selectedExpense.subscription.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                  : 'Aucune'}
+              </ModalDetailRow>
 
               <View style={styles.modalRow}>
                 <View style={styles.modalRowLeft}>
