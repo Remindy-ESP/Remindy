@@ -1,129 +1,180 @@
 # Remindy
 
-Application de gestion de rappels avec backend NestJS et application mobile React Native.
+Application de gestion de rappels et de documents — backend NestJS, mobile React Native/Expo.
 
 ## Structure du projet
 
 ```
-remindy_personal/
-├── backend/           # API NestJS
+Remindy/
+├── backend/           # API NestJS (port 3000)
 ├── frontend_mobile/   # Application mobile React Native (Expo)
-└── frontend_admin/    # Interface d'administration (à venir)
+└── frontend_admin/    # Dashboard admin React + Vite
 ```
+
+---
 
 ## Prérequis
 
-- Node.js (v18 ou supérieur)
+- Node.js v18+
 - npm
-- Pour le développement mobile : Expo Go sur votre téléphone ou émulateur Android/iOS
+- [ngrok](https://ngrok.com) avec un domaine statique gratuit (obligatoire pour OAuth Google et développement sur téléphone physique)
+- Android Studio + émulateur **ou** téléphone Android avec débogage USB/WiFi activé
 
-## Installation
+---
 
-### 1. Backend
+## Setup rapide (Makefile)
 
 ```bash
-cd backend
-npm install
+make setup        # Détecte l'IP locale et génère frontend_mobile/.env.local
+make dev-backend  # Lance NestJS en watch mode
+make dev-mobile   # Lance Expo
+make dev-admin    # Lance Vite (admin)
+make migrate      # Applique les migrations TypeORM
+
+# Windows uniquement (PowerShell)
+powershell -ExecutionPolicy Bypass -File scripts/setup-env.ps1
 ```
 
-#### Configuration Backend (.env)
+---
 
-Créez un fichier `.env.develop` dans le dossier `backend/` avec les variables suivantes :
+## Backend
+
+### Configuration — `.env.develop`
+
+Copiez `.env.exemple` → `.env.develop` et remplissez les valeurs :
 
 ```env
-# Database
+# Base de données (Neon PostgreSQL)
 NEON_DATABASE_URL_DEV=postgresql://user:password@host/database
 NEON_DATABASE_URL_TEST=postgresql://user:password@host/test_database
+NEON_DATABASE_URL_STAGING=postgresql://user:password@host/staging_database
+NEON_DATABASE_URL_PROD=postgresql://user:password@host/prod_database
+
 NODE_ENV=development
 
-# Server
-BACKEND_PORT=3000
-
 # JWT
-JWT_ACCESS_TOKEN_SECRET=your_access_token_secret
-JWT_REFRESH_TOKEN_SECRET=your_refresh_token_secret
+JWT_ACCESS_TOKEN_SECRET=un_secret_access_bien_random
+JWT_REFRESH_TOKEN_SECRET=un_secret_refresh_bien_random
 JWT_ACCESS_TOKEN_EXPIRATION=15m
 JWT_REFRESH_TOKEN_EXPIRATION=30d
-JWT_PASSWORD_RESET_SECRET=your_password_reset_secret
+JWT_PASSWORD_RESET_SECRET=un_secret_reset_bien_random
+MFA_SECRET_KEY=un_secret_mfa_bien_random
 
-# Email (SendGrid)
-SENDGRID_API_KEY=your_sendgrid_api_key
-MAIL_FROM=your_email@example.com
+# Email (Brevo / ancien SendGrid)
+SENDGRID_API_KEY=votre_cle_brevo
+MAIL_FROM=noreply@votredomaine.com
 
-# Frontend URL (pour les emails)
+# Cloudflare R2 (stockage fichiers)
+R2_ACCOUNT_ID=votre_account_id
+R2_ACCESS_KEY_ID=votre_access_key_id
+R2_SECRET_ACCESS_KEY=votre_secret_access_key
+R2_BUCKET_NAME=nom_du_bucket
+
+# IA
+GEMINI_API_KEY=votre_cle_gemini
+
+# URLs — utilisez votre domaine ngrok statique
 FRONTEND_URL=http://localhost:5173
+BACKEND_URL=https://votre-domaine.ngrok-free.dev
+FRONTEND_PASSWORD_RESET_URL=https://votre-domaine.ngrok-free.dev/auth/password-reset-redirect
+
+# Google OAuth
+GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=votre_secret_google
+GOOGLE_MOBILE_CALLBACK_URL=https://votre-domaine.ngrok-free.dev/auth/oauth/google/mobile/callback
 ```
 
-#### Démarrer le backend
+### Lancer le backend
 
 ```bash
 cd backend
-npm run start:dev
+npm install
+npm run start:dev   # http://localhost:3000
+                    # Swagger : http://localhost:3000/swagger/v1
 ```
 
-Le backend sera accessible sur `http://localhost:3000`
+### Exposer le backend via ngrok (obligatoire pour OAuth + téléphone physique)
 
-### 2. Frontend Mobile
+```bash
+ngrok http --domain=votre-domaine.ngrok-free.dev 3000
+```
+
+> Le domaine statique gratuit se crée sur [dashboard.ngrok.com/domains](https://dashboard.ngrok.com/domains).
+> Une fois créé, il ne change jamais — plus besoin de mettre à jour Google Cloud Console.
+
+---
+
+## Frontend Mobile
+
+### Configuration — `.env.local`
+
+Copiez `.env.exemple` → `.env.local` (ignoré par git) :
+
+```env
+EXPO_PUBLIC_BACKEND_API_URL=https://votre-domaine.ngrok-free.dev
+EXPO_PUBLIC_BACKEND_API_TIMEOUT=30000
+EXPO_PUBLIC_ENV=local
+
+# Google OAuth (IDs depuis Google Cloud Console)
+EXPO_PUBLIC_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=xxx.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=xxx.apps.googleusercontent.com
+```
+
+> **Pourquoi ngrok et pas l'IP locale ?**
+> L'IP change à chaque connexion réseau. ngrok donne une URL HTTPS fixe, indispensable pour Google OAuth.
+
+### Lancer l'application
 
 ```bash
 cd frontend_mobile
 npm install
+
+npm start              # Expo dev server (scan QR avec Expo Go)
+npx expo run:android   # Build natif Android (nécessite Android Studio ou téléphone connecté)
+npx expo run:ios       # Build natif iOS (macOS uniquement)
 ```
 
-#### Configuration Frontend Mobile (.env)
+> `npx expo run:android` régénère le dossier `android/` si besoin. Ce dossier est ignoré par git car entièrement auto-généré.
 
-Créez un fichier `.env.local` dans le dossier `frontend_mobile/` :
+---
 
-```env
-# Pour un téléphone physique, utilisez l'IP locale de votre PC
-# Trouvez votre IP : Windows (ipconfig), Mac/Linux (ifconfig)
-EXPO_PUBLIC_BACKEND_API_URL=http://192.168.x.x:3000
-EXPO_PUBLIC_BACKEND_API_TIMEOUT=30000
-EXPO_PUBLIC_ENV=local
-```
+## Connecter un téléphone Android en débogage WiFi
 
-**Note importante :** Pour que votre téléphone puisse se connecter au backend :
-1. Votre PC et votre téléphone doivent être sur le même réseau WiFi
-2. Remplacez `192.168.x.x` par l'IP locale de votre PC
-3. Configurez le firewall Windows pour autoriser le port 3000 (voir section Firewall ci-dessous)
+### Android 11 et supérieur (méthode recommandée)
 
-#### Fichiers d'environnement disponibles
+L'ancienne méthode `adb connect <ip>:5555` **ne fonctionne plus** directement sur Android 11+.  
+Il faut passer par le "Débogage sans fil" avec un code de jumelage :
 
-- `.env` - Valeurs par défaut (commité dans git)
-- `.env.local` - **Développement local** (ignoré par git) - votre config personnelle
-- `.env.development` - Configuration development (commité dans git)
-- `.env.staging` - Configuration staging (commité dans git)
-- `.env.production` - Configuration production (commité dans git)
+1. **Activer le mode développeur** : Réglages → À propos → appuyer 7× sur "Numéro de build"
+2. **Activer le débogage sans fil** : Réglages → Système → Options pour les développeurs → Débogage sans fil → activer
+3. **Jumeler l'appareil** : dans "Débogage sans fil", appuyer sur **"Jumeler l'appareil avec un code"**
+   - Un code à 6 chiffres et un port de jumelage s'affichent (ex: `192.168.1.x:37000`, code `123456`)
+4. Sur le PC :
+   ```bash
+   adb pair 192.168.1.x:37000
+   # Entrer le code à 6 chiffres quand demandé
+   ```
+5. Une fois jumelé, récupérer le **port de connexion** affiché dans "Débogage sans fil" (différent du port de jumelage) :
+   ```bash
+   adb connect 192.168.1.x:PORT_CONNEXION
+   ```
+6. Vérifier que le téléphone est reconnu :
+   ```bash
+   adb devices
+   # doit afficher votre appareil avec "device"
+   ```
 
-**Ordre de priorité Expo** (du moins prioritaire au plus prioritaire) :
-1. `.env`
-2. `.env.development` (en mode development)
-3. `.env.local` (toujours chargé en dernier, écrase tout)
-
-#### Démarrer l'application mobile
+### Android 10 et inférieur
 
 ```bash
-cd frontend_mobile
-
-# Développement local (par défaut)
-npm start
-
-# Avec staging
-npm run start:staging
-
-# Avec production
-npm run start:prod
+# Avec câble USB branché :
+adb tcpip 5555
+adb connect 192.168.1.x:5555
+# Débrancher le câble, le téléphone reste connecté
 ```
 
-Scannez le QR code avec l'application Expo Go.
-
-#### Configuration Firewall Windows (pour développement mobile)
-
-Ouvrez PowerShell **en tant qu'administrateur** et exécutez :
-
-```powershell
-netsh advfirewall firewall add rule name="Remindy Backend - Port 3000" dir=in action=allow protocol=TCP localport=3000
-```
+---
 
 ## Commandes utiles
 
@@ -132,24 +183,20 @@ netsh advfirewall firewall add rule name="Remindy Backend - Port 3000" dir=in ac
 ```bash
 cd backend
 
-# Développement
-npm run start:dev          # Démarre le serveur en mode watch
+npm run start:dev          # Dev (watch mode)
+npm run build              # Compilation TypeScript
+npm run lint               # ESLint auto-fix
+npm run format             # Prettier
+npm run test               # Tests unitaires
+npm run test:watch         # Jest watch
+npm run test:cov           # Couverture
+npm run test:e2e           # Tests end-to-end
 
-# Quality checks
-npm run format             # Formate le code avec Prettier
-npm run lint               # Vérifie le code avec ESLint
-npm run test               # Lance les tests unitaires
-npm run test:e2e           # Lance les tests end-to-end
-npm run test:cov           # Lance les tests avec couverture
-
-# Production
-npm run build              # Compile le projet
-npm run start:prod         # Démarre le serveur en production
-
-# Database migrations
-npm run migration:generate # Génère une migration
-npm run migration:run      # Exécute les migrations
-npm run migration:revert   # Annule la dernière migration
+# Migrations TypeORM
+npm run migration:generate -- -n NomDeLaMigration
+npm run migration:run
+npm run migration:revert
+npm run migration:show
 ```
 
 ### Frontend Mobile
@@ -157,103 +204,67 @@ npm run migration:revert   # Annule la dernière migration
 ```bash
 cd frontend_mobile
 
-# Développement
-npm start                  # Démarre Expo
-npm run android            # Lance sur Android
-npm run ios                # Lance sur iOS
-
-# Environnements
-npm run start:staging      # Démarre avec config staging
-npm run android:staging    # Android avec staging
-npm run ios:staging        # iOS avec staging
-
-# Quality checks
-npm run lint               # Vérifie le code avec ESLint
-npm run test               # Lance les tests unitaires
-npm run test:watch         # Lance les tests en mode watch
-npm run test:coverage      # Lance les tests avec couverture
+npm start                  # Expo dev server
+npm run android            # Android (émulateur/device)
+npm run ios                # iOS (macOS uniquement)
+npm run start:staging      # Config staging
+npm run start:prod         # Config production
+npm run lint               # ESLint
+npm run test               # Jest
+npm run test:watch         # Jest watch
+npm run test:coverage      # Couverture
 ```
 
-## Avant de faire une Pull Request
+---
 
-Exécutez ces commandes dans l'ordre pour chaque projet modifié :
-
-### Backend
+## Avant de créer une Pull Request
 
 ```bash
-cd backend
+# Backend
+cd backend && npm run format && npm run lint && npm run test && npm run build
 
-# 1. Formatage du code
-npm run format
-
-# 2. Vérification du linting
-npm run lint
-
-# 3. Tests unitaires
-npm run test
-
-# 4. Tests end-to-end
-npm run test:e2e
-
-# 5. Couverture de tests
-npm run test:cov
-
-# 6. Vérifier que le serveur démarre
-npm run start:dev
-# Vérifiez qu'il n'y a pas d'erreurs, puis arrêtez (Ctrl+C)
-
-# 7. Vérifier que le build fonctionne
-npm run build
+# Mobile
+cd frontend_mobile && npm run lint && npm run test
 ```
 
-### Frontend Mobile
+> La CI lance ces vérifications automatiquement sur chaque PR vers `develop`.
 
-```bash
-cd frontend_mobile
+---
 
-# 1. Vérification du linting
-npm run lint
+## Architecture
 
-# 2. Tests unitaires
-npm run test
+### Backend — Clean Architecture (4 couches)
 
-# 3. Couverture de tests
-npm run test:coverage
-
-# 4. Vérifier que l'app démarre
-npm start
-# Vérifiez qu'il n'y a pas d'erreurs, puis arrêtez (Ctrl+C)
+```
+Presentation  →  Application  →  Domain  →  Infrastructure
+(Controller)     (UseCase)       (Entity)    (TypeORM / APIs)
 ```
 
-**Important :** Tous ces tests doivent passer sans erreur avant de créer votre PR.
+17 modules : `auth`, `user`, `subscription`, `roles`, `audit`, `event`, `event-series`,
+`reminder`, `category`, `folder`, `document`, `storage`, `notification`, `admin`,
+`support`, `scheduler`, `seed`, `budgets`, `statistics`.
 
-## Documentation
+### Frontend Mobile — Expo Router (file-based routing)
 
-- [Backend API Documentation](http://localhost:3000/swagger/v1) (après avoir démarré le backend)
-- [Frontend Mobile - Gestion des environnements](frontend_mobile/README.md#environment-configuration)
+```
+app/           # Pages (routing automatique)
+features/      # Modules fonctionnels (components + hooks + api)
+components/    # Composants partagés
+services/api/  # Couche HTTP (axios)
+context/       # Auth, i18n
+hooks/         # Hooks personnalisés
+utils/         # Helpers
+```
 
-## Développement
+---
 
-### Workflow recommandé
+## Branche et CI/CD
 
-1. Créez une nouvelle branche depuis `develop`
-2. Faites vos modifications
-3. Exécutez tous les tests (voir section "Avant de faire une Pull Request")
-4. Commitez vos changements
-5. Créez une Pull Request vers `develop`
+```
+feature/* → develop → preprod → master
+```
 
-### Structure Backend (Clean Architecture)
-
-Le backend suit les principes de Clean Architecture :
-- `domain/` - Entités et logique métier
-- `application/` - Cas d'utilisation et services
-- `infrastructure/` - Implémentation technique (DB, APIs externes)
-- `presentation/` - Contrôleurs et DTOs
-
-### Structure Frontend Mobile (Expo Router)
-
-L'application mobile utilise Expo avec file-based routing :
-- `app/` - Pages et routes de l'application
-- `components/` - Composants réutilisables
-- `services/` - Services API et logique métier
-- `context/` - Contextes React (authentification, etc.)
+- Toutes les PRs ciblent `develop`
+- CI sur PR : lint + build (~3-5 min)
+- CI sur develop→preprod : lint + build + tests + migrations (~10-15 min)
+- Swagger disponible sur `http://localhost:3000/swagger/v1` en local
