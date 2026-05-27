@@ -2,10 +2,12 @@ import React from 'react';
 import { render, screen, act, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 import { AuthProvider, useAuth } from '../AuthContext';
-import { authService, userService } from '../../services/api';
-import type { User, AuthResponse } from '../../services/api/types';
+import { authService } from '@/modules/auth/infrastructure/authApi';
+import { userService } from '@/services/api';
+import { apiClient } from '@/services/api';
+import type { User, AuthResponse } from '@/services/api/types';
 
-jest.mock('../../services/api', () => ({
+jest.mock('@/modules/auth/infrastructure/authApi', () => ({
   authService: {
     isAuthenticated: jest.fn(),
     login: jest.fn(),
@@ -13,7 +15,11 @@ jest.mock('../../services/api', () => ({
     logout: jest.fn(),
     getAccessToken: jest.fn(),
     clearAuth: jest.fn(),
+    oauthApple: jest.fn(),
   },
+}));
+
+jest.mock('@/services/api', () => ({
   userService: {
     getMe: jest.fn(),
   },

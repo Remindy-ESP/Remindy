@@ -1,8 +1,8 @@
-import documentService, { DocumentResponse, UploadDocumentParams } from '../document.service';
-import client, { apiClient } from '../client';
+import documentService, { DocumentResponse, UploadDocumentParams } from '@/modules/cloud/infrastructure/documentApi';
+import client, { apiClient } from '@/shared/infrastructure/apiClient';
 
 // Mock the API client
-jest.mock('../client', () => {
+jest.mock('@/shared/infrastructure/apiClient', () => {
   const mockAxiosInstance = {
     get: jest.fn(),
     post: jest.fn(),

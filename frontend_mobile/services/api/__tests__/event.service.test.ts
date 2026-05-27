@@ -1,9 +1,9 @@
-import { eventService } from '../event.service';
-import apiClient from '../client';
+import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 import { Event, Subscription } from '../types';
 
 // Mock the API client
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

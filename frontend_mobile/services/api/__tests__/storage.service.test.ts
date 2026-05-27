@@ -1,9 +1,9 @@
-import storageService from '../storage.service';
-import apiClient from '../client';
+import storageService from '@/modules/cloud/infrastructure/storageApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 import { StorageQuota } from '../types';
 
 // Mock the API client
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { useDocuments } from '../useDocuments';
-import { documentService } from '../../services/api';
-import type { DocumentResponse } from '../../services/api/document.service';
+import { useDocuments } from '@/modules/cloud/application/useDocuments';
+import { documentService } from '@/modules/cloud/infrastructure/documentApi';
+import type { DocumentResponse } from '@/modules/cloud/infrastructure/documentApi';
 
-jest.mock('../../services/api', () => ({
+jest.mock('@/modules/cloud/infrastructure/documentApi', () => ({
   documentService: {
     getAllDocuments: jest.fn(),
     uploadDocument: jest.fn(),

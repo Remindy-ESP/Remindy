@@ -1,9 +1,9 @@
-import { categoryService } from '../category.service';
-import apiClient from '../client';
+import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from '../types';
 
 // Mock the API client
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

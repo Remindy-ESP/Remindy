@@ -43,20 +43,20 @@ const mockUseExpenseSummaryReturn = {
   refetch: jest.fn(),
 };
 
-jest.mock('../../../hooks/useStatistics', () => ({
+jest.mock('@/modules/statistics/application/useStatistics', () => ({
   useStatistics: jest.fn(() => mockUseStatisticsReturn),
 }));
 
-jest.mock('../../../hooks/useExpenseSummary', () => ({
+jest.mock('@/modules/statistics/application/useExpenseSummary', () => ({
   useExpenseSummary: jest.fn(() => mockUseExpenseSummaryReturn),
 }));
 
 describe('StatisticsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    const { useStatistics } = require('../../../hooks/useStatistics');
+    const { useStatistics } = require('@/modules/statistics/application/useStatistics');
     useStatistics.mockReturnValue(mockUseStatisticsReturn);
-    const { useExpenseSummary } = require('../../../hooks/useExpenseSummary');
+    const { useExpenseSummary } = require('@/modules/statistics/application/useExpenseSummary');
     useExpenseSummary.mockReturnValue(mockUseExpenseSummaryReturn);
   });
 
@@ -80,7 +80,7 @@ describe('StatisticsScreen', () => {
 
   it('calls setActivePeriod when a tab is pressed', () => {
     const setActivePeriod = jest.fn();
-    const { useStatistics } = require('../../../hooks/useStatistics');
+    const { useStatistics } = require('@/modules/statistics/application/useStatistics');
     useStatistics.mockReturnValue({ ...mockUseStatisticsReturn, setActivePeriod });
 
     const { getByTestId } = render(<StatisticsScreen />);
@@ -120,7 +120,7 @@ describe('StatisticsScreen', () => {
   });
 
   it('shows the summary loading state when summary is fetching', () => {
-    const { useExpenseSummary } = require('../../../hooks/useExpenseSummary');
+    const { useExpenseSummary } = require('@/modules/statistics/application/useExpenseSummary');
     useExpenseSummary.mockReturnValue({
       ...mockUseExpenseSummaryReturn,
       loading: true,
@@ -131,7 +131,7 @@ describe('StatisticsScreen', () => {
   });
 
   it('shows the summary error state when summary fails', () => {
-    const { useExpenseSummary } = require('../../../hooks/useExpenseSummary');
+    const { useExpenseSummary } = require('@/modules/statistics/application/useExpenseSummary');
     useExpenseSummary.mockReturnValue({
       ...mockUseExpenseSummaryReturn,
       data: null,
@@ -151,7 +151,7 @@ describe('StatisticsScreen', () => {
   });
 
   it('shows the empty category state when no events match the period', () => {
-    const { useStatistics } = require('../../../hooks/useStatistics');
+    const { useStatistics } = require('@/modules/statistics/application/useStatistics');
     useStatistics.mockReturnValue({
       ...mockUseStatisticsReturn,
       getStatsForPeriod: jest.fn(() => ({
@@ -166,14 +166,14 @@ describe('StatisticsScreen', () => {
   });
 
   it('shows the screen loading state when statistics are loading', () => {
-    const { useStatistics } = require('../../../hooks/useStatistics');
+    const { useStatistics } = require('@/modules/statistics/application/useStatistics');
     useStatistics.mockReturnValue({ ...mockUseStatisticsReturn, loading: true });
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Chargement des statistiques...')).toBeTruthy();
   });
 
   it('shows the screen error state when statistics fail', () => {
-    const { useStatistics } = require('../../../hooks/useStatistics');
+    const { useStatistics } = require('@/modules/statistics/application/useStatistics');
     useStatistics.mockReturnValue({ ...mockUseStatisticsReturn, error: 'Network Error' });
     const { getByText } = render(<StatisticsScreen />);
     expect(getByText('Erreur : Network Error')).toBeTruthy();

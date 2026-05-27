@@ -1,9 +1,9 @@
-import { authService } from '../auth.service';
-import apiClient, { apiClient as client } from '../client';
+import { authService } from '@/modules/auth/infrastructure/authApi';
+import apiClient, { apiClient as client } from '@/shared/infrastructure/apiClient';
 import { LoginRequest, RegisterRequest, User } from '../types';
 
 // Mock the API client
-jest.mock('../client', () => {
+jest.mock('@/shared/infrastructure/apiClient', () => {
   const mockAxiosInstance = {
     get: jest.fn(),
     post: jest.fn(),

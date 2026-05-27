@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { documentService } from '@/services/api';
-import type { DocumentResponse } from '@/services/api/document.service';
+import { documentService } from '@/modules/cloud/infrastructure/documentApi';
+import type { DocumentResponse } from '@/modules/cloud/infrastructure/documentApi';
 import i18n from '@/i18n';
 
 export function useDocuments() {

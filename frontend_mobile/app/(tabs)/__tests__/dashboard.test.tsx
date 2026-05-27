@@ -78,7 +78,7 @@ const baseUseDashboard = {
 
 const mockUseDashboard = jest.fn(() => ({ ...baseUseDashboard }));
 
-jest.mock('../../../hooks/useDashboard', () => ({
+jest.mock('@/modules/dashboard/application/useDashboard', () => ({
   useDashboard: (...args: any[]) => (mockUseDashboard as jest.Mock)(...args),
 }));
 

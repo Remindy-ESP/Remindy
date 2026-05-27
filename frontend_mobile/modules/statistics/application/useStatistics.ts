@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
-import { eventService, categoryService, type Event, type Category } from '@/services/api';
+import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
+import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
+import type { Event, Category } from '@/services/api/types';
 import { PERIOD_LABELS, type Period } from '@/types/statistics';
 import i18n from '@/i18n';
 

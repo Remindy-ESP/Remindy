@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { useFolders } from '../useFolders';
-import { folderService } from '../../services/api';
-import type { Folder } from '../../services/api/types';
+import { useFolders } from '@/modules/cloud/application/useFolders';
+import { folderService } from '@/modules/cloud/infrastructure/folderApi';
+import type { Folder } from '@/services/api/types';
 
-jest.mock('../../services/api', () => ({
+jest.mock('@/modules/cloud/infrastructure/folderApi', () => ({
   folderService: {
     getAllFolders: jest.fn(),
     createFolder: jest.fn(),

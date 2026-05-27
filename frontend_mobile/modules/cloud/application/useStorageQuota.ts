@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { storageService } from '@/services/api';
-import type { StorageQuota } from '@/services/api';
+import { storageService } from '@/modules/cloud/infrastructure/storageApi';
+import type { StorageQuota } from '@/services/api/types';
 import i18n from '@/i18n';
 
 export function useStorageQuota() {

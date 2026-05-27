@@ -1,12 +1,16 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { useDashboard } from '../useDashboard';
-import { categoryService, eventService } from '../../services/api';
-import type { Category, Event } from '../../services/api/types';
+import { useDashboard } from '@/modules/dashboard/application/useDashboard';
+import { categoryService } from '@/modules/categories/infrastructure/categoryApi';
+import { eventService } from '@/modules/dashboard/infrastructure/eventApi';
+import type { Category, Event } from '@/services/api/types';
 
-jest.mock('../../services/api', () => ({
+jest.mock('@/modules/categories/infrastructure/categoryApi', () => ({
   categoryService: {
     getAll: jest.fn(),
   },
+}));
+
+jest.mock('@/modules/dashboard/infrastructure/eventApi', () => ({
   eventService: {
     getAll: jest.fn(),
   },

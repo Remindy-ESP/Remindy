@@ -1,8 +1,8 @@
-import { supportService } from '../support.service';
-import apiClient from '../client';
-import type { CreateTicketRequest, SupportTicketCategory } from '../support.service';
+import { supportService } from '@/modules/support/infrastructure/supportApi';
+import apiClient from '@/shared/infrastructure/apiClient';
+import type { CreateTicketRequest, SupportTicketCategory } from '@/modules/support/infrastructure/supportApi';
 
-jest.mock('../client', () => {
+jest.mock('@/shared/infrastructure/apiClient', () => {
   const mockAxiosInstance = {
     get: jest.fn(),
     post: jest.fn(),

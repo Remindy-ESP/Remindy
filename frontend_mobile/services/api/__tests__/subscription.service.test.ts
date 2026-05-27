@@ -1,5 +1,5 @@
-import { subscriptionService } from '../subscription.service';
-import apiClient from '../client';
+import { subscriptionService } from '@/modules/subscriptions/infrastructure/subscriptionApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 import {
   Subscription,
   CreateSubscriptionRequest,
@@ -8,7 +8,7 @@ import {
 } from '../types';
 
 // Mock the API client
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

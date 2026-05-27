@@ -1,5 +1,5 @@
-import { userService } from '../user.service';
-import apiClient from '../client';
+import { userService } from '@/modules/profile/infrastructure/userApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 import {
   User,
   UpdateUserRequest,
@@ -9,7 +9,7 @@ import {
 } from '../types';
 
 // Mock the API client
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

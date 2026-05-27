@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   statisticsService,
   type ExpenseSummaryResponse,
-} from '@/services/api/statistics.service';
+} from '@/modules/statistics/infrastructure/statisticsApi';
 import type { Period } from '@/types/statistics';
 import i18n from '@/i18n';
 

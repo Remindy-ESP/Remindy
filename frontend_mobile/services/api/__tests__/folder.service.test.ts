@@ -1,5 +1,5 @@
-import folderService from '../folder.service';
-import apiClient from '../client';
+import folderService from '@/modules/cloud/infrastructure/folderApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 import {
   Folder,
   CreateFolderRequest,
@@ -8,7 +8,7 @@ import {
 } from '../types';
 
 // Mock the API client
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

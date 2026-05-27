@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import notificationService from '../services/api/notification.service';
+import { notificationService } from '@/modules/notifications/infrastructure/notificationApi';
 
 // expo-notifications remote push support was removed from Expo Go in SDK 53.
 // Skip all push setup when running inside Expo Go to avoid crashes.

@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { useStorageQuota } from '../useStorageQuota';
-import { storageService } from '../../services/api';
-import type { StorageQuota } from '../../services/api/types';
+import { useStorageQuota } from '@/modules/cloud/application/useStorageQuota';
+import { storageService } from '@/modules/cloud/infrastructure/storageApi';
+import type { StorageQuota } from '@/services/api/types';
 
-jest.mock('../../services/api', () => ({
+jest.mock('@/modules/cloud/infrastructure/storageApi', () => ({
   storageService: {
     getQuota: jest.fn(),
   },

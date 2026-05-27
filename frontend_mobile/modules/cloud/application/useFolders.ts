@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { folderService } from '@/services/api';
-import type { Folder, CreateFolderRequest, UpdateFolderRequest, FolderFilters } from '@/services/api';
+import { folderService } from '@/modules/cloud/infrastructure/folderApi';
+import type { Folder, CreateFolderRequest, UpdateFolderRequest, FolderFilters } from '@/services/api/types';
 import i18n from '@/i18n';
 
 export function useFolders() {

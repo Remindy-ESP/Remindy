@@ -88,7 +88,7 @@ const mockUploadDocument = jest.fn(() => Promise.resolve());
 const mockUpdateDocument = jest.fn(() => Promise.resolve());
 const mockDeleteDocument = jest.fn(() => Promise.resolve());
 
-jest.mock('@/hooks/useDocuments', () => ({
+jest.mock('@/modules/cloud/application/useDocuments', () => ({
   useDocuments: () => ({
     documents: hookState.documents,
     loading: hookState.docsLoading,
@@ -105,7 +105,7 @@ const mockUpdateFolder = jest.fn(() => Promise.resolve());
 const mockDeleteFolder = jest.fn(() => Promise.resolve());
 const mockMoveDocumentToFolder = jest.fn(() => Promise.resolve());
 
-jest.mock('@/hooks/useFolders', () => ({
+jest.mock('@/modules/cloud/application/useFolders', () => ({
   useFolders: () => ({
     folders: hookState.folders,
     loading: hookState.foldersLoading,
@@ -119,7 +119,7 @@ jest.mock('@/hooks/useFolders', () => ({
 
 const mockFetchQuota = jest.fn(() => Promise.resolve());
 
-jest.mock('@/hooks/useStorageQuota', () => ({
+jest.mock('@/modules/cloud/application/useStorageQuota', () => ({
   useStorageQuota: () => ({
     quota: hookState.quota,
     fetchQuota: mockFetchQuota,

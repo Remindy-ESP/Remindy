@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import GlobalHeader from '@/shared/ui/GlobalHeader';
 import { useAuth } from '@/context/AuthContext';
 import { APP_ROUTES } from '@/navigation/MenuConfig';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { usePushNotifications } from '@/modules/notifications/application/usePushNotifications';
 
 export default function TabLayout() {
     const router = useRouter();

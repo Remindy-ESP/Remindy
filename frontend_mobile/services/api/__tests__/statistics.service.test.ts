@@ -1,7 +1,7 @@
-import { statisticsService, type ExpenseSummaryResponse } from '../statistics.service';
-import apiClient from '../client';
+import { statisticsService, type ExpenseSummaryResponse } from '@/modules/statistics/infrastructure/statisticsApi';
+import apiClient from '@/shared/infrastructure/apiClient';
 
-jest.mock('../client');
+jest.mock('@/shared/infrastructure/apiClient');
 
 const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
 

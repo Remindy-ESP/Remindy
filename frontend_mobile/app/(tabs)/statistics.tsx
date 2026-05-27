@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useStatistics } from '@/hooks/useStatistics';
-import { useExpenseSummary } from '@/hooks/useExpenseSummary';
+import { useStatistics } from '@/modules/statistics/application/useStatistics';
+import { useExpenseSummary } from '@/modules/statistics/application/useExpenseSummary';
 import { PeriodFilterTabs } from '@/components/statistics/PeriodFilterTabs';
 import { ExpenseSummaryHeader } from '@/components/statistics/ExpenseSummaryHeader';
 import { ComparisonInfoModal } from '@/components/statistics/ComparisonInfoModal';
