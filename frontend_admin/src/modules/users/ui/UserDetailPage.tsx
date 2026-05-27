@@ -16,6 +16,7 @@ import LockResetIcon from '@mui/icons-material/LockReset';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SecurityIcon from '@mui/icons-material/Security';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useAdminUser } from '@/modules/users/application/useAdminUsers';
 import { useUserActions } from '@/modules/users/application/useUserActions';
 import { PermissionGate } from '@/shared/ui/PermissionGate';
@@ -129,7 +130,28 @@ export function UserDetailPage() {
               </Typography>
             </InfoRow>
             <InfoRow label='Email'>
-              <Typography variant='body2'>{user.email}</Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <Typography variant='body2'>{user.email}</Typography>
+                <PermissionGate permission={AdminPermission.SUPPORT_READ}>
+                  <Button
+                    size='small'
+                    variant='text'
+                    startIcon={<SupportAgentIcon fontSize='small' />}
+                    onClick={() =>
+                      navigate(`/support?q=${encodeURIComponent(user.email)}`)
+                    }
+                  >
+                    Voir les tickets
+                  </Button>
+                </PermissionGate>
+              </Box>
             </InfoRow>
             <InfoRow label='Nom'>
               <Typography variant='body2'>

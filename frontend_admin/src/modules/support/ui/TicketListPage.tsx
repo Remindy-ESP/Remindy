@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
@@ -18,10 +18,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { frFR } from '@mui/x-data-grid/locales';
 import { useAdminTickets } from '@/modules/support/application/useAdminTickets';
 import { ErrorState } from '@/shared/ui/NetworkStates';
-import {
-  TicketStatusBadge,
-  TICKET_STATUS_LABELS,
-} from './TicketStatusBadge';
+import { TicketStatusBadge, TICKET_STATUS_LABELS } from './TicketStatusBadge';
 import {
   TicketPriorityBadge,
   TICKET_PRIORITY_LABELS,
@@ -45,13 +42,15 @@ const CATEGORY_LABELS: Record<SupportTicketCategory, string> = {
 
 export function TicketListPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get('q') ?? '';
   const [filters, setFilters] = useState<AdminTicketsQuery>({
     page: 1,
     limit: 25,
     sortBy: 'createdAt',
     sortDir: 'DESC',
   });
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [statusFilter, setStatusFilter] = useState<SupportTicketStatus | ''>(
     ''
   );
@@ -76,6 +75,10 @@ export function TicketListPage() {
     setPriorityFilter('');
     setCategoryFilter('');
     setFilters(f => ({ ...f, page: 1 }));
+    if (searchParams.has('q')) {
+      searchParams.delete('q');
+      setSearchParams(searchParams, { replace: true });
+    }
   };
 
   const handlePagination = useCallback((model: GridPaginationModel) => {
